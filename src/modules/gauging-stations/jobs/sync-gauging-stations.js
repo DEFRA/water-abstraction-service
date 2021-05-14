@@ -57,8 +57,9 @@ const handler = async () => {
 
     if (gaugingStationForUpdate) {
       await gaugingStationsRepo.update(gaugingStationForUpdate, mappedGaugingStation);
+    } else {
+      await gaugingStationsRepo.create(mappedGaugingStation);
     }
-    await gaugingStationsRepo.create(mappedGaugingStation);
   }
 
   return applicationState.save('gauging-stations-import', { etag: ETag });
