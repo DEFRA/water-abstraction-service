@@ -61,13 +61,13 @@ experiment('modules/internal-search/lib/search-gauging-stations', () => {
       expect(gaugingStations).to.equal([output[1]]);
     });
 
-    test('It should return the correct station, if the Wiski ID is a full match', async () => {
-      await stub2.resolves(output[0]);
-      const gaugingStations = await searchGaugingStations('Station');
+    test('It should return the correct station, if the station reference is a full match', async () => {
+      await stub2.resolves(output[2]);
+      const gaugingStations = await searchGaugingStations('REF3');
       expect(stub1.called).to.be.true();
       expect(stub2.called).to.be.true();
       expect(stub3.called).to.be.true();
-      expect(gaugingStations).to.equal([output[0]]);
+      expect(gaugingStations).to.equal([output[2]]);
     });
 
     test('It should return an empty array, if nothing matches', async () => {
