@@ -1,7 +1,7 @@
 const controller = require('./controller');
 
 module.exports = {
-  getStation: {
+  getStatus: {
     method: 'GET',
     path: '/water/1.0/service-status',
     handler: controller.getStatus,
