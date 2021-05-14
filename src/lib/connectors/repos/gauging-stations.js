@@ -5,6 +5,33 @@ const helpers = require('./lib/helpers');
 const findOne = id =>
   helpers.findOne(GaugingStation, 'gaugingStationId', id);
 
+const findOneByStationRef = async stationRef => {
+  const model = await GaugingStation
+    .forge()
+    .where('station_reference', '=', stationRef)
+    .fetch({ require: false });
+
+  return model && model.toJSON();
+};
+
+const findOneByWiskiId = async wiskiId => {
+  const model = await GaugingStation
+    .forge()
+    .where('wiski_id', '=', wiskiId)
+    .fetch({ require: false });
+
+  return model && model.toJSON();
+};
+
+const findAllByPartialNameMatch = async query => {
+  const results = await GaugingStation
+    .forge()
+    .where('label', 'ILIKE', `%${query}%`)
+    .fetchAll({ require: false });
+
+  return results && results.toJSON();
+};
+
 const findAll = () =>
   helpers.findMany(GaugingStation);
 
@@ -19,6 +46,9 @@ const update = (id, changes) => GaugingStation
 const deleteOne = id =>
   helpers.deleteOne(GaugingStation, 'gaugingStationId', id);
 
+exports.findOneByStationRef = findOneByStationRef;
+exports.findAllByPartialNameMatch = findAllByPartialNameMatch;
+exports.findOneByWiskiId = findOneByWiskiId;
 exports.findOne = findOne;
 exports.findAll = findAll;
 exports.create = create;
