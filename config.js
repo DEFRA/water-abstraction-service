@@ -164,7 +164,7 @@ module.exports = {
   },
   import: {
     returns: { importYears: process.env.IMPORT_RETURNS_YEARS || 3 },
-    gaugingStationsSyncFrequencyInMS: 21600000,
+    gaugingStationsSyncFrequencyInMS: 100000,
     zipPassword: process.env.NALD_ZIP_PASSWORD
   },
   services: {
