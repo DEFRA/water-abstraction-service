@@ -62,7 +62,7 @@ experiment('modules/internal-search/lib/search-gauging-stations', () => {
     });
 
     test('It should return the correct station, if the station reference is a full match', async () => {
-      await stub2.resolves(output[2]);
+      await stub1.resolves(output[2]);
       const gaugingStations = await searchGaugingStations('REF3');
       expect(stub1.called).to.be.true();
       expect(stub2.called).to.be.true();
@@ -70,7 +70,16 @@ experiment('modules/internal-search/lib/search-gauging-stations', () => {
       expect(gaugingStations).to.equal([output[2]]);
     });
 
-    test('It should return an empty array, if nothing matches', async () => {
+    test('It should return an empty array, if nothing matches (1 of 2)', async () => {
+      await stub3.resolves([]);
+      const gaugingStations = await searchGaugingStations('sugar lumps');
+      expect(stub1.called).to.be.true();
+      expect(stub2.called).to.be.true();
+      expect(stub3.called).to.be.true();
+      expect(gaugingStations).to.equal([]);
+    });
+
+    test('It should return an empty array, if nothing matches (2 of 2)', async () => {
       const gaugingStations = await searchGaugingStations('sugar lumps');
       expect(stub1.called).to.be.true();
       expect(stub2.called).to.be.true();
