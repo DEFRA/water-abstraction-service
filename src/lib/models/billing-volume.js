@@ -126,14 +126,19 @@ class BillingVolume extends Model {
 
   /**
    * Sets the two part tariff status and billable volume
+   *
+   * When the supplied isSummer flag matches that of this billing volume,
+   * the full billable is set.  Otherwise zero is set.
+   *
    * @param {Number} twoPartTariffStatus
    * @param {Number} billableVolume
+   * @param {Boolean} isSummer
    */
-  setTwoPartTariffStatus (twoPartTariffStatus, billableVolume) {
+  setTwoPartTariffStatus (twoPartTariffStatus, billableVolume, isSummer) {
     this.twoPartTariffStatus = twoPartTariffStatus;
     if (assignBillableStatuses.includes(twoPartTariffStatus)) {
       this.calculatedVolume = null;
-      this.volume = billableVolume;
+      this.volume = isSummer === this.isSummer ? billableVolume : 0;
     }
     if (setErrorFlagStatuses.includes(twoPartTariffStatus)) {
       this.twoPartTariffError = true;

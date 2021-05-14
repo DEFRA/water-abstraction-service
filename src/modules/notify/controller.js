@@ -4,7 +4,7 @@ const messageQueue = require('../../lib/message-queue');
 const scheduledNotificationsService = require('../../lib/services/scheduled-notifications');
 const { logger } = require('../../logger');
 const { enqueue } = require('./index.js')(messageQueue);
-
+const notifyService = require('../../lib/notify');
 /**
  * Gets the notify template ID for a notify message ref,
  * and sends it using the notify API
@@ -64,7 +64,14 @@ const callback = async (request, h) => {
   }
 };
 
-module.exports = {
-  send,
-  callback
+/**
+ * A very basic proxy service to send notify emails via the water service
+ */
+const notifyEmailProxy = async request => {
+  const { templateId, recipient, personalisation } = request.payload;
+  return notifyService.sendEmail(templateId, recipient, personalisation);
 };
+
+exports.send = send;
+exports.callback = callback;
+exports.notifyEmailProxy = notifyEmailProxy;

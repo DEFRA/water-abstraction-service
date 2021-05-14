@@ -27,7 +27,12 @@ module.exports = {
     supplementaryYears: isTest ? 1 : 6,
     // There are 4 processes on the environments but only 1 locally
     createChargeJobConcurrency: isLocal ? 16 : 1,
-    naldSwitchOverDate: process.env.BILLING_GO_LIVE_DATE || '2021-04-01'
+    // Some billing logic is handled differently depending on whether the
+    // transaction is pre/post NALD switchover date
+    naldSwitchOverDate: process.env.BILLING_GO_LIVE_DATE || '2021-04-01',
+    // The grace period (in days) following the return due date during which time
+    // the submitted return will be considered for billing
+    returnsGracePeriod: process.env.RETURNS_GRACE_PERIOD || 21
   },
 
   blipp: {
@@ -195,12 +200,16 @@ module.exports = {
   },
 
   redis: {
-    host: process.env.REDIS_HOST || '127.0.0.1',
-    port: process.env.REDIS_PORT || 6379,
-    password: process.env.REDIS_PASSWORD || '',
-    ...(isTlsConnection) && { tls: {} },
-    db: isPermitsTestDatabase ? 4 : 2,
-    lazyConnect: isRedisLazy
+    // Note: this limit needs increasing when further Bull MQ job queues are added
+    maxListenerCount: 23,
+    connection: {
+      host: process.env.REDIS_HOST || '127.0.0.1',
+      port: process.env.REDIS_PORT || 6379,
+      password: process.env.REDIS_PASSWORD || '',
+      ...(isTlsConnection) && { tls: {} },
+      db: isPermitsTestDatabase ? 4 : 2,
+      lazyConnect: isRedisLazy
+    }
   },
 
   featureToggles: {

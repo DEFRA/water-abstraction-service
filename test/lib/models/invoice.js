@@ -471,4 +471,70 @@ experiment('lib/models/invoice', () => {
       });
     });
   });
+
+  experiment('.rebillingState', () => {
+    test('can be set to "rebill"', async () => {
+      invoice.rebillingState = 'rebill';
+      expect(invoice.rebillingState).to.equal('rebill');
+    });
+
+    test('can be set to "reversal"', async () => {
+      invoice.rebillingState = 'reversal';
+      expect(invoice.rebillingState).to.equal('reversal');
+    });
+
+    test('can be set to null', async () => {
+      invoice.rebillingState = null;
+      expect(invoice.rebillingState).to.equal(null);
+    });
+
+    test('throws an error if set to another string', async () => {
+      const func = () => {
+        invoice.isFlaggedForRebilling = 'invalid-state';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.originalInvoiceId', () => {
+    test('can be set to guid', async () => {
+      const id = uuid();
+      invoice.originalInvoiceId = id;
+      expect(invoice.originalInvoiceId).to.equal(id);
+    });
+
+    test('can be set to null', async () => {
+      invoice.originalInvoiceId = null;
+      expect(invoice.originalInvoiceId).to.equal(null);
+    });
+
+    test('throws an error if not a guid', async () => {
+      const func = () => {
+        invoice.originalInvoiceId = 'invalid-state';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.linkedInvoices', () => {
+    test('can be set to an array of invoice instances', async () => {
+      const arr = [
+        new Invoice(uuid()),
+        new Invoice(uuid())
+      ];
+      invoice.linkedInvoices = arr;
+      expect(invoice.linkedInvoices).to.equal(arr);
+    });
+
+    test('throws an error if not Invoice models', async () => {
+      const func = () => {
+        const arr = [
+          new Invoice(uuid()),
+          new InvoiceAccount(uuid())
+        ];
+        invoice.linkedInvoices = arr;
+      };
+      expect(func).to.throw();
+    });
+  });
 });
