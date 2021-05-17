@@ -30,7 +30,7 @@
     disabled: false
     isTest: true
   constraints:
-    code_is_unique:
+    uniq_financial_agreement_code:
       - financialAgreementCode
 
 - model: LicenceAgreement
