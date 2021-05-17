@@ -342,14 +342,14 @@ experiment('src/lib/services/licences', () => {
     });
   });
 
-  experiment('.getLicenceReturns', () => {
+  experiment('.getReturnsByLicenceId', () => {
     const licenceId = uuid();
     const page = 1;
     const perPage = 50;
 
     beforeEach(async () => {
       repos.licences.findOne.resolves(data.dbRow);
-      await licencesService.getLicenceReturns(licenceId, page, perPage);
+      await licencesService.getReturnsByLicenceId(licenceId, page, perPage);
     });
 
     test('calls repos.licences.findOne() with supplied licence ID', async () => {

@@ -5,8 +5,6 @@ const controller = require('../../../lib/controller');
 const licencesService = require('../../../lib/services/licences');
 const documentsService = require('../../../lib/services/documents-service');
 const crmDocumentsConnector = require('../../../lib/connectors/crm/documents');
-const scheduledNotificationsService = require('../../../lib/services/scheduled-notifications');
-const mapErrorResponse = require('../../../lib/map-error-response');
 
 const getLicence = async request =>
   controller.getEntity(request.params.licenceId, licencesService.getLicenceById);
@@ -50,20 +48,17 @@ const getValidLicenceDocumentByDate = async request => {
 const getLicenceReturns = async request => {
   const { licenceId } = request.params;
   const { page, perPage } = request.query;
-  const result = await licencesService.getLicenceReturns(licenceId, page, perPage);
-  if (!result) {
-    return Boom.notFound(`Returns for ${licenceId} not found`);
-  }
-  return result;
+
+  const result = await licencesService.getReturnsByLicenceId(licenceId, page, perPage);
+  return result || Boom.notFound(`Licence ${licenceId} not found`);
 };
 
 const getLicenceNotifications = async request => {
   const { licenceId } = request.params;
-  try {
-    return await scheduledNotificationsService.getScheduledNotificationsByLicenceId(licenceId);
-  } catch (err) {
-    return mapErrorResponse(err);
-  }
+  const { page, perPage } = request.query;
+
+  const result = await licencesService.getScheduledNotificationsByLicenceId(licenceId, page, perPage);
+  return result || Boom.notFound(`Licence ${licenceId} not found`);
 };
 
 exports.getLicence = getLicence;
