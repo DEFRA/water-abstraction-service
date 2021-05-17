@@ -143,7 +143,7 @@ class ScheduledNotification extends Model {
    * @param {Event}
    */
   set event (event) {
-    validators.assertIsInstanceOf(event, Event);
+    validators.assertIsNullableInstanceOf(event, Event);
     this._event = event;
   }
 
