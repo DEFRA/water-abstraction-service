@@ -2,9 +2,11 @@
 
 const { get } = require('lodash');
 const repo = require('../connectors/repos/scheduled-notifications');
+const licencesService = require('./licences');
 const mapper = require('../mappers/scheduled-notification');
 const service = require('./service');
 const { MESSAGE_STATUSES } = require('../models/scheduled-notification');
+const errors = require('../errors');
 
 const getScheduledNotificationById = id =>
   service.findOne(id, repo.findOne, mapper);
@@ -46,9 +48,31 @@ const getByEventId = async eventId => {
   return data.map(mapper.dbToModel);
 };
 
+/**
+ * Gets the scheduled notifications by licence ID.
+ * Note: this currently only returns sent notifications
+ *
+ * @param {String} licenceId
+ * @returns {Promise<Object>}
+ */
+const getScheduledNotificationsByLicenceId = async (licenceId, page = 1, perPage = 10) => {
+  // Get the licence number from the ID
+  const { licenceNumber } = await licencesService.getLicenceById(licenceId);
+  if (!licenceNumber) {
+    throw new errors.NotFoundError(`Licence ${licenceId} not found`);
+  }
+  // Query for notifications
+  const { pagination, data } = await repo.findByLicenceNumber(licenceNumber, page, perPage);
+  return {
+    pagination,
+    data: data.map(mapper.dbToModel)
+  };
+};
+
 exports.getScheduledNotificationById = getScheduledNotificationById;
 exports.getScheduledNotificationByNotifyId = getScheduledNotificationByNotifyId;
 exports.createScheduledNotification = createScheduledNotification;
 exports.updateScheduledNotificationWithNotifyResponse = updateScheduledNotificationWithNotifyResponse;
 exports.updateScheduledNotificationWithNotifyCallback = updateScheduledNotificationWithNotifyCallback;
 exports.getByEventId = getByEventId;
+exports.getScheduledNotificationsByLicenceId = getScheduledNotificationsByLicenceId;

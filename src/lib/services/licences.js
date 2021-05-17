@@ -10,6 +10,8 @@ const licenceVersionMapper = require('../mappers/licence-version');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../models/constants');
 
 const service = require('./service');
+const returns = require('./returns');
+
 const crmDocsConnector = require('../connectors/crm-v2/documents');
 const crmCompaniesConnector = require('../connectors/crm-v2/companies');
 
@@ -165,6 +167,19 @@ const getLicencesByInvoiceAccountId = async invoiceAccountId => {
   };
 };
 
+/**
+ * Gets licence returns, sorted by due date descending
+ * Note: includes voids
+ *
+ * @param {String} licenceId
+ * @param {Number} page
+ * @param {Number} perPage
+ */
+const getLicenceReturns = async (licenceId, page, perPage) => {
+  const licence = await getLicenceById(licenceId);
+  return returns.getReturnsForLicence(licence.licenceNumber, page, perPage);
+};
+
 exports.getLicenceById = getLicenceById;
 exports.getLicencesByLicenceRefs = getLicencesByLicenceRefs;
 exports.getLicenceVersionById = getLicenceVersionById;
@@ -177,3 +192,4 @@ exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInS
 exports.flagForSupplementaryBilling = flagForSupplementaryBilling;
 exports.getLicenceInvoices = getLicenceInvoices;
 exports.getLicencesByInvoiceAccountId = getLicencesByInvoiceAccountId;
+exports.getLicenceReturns = getLicenceReturns;

@@ -1,6 +1,6 @@
 'use strict';
 
-const { flatMap, first, last, identity } = require('lodash');
+const { flatMap, first, last, identity, uniq } = require('lodash');
 const bluebird = require('bluebird');
 const moment = require('moment');
 
@@ -202,5 +202,15 @@ const getReturnsWithContactsForLicence = async (licenceNumber) => {
   return documentsAndReturns.filter(row => row.returns.length > 0);
 };
 
+const getReturnsForLicence = async (licenceNumber, page, perPage) => {
+  const { data, pagination } = await apiConnector.getReturnsForLicence(licenceNumber, page, perPage);
+
+  return {
+    data: await returnsMappingService.mapReturnsToModels(data),
+    pagination
+  };
+};
+
 exports.getReturnsForLicenceInFinancialYear = getReturnsForLicenceInFinancialYear;
 exports.getReturnsWithContactsForLicence = getReturnsWithContactsForLicence;
+exports.getReturnsForLicence = getReturnsForLicence;
