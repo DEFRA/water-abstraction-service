@@ -1,12 +1,12 @@
 /* Replace with your SQL commands */
   CREATE TABLE IF NOT EXISTS "water"."licence_version_purpose_condition_types" (
     "licence_version_purpose_condition_type_id" uuid PRIMARY KEY default public.gen_random_uuid(),
-    "code" uuid NOT NULL,
-    "subcode" uuid NOT NULL,
-    "description" uuid NOT NULL,
+    "code" VARCHAR NOT NULL,
+    "subcode" VARCHAR NOT NULL,
+    "description" VARCHAR NOT NULL,
     "subcode_description" VARCHAR NULL,
-    "date_created" TIMESTAMP NOT NULL,
-    "date_updated" TIMESTAMP
+    "date_created" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "date_updated" TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS "water"."licence_version_purpose_conditions" (    
