@@ -152,7 +152,7 @@ class ScheduledNotification extends Model {
   }
 
   get isPdf () {
-    return this.messageRef.startsWith('pdf.');
+    return (this.messageRef || '').startsWith('pdf.');
   }
 
   /**
