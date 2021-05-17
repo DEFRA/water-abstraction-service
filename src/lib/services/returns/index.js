@@ -1,6 +1,6 @@
 'use strict';
 
-const { flatMap, first, last, identity, uniq } = require('lodash');
+const { flatMap, first, last, identity } = require('lodash');
 const bluebird = require('bluebird');
 const moment = require('moment');
 

@@ -1,5 +1,5 @@
 'use strict';
-const { compact, orderBy, findKey } = require('lodash');
+const { compact, orderBy } = require('lodash');
 const moment = require('moment');
 const Model = require('./model');
 const { assertLicenceNumber, assertIsInstanceOf, assertDate, assertNullableDate, assertIsArrayOfType } = require('./validators');
