@@ -70,7 +70,7 @@ experiment('modules/returns/lib/facade', () => {
   });
 
   experiment('.getReturnData', () => {
-    experiment('when the return is a service return ending on 2018-10-31 or later', async () => {
+    experiment('when the return is a service return ending on 2018-10-31 or later', () => {
       beforeEach(async () => {
         data = {
           versionNumber: 1,
@@ -120,7 +120,7 @@ experiment('modules/returns/lib/facade', () => {
       });
     });
 
-    experiment('when the return is a service return ending on 2018-10-31 or later but has no version', async () => {
+    experiment('when the return is a service return ending on 2018-10-31 or later but has no version', () => {
       beforeEach(async () => {
         data = {
           versionNumber: 1,
@@ -150,7 +150,7 @@ experiment('modules/returns/lib/facade', () => {
       });
     });
 
-    experiment('when the return is a non-nil, metric, NALD return', async () => {
+    experiment('when the return is a non-nil, metric, NALD return', () => {
       beforeEach(async () => {
         data = {
           versionNumber: 1,
@@ -224,7 +224,7 @@ experiment('modules/returns/lib/facade', () => {
       });
     });
 
-    experiment('when the return is a nil NALD return', async () => {
+    experiment('when the return is a nil NALD return', () => {
       beforeEach(async () => {
         data = {
           versionNumber: 1,
@@ -252,7 +252,7 @@ experiment('modules/returns/lib/facade', () => {
         expect(result.lines).to.equal([]);
       });
     });
-    experiment('when the return is a non-nil, gallons, NALD return', async () => {
+    experiment('when the return is a non-nil, gallons, NALD return', () => {
       beforeEach(async () => {
         data = {
           versionNumber: 1,

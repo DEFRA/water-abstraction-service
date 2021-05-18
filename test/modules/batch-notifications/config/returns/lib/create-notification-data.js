@@ -84,7 +84,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       };
     });
 
-    experiment('when the contact has "licence holder" role', async () => {
+    experiment('when the contact has "licence holder" role', () => {
       beforeEach(async () => {
         const contact = createContact(Contact.CONTACT_ROLE_LICENCE_HOLDER);
         result = await createNotificationData.createNotificationData(ev, contact, context);
@@ -134,7 +134,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       });
     });
 
-    experiment('when the contact has "returns to" role', async () => {
+    experiment('when the contact has "returns to" role', () => {
       beforeEach(async () => {
         const contact = createContact(Contact.CONTACT_ROLE_RETURNS_TO);
         result = await createNotificationData.createNotificationData(ev, contact, context);
@@ -167,7 +167,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       });
     });
 
-    experiment('when the contact has "primary user" role', async () => {
+    experiment('when the contact has "primary user" role', () => {
       beforeEach(async () => {
         const contact = createContact(Contact.CONTACT_ROLE_PRIMARY_USER);
         result = await createNotificationData.createNotificationData(ev, contact, context);
@@ -192,7 +192,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       });
     });
 
-    experiment('when the contact has "returns agent" role', async () => {
+    experiment('when the contact has "returns agent" role', () => {
       beforeEach(async () => {
         const contact = createContact(Contact.CONTACT_ROLE_RETURNS_AGENT);
         result = await createNotificationData.createNotificationData(ev, contact, context);
@@ -217,7 +217,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       });
     });
 
-    experiment('selects the correct return reminder template', async () => {
+    experiment('selects the correct return reminder template', () => {
       let contact;
       beforeEach(async () => {
         contact = createContact(Contact.CONTACT_ROLE_PRIMARY_USER);
@@ -277,7 +277,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
         expect(result.message_ref).to.equal('returns_reminder_primary_user_email_control');
       });
 
-      experiment('handles multiple invitation templates', async () => {
+      experiment('handles multiple invitation templates', () => {
         test('selects the appropriate template when available', async () => {
           contact = createContact(Contact.CONTACT_ROLE_LICENCE_HOLDER);
           const templateData = {

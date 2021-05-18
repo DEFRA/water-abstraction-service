@@ -128,7 +128,7 @@ experiment('handler', () => {
     expect(status).to.equal('validated');
   });
 
-  experiment('when the user is not found', async () => {
+  experiment('when the user is not found', () => {
     beforeEach(async () => {
       try {
         usersClient.getUserByUsername.resolves();
@@ -156,7 +156,7 @@ experiment('handler', () => {
     });
   });
 
-  experiment('when the XML cannot be mapped to JSON', async () => {
+  experiment('when the XML cannot be mapped to JSON', () => {
     beforeEach(async () => {
       try {
         uploadAdapters.xml.mapper.throws();
@@ -183,7 +183,7 @@ experiment('handler', () => {
     });
   });
 
-  experiment('when there is an error', async () => {
+  experiment('when there is an error', () => {
     beforeEach(async () => {
       try {
         s3.getObject.rejects({ name: 'test-error' });

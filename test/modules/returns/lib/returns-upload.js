@@ -7,7 +7,7 @@ const sandbox = sinon.createSandbox();
 const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 
-experiment('modules/returns/lib/returns-upload', async () => {
+experiment('modules/returns/lib/returns-upload', () => {
   experiment('.getUploadFilename', () => {
     test('uses csv extension by default', async () => {
       const filename = returnsUpload.getUploadFilename('test-id');

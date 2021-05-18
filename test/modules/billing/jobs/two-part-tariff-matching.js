@@ -150,7 +150,7 @@ experiment('modules/billing/jobs/two-part-tariff-matching', () => {
     });
   });
 
-  experiment('.onComplete', async () => {
+  experiment('.onComplete', () => {
     let job;
 
     experiment('when review is needed', () => {

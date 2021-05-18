@@ -106,6 +106,8 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(invoiceLicencesService, 'saveInvoiceLicenceToDB');
 
     sandbox.stub(invoiceService, 'saveInvoiceToDB');
+    sandbox.stub(invoiceService, 'resetIsFlaggedForRebilling');
+
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId');
 
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatus').resolves();
@@ -472,12 +474,10 @@ experiment('modules/billing/services/batch-service', () => {
         expect(batchId).to.equal(batch.id);
       });
 
-      test('sets the status of the batch to processing', async () => {
-        const [id, changes] = newRepos.billingBatches.update.lastCall.args;
-        expect(id).to.equal(batch.id);
-        expect(changes).to.equal({
-          status: 'processing'
-        });
+      test('resets the invoice rebilling flags', async () => {
+        expect(invoiceService.resetIsFlaggedForRebilling.calledWith(
+          batch.id
+        )).to.be.true();
       });
     });
 
@@ -508,8 +508,9 @@ experiment('modules/billing/services/batch-service', () => {
         expect(savedEvent.metadata.batch).to.equal(batch);
       });
 
-      test('does not set the status of the batch to error so the user can retry', async () => {
-        expect(newRepos.billingBatches.update.called).to.be.false();
+      test('sets the status of the batch to ready so the user can retry', async () => {
+        expect(newRepos.billingBatches.update.called).to.be.true();
+        expect(newRepos.billingBatches.update.lastCall.args[1].status).to.equal('ready');
       });
     });
   });
@@ -737,8 +738,9 @@ experiment('modules/billing/services/batch-service', () => {
       }
     };
 
-    experiment('when the CM batch is not approved for billing', async () => {
+    experiment('when the CM batch is not approved for billing', () => {
       beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(5);
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
 
@@ -754,8 +756,9 @@ experiment('modules/billing/services/batch-service', () => {
       });
     });
 
-    experiment('when the CM batch is showing as "pending"', async () => {
+    experiment('when the CM batch is showing as "pending"', () => {
       beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(5);
         cmResponse.billRun.status = 'pending';
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
@@ -768,6 +771,20 @@ experiment('modules/billing/services/batch-service', () => {
           invoiceValue,
           creditNoteValue,
           netTotal
+        })).to.be.true();
+      });
+    });
+
+    experiment('when there are 0 transactions in the batch', () => {
+      beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(0);
+        cmResponse.billRun.status = 'pending';
+        await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
+      });
+
+      test('the batch is updated correctly with "sent" status', async () => {
+        expect(newRepos.billingBatches.update.calledWith(BATCH_ID, {
+          status: Batch.BATCH_STATUS.empty
         })).to.be.true();
       });
     });
@@ -802,42 +819,7 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.setStatusToEmptyWhenNoTransactions', () => {
-    experiment('when the batch has more transactions', () => {
-      test('the status is not updated', async () => {
-        const batch = new Batch(uuid());
-        batch.status = Batch.BATCH_STATUS.ready;
-
-        newRepos.billingTransactions.countByBatchId.resolves(5);
-
-        const result = await batchService.setStatusToEmptyWhenNoTransactions(batch);
-
-        expect(newRepos.billingBatches.update.called).to.equal(false);
-        expect(result.id).to.equal(batch.id);
-        expect(result.status).to.equal(batch.status);
-      });
-    });
-
-    experiment('when the batch has no more transactions', () => {
-      test('the status is updated to empty', async () => {
-        const batch = new Batch(uuid());
-        batch.status = Batch.BATCH_STATUS.ready;
-
-        newRepos.billingTransactions.countByBatchId.resolves(0);
-
-        newRepos.billingBatches.update.resolves({
-          id: batch.id,
-          status: Batch.BATCH_STATUS.empty
-        });
-
-        const result = await batchService.setStatusToEmptyWhenNoTransactions(batch);
-        expect(result.id).to.equal(batch.id);
-        expect(result.status).to.equal(Batch.BATCH_STATUS.empty);
-      });
-    });
-  });
-
-  experiment('.cleanup', async () => {
+  experiment('.cleanup', () => {
     beforeEach(async () => {
       await batchService.cleanup(BATCH_ID);
     });
@@ -855,8 +837,8 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.create', async () => {
-    experiment('when there is an existing batch', async () => {
+  experiment('.create', () => {
+    experiment('when there is an existing batch', () => {
       const existingBatchId = uuid();
       const regionId = uuid();
 
@@ -887,7 +869,7 @@ experiment('modules/billing/services/batch-service', () => {
       });
     });
 
-    experiment('when there is a duplicate sent batch', async () => {
+    experiment('when there is a duplicate sent batch', () => {
       const existingBatchId = uuid();
       const regionId = uuid();
 
@@ -919,7 +901,7 @@ experiment('modules/billing/services/batch-service', () => {
       });
     });
 
-    experiment('when there is not an existing batch', async () => {
+    experiment('when there is not an existing batch', () => {
       let result;
       const regionId = uuid();
 
@@ -931,7 +913,7 @@ experiment('modules/billing/services/batch-service', () => {
         sandbox.stub(config.billing, 'supplementaryYears').value(6);
       });
 
-      experiment('and the batch type is annual', async () => {
+      experiment('and the batch type is annual', () => {
         beforeEach(async () => {
           result = await batchService.create(regionId, 'annual', 2019, 'all-year');
         });
@@ -952,7 +934,7 @@ experiment('modules/billing/services/batch-service', () => {
         });
       });
 
-      experiment('and the batch type is supplementary', async () => {
+      experiment('and the batch type is supplementary', () => {
         beforeEach(async () => {
           result = await batchService.create(regionId, 'supplementary', 2019, 'all-year');
         });
@@ -973,7 +955,7 @@ experiment('modules/billing/services/batch-service', () => {
         });
       });
 
-      experiment('and the batch type is two_part_tariff', async () => {
+      experiment('and the batch type is two_part_tariff', () => {
         beforeEach(async () => {
           result = await batchService.create(regionId, 'two_part_tariff', 2019, 'summer');
         });
@@ -996,7 +978,7 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.createChargeModuleBillRun', async () => {
+  experiment('.createChargeModuleBillRun', () => {
     let result;
     const cmResponse = {
       billRun: {
@@ -1039,7 +1021,7 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.approveTptBatchReview', async () => {
+  experiment('.approveTptBatchReview', () => {
     let result, batch;
 
     beforeEach(async () => {
@@ -1203,12 +1185,6 @@ experiment('modules/billing/services/batch-service', () => {
           expect(from).to.equal('yes');
           expect(to).to.equal('reprocess');
           expect(licenceId).to.equal(licenceId);
-        });
-
-        test('sets status of batch to empty when there are no transactions', () => {
-          expect(newRepos.billingBatches.update.calledWith(
-            batch.id, { status: 'empty' }
-          )).to.be.true();
         });
       });
 

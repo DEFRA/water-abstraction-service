@@ -3,7 +3,7 @@ const { experiment, test } = exports.lab = require('@hapi/lab').script();
 
 const dateHelpers = require('../../../../../../src/modules/billing/services/charge-processor-service/lib/date-helpers');
 
-experiment('modules/billing/services/charge-processor-service/lib/date-helpers', async () => {
+experiment('modules/billing/services/charge-processor-service/lib/date-helpers', () => {
   experiment('.applyEffectiveDates', () => {
     test('replaces start/end dates with the effective dates', async () => {
       const obj = {

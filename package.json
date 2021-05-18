@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "1.73.0",
+  "version": "1.74.0",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "repository": {
@@ -29,7 +29,7 @@
   "devDependencies": {
     "@hapi/basic": "^6.0.0",
     "@hapi/code": "^5.2.4",
-    "@hapi/lab": "^19.1.0",
+    "@hapi/lab": "^24.2.0",
     "auto-changelog": "^1.16.4",
     "codecov": "^3.7.2",
     "csv-stringify": "^2.0.4",
@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@envage/hapi-pg-rest-api": "^5.0.0",
-    "@envage/water-abstraction-helpers": "^4.3.7",
+    "@envage/water-abstraction-helpers": "^4.3.8",
     "@hapi/boom": "^7.4.11",
     "@hapi/catbox-redis": "^6.0.1",
     "@hapi/good": "^8.2.4",
@@ -93,8 +93,8 @@
     "pg": "^8.0.3",
     "pg-boss": "^3.2.2",
     "promise-retry": "^1.0.2",
-    "proxy-agent": "^2.3.1",
-    "puppeteer": "^1.18.1",
+    "proxy-agent": "^4.0.1",
+    "puppeteer": "^9.0.0",
     "qrcode-svg": "^1.1.0",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.8",
@@ -103,6 +103,7 @@
     "snake-case": "^2.1.0",
     "snakecase-keys": "^1.1.1",
     "title-case": "^3.0.2",
+    "tunnel": "0.0.6",
     "url-join": "^4.0.1",
     "uuid": "^3.4.0",
     "yamljs": "^0.3.0"

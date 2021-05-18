@@ -21,7 +21,8 @@ const importConnector = require('../../../lib/connectors/import');
 // Bull job queue manager
 const { jobName: createBillRunJobName } = require('../jobs/create-bill-run');
 const { jobName: refreshTotalsJobName } = require('../jobs/refresh-totals');
-
+const { jobName: approveBatchJobName } = require('../jobs/approve-batch');
+const { BATCH_STATUS } = require('../../../lib/models/batch');
 /**
  * Resource that will create a new batch skeleton which will
  * then be asynchronously populated with charge versions by a
@@ -132,11 +133,10 @@ const deleteBatch = (request, h) => controller.deleteEntity(
 const postApproveBatch = async request => {
   const { batch } = request.pre;
   const { internalCallingUser } = request.defra;
-
   try {
-    const approvedBatch = await batchService.approveBatch(batch, internalCallingUser);
-    await request.queueManager.add(refreshTotalsJobName, batch.id);
-    return approvedBatch;
+    await request.queueManager.add(approveBatchJobName, batch.id, internalCallingUser);
+    // set the batch status to processing
+    return batchService.setStatus(batch.id, BATCH_STATUS.processing);
   } catch (err) {
     return err;
   }

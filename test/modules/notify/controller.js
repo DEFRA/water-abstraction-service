@@ -10,12 +10,14 @@ const sinon = require('sinon');
 const sandbox = require('sinon').createSandbox();
 
 const scheduledNotificationsService = require('../../../src/lib/services/scheduled-notifications');
+const notifyService = require('../../../src/lib/notify');
 const controller = require('../../../src/modules/notify/controller');
 
 experiment('modules/notify/controller', () => {
   beforeEach(async () => {
     sandbox.stub(scheduledNotificationsService, 'getScheduledNotificationByNotifyId');
     sandbox.stub(scheduledNotificationsService, 'updateScheduledNotificationWithNotifyCallback');
+    sandbox.stub(notifyService, 'sendEmail').resolves();
   });
 
   afterEach(async () => {
@@ -63,6 +65,26 @@ experiment('modules/notify/controller', () => {
       test('calls the update function', () => {
         expect(scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback.called).to.be.true();
       });
+    });
+  });
+  experiment('.notifyEmailProxy', () => {
+    const tempId = uuid();
+    const request = {
+      payload: {
+        templateId: tempId,
+        recipient: 'test@email.com',
+        personalisation: { content: 'blah blah' }
+      }
+    };
+    beforeEach(async () => {
+      await controller.notifyEmailProxy(request);
+    });
+
+    test('returns a Boom 404', async () => {
+      const [id, recipient, data] = notifyService.sendEmail.lastCall.args;
+      expect(id).to.equal(tempId);
+      expect(recipient).to.equal('test@email.com');
+      expect(data).to.equal({ content: 'blah blah' });
     });
   });
 });

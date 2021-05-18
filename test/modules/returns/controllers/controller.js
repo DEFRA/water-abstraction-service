@@ -40,7 +40,7 @@ const returnData = {
   lines: []
 };
 
-experiment('modules/returns/controllers/controller', async () => {
+experiment('modules/returns/controllers/controller', () => {
   let request, response;
 
   beforeEach(async () => {

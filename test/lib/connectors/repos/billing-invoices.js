@@ -14,6 +14,7 @@ const queries = require('../../../../src/lib/connectors/repos/queries/billing-in
 
 const billingInvoices = require('../../../../src/lib/connectors/repos/billing-invoices');
 const paginationHelper = require('../../../../src/lib/connectors/repos/lib/envelope');
+const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 
 const result = {
   rows: [{
@@ -43,6 +44,8 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     };
 
     sandbox.stub(BillingInvoice, 'forge').returns(stub);
+
+    sandbox.stub(raw, 'multiRow');
   });
 
   afterEach(async () => {
@@ -112,7 +115,8 @@ experiment('lib/connectors/repos/billing-invoices', () => {
         'billingInvoiceLicences.billingTransactions',
         'billingInvoiceLicences.billingTransactions.billingVolume',
         'billingInvoiceLicences.billingTransactions.chargeElement',
-        'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
+        'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse',
+        'linkedBillingInvoices'
       ]);
     });
 
@@ -164,7 +168,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     });
   });
 
-  experiment('.delete', async () => {
+  experiment('.delete', () => {
     const billingInvoiceId = uuid();
 
     beforeEach(async () => {
@@ -182,7 +186,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     });
   });
 
-  experiment('.update', async () => {
+  experiment('.update', () => {
     const billingInvoiceId = uuid();
     const changes = { foo: 'bar' };
 
@@ -201,7 +205,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     });
   });
 
-  experiment('.findAllForInvoiceAccount', async () => {
+  experiment('.findAllForInvoiceAccount', () => {
     let result;
     const invoiceAccountId = uuid();
 
@@ -231,6 +235,34 @@ experiment('lib/connectors/repos/billing-invoices', () => {
 
     test('returns the result of the paginationHelper.paginatedEnvelope call', async () => {
       expect(result).to.equal({ data: [{ foo: 'bar' }], pagination: { page: 1, perPage: 10 } });
+    });
+  });
+
+  experiment('.findByIsFlaggedForRebillingAndRegion', () => {
+    const regionId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoices.findByIsFlaggedForRebillingAndRegion(regionId);
+    });
+
+    test('calls raw.multiRow with the correct query', async () => {
+      expect(raw.multiRow.calledWith(
+        queries.findByIsFlaggedForRebillingAndRegion, { regionId }
+      ));
+    });
+  });
+
+  experiment('.resetIsFlaggedForRebilling', () => {
+    const batchId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoices.resetIsFlaggedForRebilling(batchId);
+    });
+
+    test('calls raw.multiRow with the correct query', async () => {
+      expect(raw.multiRow.calledWith(
+        queries.resetIsFlaggedForRebilling, { batchId }
+      ));
     });
   });
 });

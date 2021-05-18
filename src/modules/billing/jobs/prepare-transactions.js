@@ -5,7 +5,7 @@ const { get, partial } = require('lodash');
 const JOB_NAME = 'billing.prepare-transactions';
 
 const batchService = require('../services/batch-service');
-const { BATCH_ERROR_CODE, BATCH_STATUS } = require('../../../lib/models/batch');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 const { jobName: createChargeJobName } = require('./create-charge');
@@ -34,13 +34,6 @@ const handler = async job => {
     // Get all transactions now in batch
     const transactions = await billingTransactionsRepo.findByBatchId(batch.id);
     const billingTransactionIds = transactions.map(getTransactionId);
-
-    // Set empty batch
-    if (transactions.length === 0) {
-      logger.info(`No transactions produced for batch ${batchId}, finalising batch run`);
-      await batchService.setStatus(batchId, BATCH_STATUS.empty);
-      return { billingTransactionIds };
-    }
 
     return {
       billingTransactionIds

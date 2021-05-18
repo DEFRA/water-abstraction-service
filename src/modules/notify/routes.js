@@ -61,5 +61,21 @@ module.exports = {
         }
       }
     }
+  },
+
+  sendEmail: {
+    method: 'POST',
+    path: `/water/${version}/notify/email`,
+    handler: controller.notifyEmailProxy,
+    config: {
+      description: 'proxy to send notify emails',
+      validate: {
+        payload: Joi.object({
+          templateId: Joi.string().required().guid(),
+          recipient: Joi.string().email().required(),
+          personalisation: Joi.object().required()
+        })
+      }
+    }
   }
 };

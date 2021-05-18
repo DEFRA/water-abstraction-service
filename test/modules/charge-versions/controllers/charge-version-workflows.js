@@ -122,7 +122,7 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
       });
     });
 
-    experiment('when all submitted data is valid', async () => {
+    experiment('when all submitted data is valid', () => {
       beforeEach(async () => {
         await cvWorkflowsController.postChargeVersionWorkflow(request);
       });

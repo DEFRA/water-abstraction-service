@@ -1,6 +1,7 @@
 'use strict';
 
-const request = require('./request');
+const got = require('./lib/got-cm');
+const { logger } = require('../../../logger');
 
 /**
  * Creates a bill run in the CM for the specified region code
@@ -8,7 +9,7 @@ const request = require('./request');
  * @return {Promise<Object>} response payload
  */
 const create = region =>
-  request.post('v2/wrls/bill-runs', { region });
+  got.post('v2/wrls/bill-runs', { json: { region } });
 
 /**
  * Adds a transaction to the specified bill run
@@ -17,7 +18,7 @@ const create = region =>
  * @return {Promise<Object>} response payload
  */
 const addTransaction = (billRunId, transaction) =>
-  request.post(`v2/wrls/bill-runs/${billRunId}/transactions`, transaction);
+  got.post(`v2/wrls/bill-runs/${billRunId}/transactions`, { json: transaction, retries: 0 });
 
 /**
  * Approves the spefified CM bill run
@@ -25,7 +26,7 @@ const addTransaction = (billRunId, transaction) =>
  * @return {Promise<Object>} response payload
  */
 const approve = billRunId =>
-  request.patch(`v2/wrls/bill-runs/${billRunId}/approve`);
+  got.patch(`v2/wrls/bill-runs/${billRunId}/approve`);
 
 /**
  * Sends the specified CM bill run
@@ -33,7 +34,7 @@ const approve = billRunId =>
  * @return {Promise<Object>} response payload
  */
 const send = billRunId =>
-  request.patch(`v2/wrls/bill-runs/${billRunId}/send`);
+  got.patch(`v2/wrls/bill-runs/${billRunId}/send`);
 
 /**
  * Deletes a specified invoice from a given bill run
@@ -42,7 +43,7 @@ const send = billRunId =>
  * @return {Promise<Object>} response payload
  */
 const deleteInvoiceFromBillRun = (billRunId, invoiceId) =>
-  request.delete(`v2/wrls/bill-runs/${billRunId}/invoices/${invoiceId}`);
+  got.delete(`v2/wrls/bill-runs/${billRunId}/invoices/${invoiceId}`);
 
 /**
  * Deletes entire bill run
@@ -50,7 +51,7 @@ const deleteInvoiceFromBillRun = (billRunId, invoiceId) =>
  * @return {Promise<Object>} response payload
  */
 const deleteBillRun = billRunId =>
-  request.delete(`v2/wrls/bill-runs/${billRunId}`);
+  got.delete(`v2/wrls/bill-runs/${billRunId}`);
 
 /**
  * Gets bill run including summary data
@@ -58,21 +59,21 @@ const deleteBillRun = billRunId =>
  * @return {Promise<Object>} response payload
  */
 const get = billRunId =>
-  request.get(`v2/wrls/bill-runs/${billRunId}`);
+  got.get(`v2/wrls/bill-runs/${billRunId}`);
 
 /**
    * Gets transactions in given bill run for a particular invoice.
    * @param {String} billRunId
    * @param {String} invoiceId
    */
-const getInvoiceTransactions = (billRunId, invoiceId) => {
-  const path = `v2/wrls/bill-runs/${billRunId}/invoices/${invoiceId}`;
-  return request.get(path);
-};
+const getInvoiceTransactions = (billRunId, invoiceId) =>
+  got.get(`v2/wrls/bill-runs/${billRunId}/invoices/${invoiceId}`);
 
-const generate = CMBillRunId => {
-  const path = `v2/wrls/bill-runs/${CMBillRunId}/generate`;
-  return request.patch(path);
+const generate = CMBillRunId =>
+  got.patch(`v2/wrls/bill-runs/${CMBillRunId}/generate`);
+
+const rebillInvoice = async (billRunId, invoiceId) => {
+  logger.info(`CM rebilling API for ${billRunId} ${invoiceId} not yet implemented`);
 };
 
 exports.addTransaction = addTransaction;
@@ -85,3 +86,4 @@ exports.send = send;
 exports.getInvoiceTransactions = getInvoiceTransactions;
 exports.deleteInvoiceFromBillRun = deleteInvoiceFromBillRun;
 exports.generate = generate;
+exports.rebillInvoice = rebillInvoice;

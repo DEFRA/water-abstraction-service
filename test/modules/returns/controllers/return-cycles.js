@@ -14,7 +14,7 @@ const controller = require('../../../../src/lib/controller');
 const returnCyclesController = require('../../../../src/modules/returns/controllers/return-cycles');
 const returnCyclesService = require('../../../../src/lib/services/return-cycles');
 
-experiment('modules/returns/controllers/controller', async () => {
+experiment('modules/returns/controllers/controller', () => {
   let request, response;
 
   beforeEach(async () => {

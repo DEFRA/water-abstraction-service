@@ -19,8 +19,17 @@ const controller = require('../../../../src/modules/billing/controllers/invoices
 
 experiment('modules/billing/controllers/invoices', () => {
   const invoiceId = uuid();
+
+  const createInvoice = (overrides = {}) => ({
+    invoiceId,
+    billingBatch: {
+      status: overrides.batchStatus || BATCH_STATUS.sent
+    },
+    rebillingState: overrides.rebillingState || null
+  });
+
   beforeEach(() => {
-    sandbox.stub(invoiceService, 'getInvoiceById').resolves({ invoiceId, billingBatch: { status: BATCH_STATUS.sent } });
+    sandbox.stub(invoiceService, 'getInvoiceById');
     sandbox.stub(invoiceService, 'updateInvoice').resolves(new Invoice(invoiceId));
   });
 
@@ -36,6 +45,7 @@ experiment('modules/billing/controllers/invoices', () => {
     let result;
     experiment('happy path', () => {
       beforeEach(async () => {
+        invoiceService.getInvoiceById.resolves(createInvoice());
         result = await controller.patchInvoice(request);
       });
 
@@ -56,13 +66,30 @@ experiment('modules/billing/controllers/invoices', () => {
 
     experiment('when the invoice is not part of a sent batch', () => {
       beforeEach(async () => {
-        invoiceService.getInvoiceById.resolves({ invoiceId, billingBatch: { status: BATCH_STATUS.ready } });
+        invoiceService.getInvoiceById.resolves(createInvoice({
+          batchStatus: BATCH_STATUS.ready
+        }));
         result = await controller.patchInvoice(request);
       });
 
       test('returns Boom conflict error with the expected message', () => {
         expect(result.isBoom).to.be.true();
         expect(result.message).to.equal('Cannot update invoice that is not part of a sent batch');
+        expect(result.output.statusCode).to.equal(409);
+      });
+    });
+
+    experiment('when the invoice is a rebill', () => {
+      beforeEach(async () => {
+        invoiceService.getInvoiceById.resolves(createInvoice({
+          rebillingState: Invoice.rebillingState.rebill
+        }));
+        result = await controller.patchInvoice(request);
+      });
+
+      test('returns Boom conflict error with the expected message', () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.message).to.equal('Cannot update invoice that is itself a rebill');
         expect(result.output.statusCode).to.equal(409);
       });
     });

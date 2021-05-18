@@ -76,7 +76,7 @@ experiment('lib/models/licence', () => {
   });
 
   // Region fields
-  experiment('.region', async () => {
+  experiment('.region', () => {
     test('can be set to a region instance', async () => {
       licence.region = data.region;
       expect(licence.region).to.equal(data.region);
@@ -90,7 +90,7 @@ experiment('lib/models/licence', () => {
     });
   });
 
-  experiment('.historicalArea', async () => {
+  experiment('.historicalArea', () => {
     test('can be set to a region instance', async () => {
       licence.historicalArea = data.region;
       expect(licence.historicalArea).to.equal(data.region);
@@ -104,7 +104,7 @@ experiment('lib/models/licence', () => {
     });
   });
 
-  experiment('.regionalChargeArea', async () => {
+  experiment('.regionalChargeArea', () => {
     test('can be set to a region instance', async () => {
       licence.regionalChargeArea = data.region;
       expect(licence.regionalChargeArea).to.equal(data.region);
@@ -118,7 +118,7 @@ experiment('lib/models/licence', () => {
     });
   });
 
-  experiment('.startDate', async () => {
+  experiment('.startDate', () => {
     test('can be set to a date string', async () => {
       licence.startDate = data.startDate;
       expect(licence.startDate).to.equal(data.startDate);
@@ -139,7 +139,7 @@ experiment('lib/models/licence', () => {
     });
   });
 
-  experiment('.expiredDate', async () => {
+  experiment('.expiredDate', () => {
     test('can be set to a date string', async () => {
       licence.expiredDate = data.expiredDate;
       expect(licence.expiredDate).to.equal(data.expiredDate);
@@ -158,7 +158,7 @@ experiment('lib/models/licence', () => {
     });
   });
 
-  experiment('.lapsedDate', async () => {
+  experiment('.lapsedDate', () => {
     test('can be set to a date string', async () => {
       licence.lapsedDate = data.lapsedDate;
       expect(licence.lapsedDate).to.equal(data.lapsedDate);
@@ -177,7 +177,7 @@ experiment('lib/models/licence', () => {
     });
   });
 
-  experiment('.revokedDate', async () => {
+  experiment('.revokedDate', () => {
     test('can be set to a date string', async () => {
       licence.revokedDate = data.revokedDate;
       expect(licence.revokedDate).to.equal(data.revokedDate);
@@ -196,7 +196,7 @@ experiment('lib/models/licence', () => {
     });
   });
 
-  experiment('.endDate', async () => {
+  experiment('.endDate', () => {
     test('returns null when expired, lapsed and revoked dates are null', async () => {
       licence.expiredDate = null;
       licence.lapsedDate = null;

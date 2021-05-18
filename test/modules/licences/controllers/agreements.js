@@ -253,7 +253,7 @@ experiment('modules/licences/controllers/licences.js', () => {
       });
     });
 
-    experiment('when there is an error', async () => {
+    experiment('when there is an error', () => {
       beforeEach(async () => {
         licenceAgreementsService.createLicenceAgreement.rejects(new NotFoundError());
         result = await controller.postLicenceAgreement(request, h);

@@ -11,14 +11,14 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 const uuid = require('uuid/v4');
 
-const request = require('../../../../src/lib/connectors/charge-module/request');
+const gotCM = require('../../../../src/lib/connectors/charge-module/lib/got-cm');
 const customerApiConnector = require('../../../../src/lib/connectors/charge-module/customers');
 
-experiment('lib/connectors/charge-module/customers', async () => {
-  const tempInvoiceAccountId = await uuid();
+experiment('lib/connectors/charge-module/customers', () => {
+  const tempInvoiceAccountId = uuid();
 
   beforeEach(async () => {
-    sandbox.stub(request, 'post').resolves();
+    sandbox.stub(gotCM, 'post').resolves();
   });
   afterEach(async () => {
     sandbox.restore();
@@ -30,12 +30,12 @@ experiment('lib/connectors/charge-module/customers', async () => {
     });
 
     test('the method is POST', async () => {
-      expect(request.post.called).to.be.true();
+      expect(gotCM.post.called).to.be.true();
     });
 
     test('the payload is equal to the resolved object from the mapInvoiceAccountToChargeModuleCustomer function', async () => {
-      const [, payload] = request.post.lastCall.args;
-      expect(payload).to.equal(tempInvoiceAccountId);
+      const [, options] = gotCM.post.lastCall.args;
+      expect(options).to.equal({ json: tempInvoiceAccountId });
     });
   });
 });

@@ -200,12 +200,16 @@ module.exports = {
   },
 
   redis: {
-    host: process.env.REDIS_HOST || '127.0.0.1',
-    port: process.env.REDIS_PORT || 6379,
-    password: process.env.REDIS_PASSWORD || '',
-    ...(isTlsConnection) && { tls: {} },
-    db: isPermitsTestDatabase ? 4 : 2,
-    lazyConnect: isRedisLazy
+    // Note: this limit needs increasing when further Bull MQ job queues are added
+    maxListenerCount: 23,
+    connection: {
+      host: process.env.REDIS_HOST || '127.0.0.1',
+      port: process.env.REDIS_PORT || 6379,
+      password: process.env.REDIS_PASSWORD || '',
+      ...(isTlsConnection) && { tls: {} },
+      db: isPermitsTestDatabase ? 4 : 2,
+      lazyConnect: isRedisLazy
+    }
   },
 
   featureToggles: {

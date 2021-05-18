@@ -104,7 +104,7 @@ experiment('findReturnByReturnId', () => {
   });
 });
 
-experiment('mapRecentReturns', async () => {
+experiment('mapRecentReturns', () => {
   test('It should select the first return in each NALD region', async () => {
     const result = searchReturns.mapRecentReturns(returns);
     const ids = result.map(row => row.return_id);
@@ -112,7 +112,7 @@ experiment('mapRecentReturns', async () => {
   });
 });
 
-experiment('findRecentReturnsByFormatId', async () => {
+experiment('findRecentReturnsByFormatId', () => {
   let stub;
   const formatId = '12345';
 
