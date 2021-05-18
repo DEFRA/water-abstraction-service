@@ -91,7 +91,10 @@ const getReturnById = async returnId => {
  */
 const getReturnsForLicence = (licenceNumber, page, perPage) => {
   const filter = {
-    licence_ref: licenceNumber
+    licence_ref: licenceNumber,
+    start_date: {
+      $gte: '2008-04-01'
+    }
   };
   const sort = {
     due_date: -1
