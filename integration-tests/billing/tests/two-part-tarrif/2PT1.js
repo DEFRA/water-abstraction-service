@@ -29,7 +29,7 @@ experiment('two part tariff ref: 2PT1', () => {
     await loader.load('water', '2PT1.yaml');
     await loader.load('returns', '2PT1-returns.yaml');
 
-    const region = loader.getRef('$region');
+    const region = loader.getRef('$2ptTestRegion');
 
     batch = await services.scenarios.runScenario(region.regionId, 'two_part_tariff', 2020, true);
   });
