@@ -1,0 +1,5 @@
+- ref: $l1Licence
+  model: Licence
+  fields:
+    licenceRef: 'L1'
+    startDate: '2008-04-01'
