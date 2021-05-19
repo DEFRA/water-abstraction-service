@@ -25,7 +25,6 @@
     financialAgreementCode: S127
     description: Section 127 (Two Part Tariff)
     disabled: false
-    isTest: true
   constraints:
     uniq_financial_agreement_code:
       - financialAgreementCode
