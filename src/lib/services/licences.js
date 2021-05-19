@@ -30,8 +30,6 @@ const getLicenceById = async licenceId =>
  * @param {Number} regionCode
  */
 const getLicenceByLicenceRef = async (licenceRef, regionCode) => {
-  console.log(licenceRef);
-  console.log(regionCode);
   const licences = await repos.licences.findOneByLicenceRef(licenceRef);
   const licence = licences.find(licence => licence.region.naldRegionId === +regionCode);
 
