@@ -22,10 +22,8 @@ CREATE TABLE IF NOT EXISTS "water"."licence_version_purpose_conditions" (
   "date_updated" timestamp NOT NULL DEFAULT NOW(),
     CONSTRAINT "uidx_external_id" unique ("external_id"),
     CONSTRAINT "licence_version_purpose_id" FOREIGN KEY ("licence_version_purpose_id")
-    REFERENCES "water"."licence_version_purposes" ("licence_version_purpose_id") MATCH SIMPLE
-    ON DELETE CASCADE,
+    REFERENCES "water"."licence_version_purposes" ("licence_version_purpose_id") MATCH SIMPLE,
   CONSTRAINT "licence_version_purpose_condition_type_id" FOREIGN KEY ("licence_version_purpose_condition_type_id")
     REFERENCES "water"."licence_version_purpose_condition_types" ("licence_version_purpose_condition_type_id") MATCH SIMPLE
-    ON DELETE CASCADE
 );
   
