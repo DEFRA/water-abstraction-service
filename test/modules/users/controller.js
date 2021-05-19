@@ -19,6 +19,9 @@ const config = require('../../../config');
 const emailNotifications = require('../../../src/lib/notifications/emails');
 const { getRolesForPermissionKey } = require('../../../src/lib/roles');
 const event = require('../../../src/lib/event');
+const licencesService = require('../../../src/lib/services/licences');
+const Licence = require('../../../src/lib/models/licence');
+const { logger } = require('../../../src/logger');
 
 const getUserResponse = () => ({
   error: null,
@@ -83,7 +86,7 @@ const getDocumentHeaderResponse = () => ({
   data: [
     {
       document_id: 'lic_1_document_id',
-      system_external_id: 'lic_1',
+      system_external_id: '01/123',
       metadata: {
         Name: 'Wet and Wild',
         contacts: [
@@ -95,7 +98,7 @@ const getDocumentHeaderResponse = () => ({
     },
     {
       document_id: 'lic_2_document_id',
-      system_external_id: 'lic_2',
+      system_external_id: '02/345',
       metadata: {
         Name: 'Wet and Wild',
         contacts: [
@@ -107,7 +110,7 @@ const getDocumentHeaderResponse = () => ({
     },
     {
       document_id: 'lic_3_document_id',
-      system_external_id: 'lic_3',
+      system_external_id: '03/456',
       metadata: {
         Name: 'Max Irrigation',
         contacts: [
@@ -121,7 +124,17 @@ const getDocumentHeaderResponse = () => ({
   error: null
 });
 
+const getLicence = licenceNumber => new Licence().fromHash({
+  licenceNumber
+});
+
 experiment('modules/users/controller', () => {
+  const licences = [
+    getLicence('01/123'),
+    getLicence('02/345'),
+    getLicence('03/456')
+  ];
+
   beforeEach(async () => {
     sandbox.stub(idmConnector.usersClient, 'findOne');
     sandbox.stub(idmConnector.usersClient, 'getUserByUsername');
@@ -132,6 +145,9 @@ experiment('modules/users/controller', () => {
     sandbox.stub(emailNotifications, 'sendNewInternalUserMessage');
     sandbox.stub(userRolesConnector, 'setInternalUserRoles');
     sandbox.stub(event, 'save');
+    sandbox.stub(licencesService, 'getLicencesByLicenceRefs');
+    sandbox.stub(logger, 'info');
+    sandbox.stub(logger, 'error');
   });
 
   afterEach(async () => {
@@ -145,6 +161,7 @@ experiment('modules/users/controller', () => {
       sandbox.stub(crmEntitiesConnector, 'getEntityVerifications').resolves(getVerificationsResponse());
       sandbox.stub(crmDocumentsConnector, 'findMany').resolves(getDocumentHeaderResponse());
       sandbox.stub(crmDocumentsConnector, 'findAll').resolves(getDocumentHeaderResponse().data);
+      licencesService.getLicencesByLicenceRefs.resolves(licences);
     });
 
     test('passes the expected user id to the idm connector', async () => {
@@ -318,13 +335,15 @@ experiment('modules/users/controller', () => {
         .to.equal([
           {
             documentId: 'lic_1_document_id',
-            licenceRef: 'lic_1',
-            licenceHolder: 'Wet and Wild LH'
+            licenceRef: '01/123',
+            licenceHolder: 'Wet and Wild LH',
+            licence: licences[0]
           },
           {
             documentId: 'lic_2_document_id',
-            licenceRef: 'lic_2',
-            licenceHolder: 'Wet and Wild LH'
+            licenceRef: '02/345',
+            licenceHolder: 'Wet and Wild LH',
+            licence: licences[1]
           }
         ]);
 
@@ -332,8 +351,9 @@ experiment('modules/users/controller', () => {
         .to.equal([
           {
             documentId: 'lic_3_document_id',
-            licenceRef: 'lic_3',
-            licenceHolder: 'Max Irrigation LH'
+            licenceRef: '03/456',
+            licenceHolder: 'Max Irrigation LH',
+            licence: licences[2]
           }
         ]);
     });

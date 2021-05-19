@@ -81,9 +81,35 @@ const getReturnById = async returnId => {
   return data;
 };
 
+/**
+ * Get a page of returns for the specified licence
+ *
+ * @param {String} licenceNumber
+ * @param {Number} page
+ * @param {Number} perPage
+ * @returns {Promise<Object>}
+ */
+const getReturnsForLicence = (licenceNumber, page, perPage) => {
+  const filter = {
+    licence_ref: licenceNumber,
+    start_date: {
+      $gte: '2008-04-01'
+    }
+  };
+  const sort = {
+    due_date: -1
+  };
+  const pagination = {
+    page,
+    perPage
+  };
+  return apiConnector.returns.findMany(filter, sort, pagination);
+};
+
 exports.getReturnById = getReturnById;
 exports.getReturnsForLicenceInCycle = getReturnsForLicenceInCycle;
 exports.getCurrentVersion = getCurrentVersion;
 exports.getLines = getLines;
 exports.getReturnsForLicence = apiConnector.getReturnsForLicence;
 exports.getLicenceReturnsByStatusAndEndDate = getLicenceReturnsByStatusAndEndDate;
+exports.getReturnsForLicence = getReturnsForLicence;
