@@ -52,7 +52,7 @@ experiment('.getGaugingStation', () => {
     });
     test('it returns a Boom error', () => {
       expect(result.isBoom).to.be.true();
-      expect(result.output.statusCode).to.equal(400);
+      expect(result.output.statusCode).to.equal(404);
       expect(result.output.payload.message).to.equal(`Gauging station ${tempGuid} not found`);
     });
   });
