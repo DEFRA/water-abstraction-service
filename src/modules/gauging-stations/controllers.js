@@ -1,8 +1,10 @@
 const gaugingStationsRepo = require('../../lib/connectors/repos/gauging-stations');
+const Boom = require('@hapi/boom');
 
-const getGaugingStation = request => {
+const getGaugingStation = async request => {
   const { stationGuid } = request.params;
-  return gaugingStationsRepo.findOne(stationGuid);
+  const gaugingStation = await gaugingStationsRepo.findOne(stationGuid);
+  return gaugingStation || Boom.notFound(`Gauging station ${stationGuid} not found`);
 };
 
 exports.getGaugingStation = getGaugingStation;

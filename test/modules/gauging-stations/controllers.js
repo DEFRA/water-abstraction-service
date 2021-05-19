@@ -16,18 +16,44 @@ const controllers = require('../../../src/modules/gauging-stations/controllers')
 
 experiment('.getGaugingStation', () => {
   const tempGuid = uuid();
-  beforeEach(async () => {
-    sandbox.stub(gaugingStationsRepo, 'findOne').resolves('some station');
-    await controllers.getGaugingStation({
-      params: {
-        stationGuid: tempGuid
-      }
+
+  experiment('with a valid guid', () => {
+    beforeEach(async () => {
+      sandbox.stub(gaugingStationsRepo, 'findOne').resolves('some station');
+      await controllers.getGaugingStation({
+        params: {
+          stationGuid: tempGuid
+        }
+      });
+    });
+
+    afterEach(() => sandbox.restore());
+
+    test('it calls the gauging stations repo findOne method', () => {
+      expect(gaugingStationsRepo.findOne.calledWith(tempGuid)).to.be.true();
     });
   });
 
-  afterEach(() => sandbox.restore());
+  experiment('with an invalid guid', () => {
+    let result;
+    beforeEach(async () => {
+      sandbox.stub(gaugingStationsRepo, 'findOne').resolves(null);
+      result = await controllers.getGaugingStation({
+        params: {
+          stationGuid: tempGuid
+        }
+      });
+    });
 
-  test('it calls the gauging stations repo findOne method', () => {
-    expect(gaugingStationsRepo.findOne.calledWith(tempGuid)).to.be.true();
+    afterEach(() => sandbox.restore());
+
+    test('it calls the gauging stations repo findOne method', () => {
+      expect(gaugingStationsRepo.findOne.calledWith(tempGuid)).to.be.true();
+    });
+    test('it returns a Boom error', () => {
+      expect(result.isBoom).to.be.true();
+      expect(result.output.statusCode).to.equal(400);
+      expect(result.output.payload.message).to.equal(`Gauging station ${tempGuid} not found`);
+    });
   });
 });
