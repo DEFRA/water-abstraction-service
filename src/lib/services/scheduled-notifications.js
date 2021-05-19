@@ -46,9 +46,26 @@ const getByEventId = async eventId => {
   return data.map(mapper.dbToModel);
 };
 
+/**
+ * Gets the scheduled notifications by licence ID.
+ * Note: this currently only returns sent notifications
+ *
+ * @param {String} licenceId
+ * @returns {Promise<Object>}
+ */
+const getScheduledNotificationsByLicenceNumber = async (licenceNumber, page = 1, perPage = 10) => {
+  // Query for notifications
+  const { pagination, data } = await repo.findByLicenceNumber(licenceNumber, page, perPage);
+  return {
+    pagination,
+    data: data.map(mapper.dbToModel)
+  };
+};
+
 exports.getScheduledNotificationById = getScheduledNotificationById;
 exports.getScheduledNotificationByNotifyId = getScheduledNotificationByNotifyId;
 exports.createScheduledNotification = createScheduledNotification;
 exports.updateScheduledNotificationWithNotifyResponse = updateScheduledNotificationWithNotifyResponse;
 exports.updateScheduledNotificationWithNotifyCallback = updateScheduledNotificationWithNotifyCallback;
 exports.getByEventId = getByEventId;
+exports.getScheduledNotificationsByLicenceNumber = getScheduledNotificationsByLicenceNumber;

@@ -121,38 +121,60 @@
       "file": "SB1-1.yaml"
     }
   ],
-    "annual-billing": [
-      {
-        "service": "idm",
-        "file": "internal-users.yaml"
-      },
-      {
-        "service": "permits",
-        "file": "test-permits.yaml"
-      },
-      {
-        "service": "crmV1",
-        "file": "crm-v1.yaml"
-      },
-      {
-        "service": "crmV2",
-        "file": "crm-v2.yaml"
-      },
-      {
-        "service": "water",
-        "file": "test-licences.yaml"
-      },
-      {
-        "service": "water",
-        "file": "test-charge-versions.yaml"
-      },
-      {
-        "service": "water",
-        "file": "test-billing-data.yaml"
-      },
-      {
-        "service": "water",
-        "file": "AB1.yaml"
-      }
+  "annual-billing": [
+    {
+      "service": "idm",
+      "file": "internal-users.yaml"
+    },
+    {
+      "service": "permits",
+      "file": "test-permits.yaml"
+    },
+    {
+      "service": "crmV1",
+      "file": "crm-v1.yaml"
+    },
+    {
+      "service": "crmV2",
+      "file": "crm-v2.yaml"
+    },
+    {
+      "service": "water",
+      "file": "test-licences.yaml"
+    },
+    {
+      "service": "water",
+      "file": "test-charge-versions.yaml"
+    },
+    {
+      "service": "water",
+      "file": "test-billing-data.yaml"
+    },
+    {
+      "service": "water",
+      "file": "AB1.yaml"
+    }
+  ],
+  "two-part-tariff-billing-data": [
+    {
+      "service": "idm",
+      "file": "internal-users.yaml"
+    },
+    {
+      "service": "permits",
+      "file": "2PT1-permits.yaml"
+    },
+    {
+      "service": "crmV1",
+      "file": "2PT1-crm-v1.yaml"
+    },
+    {
+      "service": "crmV2",
+      "file": "2PT1-crm-v2.yaml"
+    },
+    {
+      "service": "water",
+      "file": "2PT1.yaml"
+    }
   ]
 }
