@@ -27,7 +27,7 @@
     disabled: false
     isTest: true
   constraints:
-    uniq_financial_agreement_code:
+    code_is_unique:
       - financialAgreementCode
 
 - model: LicenceAgreement
