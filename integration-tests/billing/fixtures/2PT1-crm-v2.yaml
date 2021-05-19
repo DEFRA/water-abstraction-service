@@ -1,0 +1,93 @@
+- ref: $company
+  model: Company
+  fields:
+    name: Big Farm Co Ltd
+    type: organisation
+    companyNumber: '12345'
+    isTest: true
+
+- ref: $address
+  model: Address
+  fields:
+    address1: Big Farm
+    address2: Windy road
+    address3: Buttercup meadow
+    address4: Buttercup Village
+    town: Testington
+    county: Testingshire
+    postcode: TT1 1TT
+    country: UK
+    dataSource: nald
+    isTest: true
+
+- model: CompanyAddress
+  fields:
+    roleName: billing
+    companyId: $company.companyId
+    addressId: $address.addressId
+    startDate: '2008-04-01'
+    endDate: null
+    isTest: true
+
+- ref: $document
+  model: Document
+  fields:
+    versionNumber: 1
+    status: current
+    startDate: '2008-04-01'
+    endDate: null
+    regime: water
+    documentType: abstraction_licence
+    documentRef: L1
+    isTest: true
+
+- ref: $contact
+  model: Contact
+  fields:
+    salutation: Mr
+    firstName: John
+    lastName: Testerson
+    middleInitials: J
+    type: person
+    dataSource: nald
+    isTest: true
+
+- model: CompanyContact
+  fields:
+    companyId: $company.companyId
+    contactId: $contact.contactId
+    roleName: 'licenceHolder'
+    emailAddress: 'acceptance-test.external@example.com'
+    startDate: '2018-01-01'
+    isTest: true
+
+- model: DocumentRole
+  fields:
+    documentId: $document.documentId
+    role: licenceHolder
+    startDate: '2008-04-01'
+    endDate: null
+    companyId: $company.companyId
+    addressId: $address.addressId
+    contactId: $contact.contactId
+    isTest: true
+
+- ref: $invoiceAccount
+  model: InvoiceAccount
+  fields:
+    invoiceAccountNumber: A99999999A
+    startDate: '2008-04-01'
+    endDate: null
+    companyId: $company.companyId
+    isTest: true
+
+- model: InvoiceAccountAddress
+  fields:
+    invoiceAccountId: $invoiceAccount.invoiceAccountId
+    addressId: $address.addressId
+    agentCompanyId: null
+    contactId: null
+    startDate: '2008-04-01'
+    endDate: null
+    isTest: true
+
