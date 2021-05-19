@@ -213,7 +213,7 @@ const mapSummary = async (documentHeader, licence) => {
   await transformer.load(licence.licence_data_value);
   return {
     ...transformer.export(),
-    documentName: documentHeader.document_name
+    documentName: get(documentHeader, 'document_name')
   };
 };
 

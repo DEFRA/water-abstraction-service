@@ -67,11 +67,11 @@ experiment('lib/models/licence', () => {
       licence.id = data.id;
       licence.licenceNumber = data.licenceNumber;
 
-      expect(licence.toJSON()).to.equal({
-        id: data.id,
-        licenceNumber: data.licenceNumber,
-        endDate: null
-      });
+      const json = licence.toJSON();
+
+      expect(json.id).to.equal(data.id);
+      expect(json.licenceNumber).to.equal(data.licenceNumber);
+      expect(json.endDate).to.be.null();
     });
   });
 
@@ -231,6 +231,58 @@ experiment('lib/models/licence', () => {
         licence.licenceAgreements = notLicenceAgreements;
       };
       expect(func).to.throw();
+    });
+  });
+
+  experiment('.endDateReason', () => {
+    test('returns the reason for the end date', async () => {
+      licence.expiredDate = data.expiredDate;
+      licence.lapsedDate = data.lapsedDate;
+      licence.revokedDate = data.revokedDate;
+      expect(licence.endDateReason).to.equal('revokedDate');
+    });
+
+    test('returns the null if no end dates are set', async () => {
+      expect(licence.endDateReason).to.equal(null);
+    });
+  });
+
+  experiment('.isActive', () => {
+    const futureDate = '3000-01-01';
+
+    test('returns false if future dated', async () => {
+      licence.startDate = futureDate;
+      expect(licence.isActive).to.equal(false);
+    });
+
+    test('returns false if expiry date in past', async () => {
+      licence.expiredDate = data.expiredDate;
+      expect(licence.isActive).to.equal(false);
+    });
+
+    test('returns true if expiry date in future', async () => {
+      licence.expiredDate = futureDate;
+      expect(licence.isActive).to.equal(true);
+    });
+
+    test('returns false if lapsed date in past', async () => {
+      licence.lapsedDate = data.lapsedDate;
+      expect(licence.isActive).to.equal(false);
+    });
+
+    test('returns true if expiry date in future', async () => {
+      licence.lapsedDate = futureDate;
+      expect(licence.isActive).to.equal(true);
+    });
+
+    test('returns false if revoked date in past', async () => {
+      licence.revokedDate = data.revokedDate;
+      expect(licence.isActive).to.equal(false);
+    });
+
+    test('returns true if expiry date in future', async () => {
+      licence.revokedDate = futureDate;
+      expect(licence.isActive).to.equal(true);
     });
   });
 });

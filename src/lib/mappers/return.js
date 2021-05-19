@@ -30,16 +30,20 @@ const returnsServiceToModel = (ret, returnRequirement) => {
   const nald = transformNull(ret.metadata.nald);
 
   const r = new Return(ret.return_id);
-  return r.fromHash({
+  r.fromHash({
     dateRange: new DateRange(ret.start_date, ret.end_date),
     isUnderQuery: ret.under_query,
     isSummer: get(ret, 'metadata.isSummer', false),
     dueDate: ret.due_date,
     receivedDate: ret.received_date,
     status: ret.status,
-    abstractionPeriod: mapAbsPeriod(nald),
-    returnRequirement
+    abstractionPeriod: mapAbsPeriod(nald)
   });
+
+  if (returnRequirement) {
+    r.returnRequirement = returnRequirement;
+  }
+  return r;
 };
 
 exports.returnsServiceToModel = returnsServiceToModel;
