@@ -13,7 +13,7 @@
     regionId: $region.regionId
     licenceRef: 'L1'
     regions:
-      historicalAreaCode: 'SAART'
+      historicalAreaCode: 'SAAR'
       regionalChargeArea: 'Southern (Test replica)'
     isWaterUndertaker: false
     startDate: '2008-04-01'
