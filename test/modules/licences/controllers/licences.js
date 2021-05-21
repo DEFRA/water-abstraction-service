@@ -20,6 +20,8 @@ experiment('modules/licences/controllers/licences.js', () => {
     sandbox.stub(licencesService, 'getLicenceById');
     sandbox.stub(licencesService, 'getLicenceVersions');
     sandbox.stub(licencesService, 'getLicenceAccountsByRefAndDate');
+    sandbox.stub(licencesService, 'getReturnsByLicenceId');
+    sandbox.stub(licencesService, 'getScheduledNotificationsByLicenceId');
 
     sandbox.stub(documentsService, 'getValidDocumentOnDate');
 
@@ -226,6 +228,120 @@ experiment('modules/licences/controllers/licences.js', () => {
 
       test('resolves with the document', async () => {
         expect(result.document_id).to.equal('test-document-id');
+      });
+    });
+  });
+
+  experiment('.getLicenceReturns', () => {
+    let result, request;
+
+    beforeEach(async () => {
+      request = {
+        params: {
+          licenceId: 'test-licence-id'
+        },
+        query: {
+          page: 1,
+          perPage: 50
+        }
+      };
+    });
+
+    experiment('when the licence is not found', () => {
+      beforeEach(async () => {
+        licencesService.getReturnsByLicenceId.resolves(null);
+        result = await controller.getLicenceReturns(request);
+      });
+
+      test('calls the expected service method', async () => {
+        expect(licencesService.getReturnsByLicenceId.calledWith(
+          request.params.licenceId,
+          request.query.page,
+          request.query.perPage
+        ));
+      });
+
+      test('resolves with a Boom 404', async () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when the licence is not found', () => {
+      const serviceResponse = { pagination: {}, data: [] };
+
+      beforeEach(async () => {
+        licencesService.getReturnsByLicenceId.resolves(serviceResponse);
+        result = await controller.getLicenceReturns(request);
+      });
+
+      test('calls the expected service method', async () => {
+        expect(licencesService.getReturnsByLicenceId.calledWith(
+          request.params.licenceId,
+          request.query.page,
+          request.query.perPage
+        ));
+      });
+
+      test('resolves with the service method response', async () => {
+        expect(result).to.equal(serviceResponse);
+      });
+    });
+  });
+
+  experiment('.getLicenceNotifications', () => {
+    let result, request;
+
+    beforeEach(async () => {
+      request = {
+        params: {
+          licenceId: 'test-licence-id'
+        },
+        query: {
+          page: 1,
+          perPage: 50
+        }
+      };
+    });
+
+    experiment('when the licence is not found', () => {
+      beforeEach(async () => {
+        licencesService.getScheduledNotificationsByLicenceId.resolves(null);
+        result = await controller.getLicenceNotifications(request);
+      });
+
+      test('calls the expected service method', async () => {
+        expect(licencesService.getScheduledNotificationsByLicenceId.calledWith(
+          request.params.licenceId,
+          request.query.page,
+          request.query.perPage
+        ));
+      });
+
+      test('resolves with a Boom 404', async () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when the licence is not found', () => {
+      const serviceResponse = { pagination: {}, data: [] };
+
+      beforeEach(async () => {
+        licencesService.getScheduledNotificationsByLicenceId.resolves(serviceResponse);
+        result = await controller.getLicenceNotifications(request);
+      });
+
+      test('calls the expected service method', async () => {
+        expect(licencesService.getScheduledNotificationsByLicenceId.calledWith(
+          request.params.licenceId,
+          request.query.page,
+          request.query.perPage
+        ));
+      });
+
+      test('resolves with the service method response', async () => {
+        expect(result).to.equal(serviceResponse);
       });
     });
   });
