@@ -122,26 +122,10 @@ experiment('src/lib/services/licences', () => {
 
     experiment('when the licence is not found', () => {
       beforeEach(async () => {
-        repos.licences.findOneByLicenceRef.resolves([]);
+        repos.licences.findOneByLicenceRef.resolves(null);
 
         result = await licencesService.getLicenceByLicenceRef(
-          data.dbRow.licenceRef,
-          data.dbRow.region.naldRegionId
-        );
-      });
-
-      test('resolves with null', async () => {
-        expect(result).to.equal(null);
-      });
-    });
-
-    experiment('when the licence is not found for the region', () => {
-      beforeEach(async () => {
-        repos.licences.findOneByLicenceRef.resolves([data.dbRow]);
-
-        result = await licencesService.getLicenceByLicenceRef(
-          data.dbRow.licenceRef,
-          '00000000-0000-0000-0000-000000001111'
+          data.dbRow.licenceRef
         );
       });
 
