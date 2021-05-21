@@ -3,6 +3,7 @@
 const raw = require('./lib/raw');
 const { Licence, bookshelf } = require('../bookshelf');
 const queries = require('./queries/licences');
+const helpers = require('./lib/helpers');
 
 const deleteTest = () => Licence
   .forge()
@@ -30,16 +31,8 @@ const findOne = async licenceId => {
   return model ? model.toJSON() : null;
 };
 
-const findOneByLicenceRef = async licenceRef => {
-  const model = await Licence
-    .forge()
-    .where({ licence_ref: licenceRef })
-    .fetchAll({
-      withRelated: ['region']
-    });
-
-  return model.toJSON();
-};
+const findOneByLicenceRef = licenceRef =>
+  helpers.findOne(Licence, 'licence_ref', licenceRef, ['region']);
 
 /**
  * Finds many licences by licence ref array

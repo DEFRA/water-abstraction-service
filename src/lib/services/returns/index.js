@@ -14,10 +14,12 @@ const returnVersionMapper = require('../../mappers/return-version');
 // Services
 const documentsService = require('../documents-service');
 const returnsMappingService = require('./returns-mapping-service');
+const licenceService = require('../licences');
 
 // Models
 const { RETURN_STATUS } = require('../../models/return');
 const { ROLE_NAMES } = require('../../models/role');
+const { returnsServiceToModel } = require('../../mappers/return-line');
 
 const getFinancialYear = returnCycle => {
   const endYear = parseInt(returnCycle.endDate.substr(0, 4));
@@ -211,6 +213,26 @@ const getReturnsForLicence = async (licenceNumber, page, perPage) => {
   };
 };
 
+/**
+ * Gets single return service model by ID
+ *
+ * @param {String} id
+ * @return {Promise<Return>}
+ */
+const getReturnById = async id => {
+  const returnsServiceData = await apiConnector.getReturnById(id);
+  if (!returnsServiceData) {
+    return null;
+  }
+  // Map and decorate return
+  const [ret] = await returnsMappingService.mapReturnsToModels([returnsServiceData]);
+  // Include licence in response for convenience
+  const [,, licenceNumber] = id.split(/:/g);
+  ret.licence = await licenceService.getLicenceByLicenceRef(licenceNumber);
+  return ret;
+};
+
 exports.getReturnsForLicenceInFinancialYear = getReturnsForLicenceInFinancialYear;
 exports.getReturnsWithContactsForLicence = getReturnsWithContactsForLicence;
 exports.getReturnsForLicence = getReturnsForLicence;
+exports.getReturnById = getReturnById;

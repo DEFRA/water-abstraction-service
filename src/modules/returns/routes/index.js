@@ -3,5 +3,6 @@
 module.exports = {
   ...require('./routes'),
   ...require('./csv-upload'),
-  ...require('./return-cycles')
+  ...require('./return-cycles'),
+  ...require('./returns')
 };

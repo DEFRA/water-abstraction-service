@@ -12,5 +12,9 @@ module.exports = bookshelf.model('ReturnVersion', {
 
   returnRequirements () {
     return this.hasMany('ReturnRequirement', 'return_version_id', 'return_version_id');
+  },
+
+  licence () {
+    return this.belongsTo('Licence', 'licence_id', 'licence_id');
   }
 });

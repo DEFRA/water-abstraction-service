@@ -32,10 +32,8 @@ const getLicenceById = async licenceId =>
  * @param {String} licenceRef
  * @param {Number} regionCode
  */
-const getLicenceByLicenceRef = async (licenceRef, regionCode) => {
-  const licences = await repos.licences.findOneByLicenceRef(licenceRef);
-  const licence = licences.find(licence => licence.region.naldRegionId === +regionCode);
-
+const getLicenceByLicenceRef = async licenceRef => {
+  const licence = await repos.licences.findOneByLicenceRef(licenceRef);
   return licence ? licenceMapper.dbToModel(licence) : null;
 };
 

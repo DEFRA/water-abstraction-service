@@ -12,5 +12,9 @@ module.exports = bookshelf.model('ReturnRequirement', {
 
   returnRequirementPurposes () {
     return this.hasMany('ReturnRequirementPurpose', 'return_requirement_id', 'return_requirement_id');
+  },
+
+  returnVersion () {
+    return this.belongsTo('ReturnVersion', 'return_version_id', 'return_version_id');
   }
 });
