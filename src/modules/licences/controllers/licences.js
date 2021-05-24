@@ -39,8 +39,32 @@ const getValidLicenceDocumentByDate = async request => {
   return documentsService.getValidDocumentOnDate(licence.licenceNumber, date);
 };
 
+/**
+ * Gets returns for the requested licence ID.
+ * Currently this gets all returns, but it is expected that this could be
+ * extended to get external user returns between a certain date range based
+ * on the current user
+ */
+const getLicenceReturns = async request => {
+  const { licenceId } = request.params;
+  const { page, perPage } = request.query;
+
+  const result = await licencesService.getReturnsByLicenceId(licenceId, page, perPage);
+  return result || Boom.notFound(`Licence ${licenceId} not found`);
+};
+
+const getLicenceNotifications = async request => {
+  const { licenceId } = request.params;
+  const { page, perPage } = request.query;
+
+  const result = await licencesService.getScheduledNotificationsByLicenceId(licenceId, page, perPage);
+  return result || Boom.notFound(`Licence ${licenceId} not found`);
+};
+
 exports.getLicence = getLicence;
 exports.getLicenceVersions = getLicenceVersions;
 exports.getLicenceAccountsByRefAndDate = getLicenceAccountsByRefAndDate;
 exports.getLicenceDocument = getLicenceDocument;
 exports.getValidLicenceDocumentByDate = getValidLicenceDocumentByDate;
+exports.getLicenceReturns = getLicenceReturns;
+exports.getLicenceNotifications = getLicenceNotifications;

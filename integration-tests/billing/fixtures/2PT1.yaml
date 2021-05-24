@@ -1,34 +1,30 @@
 - ref: $region
   model: Region
   fields:
-    chargeRegionId: A
-    naldRegionId: 1
-    name: Test Region
-    displayName: Test Region 
+    chargeRegionId: S
+    naldRegionId: 6
+    name: Southern (Test replica)
+    displayName: Southern (Test replica)
     isTest: true
 
 - ref: $licence
   model: Licence
   fields:
-    licenceRef : L1
-    includeInSupplementaryBilling : no
-    isWaterUndertaker : false
-    regions : '{ "historicalAreaCode": "ARCA", "regionalChargeArea": "Anglian" }'
-    startDate : '2008-04-01'
-    expiredDate : null
-    lapsedDate : null
-    revokedDate : null
-    suspendFromBilling : false
-    isTest: true
     regionId: $region.regionId
+    licenceRef: 'L1'
+    regions:
+      historicalAreaCode: 'SAAR'
+      regionalChargeArea: 'Southern (Test replica)'
+    isWaterUndertaker: false
+    startDate: '2008-04-01'
+    isTest: true
 
 - ref: $twoPartTariffAgreement
   model: FinancialAgreementType
-  fields: 
+  fields:
     financialAgreementCode: S127
     description: Section 127 (Two Part Tariff)
     disabled: false
-    isTest: true
   constraints:
     uniq_financial_agreement_code:
       - financialAgreementCode
@@ -61,7 +57,7 @@
 - ref: $purposePrimary
   model: PurposePrimary
   fields:
-    legacyId : A
+    legacyId: A
     description: Agriculture
     isTest: true
   constraints:
@@ -71,7 +67,7 @@
 - ref: $purposeSecondary
   model: PurposeSecondary
   fields:
-    legacyId : AGR
+    legacyId: AGR
     description: General Agriculture
     isTest: true
   constraints:
@@ -81,7 +77,7 @@
 - ref: $purposeUse
   model: PurposeUse
   fields:
-    legacyId : 400
+    legacyId: 400
     description: Spray Irrigation - Direct
     lossFactor: high
     isTwoPartTariff: true
@@ -104,11 +100,10 @@
     seasonDerived: summer
     source: unsupported
     loss: high
-    purposePrimaryId : $purposePrimary.purposePrimaryId
-    purposeSecondaryId : $purposeSecondary.purposeSecondaryId
-    purposeUseId : $purposeUse.purposeUseId
+    purposePrimaryId: $purposePrimary.purposePrimaryId
+    purposeSecondaryId: $purposeSecondary.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
     description: CE2
-    factorsOverridden: false
     isTest: true
 
 - ref: $returnVersion
@@ -116,7 +111,7 @@
   fields:
     versionNumber: 101
     startDate: '2008-04-01'
-    endDate:  null
+    endDate: null
     status: current
     externalId: 1:12345678
     licenceId: $licence.licenceId
@@ -138,7 +133,7 @@
     externalId: 1:12345678
 
 - model: ReturnRequirementPurpose
-  fields: 
+  fields:
     returnRequirementId: $returnRequirement.returnRequirementId
     purposePrimaryId: $purposePrimary.purposePrimaryId
     purposeSecondaryId: $purposeSecondary.purposeSecondaryId

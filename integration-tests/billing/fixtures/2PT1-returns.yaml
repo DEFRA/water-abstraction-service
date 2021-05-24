@@ -14,9 +14,9 @@
     metadata: >
       {
         "nald":{
-            "areaCode":"AREA",
+            "areaCode":"SAAR",
             "formatId":12345678,
-            "regionCode":1,
+            "regionCode":6,
             "periodEndDay":"31",
             "periodEndMonth":"10",
             "periodStartDay":"1",

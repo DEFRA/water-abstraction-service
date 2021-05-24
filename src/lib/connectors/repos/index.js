@@ -10,6 +10,7 @@ exports.billingVolumes = require('./billing-volumes');
 exports.changeReasons = require('./change-reasons');
 exports.chargeVersions = require('./charge-versions');
 exports.events = require('./events');
+exports.gaugingStations = require('./gauging-stations');
 exports.licenceAgreements = require('./licence-agreements');
 exports.licenceVersions = require('./licence-versions');
 exports.licences = require('./licences');

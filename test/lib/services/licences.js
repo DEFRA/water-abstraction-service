@@ -12,6 +12,8 @@ const uuid = require('uuid/v4');
 const sandbox = require('sinon').createSandbox();
 
 const licencesService = require('../../../src/lib/services/licences');
+const returnsService = require('../../../src/lib/services/returns');
+
 const repos = require('../../../src/lib/connectors/repos');
 
 // Models
@@ -57,6 +59,7 @@ experiment('src/lib/services/licences', () => {
     sandbox.stub(repos.licenceVersions, 'findByLicenceId');
     sandbox.stub(repos.licenceVersions, 'findOne');
     sandbox.stub(repos.billingInvoiceLicences, 'findAll');
+    sandbox.stub(returnsService, 'getReturnsForLicence');
   });
 
   afterEach(async () => {
@@ -336,6 +339,28 @@ experiment('src/lib/services/licences', () => {
 
     test('calls billingInvoiceLicences.findAll() with the right parameters', () => {
       expect(repos.billingInvoiceLicences.findAll.calledWith(tempLicenceId, 1, 10)).to.be.true();
+    });
+  });
+
+  experiment('.getReturnsByLicenceId', () => {
+    const licenceId = uuid();
+    const page = 1;
+    const perPage = 50;
+
+    beforeEach(async () => {
+      repos.licences.findOne.resolves(data.dbRow);
+      await licencesService.getReturnsByLicenceId(licenceId, page, perPage);
+    });
+
+    test('calls repos.licences.findOne() with supplied licence ID', async () => {
+      const [id] = repos.licences.findOne.lastCall.args;
+      expect(id).to.equal(licenceId);
+    });
+
+    test('gets returns for licence', async () => {
+      expect(returnsService.getReturnsForLicence.calledWith(
+        data.dbRow.licenceRef, page, perPage
+      )).to.be.true();
     });
   });
 });

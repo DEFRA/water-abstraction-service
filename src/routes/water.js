@@ -9,7 +9,6 @@ const eventsRoutes = require('../controllers/events');
 const notifyTemplatesRoutes = require('../controllers/notifytemplates');
 const taskRunner = require('../controllers/taskRunner');
 const taskConfigRoutes = require('../controllers/task-config');
-const gaugingStationRoutes = require('../controllers/gauging-stations');
 const moduleRoutes = require('../modules/routes');
 const arAnalysisLicencesRoutes = require('../controllers/ar-analysis-licences');
 
@@ -24,7 +23,6 @@ module.exports = [
   ...notifyTemplatesRoutes,
   ...taskConfigRoutes,
   ...moduleRoutes,
-  ...gaugingStationRoutes,
   ...arAnalysisLicencesRoutes,
   {
     method: 'GET',

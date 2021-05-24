@@ -151,6 +151,29 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
       });
     });
 
+    experiment('for a two-part tariff transaction type when the element is disabled', () => {
+      beforeEach(async () => {
+        batch = data.createBatch('two_part_tariff', { isSummer: true });
+        chargeVersion = data.createChargeVersionWithTwoPartTariff();
+        chargeVersion.chargeElements.forEach(ce => {
+          ce.isSection127AgreementEnabled = false;
+        });
+        const chargeVersionYearOptions = {
+          transactionType: 'two_part_tariff',
+          isSummer: true
+        };
+        chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear, chargeVersionYearOptions);
+        const billingVolumes = chargeVersion.chargeElements
+          .map(data.createBillingVolume)
+          .map(billingVolume => billingVolume.fromHash({ isSummer: true }));
+        transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
+      });
+
+      test('0 transactions are created', async () => {
+        expect(transactions.length).to.equal(0);
+      });
+    });
+
     experiment('transaction charge periods', () => {
       experiment('when licence, charge version, and elements span full financial year', () => {
         beforeEach(async () => {

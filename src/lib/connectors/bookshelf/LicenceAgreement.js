@@ -16,4 +16,5 @@ module.exports = bookshelf.model('LicenceAgreement', {
   financialAgreementType () {
     return this.hasOne('FinancialAgreementType', 'financial_agreement_type_id', 'financial_agreement_type_id');
   }
+
 });

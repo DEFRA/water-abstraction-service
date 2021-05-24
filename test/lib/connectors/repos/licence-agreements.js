@@ -66,7 +66,11 @@ experiment('lib/connectors/repos/licence-agreements', () => {
       });
 
       test('calls .fetchAll() to retrieve all matching records', async () => {
-        expect(stub.fetchAll.called).to.be.true();
+        expect(stub.fetchAll.calledWith({
+          withRelated: [
+            'financialAgreementType'
+          ]
+        })).to.be.true();
       });
 
       test('calls .toJSON() on the collection', async () => {
