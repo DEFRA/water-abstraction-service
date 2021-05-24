@@ -99,20 +99,6 @@ const doesMinimumChargeApply = (chargePeriod, chargeVersion) => {
 };
 
 /**
- * Gets the intersecting date range between the supplied ranges
- * @todo replace with implementation from helpers project
- * @param {Array} ranges - e.g. [[startDate, endDate], []...]
- * @returns {Array|null}
- */
-const getIntersection = ranges => {
-  const startDate = ranges.map(range => range[0]).sort().pop();
-  const endDate = ranges.map(range => range[1]).sort()[0];
-  return moment(startDate).isAfter(endDate, 'day')
-    ? null
-    : [startDate, endDate];
-};
-
-/**
  * Gets the charge period for the element, taking into account the time-limited
  * dates.  If the time limit does not overlap with the supplied period, returns null
  * @param {Object} period
@@ -128,7 +114,7 @@ const getElementChargePeriod = (period, chargeElement) => {
     return new DateRange(period.startDate, period.endDate);
   }
 
-  const intersection = getIntersection([
+  const intersection = helpers.charging.getIntersection([
     [period.startDate, period.endDate],
     [timeLimitedPeriod.startDate, timeLimitedPeriod.endDate]
   ]);
