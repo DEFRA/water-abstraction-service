@@ -43,6 +43,31 @@ experiment('modules/billing/services/charge-processor-service/lib/agreements', (
       });
     });
 
+    experiment('when the agreement is in place for the full financial year and the agreements are not in chronological order', () => {
+      const licenceAgreements = [
+        new LicenceAgreement().fromHash({
+          dateRange: new DateRange('2004-10-01', null),
+          agreement: twoPartTariffAgreement
+        }),
+        new LicenceAgreement().fromHash({
+          dateRange: new DateRange('1996-10-30', '2005-09-15'),
+          agreement: twoPartTariffAgreement
+        })
+      ];
+
+      test('creates a single history item', async () => {
+        const history = agreements.getAgreementsHistory(chargePeriod, licenceAgreements);
+
+        expect(history).to.be.an.array().length(1);
+        expect(history[0].dateRange.startDate).to.equal(chargePeriod.startDate);
+        expect(history[0].dateRange.endDate).to.equal(chargePeriod.endDate);
+
+        // Check agreements
+        expect(history[0].agreements).to.be.an.array().length(1);
+        expect(history[0].agreements[0].code).to.equal('S127');
+      });
+    });
+
     experiment('when the agreement ends part-way through the full financial year', () => {
       let history;
 
