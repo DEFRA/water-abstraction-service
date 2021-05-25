@@ -458,6 +458,60 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           expect(transactions[0].billableDays).to.equal(32);
         });
       });
+
+      experiment('when a time-limited element ends on the first day of the financial year', () => {
+        beforeEach(async () => {
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence();
+          chargeVersion.chargeElements = [
+            data.createChargeElement({ timeLimitedStartDate: '2015-01-01', timeLimitedEndDate: '2019-04-01' })
+          ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
+          const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
+        });
+
+        test('there is a single transaction', async () => {
+          expect(transactions).to.be.an.array().length(2);
+        });
+
+        test('the transaction charge period starts and ends on the first day of the financial year', async () => {
+          expect(transactions[0].chargePeriod.startDate).to.equal('2019-04-01');
+          expect(transactions[0].chargePeriod.endDate).to.equal('2019-04-01');
+        });
+
+        test('the transaction has the correct number of billable days', async () => {
+          expect(transactions[0].authorisedDays).to.equal(366);
+          expect(transactions[0].billableDays).to.equal(1);
+        });
+      });
+
+      experiment('when a time-limited element starts on the last day of the financial year', () => {
+        beforeEach(async () => {
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence();
+          chargeVersion.chargeElements = [
+            data.createChargeElement({ timeLimitedStartDate: '2020-03-31', timeLimitedEndDate: '2030-01-01' })
+          ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
+          const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
+        });
+
+        test('there is a single transaction', async () => {
+          expect(transactions).to.be.an.array().length(2);
+        });
+
+        test('the transaction charge period starts and ends on the last day of the financial year', async () => {
+          expect(transactions[0].chargePeriod.startDate).to.equal('2020-03-31');
+          expect(transactions[0].chargePeriod.endDate).to.equal('2020-03-31');
+        });
+
+        test('the transaction has the correct number of billable days', async () => {
+          expect(transactions[0].authorisedDays).to.equal(366);
+          expect(transactions[0].billableDays).to.equal(1);
+        });
+      });
     });
 
     experiment('compensation charges', () => {
