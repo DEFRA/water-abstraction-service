@@ -16,6 +16,7 @@ const checkForUpdatedInvoiceAccountsJob = require('../../../../src/modules/billi
 
 const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts');
 const messageQueue = require('../../../../src/lib/message-queue-v2');
+const notifyService = require('../../../../src/lib/notify');
 const { logger } = require('../../../../src/logger');
 
 experiment('modules/billing/jobs/update-customers', () => {
@@ -26,6 +27,7 @@ experiment('modules/billing/jobs/update-customers', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
     sandbox.stub(logger, 'error');
+    sandbox.stub(notifyService, 'sendEmail');
     sandbox.stub(invoiceAccountsConnector, 'fetchInvoiceAccountsWithUpdatedEntities').resolves(invoiceAccountsReturned);
     sandbox.stub(messageQueue, 'getQueueManager').returns({
       add: sandbox.spy()
@@ -60,8 +62,8 @@ experiment('modules/billing/jobs/update-customers', () => {
       expect(invoiceAccountsConnector.fetchInvoiceAccountsWithUpdatedEntities.called).to.be.true();
     });
 
-    test('Creates a job to update the invoice account in CM', async () => {
-      expect(messageQueue.getQueueManager().add.called).to.be.true();
+    test('Calls the notify web server', async () => {
+      expect(notifyService.sendEmail.called).to.be.true();
     });
   });
 

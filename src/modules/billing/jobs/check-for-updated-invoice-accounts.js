@@ -7,9 +7,11 @@
 const cron = require('node-cron');
 const moment = require('moment');
 const { logger } = require('../../../logger');
+const config = require('../../../../config');
 const invoiceAccountsConnector = require('../../../lib/connectors/crm-v2/invoice-accounts');
 const messageQueue = require('../../../lib/message-queue-v2');
 const { jobNames } = require('../../../lib/constants');
+const notifyService = require('../../../lib/notify');
 
 const createMessage = () => {
   return ([
@@ -26,9 +28,15 @@ const handler = async () => {
 
   // Call CRM to identify the invoice accounts
   const invoiceAccountsWithUpdatedEntities = await invoiceAccountsConnector.fetchInvoiceAccountsWithUpdatedEntities();
+  const templateId = config.notify.templates.nald_entity_changes_detected;
+  const recipient = process.env.NALD_SERVICE_MAILBOX || null;
 
-  // Publish a job which will call CM with each of the invoice account IDs
-  invoiceAccountsWithUpdatedEntities.map(invoiceAccount => messageQueue.getQueueManager().add(jobNames.updateCustomerAccount, invoiceAccount.invoiceAccountId));
+  if (invoiceAccountsWithUpdatedEntities.length > 0 && recipient) {
+    const content = invoiceAccountsWithUpdatedEntities.map(invoiceAccount => `
+      ${invoiceAccount.invoiceAccountNumber} (Legacy identifier ${invoiceAccount.companyLegacyId})
+    `);
+    notifyService.sendEmail(templateId, recipient, { content });
+  }
 };
 
 const onFailedHandler = async (job, err) => logger.error(err.message);
