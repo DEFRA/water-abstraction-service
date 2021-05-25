@@ -107,6 +107,7 @@ module.exports = {
       email_change_verification_code_email: '1fd2e8f2-8cb9-4ed1-8fa6-691918c15430',
       email_change_email_in_use_email: 'adb02416-e9d3-4e05-a9cc-b24e25675672',
       new_internal_user_email: '45b79d3a-39f2-44cf-b8f9-012c952dbd92',
+      nald_entity_changes_detected: 'b5d29621-e30d-4dc8-a6eb-11ab075d7a0c',
 
       // currently not in use
       returns_invitation_primary_user_email: 'b18195f7-7b83-4251-a6eb-22124f1dff87',
