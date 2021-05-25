@@ -29,7 +29,7 @@ const handler = async () => {
   // Call CRM to identify the invoice accounts
   const invoiceAccountsWithUpdatedEntities = await invoiceAccountsConnector.fetchInvoiceAccountsWithUpdatedEntities();
   const templateId = config.notify.templates.nald_entity_changes_detected;
-  const recipient = process.env.NALD_SERVICE_MAILBOX || null;
+  const recipient = process.env.NALD_SERVICE_MAILBOX;
 
   if (invoiceAccountsWithUpdatedEntities.length > 0 && recipient) {
     const content = invoiceAccountsWithUpdatedEntities.map(invoiceAccount => `
