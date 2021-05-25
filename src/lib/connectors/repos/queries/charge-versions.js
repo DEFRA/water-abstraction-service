@@ -23,13 +23,13 @@ from (
       least(l.expired_date, l.lapsed_date, l.revoked_date)
     )
     *
-    -- Charge version data range
+    -- Charge version date range
     daterange(
      cv.start_date,
      cv.end_date
     ) 
     *
-    -- Financial date range
+    -- Financial year date range
     daterange(
       make_date(:financialYearEnding-1, 4, 1),
       make_date(:financialYearEnding, 3, 31)
@@ -50,7 +50,7 @@ from (
       where cvw.date_deleted is null
     )
 ) t1
--- Join licence agreements where there is an intersection betweem the 
+-- Join licence agreements where there is an intersection between the 
 -- charge period and the two-part tariff agreement date range
 left join (
   select 
