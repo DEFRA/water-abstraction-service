@@ -338,10 +338,9 @@ experiment('modules/licences/controllers/documents', () => {
     test('adds the licence model to the waterService property', async () => {
       const response = await controller.getLicenceSummaryByDocumentId(testRequest);
 
-      const [licenceNumber, regionCode] = licencesService.getLicenceByLicenceRef.lastCall.args;
+      const [licenceNumber] = licencesService.getLicenceByLicenceRef.lastCall.args;
 
       expect(licenceNumber).to.equal('12/34/56/78');
-      expect(regionCode).to.equal('1');
 
       expect(response.data.waterLicence.id).to.equal('test-licence-id');
     });

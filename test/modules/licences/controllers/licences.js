@@ -18,6 +18,7 @@ const sandbox = require('sinon').createSandbox();
 experiment('modules/licences/controllers/licences.js', () => {
   beforeEach(async () => {
     sandbox.stub(licencesService, 'getLicenceById');
+    sandbox.stub(licencesService, 'getLicenceByLicenceRef');
     sandbox.stub(licencesService, 'getLicenceVersions');
     sandbox.stub(licencesService, 'getLicenceAccountsByRefAndDate');
     sandbox.stub(licencesService, 'getReturnsByLicenceId');
@@ -342,6 +343,47 @@ experiment('modules/licences/controllers/licences.js', () => {
 
       test('resolves with the service method response', async () => {
         expect(result).to.equal(serviceResponse);
+      });
+    });
+  });
+
+  experiment('.getLicenceByLicenceNumber', () => {
+    let request, result;
+
+    const licenceNumber = '01/123/ABC';
+
+    beforeEach(async () => {
+      request = {
+        query: {
+          licenceNumber
+        }
+      };
+    });
+
+    experiment('when the licence exists', () => {
+      beforeEach(async () => {
+        licencesService.getLicenceByLicenceRef.resolves(new Licence());
+        result = await controller.getLicenceByLicenceNumber(request);
+      });
+
+      test('the licence number is passed to the service', async () => {
+        expect(licencesService.getLicenceByLicenceRef.calledWith(licenceNumber)).to.be.true();
+      });
+
+      test('resolves with a licence model', async () => {
+        expect(result instanceof Licence).to.be.true();
+      });
+    });
+
+    experiment('when the licence does not exist', () => {
+      beforeEach(async () => {
+        licencesService.getLicenceByLicenceRef.resolves(null);
+        result = await controller.getLicenceByLicenceNumber(request);
+      });
+
+      test('resolves with a Boom 404', async () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(404);
       });
     });
   });

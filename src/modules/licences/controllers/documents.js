@@ -137,7 +137,7 @@ const getLicenceByDocumentId = async (request, h) => {
     const permitLicence = await getLicence(documentId, includeExpired, companyId);
 
     if (permitLicence) {
-      const waterLicence = await licencesService.getLicenceByLicenceRef(permitLicence.licence_ref, permitLicence.licence_data_value.FGAC_REGION_CODE);
+      const waterLicence = await licencesService.getLicenceByLicenceRef(permitLicence.licence_ref);
       const licence = {
         ...permitLicence,
         id: waterLicence.id
@@ -246,7 +246,7 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
       // add the service layer model to the data object to allow the shift
       // towards using the licence model for viewing licences over the use
       // of the document entity from the CRM.
-      data.waterLicence = await licencesService.getLicenceByLicenceRef(data.licenceNumber, data.regionCode);
+      data.waterLicence = await licencesService.getLicenceByLicenceRef(data.licenceNumber);
 
       data.contacts = mapContacts(licence);
       return { error: null, data };
