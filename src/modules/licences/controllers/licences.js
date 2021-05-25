@@ -9,6 +9,9 @@ const crmDocumentsConnector = require('../../../lib/connectors/crm/documents');
 const getLicence = async request =>
   controller.getEntity(request.params.licenceId, licencesService.getLicenceById);
 
+const getLicenceByLicenceNumber = async request =>
+  controller.getEntity(request.query.licenceNumber, licencesService.getLicenceByLicenceRef);
+
 const getLicenceVersions = async request =>
   licencesService.getLicenceVersions(request.params.licenceId);
 
@@ -68,3 +71,4 @@ exports.getLicenceDocument = getLicenceDocument;
 exports.getValidLicenceDocumentByDate = getValidLicenceDocumentByDate;
 exports.getLicenceReturns = getLicenceReturns;
 exports.getLicenceNotifications = getLicenceNotifications;
+exports.getLicenceByLicenceNumber = getLicenceByLicenceNumber;

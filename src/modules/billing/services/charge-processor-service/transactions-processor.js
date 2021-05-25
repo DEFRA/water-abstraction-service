@@ -114,19 +114,12 @@ const getElementChargePeriod = (period, chargeElement) => {
     return new DateRange(period.startDate, period.endDate);
   }
 
-  const rangeA = moment.range(period.startDate, period.endDate);
-  const rangeB = moment.range(timeLimitedPeriod.startDate, timeLimitedPeriod.endDate);
+  const intersection = helpers.charging.getIntersection([
+    [period.startDate, period.endDate],
+    [timeLimitedPeriod.startDate, timeLimitedPeriod.endDate]
+  ]);
 
-  const intersection = rangeA.intersect(rangeB);
-
-  if (!intersection) {
-    return null;
-  }
-
-  const startDate = intersection.start.format(DATE_FORMAT);
-  const endDate = intersection.end.format(DATE_FORMAT);
-
-  return new DateRange(startDate, endDate);
+  return intersection ? new DateRange(...intersection) : null;
 };
 
 /**
