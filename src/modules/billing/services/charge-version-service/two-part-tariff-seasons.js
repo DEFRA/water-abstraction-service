@@ -110,29 +110,29 @@ const getWRLSTwoPartTariffSeasons = async (row, existingTPTBatches) => {
  * - FYE 2021 - crossover year, both approaches are merged
  * - Post FYE 2021 - WRLS era, depends on return versions
  *
- * @param {Object} row - includes charge version/licence info
+ * @param {Object} chargeVersionRow - includes charge version/licence info
  * @param {Array<Object>} existingTPTBatches - for supplementary only
  * @return {Promise<Object>} includes flags for each return season
  */
-const getTwoPartTariffSeasonsForChargeVersion = async (row, existingTPTBatches) => {
+const getTwoPartTariffSeasonsForChargeVersion = async (chargeVersionRow, existingTPTBatches) => {
   // This CV doesn't have a TPT agreement - so the CV won't be in any TPT seasons
-  if (!row.isTwoPartTariff) {
+  if (!chargeVersionRow.isTwoPartTariff) {
     return createTwoPartTariffBatches();
   }
 
   // Calculate seasons in NALD and WRLS era
   const seasons = [];
-  if (isNALDEraTwoPartTariffDate(row.startDate)) {
-    seasons.push(await getNALDTwoPartTariffSeasons(row));
+  if (isNALDEraTwoPartTariffDate(chargeVersionRow.startDate)) {
+    seasons.push(await getNALDTwoPartTariffSeasons(chargeVersionRow));
   }
-  if (isWRLSEraTwoPartTariffDate(row.startDate)) {
-    seasons.push(await getWRLSTwoPartTariffSeasons(row, existingTPTBatches));
+  if (isWRLSEraTwoPartTariffDate(chargeVersionRow.startDate)) {
+    seasons.push(await getWRLSTwoPartTariffSeasons(chargeVersionRow, existingTPTBatches));
   }
 
   // OR the flags in each season
-  return seasons.reduce((acc, row) => ({
-    [RETURN_SEASONS.summer]: acc[RETURN_SEASONS.summer] || row[RETURN_SEASONS.summer],
-    [RETURN_SEASONS.winterAllYear]: acc[RETURN_SEASONS.winterAllYear] || row[RETURN_SEASONS.winterAllYear]
+  return seasons.reduce((acc, season) => ({
+    [RETURN_SEASONS.summer]: acc[RETURN_SEASONS.summer] || season[RETURN_SEASONS.summer],
+    [RETURN_SEASONS.winterAllYear]: acc[RETURN_SEASONS.winterAllYear] || season[RETURN_SEASONS.winterAllYear]
   }), createTwoPartTariffBatches());
 };
 
