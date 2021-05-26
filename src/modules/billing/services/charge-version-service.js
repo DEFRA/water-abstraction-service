@@ -1,20 +1,19 @@
 'use strict';
 
-const { range, flatMap } = require('lodash');
+const { range, flatMap, uniq } = require('lodash');
 const bluebird = require('bluebird');
+const helpers = require('@envage/water-abstraction-helpers').charging;
 
 const repos = require('../../../lib/connectors/repos');
 const returnRequirementVersionService = require('../../../lib/services/return-requirement-versions');
 const { RETURN_SEASONS } = require('../../../lib/models/constants');
-const { BATCH_TYPE } = require('../../../lib/models/batch');
+const { BATCH_TYPE, BATCH_SOURCE } = require('../../../lib/models/batch');
 const { TRANSACTION_TYPE } = require('../../../lib/models/charge-version-year');
 const DateRange = require('../../../lib/models/date-range');
 const FinancialYear = require('../../../lib/models/financial-year');
 
 const chargeVersionYearService = require('./charge-version-year');
 const batchService = require('./batch-service');
-
-const config = require('../../../../config');
 
 /**
  * Creates an object which describes whether 2-part tariff billing is needed in
@@ -28,25 +27,49 @@ const createTwoPartTariffBatches = (isSummer = false, isWinterAllYear = false) =
   [RETURN_SEASONS.winterAllYear]: isWinterAllYear
 });
 
+const isNALDEraTwoPartTariffDate = date =>
+  helpers.getFinancialYear(date) <= 2021;
+
+const isWRLSEraTwoPartTariffDate = date =>
+  helpers.getFinancialYear(date) >= 2021;
+
+const isApprovedNaldBillingVolume = billingVolume =>
+  billingVolume.source === BATCH_SOURCE.nald && billingVolume.isApproved;
+
+const getIsSummer = billingVolume => billingVolume.isSummer;
+
 /**
- * Checks whether two-part tariff billing is needed for the supplied licence
- * and financial year
- * @param {Object} row - includes charge version/licence info
- * @return {Promise<Object>} includes flags for each return season
+ * Calculates which TPT seasons are needed for NALD era transactions
+ * FYE 2021 or earlier (FYE 2021 summer run in NALD)
+ *
+ * @param {Object} row
+ * @return {Promise<Object>} { summer : true, winterAllYear : false }
  */
-const getTwoPartTariffSeasonsForChargeVersion = async row => {
-  // This CV doesn't have a TPT agreement - so don't create any
-  if (!row.isTwoPartTariff) {
-    return createTwoPartTariffBatches();
-  }
+const getNALDTwoPartTariffSeasons = async row => {
+  const financialYearEnding = helpers.getFinancialYear(row.startDate);
 
+  // Get billing volumes, then filter to only include approved volumes from NALD
+  const billingVolumes = await repos.billingVolumes.findByChargeVersionAndFinancialYear(
+    row.chargeVersionId, financialYearEnding
+  );
+  const filteredBillingVolumes = billingVolumes.filter(isApprovedNaldBillingVolume);
+
+  // Get unique isSummer flags
+  const summerFlags = uniq(filteredBillingVolumes.map(getIsSummer));
+
+  // Map to return seasons
+  return createTwoPartTariffBatches(summerFlags.includes(true), summerFlags.includes(false));
+};
+
+/**
+ * Calculates which TPT seasons are needed for WRLS era transactions
+ * FYE 2021 or later (FYE 2021 winter/all year run in WRLS)
+ *
+ * @param {Object} row
+ * @return {Promise<Object>} { summer : true, winterAllYear : false }
+ */
+const getWRLSTwoPartTariffSeasons = async row => {
   const chargePeriod = new DateRange(row.startDate, row.endDate);
-
-  // When considering financial years processed in NALD, we need to match the
-  // import logic which is to import all TPT runs as winter/all year
-  if (!chargePeriod.isSameOrAfter(config.billing.naldSwitchOverDate)) {
-    return createTwoPartTariffBatches(false, true);
-  }
 
   // There is a two-part tariff agreement - we need to look at the returns required
   // to work out which seasons
@@ -67,6 +90,34 @@ const getTwoPartTariffSeasonsForChargeVersion = async row => {
   );
 
   return createTwoPartTariffBatches(isSummer, isWinterAllYear);
+};
+
+/**
+ * Checks whether two-part tariff billing is needed for the supplied licence
+ * and financial year
+ * @param {Object} row - includes charge version/licence info
+ * @return {Promise<Object>} includes flags for each return season
+ */
+const getTwoPartTariffSeasonsForChargeVersion = async row => {
+  // This CV doesn't have a TPT agreement - so the CV won't be in any TPT seasons
+  if (!row.isTwoPartTariff) {
+    return createTwoPartTariffBatches();
+  }
+
+  // Calculate seasons in NALD and WRLS era
+  const seasons = [];
+  if (isNALDEraTwoPartTariffDate(row.startDate)) {
+    seasons.push(await getNALDTwoPartTariffSeasons(row));
+  }
+  if (isWRLSEraTwoPartTariffDate(row.startDate)) {
+    seasons.push(await getWRLSTwoPartTariffSeasons(row));
+  }
+
+  // OR the flags in each season
+  return seasons.reduce((acc, row) => ({
+    [RETURN_SEASONS.summer]: acc[RETURN_SEASONS.summer] || row[RETURN_SEASONS.summer],
+    [RETURN_SEASONS.winterAllYear]: acc[RETURN_SEASONS.winterAllYear] || row[RETURN_SEASONS.winterAllYear]
+  }), createTwoPartTariffBatches());
 };
 
 /**
