@@ -24,8 +24,6 @@ const FinancialYear = require('../../../../src/lib/models/financial-year');
 const Region = require('../../../../src/lib/models/region');
 const { TRANSACTION_TYPE } = require('../../../../src/lib/models/charge-version-year');
 
-const config = require('../../../../config');
-
 const licenceId = 'licence-id';
 const chargeVersionId = 'test-charge-version-id';
 
@@ -60,9 +58,8 @@ experiment('modules/billing/services/charge-version-service', () => {
   let batch;
 
   beforeEach(async () => {
-    sandbox.stub(config.billing, 'naldSwitchOverDate').value('2021-04-01');
-
     sandbox.stub(repos.chargeVersions, 'findValidInRegionAndFinancialYear');
+    sandbox.stub(repos.billingVolumes, 'findByChargeVersionAndFinancialYear').resolves([]);
     sandbox.stub(chargeVersionYearService, 'createBatchChargeVersionYear');
 
     sandbox.stub(returnRequirementVersionService, 'getByLicenceId');
