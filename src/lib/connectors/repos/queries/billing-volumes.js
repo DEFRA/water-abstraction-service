@@ -53,5 +53,6 @@ join water.charge_elements ce on bv.charge_element_id=ce.charge_element_id
 join water.billing_batches bb on bv.billing_batch_id=bb.billing_batch_id
 and ce.charge_version_id=:chargeVersionId
 and bv.financial_year=:financialYearEnding
-and bv.is_approved=true
+and bv.is_approved=true 
+and bv.errored_on is null
 `;
