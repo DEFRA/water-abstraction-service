@@ -100,9 +100,9 @@ const getWRLSTwoPartTariffSeasons = async (row, existingTPTBatches) => {
     : batches;
 };
 
-const isSummer = season => season[RETURN_SEASONS.summer];
+const isSummerFlagSet = season => season[RETURN_SEASONS.summer];
 
-const isWinterAllYear = season => season[RETURN_SEASONS.winterAllYear];
+const isWinterAllYearFlagSet = season => season[RETURN_SEASONS.winterAllYear];
 
 /**
  * Checks whether two-part tariff billing is needed for the supplied licence
@@ -134,8 +134,8 @@ const getTwoPartTariffSeasonsForChargeVersion = async (chargeVersionRow, existin
   }
 
   return {
-    [RETURN_SEASONS.summer]: seasons.some(isSummer),
-    [RETURN_SEASONS.winterAllYear]: seasons.some(isWinterAllYear)
+    [RETURN_SEASONS.summer]: seasons.some(isSummerFlagSet),
+    [RETURN_SEASONS.winterAllYear]: seasons.some(isWinterAllYearFlagSet)
   };
 };
 
