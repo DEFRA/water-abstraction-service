@@ -22,6 +22,20 @@ module.exports = {
     }
   },
 
+  getLicenceByLicenceNumber: {
+    method: 'GET',
+    path: `/water/${version}/licences`,
+    handler: controller.getLicenceByLicenceNumber,
+    config: {
+      description: 'Gets licence by licence number',
+      validate: {
+        query: Joi.object({
+          licenceNumber: Joi.string().required()
+        })
+      }
+    }
+  },
+
   getLicenceVersions: {
     method: 'GET',
     path: `${pathPrefix}{licenceId}/versions`,

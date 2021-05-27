@@ -106,7 +106,7 @@ experiment('lib/mappers/charge-module', () => {
     sandbox.restore();
   });
 
-  experiment('.mapInvoiceAccountToChargeModuleCustomer', () => {
+  experiment('.mapInvoiceAccountToChargeModuleCustomer with a valid lastInvoiceAccountAddress', () => {
     let result;
     beforeEach(async () => {
       result = await mapper.mapInvoiceAccountToChargeModuleCustomer(mockedInvoiceAccount);
@@ -117,6 +117,18 @@ experiment('lib/mappers/charge-module', () => {
     });
     test('returns the correct customer reference', () => {
       expect(result.customerReference).to.equal(invoiceAccountNumber);
+    });
+  });
+
+  experiment('.mapInvoiceAccountToChargeModuleCustomer without a valid lastInvoiceAccountAddress', () => {
+    let result;
+    beforeEach(async () => {
+      mockedInvoiceAccount.lastInvoiceAccountAddress = undefined;
+      result = await mapper.mapInvoiceAccountToChargeModuleCustomer(mockedInvoiceAccount);
+    });
+
+    test('returns an error', () => {
+      expect(result).to.be.an.error();
     });
   });
 

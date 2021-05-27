@@ -1,23 +1,26 @@
 - ref: $region
   model: Region
   fields:
-    chargeRegionId: S
-    naldRegionId: 6
-    name: Southern (Test replica)
-    displayName: Southern (Test replica)
+    chargeRegionId: A
+    naldRegionId: 1
+    name: Test Region
+    displayName: Test Region
     isTest: true
 
 - ref: $licence
   model: Licence
   fields:
-    regionId: $region.regionId
-    licenceRef: 'L1'
-    regions:
-      historicalAreaCode: 'SAAR'
-      regionalChargeArea: 'Southern (Test replica)'
-    isWaterUndertaker: false
-    startDate: '2008-04-01'
+    licenceRef : L1
+    includeInSupplementaryBilling : no
+    isWaterUndertaker : false
+    regions : '{ "historicalAreaCode": "ARCA", "regionalChargeArea": "Anglian" }'
+    startDate : '2008-04-01'
+    expiredDate : null
+    lapsedDate : null
+    revokedDate : null
+    suspendFromBilling : false
     isTest: true
+    regionId: $region.regionId
 
 - ref: $twoPartTariffAgreement
   model: FinancialAgreementType
