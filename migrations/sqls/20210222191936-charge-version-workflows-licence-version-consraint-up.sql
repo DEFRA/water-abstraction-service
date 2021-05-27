@@ -41,4 +41,4 @@ WHERE created_by = '{"id": 0, "email": "wrls@admin.com"}';
 
 -- create the unique constraint
 ALTER TABLE water.charge_version_workflows
-ADD CONSTRAINT unique_licence _version_id_date_deleted UNIQUE (licence_version_id, date_deleted);
+ADD CONSTRAINT unique_licence_version_id_date_deleted UNIQUE (licence_version_id, date_deleted);
