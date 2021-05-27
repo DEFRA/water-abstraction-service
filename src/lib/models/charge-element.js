@@ -19,6 +19,11 @@ const validSources = {
 };
 
 class ChargeElement extends Model {
+  constructor (...args) {
+    super(...args);
+    this.isSection127AgreementEnabled = true;
+  }
+
   /**
    * Source
    * @return {String}
