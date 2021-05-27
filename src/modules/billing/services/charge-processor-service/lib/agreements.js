@@ -1,6 +1,6 @@
 'use strict';
 
-const { compact, groupBy, flatMap } = require('lodash');
+const { compact, groupBy, flatMap, sortBy } = require('lodash');
 const helpers = require('@envage/water-abstraction-helpers');
 const dateHelpers = require('./date-helpers');
 const DateRange = require('../../../../../lib/models/date-range');
@@ -34,6 +34,9 @@ const mapHistoryRow = row => {
   };
 };
 
+const getLicenceAgreementStartDate = licenceAgreement =>
+  licenceAgreement.dateRange.startDate;
+
 /**
  * Gets a history of agreements for the charge period taking into account
  * licence agreements
@@ -41,13 +44,17 @@ const mapHistoryRow = row => {
  * @param {Array<LicenceAgreement>} licenceAgreements
  * @return {Array}
  */
-const getAgreementsHistory = (chargePeriod, licenceAgreements) => {
+const getAgreementsHistory =
+(chargePeriod, licenceAgreements) => {
   // Filter out agreements that are not S127/S130 as they don't affect charging
-  const filtered = licenceAgreements
-    .filter(isBillingAgreement);
+  // And sort by start date
+  const filteredAndSorted = sortBy(
+    licenceAgreements.filter(isBillingAgreement),
+    getLicenceAgreementStartDate
+  );
 
   // Group by agreement type as each has its own timeline
-  const groups = groupBy(filtered, getPropertyKey);
+  const groups = groupBy(filteredAndSorted, getPropertyKey);
 
   // Create a combined history by applying the agreements history in each group
   const history = Object.keys(groups).reduce((acc, key) => {

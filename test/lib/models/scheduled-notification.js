@@ -5,6 +5,7 @@ const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
 
 const ScheduledNotification = require('../../../src/lib/models/scheduled-notification');
+const Event = require('../../../src/lib/models/event');
 
 const { NOTIFY_STATUSES, MESSAGE_STATUSES, DISPLAY_STATUSES } = ScheduledNotification;
 
@@ -302,6 +303,31 @@ experiment('lib/models/scheduled-notification', () => {
         notifyStatus: NOTIFY_STATUSES.technicalFailure
       });
       expect(model.toJSON().displayStatus).to.equal(DISPLAY_STATUSES.error);
+    });
+  });
+
+  experiment('.event', () => {
+    test('can be set to an event instance', async () => {
+      const ev = new Event();
+
+      const notification = new ScheduledNotification();
+      notification.event = ev;
+
+      expect(notification.event).to.equal(ev);
+    });
+
+    test('can be set to null', async () => {
+      const notification = new ScheduledNotification();
+      notification.event = null;
+
+      expect(notification.event).to.equal(null);
+    });
+
+    test('throws an error if set to an object of the wrong type', async () => {
+      expect(() => {
+        const notification = new ScheduledNotification();
+        notification.event = {};
+      }).to.throw();
     });
   });
 });

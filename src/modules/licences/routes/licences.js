@@ -22,6 +22,20 @@ module.exports = {
     }
   },
 
+  getLicenceByLicenceNumber: {
+    method: 'GET',
+    path: `/water/${version}/licences`,
+    handler: controller.getLicenceByLicenceNumber,
+    config: {
+      description: 'Gets licence by licence number',
+      validate: {
+        query: Joi.object({
+          licenceNumber: Joi.string().required()
+        })
+      }
+    }
+  },
+
   getLicenceVersions: {
     method: 'GET',
     path: `${pathPrefix}{licenceId}/versions`,
@@ -62,7 +76,7 @@ module.exports = {
           licenceId: Joi.string().guid().required()
         }),
         query: Joi.object({
-          includeExpired: Joi.boolean().optional().default(false)
+          includeExpired: Joi.boolean().optional().default(true)
         })
       }
     }
@@ -79,6 +93,42 @@ module.exports = {
           licenceId: Joi.string().guid().required(),
           date: Joi.date().iso().required()
         }
+      }
+    }
+  },
+
+  getLicenceReturns: {
+    method: 'GET',
+    path: `${pathPrefix}{licenceId}/returns`,
+    handler: controller.getLicenceReturns,
+    config: {
+      description: 'Gets paginated returns for the given licence ID',
+      validate: {
+        params: Joi.object({
+          licenceId: Joi.string().guid().required()
+        }),
+        query: Joi.object({
+          page: Joi.number().integer().min(1).default(1),
+          perPage: Joi.number().integer().min(1).default(10)
+        })
+      }
+    }
+  },
+
+  getLicenceNotifications: {
+    method: 'GET',
+    path: `${pathPrefix}{licenceId}/notifications`,
+    handler: controller.getLicenceNotifications,
+    config: {
+      description: 'Gets paginated sent notifications for the licence',
+      validate: {
+        params: Joi.object({
+          licenceId: Joi.string().guid().required()
+        }),
+        query: Joi.object({
+          page: Joi.number().integer().min(1).default(1),
+          perPage: Joi.number().integer().min(1).default(10)
+        })
       }
     }
   }
