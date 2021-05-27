@@ -29,6 +29,7 @@ experiment('Internal search controller', () => {
     const data = getData();
     sinon.stub(search, 'searchUsers').resolves({ data, pagination: getPagination(3) });
     sinon.stub(search, 'searchReturns').resolves(data);
+    sinon.stub(search, 'searchBillingAccounts').resolves(data[0]);
     sinon.stub(search, 'searchGaugingStations').resolves(data);
     sinon.stub(search, 'searchDocuments').resolves({ data, pagination: getPagination(5) });
   });
@@ -36,8 +37,15 @@ experiment('Internal search controller', () => {
   afterEach(async () => {
     search.searchUsers.restore();
     search.searchReturns.restore();
+    search.searchBillingAccounts.restore();
     search.searchGaugingStations.restore();
     search.searchDocuments.restore();
+  });
+
+  test('The response will contain a billing account object if the search term matches the expected syntax of a billing account', async () => {
+    const request = getRequest('Y12312301A');
+    const result = await controller.getInternalSearch(request);
+    expect(Object.keys(result)).to.only.include(['billingAccount']);
   });
 
   test('The response should only contain user data for a user search', async () => {
