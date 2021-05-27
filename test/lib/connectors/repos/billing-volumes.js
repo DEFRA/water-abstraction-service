@@ -353,4 +353,22 @@ experiment('lib/connectors/repos/billing-volumes', () => {
       expect(model.toJSON.called).to.be.true();
     });
   });
+
+  experiment('.findByChargeVersionAndFinancialYear', () => {
+    const chargeVersionId = 'test-charge-version-id';
+    const financialYearEnding = 2022;
+
+    beforeEach(async () => {
+      await billingVolumes.findByChargeVersionAndFinancialYear(chargeVersionId, financialYearEnding);
+    });
+
+    test('calls raw.multiRow with the query and params', async () => {
+      expect(raw.multiRow.calledWith(
+        queries.findByChargeVersionAndFinancialYear, {
+          chargeVersionId,
+          financialYearEnding
+        }
+      ));
+    });
+  });
 });
