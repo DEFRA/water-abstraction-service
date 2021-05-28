@@ -8,9 +8,9 @@ var path = require('path');
 var Promise;
 
 /**
-  * We receive the dbmigrate dependency from dbmigrate initially.
-  * This enables us to not have to rely on NODE_PATH.
-  */
+ * We receive the dbmigrate dependency from dbmigrate initially.
+ * This enables us to not have to rely on NODE_PATH.
+ */
 exports.setup = function(options, seedLink) {
   dbm = options.dbmigrate;
   type = dbm.dataType;
@@ -28,9 +28,9 @@ exports.up = function(db) {
       resolve(data);
     });
   })
-  .then(function(data) {
-    return db.runSql(data);
-  });
+    .then(function(data) {
+      return db.runSql(data);
+    });
 };
 
 exports.down = function(db) {
@@ -43,9 +43,9 @@ exports.down = function(db) {
       resolve(data);
     });
   })
-  .then(function(data) {
-    return db.runSql(data);
-  });
+    .then(function(data) {
+      return db.runSql(data);
+    });
 };
 
 exports._meta = {

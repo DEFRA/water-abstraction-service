@@ -50,7 +50,8 @@ const pojoToModelMapper = createMapper()
     'source',
     'season',
     'loss',
-    'description'
+    'description',
+    'isSection127AgreementEnabled'
   )
   .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel)
   .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.pojoToModel)
@@ -80,7 +81,8 @@ const modelToDbMapper = createMapper()
     'loss',
     'description',
     'authorisedAnnualQuantity',
-    'billableAnnualQuantity'
+    'billableAnnualQuantity',
+    'isSection127AgreementEnabled'
   )
   .map('abstractionPeriod.startDay').to('abstractionPeriodStartDay')
   .map('abstractionPeriod.startMonth').to('abstractionPeriodStartMonth')
