@@ -12,6 +12,8 @@ const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
 const Invoice = require('../../../../src/lib/models/invoice');
+const Batch = require('../../../../src/lib/models/batch');
+
 const { BATCH_STATUS } = require('../../../../src/lib/models/batch');
 
 const invoiceService = require('../../../../src/lib/services/invoice-service');
@@ -20,11 +22,11 @@ const controller = require('../../../../src/modules/billing/controllers/invoices
 experiment('modules/billing/controllers/invoices', () => {
   const invoiceId = uuid();
 
-  const createInvoice = (overrides = {}) => ({
-    invoiceId,
-    billingBatch: {
+  const createInvoice = (overrides = {}) => new Invoice().fromHash({
+    id: invoiceId,
+    batch: new Batch().fromHash({
       status: overrides.batchStatus || BATCH_STATUS.sent
-    },
+    }),
     rebillingState: overrides.rebillingState || null
   });
 
@@ -36,6 +38,7 @@ experiment('modules/billing/controllers/invoices', () => {
   afterEach(() => sandbox.restore());
 
   experiment('.patchInvoice', () => {
+    const invoice = createInvoice();
     const request = {
       params: { invoiceId },
       payload: {
@@ -45,7 +48,7 @@ experiment('modules/billing/controllers/invoices', () => {
     let result;
     experiment('happy path', () => {
       beforeEach(async () => {
-        invoiceService.getInvoiceById.resolves(createInvoice());
+        invoiceService.getInvoiceById.resolves(invoice);
         result = await controller.patchInvoice(request);
       });
 
@@ -53,9 +56,9 @@ experiment('modules/billing/controllers/invoices', () => {
         expect(invoiceService.getInvoiceById.calledWith(invoiceId)).to.be.true();
       });
 
-      test('updates the invoice with the payload', () => {
+      test('updates the invoice with the Invoice model', () => {
         expect(invoiceService.updateInvoice.calledWith(
-          invoiceId, request.payload
+          invoice
         )).to.be.true();
       });
 

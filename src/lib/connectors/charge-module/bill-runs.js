@@ -1,7 +1,6 @@
 'use strict';
 
 const got = require('./lib/got-cm');
-const { logger } = require('../../../logger');
 
 /**
  * Creates a bill run in the CM for the specified region code

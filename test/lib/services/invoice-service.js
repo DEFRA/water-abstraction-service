@@ -25,6 +25,8 @@ const { logger } = require('../../../src/logger');
 const invoiceService = require('../../../src/lib/services/invoice-service');
 
 const { NotFoundError } = require('../../../src/lib/errors');
+const InvoiceAccount = require('../../../src/lib/models/invoice-account');
+const FinancialYear = require('../../../src/lib/models/financial-year');
 
 const IDS = {
   batch: uuid(),
@@ -233,12 +235,11 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(repos.billingInvoices, 'findByIsFlaggedForRebillingAndRegion').resolves();
     sandbox.stub(repos.billingInvoices, 'resetIsFlaggedForRebilling').resolves();
     sandbox.stub(repos.billingInvoices, 'deleteInvoicesByOriginalInvoiceId').resolves();
+    sandbox.stub(repos.billingInvoices, 'create').resolves();
 
     sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountsByIds').resolves(crmData);
 
     sandbox.stub(repos.billingInvoiceLicences, 'findOne');
-
-    sandbox.stub(mappers.invoice, 'modelToDb');
 
     sandbox.stub(chargeModuleBillRunApi, 'rebillInvoice');
 
@@ -556,20 +557,18 @@ experiment('modules/billing/services/invoiceService', () => {
   });
 
   experiment('.saveInvoiceToDB', () => {
-    const batch = new Batch();
     const invoice = new Invoice();
+    const invoiceAccountId = uuid();
+    invoice.invoiceAccount = new InvoiceAccount(invoiceAccountId);
+    invoice.financialYear = new FinancialYear(2022);
 
     beforeEach(async () => {
-      mappers.invoice.modelToDb.returns({ foo: 'bar' });
-      await invoiceService.saveInvoiceToDB(batch, invoice);
-    });
-
-    test('calls the relevant mapper with the batch and invoice', async () => {
-      expect(mappers.invoice.modelToDb.calledWith(batch, invoice)).to.be.true();
+      await invoiceService.saveInvoiceToDB(invoice);
     });
 
     test('calls .upsert() on the repo with the result of the mapping', async () => {
-      expect(repos.billingInvoices.upsert.calledWith({ foo: 'bar' })).to.be.true();
+      const [data] = repos.billingInvoices.upsert.lastCall.args;
+      expect(data.invoiceAccountId).to.equal(invoiceAccountId);
     });
   });
 
@@ -611,7 +610,7 @@ experiment('modules/billing/services/invoiceService', () => {
     experiment('when the invoice does not exist', () => {
       beforeEach(async () => {
         repos.billingInvoices.findOneBy.resolves(null);
-        repos.billingInvoices.upsert.resolves(createBatchData().billingInvoices[0]);
+        repos.billingInvoices.create.resolves(createBatchData().billingInvoices[0]);
         result = await invoiceService.getOrCreateInvoice(IDS.batch, invoiceAccountId, financialYearEnding);
       });
 
@@ -630,7 +629,7 @@ experiment('modules/billing/services/invoiceService', () => {
       });
 
       test('the row is created', async () => {
-        expect(repos.billingInvoices.upsert.called).to.be.true();
+        expect(repos.billingInvoices.create.called).to.be.true();
       });
 
       test('resolves with an Invoice model', async () => {
@@ -686,27 +685,28 @@ experiment('modules/billing/services/invoiceService', () => {
   });
 
   experiment('.updateInvoice', () => {
-    const invoiceId = uuid();
-    const changes = { isFlaggedForRebilling: true };
+    const invoice = new Invoice(uuid());
+    invoice.invoiceAccount = new InvoiceAccount(uuid());
+    invoice.financialYear = new FinancialYear(2020);
+    invoice.isFlaggedForRebilling = true;
+
     let result;
 
     beforeEach(async () => {
-      sandbox.stub(mappers.invoice, 'dbToModel').returns({ bar: 'baz' });
-
-      repos.billingInvoices.update.resolves({ foo: 'bar' });
-      result = await invoiceService.updateInvoice(invoiceId, changes);
+      result = await invoiceService.updateInvoice(invoice);
     });
 
-    test('calls .update() on the repo with the invoice id', async () => {
-      expect(repos.billingInvoices.update.calledWith(invoiceId, changes)).to.be.true();
+    test('calls .update() on the repo with the invoice id and changes', async () => {
+      const [id, changes] = repos.billingInvoices.update.lastCall.args;
+      expect(id).to.equal(invoice.id);
+      expect(changes).to.be.an.object();
+      expect(changes.financialYearEnding).to.equal(2020);
+      expect(changes.invoiceAccountId).to.equal(invoice.invoiceAccount.id);
+      expect(changes.isFlaggedForRebilling).to.be.true();
     });
 
-    test('maps the invoice to the model', async () => {
-      expect(mappers.invoice.dbToModel.calledWith({ foo: 'bar' })).to.be.true();
-    });
-
-    test('returns the result of the mapping', () => {
-      expect(result).to.equal({ bar: 'baz' });
+    test('returns the updated model', () => {
+      expect(result).to.be.an.instanceOf(Invoice);
     });
   });
 
@@ -734,17 +734,33 @@ experiment('modules/billing/services/invoiceService', () => {
   experiment('.rebillInvoice', () => {
     let batch, invoice, result;
 
+    const cmResponse = {
+      invoices: [
+        {
+          id: uuid(),
+          rebilledType: 'C'
+        },
+        {
+          id: uuid(),
+          rebilledType: 'R'
+        }
+      ]
+    };
+
     beforeEach(async () => {
       batch = createBatch();
       invoice = new Invoice().fromHash({
         id: uuid(),
-        externalId: uuid()
+        externalId: uuid(),
+        invoiceAccount: new InvoiceAccount(uuid()),
+        financialYear: new FinancialYear(2020)
       });
-      repos.billingInvoices.update.resolves({});
+      repos.billingInvoices.update.resolves(cmResponse);
     });
 
     experiment('when the CM responds with no errors', () => {
       beforeEach(async () => {
+        chargeModuleBillRunApi.rebillInvoice.resolves(cmResponse);
         result = await invoiceService.rebillInvoice(batch, invoice);
       });
 
@@ -769,6 +785,24 @@ experiment('modules/billing/services/invoiceService', () => {
         )).to.be.true();
       });
 
+      test('a new pair of invoices are created', async () => {
+        expect(repos.billingInvoices.create.callCount).to.equal(2);
+      });
+
+      test('saves the "cancel" invoice to the database', async () => {
+        const [dbRow] = repos.billingInvoices.create.firstCall.args;
+        expect(dbRow.externalId).to.equal(cmResponse.invoices[0].id);
+        expect(dbRow.rebillingState).to.equal(Invoice.rebillingState.reversal);
+        expect(dbRow.originalBillingInvoiceId).to.equal(invoice.id);
+      });
+
+      test('saves the "rebill" invoice to the database', async () => {
+        const [dbRow] = repos.billingInvoices.create.secondCall.args;
+        expect(dbRow.externalId).to.equal(cmResponse.invoices[1].id);
+        expect(dbRow.rebillingState).to.equal(Invoice.rebillingState.rebill);
+        expect(dbRow.originalBillingInvoiceId).to.equal(invoice.id);
+      });
+
       test('resolves with the updated Invoice model', async () => {
         expect(result).to.be.an.instanceOf(Invoice);
       });
@@ -777,7 +811,9 @@ experiment('modules/billing/services/invoiceService', () => {
     experiment('when the CM responds with a 409 error', () => {
       beforeEach(async () => {
         const err = new Error('Oh no');
-        err.statusCode = 409;
+        err.response = {
+          statusCode: 409
+        };
         chargeModuleBillRunApi.rebillInvoice.rejects(err);
         result = await invoiceService.rebillInvoice(batch, invoice);
       });
@@ -792,19 +828,6 @@ experiment('modules/billing/services/invoiceService', () => {
       test('an info message is logged', async () => {
         expect(logger.info.called).to.be.true();
         expect(logger.error.called).to.be.false();
-      });
-
-      test('the invoice is updated so that the originalBillingInvoiceId = the invoice ID', async () => {
-        expect(repos.billingInvoices.update.calledWith(
-          invoice.id, {
-            originalBillingInvoiceId: invoice.id,
-            rebillingState: null
-          }
-        )).to.be.true();
-      });
-
-      test('resolves with the updated Invoice model', async () => {
-        expect(result).to.be.an.instanceOf(Invoice);
       });
     });
 

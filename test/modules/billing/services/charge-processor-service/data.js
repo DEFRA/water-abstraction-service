@@ -87,7 +87,7 @@ const createChargeElement = (overrides = {}) => {
 const createFinancialYear = year => new FinancialYear(year || 2020);
 
 const createBatch = (type, options = {}) => {
-  const batch = new Batch();
+  const batch = new Batch(uuid());
   return batch.fromHash({
     type,
     region: new Region(uuid(), 'region'),

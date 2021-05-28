@@ -107,6 +107,19 @@ const getInvoiceNumber = cmTransactions => {
   return transactionsWithRef[0] ? transactionsWithRef[0].transactionReference : null;
 };
 
+const cmRebilledTypes = new Map()
+  .set('C', 'reversal')
+  .set('R', 'rebill')
+  .set('O', null);
+
+const cmToPojoMapper = createMapper()
+  .map('id').to('externalId')
+  .copy('netTotal')
+  .map('deminimisInvoice').to('isDeMinimis')
+  .map('debitLineValue').to('invoiceValue')
+  .map('creditLineValue').to('creditNoteValue', value => -value)
+  .map('rebilledType').to('rebillingState', value => cmRebilledTypes.get(value));
+
 /**
  * Maps Charge Module invoice data to POJO model with WRLS naming
  *
@@ -115,12 +128,8 @@ const getInvoiceNumber = cmTransactions => {
  * @returns {Object}
  */
 const cmToPojo = (cmInvoiceSummary, cmTransactions = []) => ({
-  isDeMinimis: cmInvoiceSummary.deminimisInvoice,
-  invoiceNumber: getInvoiceNumber(cmTransactions),
-  netTotal: cmInvoiceSummary.netTotal,
-  invoiceValue: cmInvoiceSummary.debitLineValue,
-  creditNoteValue: -cmInvoiceSummary.creditLineValue,
-  externalId: cmInvoiceSummary.id
+  ...cmToPojoMapper.execute(cmInvoiceSummary),
+  invoiceNumber: getInvoiceNumber(cmTransactions)
 });
 
 exports.dbToModel = dbToModel;

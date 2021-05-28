@@ -1,6 +1,6 @@
 'use strict';
 
-const { find, partialRight, pickBy } = require('lodash');
+const { find, partialRight, pickBy, get } = require('lodash');
 const pWaterfall = require('p-waterfall');
 
 const { logger } = require('../../logger');
@@ -40,7 +40,7 @@ const getInvoiceById = async (invoiceId) => {
  * @param {Invoice} invoice
  * @return {Promise<Object>}
  */
-const saveInvoiceToDB = async (batch, invoice) => {
+const saveInvoiceToDB = async invoice => {
   const data = mappers.invoice.modelToDb(invoice);
   return repos.billingInvoices.upsert(data);
 };
@@ -252,10 +252,6 @@ const setSourceInvoiceAsRebilled = async invoiceId => {
   return mappers.invoice.dbToModel(updatedRow);
 };
 
-const cmRebilledTypes = new Map()
-  .set('C', 'reversal')
-  .set('R', 'rebill');
-
 /**
  * Creates the re-billing invoices in the new batch using the external IDs
  * returned from the CM re-billing API call
@@ -270,10 +266,10 @@ const createRebillingInvoices = (batch, invoice, cmResponse) => {
     // Additional properties which should be set on the invoice model
     // to reflect the CM re-billing state
     const invoiceProperties = {
-      externalId: cmInvoice.id,
-      originalInvoiceId: invoice.id,
-      rebillingState: cmRebilledTypes.get(cmInvoice.rebilledType)
+      ...mappers.invoice.cmToPojo(cmInvoice),
+      originalInvoiceId: invoice.id
     };
+
     return getOrCreateInvoice(
       batch.id,
       invoice.invoiceAccount.id,
@@ -297,7 +293,7 @@ const rebillInvoice = async (batch, invoice) => {
     await createRebillingInvoices(batch, invoice, cmResponse);
     return setSourceInvoiceAsRebilled(invoice.id);
   } catch (err) {
-    if (err.response.statusCode === 409) {
+    if (get(err, 'response.statusCode') === 409) {
       logger.info(`Invoice ${invoice.id} already marked for rebilling in batch ${batch.id}`);
     } else {
       logger.error(`Failed to mark invoice ${invoice.id} for rebilling in charge module`, err);

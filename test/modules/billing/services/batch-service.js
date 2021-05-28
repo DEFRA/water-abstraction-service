@@ -579,7 +579,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('each invoice in the batch is saved', async () => {
       expect(
-        invoiceService.saveInvoiceToDB.calledWith(models.batch, models.invoice)
+        invoiceService.saveInvoiceToDB.calledWith(models.invoice)
       ).to.be.true();
     });
 
@@ -1107,9 +1107,10 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       experiment('when the invoice is found and there are no errors', () => {
-        let billingInvoiceId, billingInvoiceExternalId, invoiceAccountId, licenceId, billingInvoice, originalBillingInvoiceId;
+        let billingBatchId, billingInvoiceId, billingInvoiceExternalId, invoiceAccountId, licenceId, billingInvoice, originalBillingInvoiceId;
 
         beforeEach(async () => {
+          billingBatchId = uuid();
           billingInvoiceId = uuid();
           billingInvoiceExternalId = uuid();
           invoiceAccountId = uuid();
@@ -1123,6 +1124,7 @@ experiment('modules/billing/services/batch-service', () => {
             externalId: billingInvoiceExternalId,
             financialYearEnding: 2020,
             billingBatch: {
+              billingBatchId,
               externalId: batch.externalId
             },
             billingInvoiceLicences: [

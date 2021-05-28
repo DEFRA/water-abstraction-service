@@ -125,6 +125,10 @@ const deleteInvoicesByOriginalInvoiceId = originalBillingInvoiceId =>
   bookshelf.knex.raw(queries.deleteByOriginalInvoiceId, { originalBillingInvoiceId });
 
 exports.deleteInvoicesByOriginalInvoiceId = deleteInvoicesByOriginalInvoiceId;
+
+const create = data =>
+  helpers.create(BillingInvoice, data);
+
 exports.upsert = upsert;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;
@@ -135,3 +139,4 @@ exports.update = update;
 exports.findAllForInvoiceAccount = findAllForInvoiceAccount;
 exports.findByIsFlaggedForRebillingAndRegion = findByIsFlaggedForRebillingAndRegion;
 exports.resetIsFlaggedForRebilling = resetIsFlaggedForRebilling;
+exports.create = create;

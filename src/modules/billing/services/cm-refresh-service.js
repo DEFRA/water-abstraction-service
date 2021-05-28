@@ -198,22 +198,6 @@ const updateInvoice = async (batch, invoice, cmInvoiceSummary) => {
 
   await updateTransactions(batch, invoice, cmInvoiceSummary, cmTransactions);
 
-  /*
-  // Index WRLS transactions by external ID
-  const transactionMap = getTransactionMap(invoice);
-
-  // Create/update transactions
-  for (const cmTransaction of cmTransactions) {
-    const invoiceLicence = invoice
-      .getInvoiceLicenceByLicenceNumber(cmTransaction.licenceNumber);
-    const transaction = mapTransaction(invoice, transactionMap, cmTransaction);
-    await transactionService.saveTransactionToDB(invoiceLicence, transaction);
-  }
-
-  // Delete transactions no longer on the CM side
-  await deleteTransactions(cmTransactions, transactionMap);
-  */
-
   return invoice;
 };
 
@@ -228,13 +212,9 @@ const updateInvoices = async (batch, cmResponse) => {
   };
 
   // Iterate through invoices in series, to avoid overwhelming CM with too many simultaneous requests
-  return Bluebird.mapSeries(invoiceMaps.cm, async ([key, cmInvoice]) => {
-    // const cmTransactions = await getAllCmTransactionsForInvoice(
-    //   batch.externalId,
-    //   cmInvoice.id
-    // );
-    return updateInvoice(batch, invoiceMaps.wrls.get(key), cmInvoice);
-  });
+  return Bluebird.mapSeries(invoiceMaps.cm, async ([key, cmInvoice]) =>
+    updateInvoice(batch, invoiceMaps.wrls.get(key), cmInvoice)
+  );
 };
 
 const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating';
@@ -263,6 +243,5 @@ const updateBatch = async batchId => {
 
   return true;
 };
-updateBatch('67c3dad7-e332-43c4-a017-9411c0aae15e');
 
 exports.updateBatch = updateBatch;
