@@ -33,7 +33,7 @@ const getPurposeUseDescription = purposeUse => {
   return purposeUse.name.split('-')[0].trim();
 };
 
-const getTwoPartTariffTransactionDescription = (transaction) => {
+const getTwoPartTariffTransactionDescription = transaction => {
   const prefix = transaction.isTwoPartTariffSupplementary ? 'Second' : 'First';
   const purposeUseDescription = getPurposeUseDescription(transaction.chargeElement.purposeUse);
   const { description } = transaction.chargeElement;
