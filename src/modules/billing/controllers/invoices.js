@@ -4,8 +4,7 @@ const invoiceService = require('../../../lib/services/invoice-service');
 const mapErrorResponse = require('../../../lib/map-error-response');
 
 const invoiceIsPartOfSentBatch = invoice => {
-  const { billingBatch } = invoice;
-  return billingBatch.status === BATCH_STATUS.sent;
+  return invoice.batch.status === BATCH_STATUS.sent;
 };
 
 const invoiceIsRebill = invoice =>
@@ -21,7 +20,9 @@ const patchInvoice = async request => {
     if (invoiceIsRebill(invoice)) {
       return Boom.conflict('Cannot update invoice that is itself a rebill');
     }
-    return invoiceService.updateInvoice(invoiceId, request.payload);
+    // Update and persist Invoice service model
+    invoice.fromHash(request.payload);
+    return invoiceService.updateInvoice(invoice);
   } catch (err) {
     return mapErrorResponse(err);
   }

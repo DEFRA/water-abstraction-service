@@ -72,9 +72,8 @@ const getInvoiceTransactions = (billRunId, invoiceId) =>
 const generate = CMBillRunId =>
   got.patch(`v2/wrls/bill-runs/${CMBillRunId}/generate`);
 
-const rebillInvoice = async (billRunId, invoiceId) => {
-  logger.info(`CM rebilling API for ${billRunId} ${invoiceId} not yet implemented`);
-};
+const rebillInvoice = async (billRunId, invoiceId) =>
+  got.patch(`v2/wrls/bill-runs/${billRunId}/invoices/${invoiceId}/rebill`);
 
 exports.addTransaction = addTransaction;
 exports.approve = approve;
