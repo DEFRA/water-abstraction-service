@@ -150,4 +150,15 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
       expect(path).to.equal('v2/wrls/bill-runs/test-id/invoices/test-invoice-id');
     });
   });
+
+  experiment('.rebillInvoice', () => {
+    beforeEach(async () => {
+      await billRunsApiConnector.rebillInvoice('test-id', 'test-invoice-id');
+    });
+
+    test('the correct endpoint is called', async () => {
+      const [path] = gotCM.patch.lastCall.args;
+      expect(path).to.equal('v2/wrls/bill-runs/test-id/invoices/test-invoice-id/rebill');
+    });
+  });
 });

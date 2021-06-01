@@ -16,6 +16,8 @@ const cmRefreshService = require('../../../../src/modules/billing/services/cm-re
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const invoiceService = require('../../../../src/lib/services/invoice-service');
 const transactionService = require('../../../../src/modules/billing/services/transactions-service');
+const licencesService = require('../../../../src/lib/services/licences');
+const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
 
 // Models
 const Batch = require('../../../../src/lib/models/batch');
@@ -34,6 +36,9 @@ const customerRefs = [
 ];
 const licenceNumbers = [
   '01/234/ABC', '04/567/CDE'
+];
+const licenceIds = [
+  uuid(), uuid()
 ];
 const invoiceIds = [
   uuid(), uuid()
@@ -175,6 +180,19 @@ const cmResponses = {
 
 const createInvoices = () => customerRefs.map((accountNumber, i) => {
   return new Invoice().fromHash({
+    id: invoiceIds[i],
+    invoiceAccount: new InvoiceAccount().fromHash({
+      accountNumber
+    }),
+    financialYear: new FinancialYear(financialYearEnding),
+    invoiceLicences: [],
+    rebillingState: null
+  });
+});
+
+const createInvoicesWithInvoiceLicences = () => customerRefs.map((accountNumber, i) => {
+  return new Invoice().fromHash({
+    id: invoiceIds[i],
     invoiceAccount: new InvoiceAccount().fromHash({
       accountNumber
     }),
@@ -196,6 +214,15 @@ const createInvoices = () => customerRefs.map((accountNumber, i) => {
   });
 });
 
+const createLicence = index => new Licence().fromHash({
+  id: licenceIds[index],
+  licenceNumber: licenceNumbers[index]
+});
+
+const createInvoiceLicence = index => new InvoiceLicence().fromHash({
+  licence: createLicence(index)
+});
+
 experiment('modules/billing/services/cm-refresh-service', () => {
   let result, batch, invoices;
 
@@ -211,6 +238,10 @@ experiment('modules/billing/services/cm-refresh-service', () => {
 
     sandbox.stub(transactionService, 'saveTransactionToDB');
     sandbox.stub(transactionService, 'deleteById');
+
+    sandbox.stub(licencesService, 'getLicenceByLicenceRef');
+
+    sandbox.stub(invoiceLicencesService, 'getOrCreateInvoiceLicence');
   });
 
   afterEach(async () => {
@@ -254,7 +285,7 @@ experiment('modules/billing/services/cm-refresh-service', () => {
     experiment('when the CM batch is ready', () => {
       beforeEach(async () => {
         batch = createBatch();
-        invoices = createInvoices();
+        invoices = createInvoicesWithInvoiceLicences();
 
         batchService.getBatchById.resolves(batch);
         batchService.updateWithCMSummary.resolves(batch);
@@ -274,6 +305,74 @@ experiment('modules/billing/services/cm-refresh-service', () => {
 
       test('the correct batch is retrieved from the batch service', async () => {
         expect(batchService.getBatchById.calledWith(batchId)).to.be.true();
+      });
+
+      test('the batch is fetched from the CM on externalId', async () => {
+        expect(cmBillRunsConnector.get.calledWith(externalId)).to.be.true();
+      });
+
+      test('invoices are fetched for the batch from the db', async () => {
+        expect(invoiceService.getInvoicesForBatch.calledWith(
+          batch, { includeTransactions: true }
+        )).to.be.true();
+      });
+    });
+
+    experiment('when the CM batch is ready and the invoice licences dont exist in the current batch', () => {
+      beforeEach(async () => {
+        batch = createBatch();
+        invoices = createInvoices();
+
+        batchService.getBatchById.resolves(batch);
+        batchService.updateWithCMSummary.resolves(batch);
+
+        invoiceService.getInvoicesForBatch.resolves(invoices);
+
+        cmBillRunsConnector.get.resolves(cmResponses.batchSummary.ready);
+        cmBillRunsConnector.getInvoiceTransactions.withArgs(externalId, invoiceIds[0]).resolves({
+          invoice: cmResponses.batchSummary.ready.billRun.invoices[0]
+        });
+        cmBillRunsConnector.getInvoiceTransactions.withArgs(externalId, invoiceIds[1]).resolves({
+          invoice: cmResponses.batchSummary.ready.billRun.invoices[1]
+        });
+
+        licencesService.getLicenceByLicenceRef.withArgs(licenceNumbers[0]).resolves(
+          createLicence(0)
+        );
+        licencesService.getLicenceByLicenceRef.withArgs(licenceNumbers[1]).resolves(
+          createLicence(1)
+        );
+
+        invoiceLicencesService.getOrCreateInvoiceLicence.onCall(0).resolves(
+          createInvoiceLicence(0)
+        );
+        invoiceLicencesService.getOrCreateInvoiceLicence.onCall(1).resolves(
+          createInvoiceLicence(1)
+        );
+
+        result = await cmRefreshService.updateBatch(batchId);
+      });
+
+      test('the correct batch is retrieved from the batch service', async () => {
+        expect(batchService.getBatchById.calledWith(batchId)).to.be.true();
+      });
+
+      test('the first invoice licence is created', async () => {
+        expect(
+          licencesService.getLicenceByLicenceRef.firstCall.args
+        ).to.equal([licenceNumbers[0]]);
+        expect(
+          invoiceLicencesService.getOrCreateInvoiceLicence.firstCall.args
+        ).to.equal([invoiceIds[0], licenceIds[0], licenceNumbers[0]]);
+      });
+
+      test('the second invoice licence is created', async () => {
+        expect(
+          licencesService.getLicenceByLicenceRef.secondCall.args
+        ).to.equal([licenceNumbers[1]]);
+        expect(
+          invoiceLicencesService.getOrCreateInvoiceLicence.secondCall.args
+        ).to.equal([invoiceIds[1], licenceIds[1], licenceNumbers[1]]);
       });
 
       test('the batch is fetched from the CM on externalId', async () => {

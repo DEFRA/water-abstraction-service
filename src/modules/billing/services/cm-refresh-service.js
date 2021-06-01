@@ -143,6 +143,14 @@ const deleteTransactions = (cmTransactions, transactionMap) => {
   return transactionService.deleteById(deleteIds);
 };
 
+/**
+ * Gets or creates the InvoiceLicence model within the supplied
+ * Invoice with the supplied licence numberr
+ *
+ * @param {Invoice} invoice
+ * @param {String} licenceNumber
+ * @returns {Promise<InvoiceLicence>}
+ */
 const getOrCreateInvoiceLicence = async (invoice, licenceNumber) => {
   // Get existing InvoiceLicence by licence number
   const invoiceLicence = invoice
@@ -159,7 +167,15 @@ const getOrCreateInvoiceLicence = async (invoice, licenceNumber) => {
   return newInvoiceLicence;
 };
 
-const updateTransactions = async (batch, invoice, cmInvoiceSummary, cmTransactions) => {
+/**
+ * Updates the transactions within a particular invoice within a batch
+ * using the data from the CM
+ *
+ * @param {Invoice} invoice
+ * @param {Array<Object>} cmTransactions
+ * @returns {Promise}
+ */
+const updateTransactions = async (invoice, cmTransactions) => {
   // Index WRLS transactions by external ID
   const transactionMap = getTransactionMap(invoice);
 
@@ -175,7 +191,8 @@ const updateTransactions = async (batch, invoice, cmInvoiceSummary, cmTransactio
 };
 
 /**
- * Maps CM data to an Invoice model
+ * Maps CM data to the Invoice model and saves it,
+ * then updates all transactions within the invoice
  *
  * @param {Batch} batch
  * @param {Invoice} invoice
@@ -196,11 +213,18 @@ const updateInvoice = async (batch, invoice, cmInvoiceSummary) => {
   // Persist invoice to DB
   await invoiceService.updateInvoice(invoice);
 
-  await updateTransactions(batch, invoice, cmInvoiceSummary, cmTransactions);
+  await updateTransactions(invoice, cmTransactions);
 
   return invoice;
 };
 
+/**
+ * Updates all the invoices within a batch
+ *
+ * @param {Batch} batch
+ * @param {Object} cmResponse
+ * @return {Promise}
+ */
 const updateInvoices = async (batch, cmResponse) => {
   // Fetch WRLS batch invoices
   const invoices = await invoiceService.getInvoicesForBatch(batch, { includeTransactions: true });
@@ -219,6 +243,12 @@ const updateInvoices = async (batch, cmResponse) => {
 
 const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating';
 
+/**
+ * Updates the batch with the given batch ID
+ * with data retrieved from the CM
+ *
+ * @param {String} batchId
+ */
 const updateBatch = async batchId => {
   // Fetch WRLS batch
   const batch = await batchService.getBatchById(batchId);
