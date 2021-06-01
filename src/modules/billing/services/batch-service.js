@@ -326,11 +326,11 @@ const updateInvoiceLicencesForSupplementaryReprocessing = invoice => {
  * @param {*} originalBillingInvoideId - the original invoice
  * @return {promise}
  */
-const deleteRebillingInvoices = async originalBillingInvoideId => {
+const deleteRebillingInvoices = async originalBillingInvoiceId => {
   // update the original invoice rebilling state to null and originalIncoideId to null
-  await invoiceService.update(originalBillingInvoideId, { isFlaggedForBilling: false, originalBillingInvoideId: null, rebillingState: null });
+  await invoiceService.updateInvoice(originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
   // delete all the invoices where the original_billing_invoice_id = originalInvoiceId
-  await invoiceService.deleteByOriginalBillingInvoiceId(originalBillingInvoideId);
+  await invoiceService.deleteByOriginalBillingInvoiceId(originalBillingInvoiceId);
 };
 
 /**
@@ -367,7 +367,7 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
     if (invoice.rebillingState === null) {
       await newRepos.billingInvoices.delete(invoiceId);
     } else {
-      await deleteRebillingInvoices(invoice);
+      await deleteRebillingInvoices(invoice.originalBillingInvoiceId);
     }
 
     // update the include in supplementary billing status
