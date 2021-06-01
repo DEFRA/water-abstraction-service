@@ -29,7 +29,7 @@ const getInvoiceDataById = async invoiceId => {
  * @param {String} invoiceId
  * @returns {Promise<Invoice>}
  */
-const getInvoiceById = async (invoiceId) => {
+const getInvoiceById = async invoiceId => {
   const data = await getInvoiceDataById(invoiceId);
   return mappers.invoice.dbToModel(data);
 };
@@ -280,6 +280,8 @@ const createRebillingInvoices = (batch, invoice, cmResponse) => {
   return Promise.all(tasks);
 };
 
+const isConflictError = err => get(err, 'response.statusCode') === 409;
+
 /**
  * Rebills the requested invoice
  *
@@ -293,8 +295,9 @@ const rebillInvoice = async (batch, invoice) => {
     await createRebillingInvoices(batch, invoice, cmResponse);
     return setSourceInvoiceAsRebilled(invoice.id);
   } catch (err) {
-    if (get(err, 'response.statusCode') === 409) {
+    if (isConflictError(err)) {
       logger.info(`Invoice ${invoice.id} already marked for rebilling in batch ${batch.id}`);
+      return null;
     } else {
       logger.error(`Failed to mark invoice ${invoice.id} for rebilling in charge module`, err);
       throw err;

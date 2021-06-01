@@ -3,9 +3,8 @@ const Boom = require('@hapi/boom');
 const invoiceService = require('../../../lib/services/invoice-service');
 const mapErrorResponse = require('../../../lib/map-error-response');
 
-const invoiceIsPartOfSentBatch = invoice => {
-  return invoice.batch.status === BATCH_STATUS.sent;
-};
+const invoiceIsPartOfSentBatch = invoice =>
+  invoice.batch.status === BATCH_STATUS.sent;
 
 const invoiceIsRebill = invoice =>
   invoice.rebillingState !== null;
