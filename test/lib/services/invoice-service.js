@@ -232,6 +232,7 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(repos.billingInvoices, 'findAllForInvoiceAccount').resolves();
     sandbox.stub(repos.billingInvoices, 'findByIsFlaggedForRebillingAndRegion').resolves();
     sandbox.stub(repos.billingInvoices, 'resetIsFlaggedForRebilling').resolves();
+    sandbox.stub(repos.billingInvoices, 'deleteInvoicesByOriginalInvoiceId').resolves();
 
     sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountsByIds').resolves(crmData);
 
@@ -819,6 +820,14 @@ experiment('modules/billing/services/invoiceService', () => {
         await expect(func()).to.reject();
         expect(logger.error.called).to.be.true();
       });
+    });
+  });
+
+  experiment('.deleteByOriginalBillingInvoiceId', () => {
+    test('the original invoice is passed to the repos connector', async () => {
+      const id = uuid();
+      await invoiceService.deleteByOriginalBillingInvoiceId(id);
+      expect(repos.billingInvoices.deleteInvoicesByOriginalInvoiceId.calledWith(id)).to.be.true();
     });
   });
 });

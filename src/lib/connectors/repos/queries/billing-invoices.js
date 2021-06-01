@@ -47,3 +47,7 @@ where
   and t2.original_billing_invoice_id is not null
 returning *;
 `;
+
+exports.deleteByOriginalBillingInvoiceId = `
+delete from water.billing_invoices 
+where original_billing_invoice_id = :originalBillingInvoiceId`;
