@@ -117,6 +117,14 @@ const findByIsFlaggedForRebillingAndRegion = regionId =>
 const resetIsFlaggedForRebilling = batchId =>
   raw.multiRow(queries.resetIsFlaggedForRebilling, { batchId });
 
+/**
+ * Deletes rebilled invoices by originalInvoiceId
+ * @param {String} originalBillingInvoiceId
+ */
+const deleteInvoicesByOriginalInvoiceId = originalBillingInvoiceId =>
+  bookshelf.knex.raw(queries.deleteByOriginalInvoiceId, { originalBillingInvoiceId });
+
+exports.deleteInvoicesByOriginalInvoiceId = deleteInvoicesByOriginalInvoiceId;
 exports.upsert = upsert;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;

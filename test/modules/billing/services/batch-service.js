@@ -86,6 +86,8 @@ experiment('modules/billing/services/batch-service', () => {
 
     sandbox.stub(newRepos.billingInvoices, 'deleteEmptyByBatchId').resolves();
     sandbox.stub(newRepos.billingInvoices, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingInvoices, 'deleteInvoicesByOriginalInvoiceId').resolves();
+    sandbox.stub(newRepos.billingInvoices, 'update').resolves();
 
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteEmptyByBatchId').resolves();
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchId').resolves();
@@ -107,6 +109,8 @@ experiment('modules/billing/services/batch-service', () => {
 
     sandbox.stub(invoiceService, 'saveInvoiceToDB');
     sandbox.stub(invoiceService, 'resetIsFlaggedForRebilling');
+    sandbox.stub(invoiceService, 'updateInvoice').resolves();
+    sandbox.stub(invoiceService, 'deleteByOriginalBillingInvoiceId').resolves();
 
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId');
 
@@ -1103,15 +1107,16 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       experiment('when the invoice is found and there are no errors', () => {
-        let billingInvoiceId, billingInvoiceExternalId, invoiceAccountId, licenceId;
+        let billingInvoiceId, billingInvoiceExternalId, invoiceAccountId, licenceId, billingInvoice, originalBillingInvoiceId;
 
         beforeEach(async () => {
           billingInvoiceId = uuid();
           billingInvoiceExternalId = uuid();
           invoiceAccountId = uuid();
           licenceId = uuid();
+          originalBillingInvoiceId = uuid();
 
-          newRepos.billingInvoices.findOne.resolves({
+          billingInvoice = {
             billingInvoiceId,
             invoiceAccountId,
             invoiceAccountNumber: 'A12345678A',
@@ -1144,8 +1149,10 @@ experiment('modules/billing/services/batch-service', () => {
                   revokedDate: null
                 }
               }
-            ]
-          });
+            ],
+            rebillingState: null
+          };
+          newRepos.billingInvoices.findOne.resolves(billingInvoice);
           newRepos.billingTransactions.countByBatchId.resolves(0);
           await batchService.deleteBatchInvoice(batch, billingInvoiceId);
         });
@@ -1185,6 +1192,24 @@ experiment('modules/billing/services/batch-service', () => {
           expect(from).to.equal('yes');
           expect(to).to.equal('reprocess');
           expect(licenceId).to.equal(licenceId);
+        });
+
+        experiment('when the invoice is a rebilling invoice', () => {
+          beforeEach(async () => {
+            billingInvoice.rebillingState = 'rebill';
+            billingInvoice.originalBillingInvoiceId = originalBillingInvoiceId;
+            newRepos.billingInvoices.findOne.resolves(billingInvoice);
+            await batchService.deleteBatchInvoice(batch, billingInvoiceId);
+          });
+
+          test('the original invoice rebilling state is updated', () => {
+            expect(invoiceService.updateInvoice.calledWith(originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null }))
+              .to.be.true();
+          });
+
+          test('the rebilled invoices are deleted with deleteByOriginalBillingInvoiceId using the original invoice id', () => {
+            expect(invoiceService.deleteByOriginalBillingInvoiceId.calledWith(originalBillingInvoiceId)).to.be.true();
+          });
         });
       });
 

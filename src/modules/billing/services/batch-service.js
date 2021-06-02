@@ -321,6 +321,19 @@ const updateInvoiceLicencesForSupplementaryReprocessing = invoice => {
 };
 
 /**
+ * Deletes all rebilled invoices that is grouped by the original invoice id and
+ * resets the rebilling state and original invoice id flags to null for the original invoice
+ * @param {*} originalBillingInvoideId - the original invoice
+ * @return {promise}
+ */
+const deleteRebillingInvoices = async originalBillingInvoiceId => {
+  // update the original invoice rebilling state to null and originalIncoideId to null
+  await invoiceService.updateInvoice(originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
+  // delete all the invoices where the original_billing_invoice_id = originalInvoiceId
+  await invoiceService.deleteByOriginalBillingInvoiceId(originalBillingInvoiceId);
+};
+
+/**
  * Deletes an individual invoice from the batch.  Also deletes CM transactions
  * @param {Batch} batch
  * @param {String} invoiceId
@@ -348,7 +361,14 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
     await newRepos.billingVolumes.deleteByBatchAndInvoiceId(batch.id, invoiceId);
     await newRepos.billingTransactions.deleteByInvoiceId(invoiceId);
     await newRepos.billingInvoiceLicences.deleteByInvoiceId(invoiceId);
-    await newRepos.billingInvoices.delete(invoiceId);
+
+    // Delete the invoice if the rebilling state is null otherwise
+    // reset the original invoice and delete the rebilled invoices.
+    if (invoice.rebillingState === null) {
+      await newRepos.billingInvoices.delete(invoiceId);
+    } else {
+      await deleteRebillingInvoices(invoice.originalBillingInvoiceId);
+    }
 
     // update the include in supplementary billing status
     const invoiceModel = mappers.invoice.dbToModel(invoice);
