@@ -50,4 +50,4 @@ returning *;
 
 exports.deleteByOriginalBillingInvoiceId = `
 delete from water.billing_invoices 
-where original_billing_invoice_id = :originalBillingInvoiceId`;
+where original_billing_invoice_id = :originalBillingInvoiceId;`;
