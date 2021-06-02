@@ -42,7 +42,7 @@ const getTestDataForHashing = () => {
   chargeElement.description = 'Test description';
 
   const purpose = new PurposeUse();
-  purpose.name = 'Test Purpose';
+  purpose.name = 'Spray Irrigation - Direct';
   chargeElement.purposeUse = purpose;
 
   const transaction = new Transaction();
@@ -540,7 +540,7 @@ experiment('lib/models/transaction', () => {
         transaction.isCompensationCharge = false;
         transaction.isTwoPartTariffSupplementary = false;
         const description = transaction.createDescription();
-        expect(description).to.equal('First Part Test Purpose Charge at Test Description');
+        expect(description).to.equal('First Part Spray Irrigation Charge Test Description');
         expect(transaction.description).to.equal(description);
       });
 
@@ -550,7 +550,7 @@ experiment('lib/models/transaction', () => {
         transaction.chargeElement.description = null;
 
         const description = transaction.createDescription();
-        expect(description).to.equal('First Part Test Purpose Charge');
+        expect(description).to.equal('First Part Spray Irrigation Charge');
       });
 
       test('the compensation charge text is preset', async () => {
@@ -564,7 +564,7 @@ experiment('lib/models/transaction', () => {
         transaction.isCompensationCharge = false;
         transaction.isTwoPartTariffSupplementary = true;
         const description = transaction.createDescription();
-        expect(description).to.equal('Second Part Test Purpose Charge at Test Description');
+        expect(description).to.equal('Second Part Spray Irrigation Charge Test Description');
       });
     });
   });

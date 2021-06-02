@@ -3,71 +3,16 @@
 const { range, flatMap } = require('lodash');
 const bluebird = require('bluebird');
 
-const repos = require('../../../lib/connectors/repos');
-const returnRequirementVersionService = require('../../../lib/services/return-requirement-versions');
-const { RETURN_SEASONS } = require('../../../lib/models/constants');
-const { BATCH_TYPE } = require('../../../lib/models/batch');
-const { TRANSACTION_TYPE } = require('../../../lib/models/charge-version-year');
-const DateRange = require('../../../lib/models/date-range');
-const FinancialYear = require('../../../lib/models/financial-year');
+const repos = require('../../../../lib/connectors/repos');
+const twoPartTariffSeasonsService = require('./two-part-tariff-seasons');
 
-const chargeVersionYearService = require('./charge-version-year');
-const batchService = require('./batch-service');
+const { RETURN_SEASONS } = require('../../../../lib/models/constants');
+const { BATCH_TYPE } = require('../../../../lib/models/batch');
+const { TRANSACTION_TYPE } = require('../../../../lib/models/charge-version-year');
+const FinancialYear = require('../../../../lib/models/financial-year');
 
-const config = require('../../../../config');
-
-/**
- * Creates an object which describes whether 2-part tariff billing is needed in
- * each season
- * @param {Boolean} isSummer
- * @param {Boolean} isWinterAllYear
- * @return {Object}
- */
-const createTwoPartTariffBatches = (isSummer = false, isWinterAllYear = false) => ({
-  [RETURN_SEASONS.summer]: isSummer,
-  [RETURN_SEASONS.winterAllYear]: isWinterAllYear
-});
-
-/**
- * Checks whether two-part tariff billing is needed for the supplied licence
- * and financial year
- * @param {Object} row - includes charge version/licence info
- * @return {Promise<Object>} includes flags for each return season
- */
-const getTwoPartTariffSeasonsForChargeVersion = async row => {
-  // This CV doesn't have a TPT agreement - so don't create any
-  if (!row.isTwoPartTariff) {
-    return createTwoPartTariffBatches();
-  }
-
-  const chargePeriod = new DateRange(row.startDate, row.endDate);
-
-  // When considering financial years processed in NALD, we need to match the
-  // import logic which is to import all TPT runs as winter/all year
-  if (!chargePeriod.isSameOrAfter(config.billing.naldSwitchOverDate)) {
-    return createTwoPartTariffBatches(false, true);
-  }
-
-  // There is a two-part tariff agreement - we need to look at the returns required
-  // to work out which seasons
-  const returnVersions = await returnRequirementVersionService.getByLicenceId(row.licenceId);
-
-  // Filter only return versions that overlap this charge period
-  const returnVersionsInChargePeriod = returnVersions.filter(
-    returnVersion => returnVersion.dateRange.overlaps(chargePeriod) && returnVersion.isNotDraft
-  );
-
-  // Whether summer or winter/all year returns are due for two-part tariff applicable purposes
-  const isSummer = returnVersionsInChargePeriod.some(
-    returnVersion => returnVersion.hasTwoPartTariffPurposeReturnsInSeason(RETURN_SEASONS.summer)
-  );
-
-  const isWinterAllYear = returnVersionsInChargePeriod.some(
-    returnVersion => returnVersion.hasTwoPartTariffPurposeReturnsInSeason(RETURN_SEASONS.winterAllYear)
-  );
-
-  return createTwoPartTariffBatches(isSummer, isWinterAllYear);
-};
+const chargeVersionYearService = require('../charge-version-year');
+const batchService = require('../batch-service');
 
 /**
  * Gets the return season string from the isSummer flag
@@ -99,12 +44,15 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
   if (!chargeVersion.includeInSupplementaryBilling) {
     return [];
   }
+
   const types = getAnnualTransactionTypes();
-  const twoPartTariffSeasons = await getTwoPartTariffSeasonsForChargeVersion(chargeVersion);
-  if (existingTPTBatches.some(existingBatch => existingBatch.isSummer) && twoPartTariffSeasons[RETURN_SEASONS.summer]) {
+
+  const twoPartTariffSeasons = await twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion(chargeVersion, existingTPTBatches);
+
+  if (twoPartTariffSeasons[RETURN_SEASONS.summer]) {
     types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: true });
   }
-  if (existingTPTBatches.some(existingBatch => !existingBatch.isSummer) && twoPartTariffSeasons[RETURN_SEASONS.winterAllYear]) {
+  if (twoPartTariffSeasons[RETURN_SEASONS.winterAllYear]) {
     types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: false });
   }
 
@@ -119,7 +67,7 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
  * @returns {Promise<Array>} an array of objects describing the transaction types needed, e.g. [{ type : 'two_part_tariff', isSummer: false }]
  */
 const getTwoPartTariffTransactionTypes = async (batch, chargeVersion) => {
-  const twoPartTariffSeasons = await getTwoPartTariffSeasonsForChargeVersion(chargeVersion);
+  const twoPartTariffSeasons = await twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion(chargeVersion);
   if (twoPartTariffSeasons[getReturnSeasonKey(batch.isSummer)]) {
     return [
       { type: TRANSACTION_TYPE.twoPartTariff, isSummer: batch.isSummer }

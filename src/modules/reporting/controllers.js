@@ -5,6 +5,6 @@ const reportsConnector = require('../../lib/connectors/reporting/');
  * @param request {Object} The request object
  * @returns {Request} Request body
  */
-const getReport = request => reportsConnector.getReport(request);
+const getReport = request => reportsConnector.getReport(request.defra.internalCallingUser.id, request.params.reportIdentifier);
 
 exports.getReport = getReport;

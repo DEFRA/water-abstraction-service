@@ -311,4 +311,27 @@ experiment('lib/models/charge-element', () => {
       expect(func).to.throw();
     });
   });
+
+  experiment('.isSection127AgreementEnabled', () => {
+    test('defaults to true for a new model', async () => {
+      expect(chargeElement.isSection127AgreementEnabled).to.be.true();
+    });
+
+    test('can be set to true', async () => {
+      chargeElement.isSection127AgreementEnable = true;
+      expect(chargeElement.isSection127AgreementEnabled).to.be.true();
+    });
+
+    test('can be set to false', async () => {
+      chargeElement.isSection127AgreementEnabled = false;
+      expect(chargeElement.isSection127AgreementEnabled).to.be.false();
+    });
+
+    test('throws an error if set to null', async () => {
+      const func = () => {
+        chargeElement.isSection127AgreementEnabled = null;
+      };
+      expect(func).to.throw();
+    });
+  });
 });

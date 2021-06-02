@@ -14,7 +14,9 @@ const { combineAddressLines, getAddressObjectFromArray } = require('./lib/helper
  */
 const mapInvoiceAccountToChargeModuleCustomer = invoiceAccount => {
   const { lastInvoiceAccountAddress, company } = invoiceAccount;
-
+  if (!lastInvoiceAccountAddress) {
+    return new Error('Could not retrieve lastInvoiceAccountAddress');
+  }
   const { address, agentCompany } = lastInvoiceAccountAddress;
   const customerName = extractCustomerName(company, agentCompany);
   const fao = extractFAO(lastInvoiceAccountAddress);

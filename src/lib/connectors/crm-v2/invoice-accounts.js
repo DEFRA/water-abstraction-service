@@ -5,10 +5,11 @@ const urlJoin = require('url-join');
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
 
-const getUri = (...tail) => urlJoin(config.services.crm_v2, 'invoice-accounts', ...tail);
+const getPluralisedUri = (...tail) => urlJoin(config.services.crm_v2, 'invoice-accounts', ...tail);
+const getSingularUri = (...tail) => urlJoin(config.services.crm_v2, 'invoice-account', ...tail);
 
 const getBatch = ids =>
-  serviceRequest.get(getUri(), {
+  serviceRequest.get(getPluralisedUri(), {
     qs: { id: ids },
     qsStringifyOptions: { arrayFormat: 'repeat' }
   });
@@ -30,7 +31,7 @@ const getInvoiceAccountsByIds = async ids => {
  * Gets an invoice account including company data for the given invoice account id
  * @param String id The invoice account id
  */
-const getInvoiceAccountById = id => serviceRequest.get(getUri(id));
+const getInvoiceAccountById = id => serviceRequest.get(getPluralisedUri(id));
 
 /**
  * Creates an invoice account entity in the CRM
@@ -38,11 +39,11 @@ const getInvoiceAccountById = id => serviceRequest.get(getUri(id));
  * @param {Object} invoiceAccount The invoice account to persist
  */
 const createInvoiceAccount = invoiceAccount => {
-  return serviceRequest.post(getUri(), { body: invoiceAccount });
+  return serviceRequest.post(getPluralisedUri(), { body: invoiceAccount });
 };
 
 const deleteInvoiceAccount = async invoiceAccountId =>
-  serviceRequest.delete(getUri(invoiceAccountId));
+  serviceRequest.delete(getPluralisedUri(invoiceAccountId));
 
 /**
  * Creates an invoice account address association to the invoice
@@ -52,12 +53,25 @@ const deleteInvoiceAccount = async invoiceAccountId =>
  * @param {Object} invoiceAccountAddress The invoice account address to persist
  */
 const createInvoiceAccountAddress = (invoiceAccountId, invoiceAccountAddress) => {
-  const url = getUri(invoiceAccountId, 'addresses');
+  const url = getPluralisedUri(invoiceAccountId, 'addresses');
   return serviceRequest.post(url, { body: invoiceAccountAddress });
 };
+
+/**
+ * Fetches invoice account IDs where the entities hashes do not match
+ *
+ */
+const fetchInvoiceAccountsWithUpdatedEntities = () => {
+  const url = getPluralisedUri('recently-updated');
+  return serviceRequest.get(url);
+};
+
+const getInvoiceAccountByRef = ref => serviceRequest.get(getSingularUri(), { qs: { ref } });
 
 exports.createInvoiceAccount = createInvoiceAccount;
 exports.deleteInvoiceAccount = deleteInvoiceAccount;
 exports.createInvoiceAccountAddress = createInvoiceAccountAddress;
 exports.getInvoiceAccountById = getInvoiceAccountById;
 exports.getInvoiceAccountsByIds = getInvoiceAccountsByIds;
+exports.fetchInvoiceAccountsWithUpdatedEntities = fetchInvoiceAccountsWithUpdatedEntities;
+exports.getInvoiceAccountByRef = getInvoiceAccountByRef;
