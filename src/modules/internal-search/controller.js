@@ -16,7 +16,7 @@ const buildInternalSearchResponse = async (request) => {
     buildResponse(response, 'returns', data);
   } else if (isBillingAccountReference) {
     // Search for billing accounts
-    const data = await search.searchBillingAccounts(query);
+    const data = await search.searchBillingAccounts(query.toUpperCase());
     buildResponse(response, 'billingAccount', data);
   } else if (isUser) {
     // User search
