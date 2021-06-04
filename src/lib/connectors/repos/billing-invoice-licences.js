@@ -108,6 +108,11 @@ const deleteByInvoiceId = billingInvoiceId => BillingInvoiceLicence
   .where({ billing_invoice_id: billingInvoiceId })
   .destroy();
 
+const findCountByInvoiceId = billingInvoiceId => BillingInvoiceLicence
+  .forge()
+  .where({ billing_invoice_id: billingInvoiceId })
+  .count();
+
 exports.findOne = findOne;
 exports.findAll = findAll;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
@@ -116,3 +121,4 @@ exports.upsert = upsert;
 exports.delete = deleteRecord;
 exports.deleteByBatchId = deleteByBatchId;
 exports.deleteByInvoiceId = deleteByInvoiceId;
+exports.findCountByInvoiceId = findCountByInvoiceId;
