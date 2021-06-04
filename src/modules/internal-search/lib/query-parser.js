@@ -46,7 +46,7 @@ const parseQuery = (query) => {
     isNumeric: isNumeric(query),
     isUser: isUserQuery(query),
     isReturnId: isReturnId(query),
-    isBillingAccountReference: isBillingAccountReference(query)
+    isBillingAccountReference: isBillingAccountReference(query.toUpperCase())
   };
 };
 
