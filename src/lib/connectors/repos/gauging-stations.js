@@ -7,8 +7,8 @@ const raw = require('./lib/raw');
 const findOne = id =>
   helpers.findOne(GaugingStation, 'gaugingStationId', id);
 
-const findStationConditionsForId = id =>
-  raw.multiRow(queries.findGaugingStations, { id });
+const findStationConditionsForId = gaugingStationId =>
+  raw.multiRow(queries.findGaugingStations, { gaugingStationId });
 
 const findOneByStationRef = async stationRef => {
   const model = await GaugingStation

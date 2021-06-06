@@ -13,7 +13,7 @@ module.exports = {
       description: 'Gets a gauging station by id',
       validate: {
         params: Joi.object({
-          gaugingStationId: Joi.string().guid()
+          gaugingStationId: Joi.string().required().guid()
         })
       }
     }
