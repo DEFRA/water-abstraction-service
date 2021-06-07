@@ -322,9 +322,9 @@ const updateInvoiceLicencesForSupplementaryReprocessing = invoice => {
 };
 
 /**
- * deletes all the transactions, invoice licences and invoices for
- * the linked invoices where the invoice id does not match the original invoice id
- * @param {*} invoiceId
+ * deletes all the transactions, invoice licences, invoices, charge version years and charge module data for an invoice
+ * @param {object} batch the billig batch object - must contain external id
+ * @param {Invoice} invoice water service invoice instance
  */
 const deleteInvoicesWithRelatedData = async (batch, invoice) => {
   await newRepos.billingBatchChargeVersionYears.deleteByInvoiceId(invoice.billingInvoiceId);
