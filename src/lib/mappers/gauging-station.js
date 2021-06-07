@@ -68,7 +68,7 @@ const dbToModelMapper = createMapper()
     'metadata',
     'dateCreated',
     'dateUpdated'
-  )
+  );
 
 const dbToModel = row => helpers.createModel(GaugingStation, row, dbToModelMapper);
 

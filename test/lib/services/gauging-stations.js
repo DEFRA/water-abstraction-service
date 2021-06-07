@@ -7,7 +7,6 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
-const uuid = require('uuid/v4');
 
 const sandbox = require('sinon').createSandbox();
 const gaugingStationService = require('../../../src/lib/services/gauging-station-service');
@@ -16,8 +15,8 @@ const gaugingStationRepo = require('../../../src/lib/connectors/repos/gauging-st
 
 const routes = require('../../../src/modules/gauging-stations/routes');
 const testHelpers = require('../../test-helpers');
-const gaugingStation = require('../../../src/lib/models/gauging-station');
-//const { ROLES } = require('../../../src/lib/roles');
+/* const gaugingStation = require('../../../src/lib/models/gauging-station');
+const { ROLES } = require('../../../src/lib/roles'); */
 
 const data = {
   dbRow: {
@@ -26,47 +25,40 @@ const data = {
   }
 };
 
-experiment('getGaugingStationById', () => {
+experiment('getGaugingStationConditionsForId', () => {
   let result;
-
   beforeEach(async () => {
-    sandbox.stub(repos.gaugingStations, 'findOne');  /* simulate db results */
-    gaugingStationRepo.findOne.resolves(data.dbRow); 
-    result = await gaugingStationService.getGaugingStations(data.dbRow.gaugingStationId);
+    sandbox.stub(repos.gaugingStations, 'findStationConditionsForId'); /* simulate db results */
+    gaugingStationRepo.findStationConditionsForId.resolves(data.dbRow);
+    result = await gaugingStationService.getGaugingStationConditionsForId(data.dbRow.gaugingStationId);
   });
-
   afterEach(async () => {
     sandbox.restore(); /* e.g. searchGaugingstations require restore */
   });
-
-  test('calls repos.gaugingStation.getGaugingStations() with id', async () => {
-    /* console.log('>>>>>> After promise >>>> RESULT: ' + JSON.stringify(result)); */
-    const [id] = gaugingStationRepo.findOne.lastCall.args;
+  test('calls repos.gaugingStation.getGaugingStationConditionsForId with id', async () => {
+    const [id] = gaugingStationRepo.findStationConditionsForId.lastCall.args;
+    expect(Array.isArray(result)).to.equal(false);
     expect(id).to.equal(data.dbRow.gaugingStationId);
   });
-
 });
 
 experiment('calls gaugingStation Api with id', () => {
   let server, request;
-  const id = data.dbRow.gaugingStationId;
-  
   beforeEach(async () => {
-    server = await testHelpers.createServerForRoute(routes.getGaugingStationConditionsForId); //getGaugingStation
+    server = await testHelpers.createServerForRoute(routes.getGaugingStationConditionsForId);
+    const id = data.dbRow.gaugingStationId;
     request = {
       method: 'GET',
       url: `/water/1.0/gauging-stations/${id}/conditions`
     };
   });
-  
   test('returns the 200 for a valid payload', async () => {
     const response = await server.inject(request);
     expect(response.statusCode).to.equal(200);
   });
-  
   test('returns a 400 if the search string is less than two characters long', async () => {
     const idshort = '0';
-    request.url = '/water/1.0/gauging-stations/${idshort}/conditions';
+    request.url = `/water/1.0/gauging-stations/${idshort}/conditions`;
     const response = await server.inject(request);
     expect(response.statusCode).to.equal(400);
   });
@@ -74,20 +66,17 @@ experiment('calls gaugingStation Api with id', () => {
 
 experiment('getGaugingStationByRef', () => {
   let result;
-
   beforeEach(async () => {
-    sandbox.stub(gaugingStationRepo, 'findOneByStationRef');  /* simulate db results */
+    sandbox.stub(gaugingStationRepo, 'findOneByStationRef'); /* simulate db results */
     gaugingStationRepo.findOneByStationRef.resolves(data.dbRow);
     result = await gaugingStationService.getGaugingStationsByRef(data.dbRow.stationReference);
   });
-
   afterEach(async () => {
     sandbox.restore();
   });
-
   test('calls repos.gaugingStation.getGaugingStationsByRef()', async () => {
-    /* console.log('>>>>>> After promise >>>> RESULT BY REF: ' + JSON.stringify(result)); */
     const [stationReference] = gaugingStationRepo.findOneByStationRef.lastCall.args;
+    expect(Array.isArray(result)).to.equal(false);
     expect(stationReference).to.equal(data.dbRow.stationReference);
   });
 });
@@ -105,10 +94,6 @@ experiment('getGaugingStationConditionsForId database search', () => {
 
   test('calls repos.gaugingStation.getGaugingStationConditionsForId()', async () => {
     console.log('>>>>>> After promise >>>> RESULT BY getGaugingStationConditionsForId: ' + JSON.stringify(result));
-    //const gaugingStationId = result.gaugingStationId;
     expect(Array.isArray(result)).to.equal(true);
   });
 });
-
-
-
