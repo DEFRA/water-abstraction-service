@@ -81,6 +81,8 @@ experiment('getGaugingStationByRef', () => {
   });
 });
 
+/* Below test Requires NEW table water.gauging_station_condition */
+/*
 experiment('getGaugingStationConditionsForId database search', () => {
   let result;
 
@@ -97,3 +99,4 @@ experiment('getGaugingStationConditionsForId database search', () => {
     expect(Array.isArray(result)).to.equal(true);
   });
 });
+*/
