@@ -822,12 +822,4 @@ experiment('modules/billing/services/invoiceService', () => {
       });
     });
   });
-
-  experiment('.deleteByOriginalBillingInvoiceId', () => {
-    test('the original invoice is passed to the repos connector', async () => {
-      const id = uuid();
-      await invoiceService.deleteByOriginalBillingInvoiceId(id);
-      expect(repos.billingInvoices.deleteInvoicesByOriginalInvoiceId.calledWith(id)).to.be.true();
-    });
-  });
 });
