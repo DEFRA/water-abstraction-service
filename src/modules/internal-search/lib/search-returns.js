@@ -108,7 +108,7 @@ const findRecentReturnsByFormatId = async (formatId) => {
   };
   const columns = [
     'return_id', 'licence_ref', 'return_requirement',
-    'end_date', 'metadata', 'status'
+    'end_date', 'metadata', 'status', 'due_date'
   ];
 
   const returns = await returnsService.returns.findAll(filter, sort, columns);
