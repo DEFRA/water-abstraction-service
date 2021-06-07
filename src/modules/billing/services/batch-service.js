@@ -360,7 +360,7 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
     await invoiceService.updateInvoice(invoice.originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
 
     const invoicesToDelete = [invoice, ...invoice.linkedBillingInvoices].filter(row => row.billingInvoiceId !== row.originalBillingInvoiceId);
-    await bluebird.mapSeries(invoicesToDelete, invoice => deleteInvoicesWithRelatedData(batch, invoice));
+    await bluebird.mapSeries(invoicesToDelete, invoiceRow => deleteInvoicesWithRelatedData(batch, invoiceRow));
 
     // update the include in supplementary billing status
     const invoiceModel = mappers.invoice.dbToModel(invoice);
