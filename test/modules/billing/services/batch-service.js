@@ -58,7 +58,8 @@ const batch = {
   toFinancialYearEnding: 2019,
   status: 'processing',
   dateCreated: (new Date()).toISOString(),
-  region
+  region,
+  externalId: uuid()
 };
 
 const data = {
@@ -1150,7 +1151,8 @@ experiment('modules/billing/services/batch-service', () => {
               }
             ],
             linkedBillingInvoices: [],
-            rebillingState: null
+            rebillingState: null,
+            originalBillingInvoiceId: uuid()
           };
           newRepos.billingInvoices.findOne.resolves(billingInvoice);
           newRepos.billingTransactions.countByBatchId.resolves(0);
@@ -1212,11 +1214,14 @@ experiment('modules/billing/services/batch-service', () => {
       experiment('when the invoice is found and there is an error errors', () => {
         beforeEach(async () => {
           newRepos.billingInvoices.findOne.resolves({
+            billingInvoiceId: uuid(),
             invoiceAccountNumber: 'A12345678A',
             financialYearEnding: 2020,
             billingBatch: {
               externalId: batch.externalId
-            }
+            },
+            linkedBillingInvoices: [],
+            originalBillingInvoiceId: uuid()
           });
           newRepos.billingTransactions.findByBatchId.resolves([]);
           chargeModuleBillRunConnector.deleteInvoiceFromBillRun.rejects(new Error('oh no!'));

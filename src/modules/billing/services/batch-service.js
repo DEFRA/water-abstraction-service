@@ -326,25 +326,13 @@ const updateInvoiceLicencesForSupplementaryReprocessing = invoice => {
  * the linked invoices where the invoice id does not match the original invoice id
  * @param {*} invoiceId
  */
-const deleteTransactionsInvoiceLicencesInvoices = async invoice => {
-  if (invoice.billingInvoiceId !== invoice.originalBillingInvoiceId) {
-    await newRepos.billingTransactions.deleteByInvoiceId(invoice.billingInvoiceId);
-    await newRepos.billingInvoiceLicences.deleteByInvoiceId(invoice.billingInvoiceId);
-    await newRepos.billingInvoices.delete(invoice.billingInvoiceId);
-  }
-};
-
-/**
- * Deletes all rebilled invoices that is grouped by the original invoice id and
- * resets the rebilling state and original invoice id flags to null for the original invoice
- * @param {*} originalBillingInvoideId - the original invoice
- * @return {promise}
- */
-const deleteRebillingInvoices = async invoice => {
-  // update the original invoice rebilling state to null and originalIncoideId to null
-  await invoiceService.updateInvoice(invoice.originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
-  // delete all the transactions, invoice licences and invoices for the invoice and the linked invoices but not the original invoice
-  return bluebird.mapSeries([invoice, ...invoice.linkedBillingInvoices], deleteTransactionsInvoiceLicencesInvoices);
+const deleteInvoicesWithRelatedData = async (batch, invoice) => {
+  await newRepos.billingBatchChargeVersionYears.deleteByInvoiceId(invoice.billingInvoiceId);
+  await newRepos.billingVolumes.deleteByBatchAndInvoiceId(batch.id, invoice.billingInvoiceId);
+  await chargeModuleBillRunConnector.deleteInvoiceFromBillRun(batch.externalId, invoice.externalId);
+  await newRepos.billingTransactions.deleteByInvoiceId(invoice.billingInvoiceId);
+  await newRepos.billingInvoiceLicences.deleteByInvoiceId(invoice.billingInvoiceId);
+  await newRepos.billingInvoices.delete(invoice.billingInvoiceId);
 };
 
 /**
@@ -364,23 +352,15 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
   if (!invoice) {
     throw new NotFoundError(`Invoice ${invoiceId} not found`);
   }
-
   // Set batch status back to 'processing'
   await setStatus(batch.id, Batch.BATCH_STATUS.processing);
 
   try {
-    await chargeModuleBillRunConnector.deleteInvoiceFromBillRun(invoice.billingBatch.externalId, invoice.externalId);
+    // update the original invoice rebilling state to null and originalInvoideId to null
+    await invoiceService.updateInvoice(invoice.originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
 
-    // Delete the invoice if the rebilling state is null otherwise
-    // reset the original invoice and delete the rebilled invoices.
-    if (invoice.rebillingState === null) {
-      // Delete local data
-      await newRepos.billingBatchChargeVersionYears.deleteByInvoiceId(invoiceId);
-      await newRepos.billingVolumes.deleteByBatchAndInvoiceId(batch.id, invoiceId);
-      await deleteTransactionsInvoiceLicencesInvoices(invoice);
-    } else {
-      await deleteRebillingInvoices(invoice);
-    }
+    const invoicesToDelete = [invoice, ...invoice.linkedBillingInvoices].filter(row => row.billingInvoiceId !== row.originalBillingInvoiceId);
+    await bluebird.mapSeries(invoicesToDelete, invoice => deleteInvoicesWithRelatedData(batch, invoice));
 
     // update the include in supplementary billing status
     const invoiceModel = mappers.invoice.dbToModel(invoice);
