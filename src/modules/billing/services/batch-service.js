@@ -361,7 +361,7 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
     if (invoice.originalBillingInvoiceId !== null) {
       await invoiceService.updateInvoice(invoice.originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
       invoicesToDelete.push([...invoice.linkedBillingInvoices].filter(row => row.billingInvoiceId !== row.originalBillingInvoiceId));
-    };
+    }
 
     await bluebird.mapSeries(invoicesToDelete, invoiceRow => deleteInvoicesWithRelatedData(batch, invoiceRow));
 
