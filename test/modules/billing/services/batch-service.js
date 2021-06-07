@@ -110,7 +110,6 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(invoiceService, 'saveInvoiceToDB');
     sandbox.stub(invoiceService, 'resetIsFlaggedForRebilling');
     sandbox.stub(invoiceService, 'updateInvoice').resolves();
-    sandbox.stub(invoiceService, 'deleteByOriginalBillingInvoiceId').resolves();
 
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId');
 
@@ -1150,6 +1149,7 @@ experiment('modules/billing/services/batch-service', () => {
                 }
               }
             ],
+            linkedBillingInvoices: [],
             rebillingState: null
           };
           newRepos.billingInvoices.findOne.resolves(billingInvoice);
@@ -1205,10 +1205,6 @@ experiment('modules/billing/services/batch-service', () => {
           test('the original invoice rebilling state is updated', () => {
             expect(invoiceService.updateInvoice.calledWith(originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null }))
               .to.be.true();
-          });
-
-          test('the rebilled invoices are deleted with deleteByOriginalBillingInvoiceId using the original invoice id', () => {
-            expect(invoiceService.deleteByOriginalBillingInvoiceId.calledWith(originalBillingInvoiceId)).to.be.true();
           });
         });
       });
