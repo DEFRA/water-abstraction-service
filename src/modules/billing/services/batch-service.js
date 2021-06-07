@@ -326,7 +326,7 @@ const updateInvoiceLicencesForSupplementaryReprocessing = invoice => {
  * the linked invoices where the invoice id does not match the original invoice id
  * @param {*} invoiceId
  */
-const deleteTransactionsInvoiceLicencesInvoices = async (invoice) => {
+const deleteTransactionsInvoiceLicencesInvoices = async invoice => {
   if (invoice.billingInvoiceId !== invoice.originalBillingInvoiceId) {
     await newRepos.billingTransactions.deleteByInvoiceId(invoice.billingInvoiceId);
     await newRepos.billingInvoiceLicences.deleteByInvoiceId(invoice.billingInvoiceId);
