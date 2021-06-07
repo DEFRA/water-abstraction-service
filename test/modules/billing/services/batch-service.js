@@ -1152,7 +1152,7 @@ experiment('modules/billing/services/batch-service', () => {
             ],
             linkedBillingInvoices: [],
             rebillingState: null,
-            originalBillingInvoiceId: uuid()
+            originalBillingInvoiceId: null
           };
           newRepos.billingInvoices.findOne.resolves(billingInvoice);
           newRepos.billingTransactions.countByBatchId.resolves(0);
@@ -1221,7 +1221,7 @@ experiment('modules/billing/services/batch-service', () => {
               externalId: batch.externalId
             },
             linkedBillingInvoices: [],
-            originalBillingInvoiceId: uuid()
+            originalBillingInvoiceId: null
           });
           newRepos.billingTransactions.findByBatchId.resolves([]);
           chargeModuleBillRunConnector.deleteInvoiceFromBillRun.rejects(new Error('oh no!'));
