@@ -5,19 +5,25 @@ const { NotFoundError } = require('../errors');
 
 const getGaugingStations = async gaugingStationId => {
   const gaugingStationResponse = await gaugingStationRepo.findOne(gaugingStationId);
-  if (gaugingStationResponse) { return gaugingStationMapper.dbToModel(gaugingStationResponse); }
+  if (gaugingStationResponse) {
+    return gaugingStationMapper.dbToModel(gaugingStationResponse);
+  }
   throw new NotFoundError('GaugingStations by id not found');
 };
 
 const getGaugingStationsByRef = async stationRef => {
   const gaugingStationResponseRef = await gaugingStationRepo.findOneByStationRef(stationRef);
-  if (gaugingStationResponseRef) { return gaugingStationMapper.dbToModel(gaugingStationResponseRef); }
+  if (gaugingStationResponseRef) {
+    return gaugingStationMapper.dbToModel(gaugingStationResponseRef);
+  }
   throw new NotFoundError('GaugingStations by ref not found');
 };
 
 const getGaugingStationConditionsForId = async gaugingStationId => {
   const gaugingStationConditions = await gaugingStationRepo.findStationConditionsForId(gaugingStationId);
-  if (gaugingStationConditions) { return gaugingStationConditions; }
+  if (gaugingStationConditions) {
+    return gaugingStationConditions;
+  }
   throw new NotFoundError('GaugingStations conditions by id not found');
 };
 
