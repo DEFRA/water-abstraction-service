@@ -356,10 +356,13 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
   await setStatus(batch.id, Batch.BATCH_STATUS.processing);
 
   try {
-    // update the original invoice rebilling state to null and originalInvoideId to null
-    await invoiceService.updateInvoice(invoice.originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
+    const invoicesToDelete = [invoice];
 
-    const invoicesToDelete = [invoice, ...invoice.linkedBillingInvoices].filter(row => row.billingInvoiceId !== row.originalBillingInvoiceId);
+    if (invoice.originalBillingInvoiceId !== null) {
+      await invoiceService.updateInvoice(invoice.originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
+      invoicesToDelete.push([...invoice.linkedBillingInvoices].filter(row => row.billingInvoiceId !== row.originalBillingInvoiceId));
+    };
+
     await bluebird.mapSeries(invoicesToDelete, invoiceRow => deleteInvoicesWithRelatedData(batch, invoiceRow));
 
     // update the include in supplementary billing status
