@@ -1221,7 +1221,8 @@ experiment('modules/billing/services/batch-service', () => {
               externalId: batch.externalId
             },
             linkedBillingInvoices: [],
-            originalBillingInvoiceId: null
+            originalBillingInvoiceId: null,
+            rebillingState: null
           });
           newRepos.billingTransactions.findByBatchId.resolves([]);
           chargeModuleBillRunConnector.deleteInvoiceFromBillRun.rejects(new Error('oh no!'));

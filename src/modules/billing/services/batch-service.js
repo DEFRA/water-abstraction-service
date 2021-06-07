@@ -335,6 +335,8 @@ const deleteInvoicesWithRelatedData = async (batch, invoice) => {
   await newRepos.billingInvoices.delete(invoice.billingInvoiceId);
 };
 
+const isNotOriginalInvoice = row => row.billingInvoiceId !== row.originalBillingInvoiceId;
+
 /**
  * Deletes an individual invoice from the batch.  Also deletes CM transactions
  * @param {Batch} batch
@@ -356,11 +358,11 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
   await setStatus(batch.id, Batch.BATCH_STATUS.processing);
 
   try {
-    const invoicesToDelete = [invoice];
+    let invoicesToDelete = [invoice];
 
-    if (invoice.originalBillingInvoiceId !== null) {
+    if (invoice.rebillingState !== null) {
       await invoiceService.updateInvoice(invoice.originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
-      invoicesToDelete.push([...invoice.linkedBillingInvoices].filter(row => row.billingInvoiceId !== row.originalBillingInvoiceId));
+      invoicesToDelete = invoice.linkedBillingInvoices.filter(isNotOriginalInvoice);
     }
 
     await bluebird.mapSeries(invoicesToDelete, invoiceRow => deleteInvoicesWithRelatedData(batch, invoiceRow));
