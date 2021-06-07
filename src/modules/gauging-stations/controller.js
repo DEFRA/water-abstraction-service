@@ -1,26 +1,26 @@
 'use strict';
 
-const gaugingStationsService = require('../../lib/services/gauging-station-service');
+const gaugingStationService = require('../../lib/services/gauging-station-service');
 const controller = require('../../lib/controller');
 
 const getGaugingStation = async request =>
   controller.getEntities(
     request.params.gaugingStationId,
-    gaugingStationsService.getGaugingStations
+    gaugingStationService.getGaugingStations
   );
 
 const getGaugingStationByRef = async request =>
   controller.getEntities(
     request.params.stationRef,
-    gaugingStationsService.getGaugingStationByRef
+    gaugingStationService.getGaugingStationByRef
   );
 
-const getGaugingStationConditionsForId = async request =>
+const getGaugingStationConditionsById = async request =>
   controller.getEntities(
     request.params.gaugingStationId,
-    gaugingStationsService.getGaugingStationConditionsForId
+    gaugingStationService.getGaugingStationConditionsById
   );
 
 exports.getGaugingStation = getGaugingStation;
 exports.getGaugingStationByRef = getGaugingStationByRef;
-exports.getGaugingStationConditionsForId = getGaugingStationConditionsForId;
+exports.getGaugingStationConditionsById = getGaugingStationConditionsById;

@@ -4,10 +4,10 @@ const Joi = require('@hapi/joi');
 const controller = require('../controller');
 
 module.exports = {
-  getGaugingStationConditionsForId: {
+  getGaugingStationConditionsById: {
     path: '/water/1.0/gauging-stations/{gaugingStationId}/conditions',
     method: 'GET',
-    handler: controller.getGaugingStationConditionsForId,
+    handler: controller.getGaugingStationConditionsById,
     config: {
       tags: ['api'],
       description: 'Gets a gauging station by id',

@@ -25,18 +25,18 @@ const data = {
   }
 };
 
-experiment('getGaugingStationConditionsForId', () => {
+experiment('getGaugingStationConditionsById', () => {
   let result;
   beforeEach(async () => {
-    sandbox.stub(repos.gaugingStations, 'findStationConditionsForId'); /* simulate db results */
-    gaugingStationRepo.findStationConditionsForId.resolves(data.dbRow);
-    result = await gaugingStationService.getGaugingStationConditionsForId(data.dbRow.gaugingStationId);
+    sandbox.stub(repos.gaugingStations, 'findLicenceConditionsByStationId'); /* simulate db results */
+    gaugingStationRepo.findLicenceConditionsByStationId.resolves(data.dbRow);
+    result = await gaugingStationService.getGaugingStationConditionsById(data.dbRow.gaugingStationId);
   });
   afterEach(async () => {
     sandbox.restore(); /* e.g. searchGaugingstations require restore */
   });
-  test('calls repos.gaugingStation.getGaugingStationConditionsForId with id', async () => {
-    const [id] = gaugingStationRepo.findStationConditionsForId.lastCall.args;
+  test('calls repos.gaugingStation.getGaugingStationConditionsById with id', async () => {
+    const [id] = gaugingStationRepo.findLicenceConditionsByStationId.lastCall.args;
     expect(Array.isArray(result)).to.equal(false);
     expect(id).to.equal(data.dbRow.gaugingStationId);
   });
@@ -45,7 +45,7 @@ experiment('getGaugingStationConditionsForId', () => {
 experiment('calls gaugingStation Api with id', () => {
   let server, request;
   beforeEach(async () => {
-    server = await testHelpers.createServerForRoute(routes.getGaugingStationConditionsForId);
+    server = await testHelpers.createServerForRoute(routes.getGaugingStationConditionsById);
     const id = data.dbRow.gaugingStationId;
     request = {
       method: 'GET',
@@ -83,19 +83,19 @@ experiment('getGaugingStationByRef', () => {
 
 /* Below test Requires NEW table water.gauging_station_condition */
 /*
-experiment('getGaugingStationConditionsForId database search', () => {
+experiment('getGaugingStationConditionsById database search', () => {
   let result;
 
   beforeEach(async () => {
-    result = await gaugingStationService.getGaugingStationConditionsForId(data.dbRow.gaugingStationId);
+    result = await gaugingStationService.getGaugingStationConditionsById(data.dbRow.gaugingStationId);
   });
 
   afterEach(async () => {
     sandbox.restore();
   });
 
-  test('calls repos.gaugingStation.getGaugingStationConditionsForId()', async () => {
-    console.log('>>>>>> After promise >>>> RESULT BY getGaugingStationConditionsForId: ' + JSON.stringify(result));
+  test('calls repos.gaugingStation.getGaugingStationConditionsById()', async () => {
+    console.log('>>>>>> After promise >>>> RESULT BY getGaugingStationConditionsById: ' + JSON.stringify(result));
     expect(Array.isArray(result)).to.equal(true);
   });
 });

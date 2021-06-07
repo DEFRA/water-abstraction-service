@@ -8,7 +8,7 @@ const getGaugingStations = async gaugingStationId => {
   if (gaugingStationResponse) {
     return gaugingStationMapper.dbToModel(gaugingStationResponse);
   }
-  throw new NotFoundError('GaugingStations by id not found');
+  throw new NotFoundError(`Could not find gauging station with ID ${gaugingStationId}`);
 };
 
 const getGaugingStationsByRef = async stationRef => {
@@ -16,17 +16,17 @@ const getGaugingStationsByRef = async stationRef => {
   if (gaugingStationResponseRef) {
     return gaugingStationMapper.dbToModel(gaugingStationResponseRef);
   }
-  throw new NotFoundError('GaugingStations by ref not found');
+  throw new NotFoundError(`Could not find a gauging station with ref ${stationRef}`);
 };
 
-const getGaugingStationConditionsForId = async gaugingStationId => {
-  const gaugingStationConditions = await gaugingStationRepo.findStationConditionsForId(gaugingStationId);
+const getGaugingStationConditionsById = async gaugingStationId => {
+  const gaugingStationConditions = await gaugingStationRepo.findLicenceConditionsByStationId(gaugingStationId);
   if (gaugingStationConditions) {
     return gaugingStationConditions;
   }
-  throw new NotFoundError('GaugingStations conditions by id not found');
+  throw new NotFoundError(`Could not find gauging station conditions with ID ${gaugingStationId}`);
 };
 
 exports.getGaugingStations = getGaugingStations;
 exports.getGaugingStationsByRef = getGaugingStationsByRef;
-exports.getGaugingStationConditionsForId = getGaugingStationConditionsForId;
+exports.getGaugingStationConditionsById = getGaugingStationConditionsById;
