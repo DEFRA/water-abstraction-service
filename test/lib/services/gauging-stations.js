@@ -15,8 +15,6 @@ const gaugingStationRepo = require('../../../src/lib/connectors/repos/gauging-st
 
 const routes = require('../../../src/modules/gauging-stations/routes');
 const testHelpers = require('../../test-helpers');
-/* const gaugingStation = require('../../../src/lib/models/gauging-station');
-const { ROLES } = require('../../../src/lib/roles'); */
 
 const data = {
   dbRow: {
@@ -33,7 +31,7 @@ experiment('getGaugingStationConditionsById', () => {
     result = await gaugingStationService.getGaugingStationConditionsById(data.dbRow.gaugingStationId);
   });
   afterEach(async () => {
-    sandbox.restore(); /* e.g. searchGaugingstations require restore */
+    sandbox.restore();
   });
   test('calls repos.gaugingStation.getGaugingStationConditionsById with id', async () => {
     const [id] = gaugingStationRepo.findLicenceConditionsByStationId.lastCall.args;
@@ -80,23 +78,3 @@ experiment('getGaugingStationByRef', () => {
     expect(stationReference).to.equal(data.dbRow.stationReference);
   });
 });
-
-/* Below test Requires NEW table water.gauging_station_condition */
-/*
-experiment('getGaugingStationConditionsById database search', () => {
-  let result;
-
-  beforeEach(async () => {
-    result = await gaugingStationService.getGaugingStationConditionsById(data.dbRow.gaugingStationId);
-  });
-
-  afterEach(async () => {
-    sandbox.restore();
-  });
-
-  test('calls repos.gaugingStation.getGaugingStationConditionsById()', async () => {
-    console.log('>>>>>> After promise >>>> RESULT BY getGaugingStationConditionsById: ' + JSON.stringify(result));
-    expect(Array.isArray(result)).to.equal(true);
-  });
-});
-*/
