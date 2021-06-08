@@ -47,7 +47,7 @@ experiment('calls gaugingStation Api with id', () => {
     const id = data.dbRow.gaugingStationId;
     request = {
       method: 'GET',
-      url: `/water/1.0/gauging-stations/${id}/conditions`
+      url: `/water/1.0/gauging-stations/${id}/licences`
     };
   });
   test('returns the 200 for a valid payload', async () => {
@@ -56,7 +56,7 @@ experiment('calls gaugingStation Api with id', () => {
   });
   test('returns a 400 if the search string is less than two characters long', async () => {
     const idshort = '0';
-    request.url = `/water/1.0/gauging-stations/${idshort}/conditions`;
+    request.url = `/water/1.0/gauging-stations/${idshort}/licences`;
     const response = await server.inject(request);
     expect(response.statusCode).to.equal(400);
   });

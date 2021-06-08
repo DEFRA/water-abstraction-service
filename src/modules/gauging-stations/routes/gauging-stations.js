@@ -5,7 +5,7 @@ const controller = require('../controller');
 
 module.exports = {
   getGaugingStationConditionsById: {
-    path: '/water/1.0/gauging-stations/{gaugingStationId}/conditions',
+    path: '/water/1.0/gauging-stations/{gaugingStationId}/licences',
     method: 'GET',
     handler: controller.getGaugingStationConditionsById,
     config: {
