@@ -13,6 +13,7 @@ const { set, cloneDeep } = require('lodash');
 const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const licencesService = require('../../../../src/lib/services/licences');
+const { logger } = require('../../../../src/logger');
 
 const messageQueue = require('../../../../src/lib/message-queue-v2');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
@@ -57,6 +58,8 @@ experiment('modules/billing/services/invoice-licences-service', () => {
     sandbox.stub(chargeModuleBillRunConnector, 'deleteLicence');
 
     sandbox.stub(licencesService, 'flagForSupplementaryBilling');
+
+    sandbox.stub(logger, 'error');
   });
 
   afterEach(async () => {
@@ -298,6 +301,33 @@ experiment('modules/billing/services/invoice-licences-service', () => {
         const func = () => invoiceLicencesService.deleteByInvoiceLicenceId(invoiceLicenceId);
         const err = await expect(func()).to.reject();
         expect(err).to.be.an.instanceOf(errors.ConflictingDataError);
+      });
+    });
+
+    experiment('when there is an unexpected error', () => {
+      const error = new Error('oops');
+      let result;
+
+      beforeEach(async () => {
+        newRepos.billingInvoiceLicences.findOne.resolves(billingInvoiceLicence);
+        newRepos.billingInvoiceLicences.findCountByInvoiceId.resolves(2);
+        chargeModuleBillRunConnector.getInvoiceTransactions.rejects(error);
+        const func = () => invoiceLicencesService.deleteByInvoiceLicenceId(invoiceLicenceId);
+        result = await expect(func()).to.reject();
+      });
+
+      test('sets the batch to "error" status', async () => {
+        expect(batchService.setStatus.calledWith(
+          batchId, Batch.BATCH_STATUS.error
+        ));
+      });
+
+      test('logs the error', async () => {
+        expect(logger.error.called).to.be.true();
+      });
+
+      test('rethrows the error', async () => {
+        expect(result).to.equal(error);
       });
     });
   });
