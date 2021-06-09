@@ -80,7 +80,7 @@
     "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.1",
     "libxmljs": "^0.19.7",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "map-factory": "^3.8.3",
     "moment": "^2.27.0",
     "moment-range": "^4.0.2",
