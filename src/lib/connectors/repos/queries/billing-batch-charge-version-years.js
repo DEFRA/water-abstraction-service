@@ -18,6 +18,7 @@ delete from water.billing_batch_charge_version_years y
     and t.charge_element_id=e.charge_element_id 
     and y.charge_version_id=e.charge_version_id
     and y.financial_year_ending=i.financial_year_ending
+    and y.billing_batch_id = i.billing_batch_id;
 `;
 
 exports.deleteByBatchIdAndLicenceId = `
