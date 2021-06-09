@@ -240,14 +240,6 @@ const rebillInvoice = async (batch, invoice) => {
 };
 
 /**
- * Deletes all new rebilled invoices where it matches the original invoiceId
- * @param {string} originalBillingInvoiceId
- * @returns {promise}
- */
-const deleteByOriginalBillingInvoiceId = originalBillingInvoiceId =>
-  repos.billingInvoices.deleteInvoicesByOriginalInvoiceId(originalBillingInvoiceId);
-
-/**
  * Resets invoices originally flagged for rebilling which have now been re-billed
  * in the current batch
  *
@@ -256,7 +248,6 @@ const deleteByOriginalBillingInvoiceId = originalBillingInvoiceId =>
  */
 const resetIsFlaggedForRebilling = batchId => repos.billingInvoices.resetIsFlaggedForRebilling(batchId);
 
-exports.deleteByOriginalBillingInvoiceId = deleteByOriginalBillingInvoiceId;
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
