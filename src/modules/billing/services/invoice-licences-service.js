@@ -81,6 +81,7 @@ const deleteByInvoiceLicenceId = async invoiceLicenceId => {
 const validateInvoiceLicenceIsDeletable = async billingInvoiceLicence => {
   assertInvoiceLicenceExists(billingInvoiceLicence);
   assertRelatedBatchHasReadyStatus(billingInvoiceLicence);
+  assertInvoiceIsNotARebill(billingInvoiceLicence);
 
   // Validate invoice licence count within parent invoice
   const invoiceLicenceCountInInvoice = await getInvoiceLicenceCount(billingInvoiceLicence);
@@ -97,6 +98,12 @@ const assertRelatedBatchHasReadyStatus = billingInvoiceLicence => {
   const { status } = billingInvoiceLicence.billingInvoice.billingBatch;
   if (status !== Batch.BATCH_STATUS.ready) {
     throw new errors.ConflictingDataError(`Expected batch in ready status (status is "${status}")`);
+  }
+};
+
+const assertInvoiceIsNotARebill = billingInvoiceLicence => {
+  if (billingInvoiceLicence.billingInvoice.rebillingState !== null) {
+    throw new errors.ConflictingDataError('Cannot delete a licence for a rebilling invoice');
   }
 };
 
