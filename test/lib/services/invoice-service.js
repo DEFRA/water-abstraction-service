@@ -232,6 +232,7 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(repos.billingInvoices, 'findAllForInvoiceAccount').resolves();
     sandbox.stub(repos.billingInvoices, 'findByIsFlaggedForRebillingAndRegion').resolves();
     sandbox.stub(repos.billingInvoices, 'resetIsFlaggedForRebilling').resolves();
+    sandbox.stub(repos.billingInvoices, 'deleteInvoicesByOriginalInvoiceId').resolves();
 
     sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountsByIds').resolves(crmData);
 

@@ -265,4 +265,18 @@ experiment('lib/connectors/repos/billing-invoices', () => {
       ));
     });
   });
+
+  experiment('.deleteInvoicesByOriginalInvoiceId', () => {
+    const originalInvoiceId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoices.deleteInvoicesByOriginalInvoiceId(originalInvoiceId);
+    });
+
+    test('calls raw.multiRow with the correct query', async () => {
+      expect(raw.multiRow.calledWith(
+        queries.deleteByOriginalInvoiceId, { originalInvoiceId }
+      ));
+    });
+  });
 });
