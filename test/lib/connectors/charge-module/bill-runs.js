@@ -150,4 +150,15 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
       expect(path).to.equal('v2/wrls/bill-runs/test-id/invoices/test-invoice-id');
     });
   });
+
+  experiment('.deleteLicence', () => {
+    beforeEach(async () => {
+      await billRunsApiConnector.deleteLicence('test-id', 'test-licence-id');
+    });
+
+    test('the correct endpoint is called', async () => {
+      const [path] = gotCM.delete.lastCall.args;
+      expect(path).to.equal('v2/wrls/bill-runs/test-id/licences/test-licence-id');
+    });
+  });
 });
