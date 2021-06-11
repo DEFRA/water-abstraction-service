@@ -6,7 +6,7 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
-const uuid = require('uuid').v4();
+const { v4: uuid } = require('uuid');
 
 const licenceGaugingStations = require('../../../../src/lib/connectors/repos/licence-gauging-stations');
 const { LicenceGaugingStations } = require('../../../../src/lib/connectors/bookshelf');

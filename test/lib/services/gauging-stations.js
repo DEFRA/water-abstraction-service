@@ -14,8 +14,7 @@ const repos = require('../../../src/lib/connectors/repos');
 const gaugingStationRepo = require('../../../src/lib/connectors/repos/gauging-stations');
 
 const routes = require('../../../src/modules/gauging-stations/routes');
-console.log('§§§§§§§§§');
-console.log(routes);
+
 const testHelpers = require('../../test-helpers');
 
 const data = {
