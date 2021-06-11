@@ -43,5 +43,33 @@ module.exports = {
         })
       }
     }
+  },
+  createLicenceGaugingStationLink: {
+    path: '/water/1.0/gauging-stations/{gaugingStationId}/licences',
+    method: 'POST',
+    handler: controller.createLicenceGaugingStationLink,
+    config: {
+      tags: ['api'],
+      description: 'Creates a link between a gauging station and a licence',
+      validate: {
+        params: Joi.object({
+          gaugingStationId: Joi.string().uuid().required()
+        }),
+        payload: Joi.object({
+          licenceId: Joi.string().uuid().required(),
+          licenceVersionPurposeConditionId: Joi.string().uuid().allow(null),
+          thresholdUnit: Joi.string().required(),
+          thresholdValue: Joi.number().required(),
+          abstractionPeriod: Joi.object({
+            startDay: Joi.number(),
+            startMonth: Joi.number(),
+            endDay: Joi.number(),
+            endMonth: Joi.number()
+          }).allow({}, null),
+          restrictionType: Joi.string().required().allow('flow', 'level'),
+          alertType: Joi.string().required().allow('stop', 'reduce', 'stop_or_reduce')
+        })
+      }
+    }
   }
 };

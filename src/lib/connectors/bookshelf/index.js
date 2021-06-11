@@ -13,6 +13,7 @@ exports.ChargeVersionWorkflow = require('./ChargeVersionWorkflow');
 exports.Event = require('./Event');
 exports.FinancialAgreementType = require('./FinancialAgreementType');
 exports.GaugingStation = require('./GaugingStation');
+exports.LicenceGaugingStations = require('./LicenceGaugingStations');
 exports.Licence = require('./Licence');
 exports.LicenceAgreement = require('./LicenceAgreement');
 exports.LicenceVersion = require('./LicenceVersion');
