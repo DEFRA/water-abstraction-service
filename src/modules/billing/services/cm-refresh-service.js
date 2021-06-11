@@ -11,6 +11,9 @@ const errors = require('../../../lib/errors');
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 const { logger } = require('../../../logger');
 
+// Models
+const Transaction = require('../../../lib/models/transaction');
+
 // Mappers
 const transactionMapper = require('../mappers/transaction');
 
@@ -111,7 +114,12 @@ const mapTransaction = (invoice, transactionMap, cmTransaction) => {
       });
   } else {
     // Create a new min charge model and add to heirarchy
-    const newTransaction = transactionMapper.cmToModel({ ...cmTransaction, twoPartTariff: false });
+    const newTransaction = transactionMapper.cmToModel({
+      ...cmTransaction,
+      twoPartTariff: false
+    }).fromHash({
+      status: Transaction.statuses.chargeCreated
+    });
     invoice
       .getInvoiceLicenceByLicenceNumber(cmTransaction.licenceNumber)
       .transactions

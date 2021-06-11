@@ -15,6 +15,8 @@ const buildResponse = (response, key, data) => {
     }
   } else if (data.length) {
     set(response, key, data);
+  } else if (data && ['billingAccount'].includes(key)) {
+    set(response, key, data);
   }
 };
 
