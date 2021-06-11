@@ -49,11 +49,11 @@ module.exports = {
     path: '/water/1.0/gauging-stations/{gaugingStationId}/licences',
     method: 'POST',
     handler: controller.createLicenceGaugingStationLink,
-    auth: {
-      scope: [abstractionAlertsNotifications]
-    },
     config: {
       tags: ['api'],
+      auth: {
+        scope: [abstractionAlertsNotifications]
+      },
       description: 'Creates a link between a gauging station and a licence',
       validate: {
         params: Joi.object({
