@@ -16,6 +16,7 @@ const Batch = require('../../../../src/lib/models/batch');
 const repos = require('../../../../src/lib/connectors/repos');
 
 const licencesService = require('../../../../src/modules/billing/services/licences-service');
+const invoiceAccountService = require('../../../../src/lib/services/invoice-accounts-service');
 const generalLicencesService = require('../../../../src/lib/services/licences');
 
 const { BatchStatusError } = require('../../../../src/modules/billing/lib/errors');
@@ -31,6 +32,7 @@ experiment('modules/billing/services/licences-service', () => {
 
     sandbox.stub(repos.billingVolumes, 'deleteByBatchIdAndLicenceId');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchIdAndLicenceId');
+    sandbox.stub(invoiceAccountService, 'getByInvoiceAccountId').resolves({ company: { name: 'test company name' } });
   });
 
   afterEach(async () => {
@@ -61,7 +63,8 @@ experiment('modules/billing/services/licences-service', () => {
         licenceId: dbResults[0].licenceId,
         licenceRef: dbResults[0].licenceRef,
         twoPartTariffError: true,
-        twoPartTariffStatuses: [10, 20]
+        twoPartTariffStatuses: [10, 20],
+        billingContact: 'test company name'
       }]);
     });
   });

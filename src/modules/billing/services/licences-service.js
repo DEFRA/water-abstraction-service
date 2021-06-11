@@ -4,16 +4,19 @@ const repos = require('../../../lib/connectors/repos');
 const Batch = require('../../../lib/models/batch');
 const { BatchStatusError } = require('../lib/errors');
 const licencesService = require('../../../lib/services/licences');
+const invoiceAccountService = require('../../../lib/services/invoice-accounts-service');
+const bluebird = require('bluebird');
 
-const mapItem = item => ({
-  licenceId: item.licenceId,
-  licenceRef: item.licenceRef,
-  twoPartTariffError: item.twoPartTariffErrors.includes(true),
+const mapItem = async (licence, invoiceAccountCompany) => ({
+  licenceId: licence.licenceId,
+  licenceRef: licence.licenceRef,
+  twoPartTariffError: licence.twoPartTariffErrors.includes(true),
   twoPartTariffStatuses: Array.from(
-    item.twoPartTariffStatuses.reduce((statuses, status) => {
+    licence.twoPartTariffStatuses.reduce((statuses, status) => {
       return (status === null) ? statuses : statuses.add(status);
     }, new Set())
-  )
+  ),
+  billingContact: invoiceAccountCompany.name
 });
 
 /**
@@ -21,16 +24,19 @@ const mapItem = item => ({
  * represents the billing invoice licence records that exist in a
  * batch, including the aggregated two part tariff status codes for the
  * underlying transactions.
- *
  * This shifts from the pattern of passing models around due to
  * the volume of data that would have to be serialized for annual batches.
+ * Invoice Account Company added to display the billing contact in the UI
  *
  * @param {String} batchId
  * @return {Promise<Array>}
  */
 const getByBatchIdForTwoPartTariffReview = async batchId => {
   const data = await repos.licences.findByBatchIdForTwoPartTariffReview(batchId);
-  return data.map(mapItem);
+  return bluebird.mapSeries(data, async row => {
+    const invoiceAccount = await invoiceAccountService.getByInvoiceAccountId(row.invoiceAccountId);
+    return mapItem(row, invoiceAccount.company);
+  });
 };
 
 /**
