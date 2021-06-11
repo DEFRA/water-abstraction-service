@@ -12,9 +12,7 @@ const mapItem = async (licence, invoiceAccountCompany) => ({
   licenceRef: licence.licenceRef,
   twoPartTariffError: licence.twoPartTariffErrors.includes(true),
   twoPartTariffStatuses: Array.from(
-    licence.twoPartTariffStatuses.reduce((statuses, status) => {
-      return (status === null) ? statuses : statuses.add(status);
-    }, new Set())
+    licence.twoPartTariffStatuses.reduce((statuses, status) => (status === null) ? statuses : statuses.add(status), new Set())
   ),
   billingContact: invoiceAccountCompany.name
 });
