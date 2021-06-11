@@ -19,7 +19,7 @@ const getGaugingStationsByRef = async stationRef => {
   throw new NotFoundError(`Could not find a gauging station with ref ${stationRef}`);
 };
 
-const getGaugingStationConditionsById = async gaugingStationId => {
+const getGaugingStationLicencesById = async gaugingStationId => {
   const gaugingStationConditions = await gaugingStationRepo.findLicenceConditionsByStationId(gaugingStationId);
   if (gaugingStationConditions) {
     return gaugingStationConditions;
@@ -29,4 +29,4 @@ const getGaugingStationConditionsById = async gaugingStationId => {
 
 exports.getGaugingStations = getGaugingStations;
 exports.getGaugingStationsByRef = getGaugingStationsByRef;
-exports.getGaugingStationConditionsById = getGaugingStationConditionsById;
+exports.getGaugingStationLicencesById = getGaugingStationLicencesById;
