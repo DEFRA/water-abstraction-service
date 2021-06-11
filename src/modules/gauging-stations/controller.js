@@ -3,7 +3,7 @@
 const gaugingStationService = require('../../lib/services/gauging-station-service');
 const licenceGaugingStationsService = require('../../lib/services/licence-gauging-stations-service');
 const licencesService = require('../../lib/services/licences');
-const controller = require('../../lib/controller');
+const controllerHelper = require('../../lib/controller');
 const gaugingStationsRepo = require('../../lib/connectors/repos/gauging-stations');
 const Boom = require('@hapi/boom');
 const { logger } = require('../../logger');
@@ -15,13 +15,13 @@ const getGaugingStation = async request => {
 };
 
 const getGaugingStationByRef = async request =>
-  controller.getEntities(
+  controllerHelper.getEntities(
     request.params.stationRef,
     gaugingStationService.getGaugingStationByRef
   );
 
 const getGaugingStationLicencesById = async request =>
-  controller.getEntities(
+  controllerHelper.getEntities(
     request.params.gaugingStationId,
     gaugingStationService.getGaugingStationLicencesById
   );
@@ -43,7 +43,7 @@ const createLicenceGaugingStationLink = async request => {
     await licencesService.getLicenceById(licenceId);
 
     // Check that the gauging station ID belongs to an actual gauging station.
-    await gaugingStationService.getGaugingStations(gaugingStationId);
+    await gaugingStationService.getGaugingStation(gaugingStationId);
 
     return licenceGaugingStationsService.createNewLicenceLink(gaugingStationId, licenceId, {
       licenceVersionPurposeConditionId,

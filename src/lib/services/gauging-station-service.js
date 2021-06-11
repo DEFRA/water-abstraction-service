@@ -3,7 +3,7 @@ const gaugingStationRepo = require('../connectors/repos/gauging-stations');
 const gaugingStationMapper = require('../mappers/gauging-station');
 const { NotFoundError } = require('../errors');
 
-const getGaugingStations = async gaugingStationId => {
+const getGaugingStation = async gaugingStationId => {
   const gaugingStationResponse = await gaugingStationRepo.findOne(gaugingStationId);
   if (gaugingStationResponse) {
     return gaugingStationMapper.dbToModel(gaugingStationResponse);
@@ -11,7 +11,7 @@ const getGaugingStations = async gaugingStationId => {
   throw new NotFoundError(`Could not find gauging station with ID ${gaugingStationId}`);
 };
 
-const getGaugingStationsByRef = async stationRef => {
+const getGaugingStationByRef = async stationRef => {
   const gaugingStationResponseRef = await gaugingStationRepo.findOneByStationRef(stationRef);
   if (gaugingStationResponseRef) {
     return gaugingStationMapper.dbToModel(gaugingStationResponseRef);
@@ -27,6 +27,6 @@ const getGaugingStationLicencesById = async gaugingStationId => {
   throw new NotFoundError(`Could not find gauging station conditions with ID ${gaugingStationId}`);
 };
 
-exports.getGaugingStations = getGaugingStations;
-exports.getGaugingStationsByRef = getGaugingStationsByRef;
+exports.getGaugingStation = getGaugingStation;
+exports.getGaugingStationByRef = getGaugingStationByRef;
 exports.getGaugingStationLicencesById = getGaugingStationLicencesById;

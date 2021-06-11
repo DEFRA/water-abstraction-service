@@ -68,7 +68,7 @@ experiment('getGaugingStationByRef', () => {
   beforeEach(async () => {
     sandbox.stub(gaugingStationRepo, 'findOneByStationRef'); /* simulate db results */
     gaugingStationRepo.findOneByStationRef.resolves(data.dbRow);
-    result = await gaugingStationService.getGaugingStationsByRef(data.dbRow.stationReference);
+    result = await gaugingStationService.getGaugingStationByRef(data.dbRow.stationReference);
   });
   afterEach(async () => {
     sandbox.restore();
