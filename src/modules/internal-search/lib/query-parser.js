@@ -16,6 +16,16 @@ const isReturnId = query => {
 };
 
 /**
+ * Tests whether the query is for a billing account reference
+ * @param  {String}  query - the search query
+ * @return {Boolean}       returns true if an exact billing account reference
+ */
+const isBillingAccountReference = query => {
+  const pattern = /^[ABENSTWY][0-9]{8}A$/;
+  return pattern.test(query);
+};
+
+/**
  * Tests whether the query could be for a return format ID
  * - i.e. only contains numbers 0-9
  * @param  {String}  query - the search query
@@ -35,7 +45,8 @@ const parseQuery = (query) => {
   return {
     isNumeric: isNumeric(query),
     isUser: isUserQuery(query),
-    isReturnId: isReturnId(query)
+    isReturnId: isReturnId(query),
+    isBillingAccountReference: isBillingAccountReference(query.toUpperCase())
   };
 };
 

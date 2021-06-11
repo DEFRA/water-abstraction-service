@@ -13,6 +13,7 @@ const { BatchStatusError } = require('../lib/errors');
 const { NotFoundError } = require('../../../lib/errors');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/constants');
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
+const bluebird = require('bluebird');
 
 const Batch = require('../../../lib/models/batch');
 
@@ -321,6 +322,22 @@ const updateInvoiceLicencesForSupplementaryReprocessing = invoice => {
 };
 
 /**
+ * deletes all the transactions, invoice licences, invoices, charge version years and charge module data for an invoice
+ * @param {object} batch the billig batch object - must contain external id
+ * @param {Invoice} invoice water service invoice instance
+ */
+const deleteInvoicesWithRelatedData = async (batch, invoice) => {
+  await newRepos.billingBatchChargeVersionYears.deleteByInvoiceId(invoice.billingInvoiceId);
+  await newRepos.billingVolumes.deleteByBatchAndInvoiceId(batch.id, invoice.billingInvoiceId);
+  await chargeModuleBillRunConnector.deleteInvoiceFromBillRun(batch.externalId, invoice.externalId);
+  await newRepos.billingTransactions.deleteByInvoiceId(invoice.billingInvoiceId);
+  await newRepos.billingInvoiceLicences.deleteByInvoiceId(invoice.billingInvoiceId);
+  await newRepos.billingInvoices.delete(invoice.billingInvoiceId);
+};
+
+const isNotOriginalInvoice = row => row.billingInvoiceId !== row.originalBillingInvoiceId;
+
+/**
  * Deletes an individual invoice from the batch.  Also deletes CM transactions
  * @param {Batch} batch
  * @param {String} invoiceId
@@ -337,18 +354,18 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
   if (!invoice) {
     throw new NotFoundError(`Invoice ${invoiceId} not found`);
   }
-
   // Set batch status back to 'processing'
   await setStatus(batch.id, Batch.BATCH_STATUS.processing);
 
   try {
-    await chargeModuleBillRunConnector.deleteInvoiceFromBillRun(invoice.billingBatch.externalId, invoice.externalId);
-    // Delete local data
-    await newRepos.billingBatchChargeVersionYears.deleteByInvoiceId(invoiceId);
-    await newRepos.billingVolumes.deleteByBatchAndInvoiceId(batch.id, invoiceId);
-    await newRepos.billingTransactions.deleteByInvoiceId(invoiceId);
-    await newRepos.billingInvoiceLicences.deleteByInvoiceId(invoiceId);
-    await newRepos.billingInvoices.delete(invoiceId);
+    let invoicesToDelete = [invoice];
+
+    if (invoice.rebillingState !== null) {
+      await invoiceService.updateInvoice(invoice.originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
+      invoicesToDelete = invoice.linkedBillingInvoices.filter(isNotOriginalInvoice);
+    }
+
+    await bluebird.mapSeries(invoicesToDelete, invoiceRow => deleteInvoicesWithRelatedData(batch, invoiceRow));
 
     // update the include in supplementary billing status
     const invoiceModel = mappers.invoice.dbToModel(invoice);

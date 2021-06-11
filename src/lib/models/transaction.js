@@ -1,6 +1,6 @@
 'use strict';
 
-const { isNull } = require('lodash');
+const { isNull, identity } = require('lodash');
 const { titleCase } = require('title-case');
 
 const Model = require('./model');
@@ -22,13 +22,25 @@ const getDescriptionFromChargeElement = chargeElement => {
   return chargeElement.description || chargeElement.purposeUse.name;
 };
 
-const getTwoPartTariffTransactionDescription = (transaction) => {
+/**
+ * Removes the part of the purpose use description after the hyphen
+ * For example, Spray Irrigation - Direct is mapped to Spray Irrigation
+ *
+ * @param {PurposeUse} purposeUse
+ * @returns {String}
+ */
+const getPurposeUseDescription = purposeUse => {
+  return purposeUse.name.split('-')[0].trim();
+};
+
+const getTwoPartTariffTransactionDescription = transaction => {
   const prefix = transaction.isTwoPartTariffSupplementary ? 'Second' : 'First';
-  const { purposeUse: { name: purpose }, description } = transaction.chargeElement;
+  const purposeUseDescription = getPurposeUseDescription(transaction.chargeElement.purposeUse);
+  const { description } = transaction.chargeElement;
 
-  const txDescription = `${prefix} part ${purpose} charge`;
-
-  return description ? `${txDescription} at ${description}` : txDescription;
+  return [prefix, 'Part', purposeUseDescription, 'Charge', description]
+    .filter(identity)
+    .join(' ');
 };
 
 class Transaction extends Model {

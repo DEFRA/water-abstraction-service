@@ -53,7 +53,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         expect(transactions[2].isNewLicence).to.equal(true);
         expect(transactions[2].agreements[0].code).to.equal('S127');
         expect(transactions[2].isTwoPartTariffSupplementary).to.equal(false);
-        expect(transactions[2].description).to.equal('First Part Spray Irrigation Direct Charge at Test Description');
+        expect(transactions[2].description).to.equal('First Part Spray Irrigation Direct Charge Test Description');
       });
 
       test('a first-part two-part tariff compensation charge is created for the second element', async () => {
@@ -142,7 +142,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         expect(transactions[0].isMinimumCharge).to.be.undefined();
         expect(transactions[0].agreements[0].code).to.equal('S127');
         expect(transactions[0].isTwoPartTariffSupplementary).to.equal(true);
-        expect(transactions[0].description).to.equal('Second Part Spray Irrigation Direct Charge at Test Description');
+        expect(transactions[0].description).to.equal('Second Part Spray Irrigation Direct Charge Test Description');
       });
 
       test('authorised and billable days are set to 0', () => {
