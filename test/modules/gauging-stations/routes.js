@@ -5,7 +5,7 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 
 const routes = require('../../../src/modules/gauging-stations/routes');
-const controllers = require('../../../src/modules/gauging-stations/controllers');
+const controllers = require('../../../src/modules/gauging-stations/controller');
 
 experiment('.getGaugingStation', () => {
   test('it has the right method', () => {

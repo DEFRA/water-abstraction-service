@@ -12,7 +12,7 @@ const sandbox = sinon.createSandbox();
 const { v4: uuid } = require('uuid');
 
 const gaugingStationsRepo = require('../../../src/lib/connectors/repos/gauging-stations');
-const controllers = require('../../../src/modules/gauging-stations/controllers');
+const controller = require('../../../src/modules/gauging-stations/controller');
 
 experiment('.getGaugingStation', () => {
   const tempGuid = uuid();
@@ -20,7 +20,7 @@ experiment('.getGaugingStation', () => {
   experiment('with a valid guid', () => {
     beforeEach(async () => {
       sandbox.stub(gaugingStationsRepo, 'findOne').resolves('some station');
-      await controllers.getGaugingStation({
+      await controller.getGaugingStation({
         params: {
           stationGuid: tempGuid
         }
@@ -38,7 +38,7 @@ experiment('.getGaugingStation', () => {
     let result;
     beforeEach(async () => {
       sandbox.stub(gaugingStationsRepo, 'findOne').resolves(null);
-      result = await controllers.getGaugingStation({
+      result = await controller.getGaugingStation({
         params: {
           stationGuid: tempGuid
         }
