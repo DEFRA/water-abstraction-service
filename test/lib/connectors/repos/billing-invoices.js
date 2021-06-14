@@ -15,6 +15,7 @@ const queries = require('../../../../src/lib/connectors/repos/queries/billing-in
 const billingInvoices = require('../../../../src/lib/connectors/repos/billing-invoices');
 const paginationHelper = require('../../../../src/lib/connectors/repos/lib/envelope');
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
+const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
 
 const result = {
   rows: [{
@@ -46,6 +47,8 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     sandbox.stub(BillingInvoice, 'forge').returns(stub);
 
     sandbox.stub(raw, 'multiRow');
+
+    sandbox.stub(helpers, 'create');
   });
 
   afterEach(async () => {
@@ -248,7 +251,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     test('calls raw.multiRow with the correct query', async () => {
       expect(raw.multiRow.calledWith(
         queries.findByIsFlaggedForRebillingAndRegion, { regionId }
-      ));
+      )).to.be.true();
     });
   });
 
@@ -262,7 +265,21 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     test('calls raw.multiRow with the correct query', async () => {
       expect(raw.multiRow.calledWith(
         queries.resetIsFlaggedForRebilling, { batchId }
-      ));
+      )).to.be.true();
+    });
+  });
+
+  experiment('.create', () => {
+    const data = { foo: 'bar' };
+
+    beforeEach(async () => {
+      await billingInvoices.create(data);
+    });
+
+    test('calls helpers.create with the Bookshelf model and supplied data', async () => {
+      expect(helpers.create.calledWith(
+        BillingInvoice, data
+      )).to.be.true();
     });
   });
 

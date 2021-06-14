@@ -196,7 +196,7 @@ const saveInvoiceLicences = async (batch, invoice) => {
 
 const saveInvoicesToDB = async batch => {
   for (const invoice of batch.invoices) {
-    const { billingInvoiceId } = await invoiceService.saveInvoiceToDB(batch, invoice);
+    const { billingInvoiceId } = await invoiceService.saveInvoiceToDB(invoice);
     invoice.id = billingInvoiceId;
     await saveInvoiceLicences(batch, invoice);
   }

@@ -67,7 +67,10 @@ const processChargeVersionYear = async (chargeVersionYear) => {
   const invoiceAccount = await invoiceAccountsConnector.getInvoiceAccountById(chargeVersion.invoiceAccount.id);
   // Generate Invoice data structure
   const invoice = mappers.invoice.crmToModel(invoiceAccount);
-  invoice.financialYear = financialYear;
+  invoice.fromHash({
+    financialYear: financialYear,
+    batchId: chargeVersionYear.batch.id
+  });
   const invoiceLicence = createInvoiceLicence(chargeVersion);
   invoiceLicence.transactions = await createTransactions(chargeVersionYear);
   invoice.invoiceLicences = [invoiceLicence];

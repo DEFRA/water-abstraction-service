@@ -374,6 +374,19 @@ class Invoice extends Totals {
   get linkedInvoices () {
     return this._linkedInvoices;
   }
+
+  /**
+   * The ID of the related batch
+   * @param {String|Null} id - guid
+   */
+  set batchId (id) {
+    assertNullableId(id);
+    this._batchId = id;
+  }
+
+  get batchId () {
+    return this._batchId;
+  }
 }
 
 module.exports = Invoice;
