@@ -302,7 +302,10 @@ const cmToModelMapper = createMapper()
 const cmToModel = data =>
   createModel(Transaction, data, cmToModelMapper);
 
+const cmToPojo = cmTransaction => cmToModelMapper.execute(cmTransaction);
+
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
 exports.modelToChargeModule = modelToChargeModule;
 exports.cmToModel = cmToModel;
+exports.cmToPojo = cmToPojo;

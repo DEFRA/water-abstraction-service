@@ -10,9 +10,10 @@ const mappers = require('../mappers');
  * @param {InvoiceLicence} invoiceLicence
  * @return {Promise<Object>} row data inserted
  */
-const saveInvoiceLicenceToDB = (invoice, invoiceLicence) => {
+const saveInvoiceLicenceToDB = async (invoice, invoiceLicence) => {
   const data = mappers.invoiceLicence.modelToDB(invoice, invoiceLicence);
-  return newRepos.billingInvoiceLicences.upsert(data);
+  const dbRow = await newRepos.billingInvoiceLicences.upsert(data);
+  return mappers.invoiceLicence.dbToModel(dbRow);
 };
 
 const getInvoiceLicenceWithTransactions = async invoiceLicenceId => {

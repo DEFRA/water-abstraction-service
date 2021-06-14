@@ -192,7 +192,7 @@ const approveBatch = async (batch, internalCallingUser) => {
   }
 };
 
-const saveInvoiceLicenceTransactions = async (batch, invoice, invoiceLicence) => {
+const saveInvoiceLicenceTransactions = async (invoiceLicence) => {
   for (const transaction of invoiceLicence.transactions) {
     const { billingTransactionId } = await transactionsService.saveTransactionToDB(invoiceLicence, transaction);
     transaction.id = billingTransactionId;
@@ -201,9 +201,9 @@ const saveInvoiceLicenceTransactions = async (batch, invoice, invoiceLicence) =>
 
 const saveInvoiceLicences = async (batch, invoice) => {
   for (const invoiceLicence of invoice.invoiceLicences) {
-    const { billingInvoiceLicenceId } = await invoiceLicenceService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
-    invoiceLicence.id = billingInvoiceLicenceId;
-    await saveInvoiceLicenceTransactions(batch, invoice, invoiceLicence);
+    const { id } = await invoiceLicenceService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
+    invoiceLicence.id = id;
+    await saveInvoiceLicenceTransactions(invoiceLicence);
   }
 };
 

@@ -49,6 +49,8 @@ const onComplete = async (job, queueManager) => {
     const batchId = get(job, 'data.batchId');
     const { billingTransactionIds } = job.returnvalue;
 
+    // @todo with rebilling there can be 0 transactions here - if so we need to skip to next step
+
     logger.info(`${billingTransactionIds.length} transactions produced for batch ${batchId}, creating charges...`);
 
     // Note: publish jobs in series to avoid overwhelming message queue

@@ -16,12 +16,17 @@ const FinancialYear = require('../models/financial-year');
 // Errors
 const { NotFoundError } = require('../errors');
 
-const getInvoiceById = async invoiceId => {
+const getInvoiceDataById = async invoiceId => {
   const data = await repos.billingInvoices.findOne(invoiceId);
   if (!data) {
     throw new NotFoundError(`Invoice ${invoiceId} not found`);
   }
   return data;
+};
+
+const getInvoiceById = async invoiceId => {
+  const data = await getInvoiceDataById(invoiceId);
+  return mappers.invoice.dbToModel(data);
 };
 
 /**
@@ -31,7 +36,10 @@ const getInvoiceById = async invoiceId => {
  * @return {Promise<Object>} row data inserted (camel case)
  */
 const saveInvoiceToDB = async (batch, invoice) => {
-  const data = mappers.invoice.modelToDb(batch, invoice);
+  const data = {
+    ...mappers.invoice.modelToDb(invoice),
+    billingBatchId: batch.id
+  };
   return repos.billingInvoices.upsert(data);
 };
 
@@ -75,7 +83,7 @@ const getBatchInvoices = async context => {
 const getInvoice = async context => {
   const { batch, invoiceId } = context;
 
-  const data = await getInvoiceById(invoiceId);
+  const data = await getInvoiceDataById(invoiceId);
 
   if (data.billingBatchId !== batch.id) {
     throw new NotFoundError(`Invoice ${invoiceId} not found in batch ${batch.id}`);
@@ -178,7 +186,7 @@ const getInvoicesTransactionsForBatch = partialRight(getInvoicesForBatch, {
  * @param {Number} financialYearEnding
  * @return {Promise<Object>} the new/existing invoice service model
  */
-const getOrCreateInvoice = async (batchId, invoiceAccountId, financialYearEnding) => {
+const getOrCreateInvoice = async (batchId, invoiceAccountId, financialYearEnding, data = {}) => {
   const existingRow = await repos.billingInvoices.findOneBy({
     billingBatchId: batchId,
     invoiceAccountId,
@@ -190,10 +198,17 @@ const getOrCreateInvoice = async (batchId, invoiceAccountId, financialYearEnding
   // Look up invoice account in CRM and map to service model
   const [crmData] = await invoiceAccountsConnector.getInvoiceAccountsByIds([invoiceAccountId]);
   const modelFromCrm = mappers.invoice.crmToModel(crmData);
-  modelFromCrm.financialYear = new FinancialYear(financialYearEnding);
+  modelFromCrm.fromHash({
+    ...data,
+    batchId,
+    financialYear: new FinancialYear(financialYearEnding)
+  });
 
   // Write to DB and map back to service model
-  const newRow = await saveInvoiceToDB({ id: batchId }, modelFromCrm);
+  const newRow = await repos.billingInvoices.create({
+    billingBatchId: batchId,
+    ...mappers.invoice.modelToDb(modelFromCrm)
+  });
   return mappers.invoice.dbToModel(newRow);
 };
 
