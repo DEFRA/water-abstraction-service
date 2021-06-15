@@ -12,13 +12,13 @@ const sandbox = sinon.createSandbox();
 const uuid = require('uuid/v4');
 
 const Batch = require('../../../../src/lib/models/batch');
-
+const Decimal = require('decimal.js-light');
 const repos = require('../../../../src/lib/connectors/repos');
 
 const licencesService = require('../../../../src/modules/billing/services/licences-service');
 const invoiceAccountService = require('../../../../src/lib/services/invoice-accounts-service');
 const generalLicencesService = require('../../../../src/lib/services/licences');
-
+const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
 const { BatchStatusError } = require('../../../../src/modules/billing/lib/errors');
 
 experiment('modules/billing/services/licences-service', () => {
@@ -32,6 +32,7 @@ experiment('modules/billing/services/licences-service', () => {
 
     sandbox.stub(repos.billingVolumes, 'deleteByBatchIdAndLicenceId');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchIdAndLicenceId');
+    sandbox.stub(billingVolumesService, 'getLicenceBillingVolumes').resolves([{ calculatedVolume: new Decimal(10), volume: 100 }]);
     sandbox.stub(invoiceAccountService, 'getByInvoiceAccountId').resolves({ company: { name: 'test company name' } });
   });
 
@@ -64,7 +65,8 @@ experiment('modules/billing/services/licences-service', () => {
         licenceRef: dbResults[0].licenceRef,
         twoPartTariffError: true,
         twoPartTariffStatuses: [10, 20],
-        billingContact: 'test company name'
+        billingContact: 'test company name',
+        billingVolumeEdited: true
       }]);
     });
   });
