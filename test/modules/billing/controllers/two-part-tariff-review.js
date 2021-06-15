@@ -20,7 +20,7 @@ const licencesService = require('../../../../src/modules/billing/services/licenc
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const eventService = require('../../../../src/lib/services/events');
-
+const bluebird = require('bluebird');
 const { NotFoundError } = require('../../../../src/lib/errors.js');
 const { BatchStatusError, TransactionStatusError } = require('../../../../src/modules/billing/lib/errors.js');
 const BillingVolume = require('../../../../src/lib/connectors/bookshelf/BillingVolume');
@@ -74,9 +74,8 @@ experiment('modules/billing/controllers/two-part-tariff-review', () => {
     sandbox.stub(billingVolumesService, 'getBillingVolumeById');
     sandbox.stub(billingVolumesService, 'updateBillingVolume');
     sandbox.stub(billingVolumesService, 'getBillingVolumeChargePeriod').resolves(new DateRange('2021-04-01', '2022-03-31'));
-
     sandbox.stub(batchService, 'approveTptBatchReview').resolves(batch);
-
+    sandbox.stub(bluebird, 'mapSeries').resolves();
     event = new Event(uuid());
     sandbox.stub(eventService, 'create').resolves(event);
   });

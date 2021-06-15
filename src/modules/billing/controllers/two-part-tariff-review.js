@@ -8,7 +8,7 @@ const mapErrorResponse = require('../../../lib/map-error-response');
 const { jobStatus } = require('../lib/event');
 const { createBatchEvent, EVENT_TYPES } = require('../lib/batch-event');
 const { envelope } = require('../../../lib/response');
-
+const bluebird = require('bluebird');
 const { jobName: processChargeVersionsJobName } = require('../jobs/process-charge-versions');
 
 /**
@@ -39,7 +39,11 @@ const getBatchLicences = async (request, h) => {
 const getBatchLicenceVolumes = (request) => {
   const { batch } = request.pre;
 
-  return billingVolumesService.getLicenceBillingVolumes(batch, request.params.licenceId);
+  const billingVolumes = billingVolumesService.getLicenceBillingVolumes(batch, request.params.licenceId);
+  return bluebird.mapSeries(billingVolumes, async billingVolume => {
+    billingVolume.chargePeriod = await billingVolumesService.getBillingVolumeChargePeriod(billingVolume);
+    return billingVolume;
+  });
 };
 
 /**

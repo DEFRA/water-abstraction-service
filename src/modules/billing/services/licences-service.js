@@ -5,16 +5,23 @@ const Batch = require('../../../lib/models/batch');
 const { BatchStatusError } = require('../lib/errors');
 const licencesService = require('../../../lib/services/licences');
 const invoiceAccountService = require('../../../lib/services/invoice-accounts-service');
+const billingVolumesService = require('./billing-volumes-service');
 const bluebird = require('bluebird');
 
-const mapItem = async (licence, invoiceAccountCompany) => ({
+const isBillingVolumeEdited = billingVolumes => !billingVolumes.every(row =>
+  row.calculatedVolume !== null
+    ? row.calculatedVolume.equals(row.volume)
+    : true);
+
+const mapItem = async (licence, invoiceAccountCompany, billingVolumes) => ({
   licenceId: licence.licenceId,
   licenceRef: licence.licenceRef,
   twoPartTariffError: licence.twoPartTariffErrors.includes(true),
   twoPartTariffStatuses: Array.from(
     licence.twoPartTariffStatuses.reduce((statuses, status) => (status === null) ? statuses : statuses.add(status), new Set())
   ),
-  billingContact: invoiceAccountCompany.name
+  billingContact: invoiceAccountCompany.name,
+  billingVolumeEdited: isBillingVolumeEdited(billingVolumes)
 });
 
 /**
@@ -33,7 +40,8 @@ const getByBatchIdForTwoPartTariffReview = async batchId => {
   const data = await repos.licences.findByBatchIdForTwoPartTariffReview(batchId);
   return bluebird.mapSeries(data, async row => {
     const invoiceAccount = await invoiceAccountService.getByInvoiceAccountId(row.invoiceAccountId);
-    return mapItem(row, invoiceAccount.company);
+    const billingVolume = await billingVolumesService.getLicenceBillingVolumes({ id: batchId }, row.licenceId);
+    return mapItem(row, invoiceAccount.company, billingVolume);
   });
 };
 
