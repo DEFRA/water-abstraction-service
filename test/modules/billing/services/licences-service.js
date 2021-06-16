@@ -45,7 +45,8 @@ experiment('modules/billing/services/licences-service', () => {
       licenceId: uuid(),
       licenceRef: '01/123',
       twoPartTariffErrors: [true, false, false, true],
-      twoPartTariffStatuses: [10, null, null, 10, 20]
+      twoPartTariffStatuses: [10, null, null, 10, 20],
+      returnVolumeEdited: 1
     }];
 
     beforeEach(async () => {
