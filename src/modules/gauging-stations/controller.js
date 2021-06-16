@@ -41,10 +41,16 @@ const createLicenceGaugingStationLink = async request => {
     } = request.payload;
 
     // Check that the licence ID belongs to an actual licence.
-    await licencesService.getLicenceById(licenceId);
+    const licence = await licencesService.getLicenceById(licenceId);
+    if (!licence) {
+      return Boom.notFound(`Licence with ID ${licenceId} could not be found`);
+    }
 
     // Check that the gauging station ID belongs to an actual gauging station.
-    await gaugingStationService.getGaugingStation(gaugingStationId);
+    const gaugingStation = await gaugingStationService.getGaugingStation(gaugingStationId);
+    if (!gaugingStation) {
+      return Boom.notFound(`Gauging Station with ID ${gaugingStationId} could not be found`);
+    }
 
     return licenceGaugingStationsService.createNewLicenceLink(gaugingStationId, licenceId, abstractionPeriodInObjectParser({
       licenceVersionPurposeConditionId,

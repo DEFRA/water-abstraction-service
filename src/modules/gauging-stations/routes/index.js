@@ -65,7 +65,7 @@ module.exports = {
         payload: Joi.object({
           licenceId: Joi.string().uuid().required(),
           licenceVersionPurposeConditionId: Joi.string().uuid().allow(null),
-          thresholdUnit: Joi.string().required(),
+          thresholdUnit: Joi.number().required(),
           thresholdValue: Joi.number().required(),
           abstractionPeriod: Joi.object({
             startDay: VALID_DAY,
