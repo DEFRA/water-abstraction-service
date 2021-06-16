@@ -4,6 +4,9 @@ const Joi = require('@hapi/joi');
 const { ROLES: { abstractionAlertsNotifications } } = require('../../../lib/roles');
 const controller = require('../controller');
 
+const VALID_DAY = Joi.number().integer().min(1).max(31);
+const VALID_MONTH = Joi.number().integer().min(1).max(12);
+
 module.exports = {
   getGaugingStation: {
     method: 'GET',
@@ -64,10 +67,12 @@ module.exports = {
           licenceVersionPurposeConditionId: Joi.string().uuid().allow(null),
           thresholdUnit: Joi.string().required(),
           thresholdValue: Joi.number().required(),
-          abstractionPeriodStartDay: Joi.number(),
-          abstractionPeriodStartMonth: Joi.number(),
-          abstractionPeriodEndDay: Joi.number(),
-          abstractionPeriodEndMonth: Joi.number(),
+          abstractionPeriod: Joi.object({
+            startDay: VALID_DAY,
+            startMonth: VALID_MONTH,
+            endDay: VALID_DAY,
+            endMonth: VALID_MONTH
+          }).allow(null, {}),
           restrictionType: Joi.string().required().allow('flow', 'level'),
           alertType: Joi.string().required().allow('stop', 'reduce', 'stop_or_reduce')
         })

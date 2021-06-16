@@ -6,6 +6,7 @@ const licencesService = require('../../lib/services/licences');
 const controllerHelper = require('../../lib/controller');
 const gaugingStationsRepo = require('../../lib/connectors/repos/gauging-stations');
 const Boom = require('@hapi/boom');
+const { abstractionPeriodInObjectParser } = require('./helpers');
 const { logger } = require('../../logger');
 
 const getGaugingStation = async request => {
@@ -34,10 +35,7 @@ const createLicenceGaugingStationLink = async request => {
       licenceVersionPurposeConditionId,
       thresholdUnit,
       thresholdValue,
-      abstractionPeriodStartDay,
-      abstractionPeriodStartMonth,
-      abstractionPeriodEndDay,
-      abstractionPeriodEndMonth,
+      abstractionPeriod,
       restrictionType,
       alertType
     } = request.payload;
@@ -48,18 +46,15 @@ const createLicenceGaugingStationLink = async request => {
     // Check that the gauging station ID belongs to an actual gauging station.
     await gaugingStationService.getGaugingStation(gaugingStationId);
 
-    return licenceGaugingStationsService.createNewLicenceLink(gaugingStationId, licenceId, {
+    return licenceGaugingStationsService.createNewLicenceLink(gaugingStationId, licenceId, abstractionPeriodInObjectParser({
       licenceVersionPurposeConditionId,
       thresholdUnit,
       thresholdValue,
-      abstractionPeriodStartDay,
-      abstractionPeriodStartMonth,
-      abstractionPeriodEndDay,
-      abstractionPeriodEndMonth,
+      abstractionPeriod,
       restrictionType,
       alertType,
       source: 'wrls'
-    });
+    }));
   } catch (e) {
     const { gaugingStationId } = request.params;
     const {
