@@ -1,7 +1,5 @@
 const { expect } = require('@hapi/code');
 const {
-  before,
-  after,
   experiment,
   beforeEach,
   afterEach,
@@ -109,10 +107,10 @@ experiment('getGaugingStationLicencesById', () => {
 experiment('createLicenceGaugingStationLink', () => {
   const request = {
     params: {
-      gaugingStationId: 'someguid2'
+      gaugingStationId: '00000000-0000-0000-0000-000000000000'
     },
     payload: {
-      licenceId: 'someguid1',
+      licenceId: '00000000-0000-0000-0000-000000000001',
       licenceVersionPurposeConditionId: null,
       thresholdUnit: 'm',
       thresholdValue: 10,
@@ -126,19 +124,19 @@ experiment('createLicenceGaugingStationLink', () => {
       alertType: 'reduce'
     }
   };
-  before(async () => {
-    await sandbox.stub(licencesService, 'getLicenceById').resolves();
-    await sandbox.stub(gaugingStationService, 'getGaugingStation').resolves();
+  beforeEach(async () => {
+    await sandbox.stub(licencesService, 'getLicenceById').resolves({ id: '00000000-0000-0000-0000-000000000000' });
+    await sandbox.stub(gaugingStationService, 'getGaugingStation').resolves({ id: '00000000-0000-0000-0000-000000000001' });
     await sandbox.stub(licenceGaugingStationsService, 'createNewLicenceLink').resolves();
     await controller.createLicenceGaugingStationLink(request);
   });
 
-  after(() => sandbox.restore());
+  afterEach(() => sandbox.restore());
 
   test('calls licencesService.getLicenceById to ascertain if the licence exists', () => {
-    expect(licencesService.getLicenceById.calledWith('someguid1')).to.be.true();
+    expect(licencesService.getLicenceById.calledWith('00000000-0000-0000-0000-000000000001')).to.be.true();
   });
   test('calls gaugingStationService.getGaugingStation to ascertain if the station exists', () => {
-    expect(gaugingStationService.getGaugingStation.calledWith('someguid2')).to.be.true();
+    expect(gaugingStationService.getGaugingStation.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
   });
 });
