@@ -116,7 +116,10 @@ experiment('createLicenceGaugingStationLink', () => {
       licenceVersionPurposeConditionId: null,
       thresholdUnit: 'm',
       thresholdValue: 10,
-      abstractionPeriod: null,
+      abstractionPeriodStartDay: null,
+      abstractionPeriodStartMonth: null,
+      abstractionPeriodEndDay: null,
+      abstractionPeriodEndMonth: null,
       restrictionType: 'flow',
       alertType: 'reduce'
     }

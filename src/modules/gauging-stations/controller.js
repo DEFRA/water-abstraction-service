@@ -34,7 +34,10 @@ const createLicenceGaugingStationLink = async request => {
       licenceVersionPurposeConditionId,
       thresholdUnit,
       thresholdValue,
-      abstractionPeriod,
+      abstractionPeriodStartDay,
+      abstractionPeriodStartMonth,
+      abstractionPeriodEndDay,
+      abstractionPeriodEndMonth,
       restrictionType,
       alertType
     } = request.payload;
@@ -49,7 +52,10 @@ const createLicenceGaugingStationLink = async request => {
       licenceVersionPurposeConditionId,
       thresholdUnit,
       thresholdValue,
-      ...abstractionPeriod,
+      abstractionPeriodStartDay,
+      abstractionPeriodStartMonth,
+      abstractionPeriodEndDay,
+      abstractionPeriodEndMonth,
       restrictionType,
       alertType,
       source: 'wrls'
