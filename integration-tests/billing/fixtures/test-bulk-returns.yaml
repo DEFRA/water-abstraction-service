@@ -1,0 +1,191 @@
+- ref: $returnMonthlyA
+  model: Return
+  fields:
+    return_id: v1:1:AT/CURR/MONTHLY/02:9999990:2019-01-01:2019-12-31
+    regime: water
+    licence_ref : 'AT/CURR/MONTHLY/02'
+    licence_type: abstraction
+    start_date: '2019-01-01'
+    end_date: '2019-12-31'
+    due_date:	'2020-01-28'
+    returns_frequency: month
+    status: due
+    source: NALD
+    metadata: >
+      {
+        "nald":{
+            "areaCode":"AREA",
+            "formatId":9999990,
+            "regionCode":6,
+            "periodEndDay":"31",
+            "periodEndMonth":"12",
+            "periodStartDay":"1",
+            "periodStartMonth":"1"
+        },
+        "points":[
+            {
+              "name":"The Name of this",
+              "ngr1":"TG 123 456",
+              "ngr2":null,
+              "ngr3":null,
+              "ngr4":null
+            }
+        ],
+        "isFinal":false,
+        "version":1,
+        "isSummer":false,
+        "isUpload":true,
+        "purposes":[
+            {
+              "alias":"SPRAY IRRIGATION STORAGE",
+              "primary":{
+                  "code":"A",
+                  "description":"Agriculture"
+              },
+              "secondary":{
+                  "code":"AGR",
+                  "description":"General Agriculture"
+              },
+              "tertiary":{
+                  "code":"420",
+                  "description":"Spray Irrigation - Storage"
+              }
+            }
+        ],
+        "isCurrent":true,
+        "description":"Its all about the description",
+        "isTwoPartTariff":true
+      }
+    received_date: null
+    return_requirement: '9999990'
+    under_query: false
+    is_test: true
+
+
+- ref: $returnMonthlyB
+  model: Return
+  fields:
+    return_id: v1:1:AT/CURR/MONTHLY/02:9999991:2020-01-01:2020-12-31
+    regime: water
+    licence_ref : 'AT/CURR/MONTHLY/02'
+    licence_type: abstraction
+    start_date: '2020-01-01'
+    end_date: '2020-12-31'
+    due_date:	'2021-01-28'
+    returns_frequency: month
+    status: due
+    source: NALD
+    metadata: >
+      {
+        "nald":{
+            "areaCode":"AREA",
+            "formatId":9999991,
+            "regionCode":6,
+            "periodEndDay":"31",
+            "periodEndMonth":"12",
+            "periodStartDay":"1",
+            "periodStartMonth":"1"
+        },
+        "points":[
+            {
+              "name":"The Name of this",
+              "ngr1":"TG 123 456",
+              "ngr2":null,
+              "ngr3":null,
+              "ngr4":null
+            }
+        ],
+        "isFinal":false,
+        "version":1,
+        "isSummer":false,
+        "isUpload":true,
+        "purposes":[
+            {
+              "alias":"SPRAY IRRIGATION STORAGE",
+              "primary":{
+                  "code":"A",
+                  "description":"Agriculture"
+              },
+              "secondary":{
+                  "code":"AGR",
+                  "description":"General Agriculture"
+              },
+              "tertiary":{
+                  "code":"420",
+                  "description":"Spray Irrigation - Storage"
+              }
+            }
+        ],
+        "isCurrent":true,
+        "description":"Its all about the description",
+        "isTwoPartTariff":true
+      }
+    received_date: null
+    return_requirement: '9999991'
+    under_query: false
+    is_test: true
+
+
+- ref: $returnMonthlyC
+  model: Return
+  fields:
+    return_id: v1:1:AT/CURR/MONTHLY/02:9999992:2021-01-01:2021-02-28
+    regime: water
+    licence_ref : 'AT/CURR/MONTHLY/02'
+    licence_type: abstraction
+    start_date: '2021-01-01'
+    end_date: '2021-02-28'
+    due_date:	'2021-03-31'
+    returns_frequency: month
+    status: due
+    source: NALD
+    metadata: >
+      {
+        "nald":{
+            "areaCode":"AREA",
+            "formatId":9999992,
+            "regionCode":6,
+            "periodEndDay":"28",
+            "periodEndMonth":"02",
+            "periodStartDay":"1",
+            "periodStartMonth":"1"
+        },
+        "points":[
+            {
+              "name":"Winter",
+              "ngr1":"TG 123 456",
+              "ngr2":null,
+              "ngr3":null,
+              "ngr4":null
+            }
+        ],
+        "isFinal":false,
+        "version":1,
+        "isSummer":false,
+        "isUpload":true,
+        "purposes":[
+            {
+              "alias":"SPRAY IRRIGATION STORAGE",
+              "primary":{
+                  "code":"A",
+                  "description":"Agriculture"
+              },
+              "secondary":{
+                  "code":"AGR",
+                  "description":"General Agriculture"
+              },
+              "tertiary":{
+                  "code":"420",
+                  "description":"Spray Irrigation - Storage"
+              }
+            }
+        ],
+        "isCurrent":true,
+        "description":"Its all about the description",
+        "isTwoPartTariff":true
+      }
+    received_date: null
+    return_requirement: '9999992'
+    under_query: false
+    is_test: true
+
