@@ -2,11 +2,11 @@ const Joi = require('@hapi/joi');
 
 const { version } = require('../../../../config');
 
-const pathPrefix = '/water/1.0/licence-version-purpose-conditions/';
+const pathPrefix = `/water/${version}/licence-version-purpose-conditions/`;
 const controller = require('../controllers/licence-version-purpose-conditions');
 
 module.exports = {
-  getLicenceInvoices: {
+  getLicenceVersionPurposeConditions: {
     method: 'GET',
     path: `${pathPrefix}{licenceVersionPurposeConditionId}`,
     handler: controller.getLicenceVersionPurposeConditionById,

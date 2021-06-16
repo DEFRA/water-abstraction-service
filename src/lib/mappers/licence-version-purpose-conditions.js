@@ -16,8 +16,8 @@ const dbToModelMapper = createMapper()
 
 /**
  * Maps row from water.financial_agreement_types to Agreement service model
- * @param {Object} - row from water.financial_agreement_types
  * @return {Agreement}
+ * @param row
  */
 const dbToModel = row =>
   helpers.createModel(LicenceVersionPurposeCondition, row, dbToModelMapper);
