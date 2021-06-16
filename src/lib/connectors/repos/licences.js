@@ -13,11 +13,9 @@ const deleteTest = () => Licence
   });
 
 /**
- * Gets a list of licence agreements of the given types for the specified
- * licece number
- * @param {String} licenceRef - licence number
- * @param {Array} agreementTypes
+ * Gets a licence record given its ID
  * @return {Promise<Array>}
+ * @param licenceId
  */
 const findOne = async licenceId => {
   const model = await Licence

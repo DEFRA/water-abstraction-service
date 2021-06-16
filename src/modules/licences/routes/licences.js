@@ -131,5 +131,23 @@ module.exports = {
         })
       }
     }
+  },
+
+  getLicenceConditions: {
+    method: 'GET',
+    path: `${pathPrefix}{licenceId}/licence-version-purpose-conditions`,
+    handler: controller.getLicenceVersionPurposeConditionsByLicenceId,
+    config: {
+      description: 'Gets conditions associated with the licence through its licence versions',
+      validate: {
+        params: Joi.object({
+          licenceId: Joi.string().guid().required()
+        }),
+        query: Joi.object({
+          page: Joi.number().integer().min(1).default(1),
+          perPage: Joi.number().integer().min(1).default(10)
+        })
+      }
+    }
   }
 };

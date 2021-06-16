@@ -12,6 +12,7 @@ const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../models/constants');
 const service = require('./service');
 const returns = require('./returns');
 const scheduledNotifications = require('./scheduled-notifications');
+const conditions = require('./licence-version-purpose-conditions');
 
 const crmDocsConnector = require('../connectors/crm-v2/documents');
 const crmCompaniesConnector = require('../connectors/crm-v2/companies');
@@ -198,6 +199,23 @@ const getScheduledNotificationsByLicenceId = async (licenceId, page, perPage) =>
   return scheduledNotifications.getScheduledNotificationsByLicenceNumber(licence.licenceNumber, page, perPage);
 };
 
+/**
+ * Gets licence conditions
+ *
+ * @param {String} licenceId
+ * @param {Number} page
+ * @param {Number} perPage
+ * @return {Promise<Object>} contains { data, pagination}
+ */
+const getLicenceVersionPurposeConditionsByLicenceId = async (licenceId, page, perPage) => {
+  const licence = await getLicenceById(licenceId);
+  if (!licence) {
+    return null;
+  }
+
+  return conditions.getLicenceVersionPurposeConditionsByLicenceId(licenceId, page, perPage);
+};
+
 exports.getLicenceById = getLicenceById;
 exports.getLicencesByLicenceRefs = getLicencesByLicenceRefs;
 exports.getLicenceVersionById = getLicenceVersionById;
@@ -212,3 +230,4 @@ exports.getLicenceInvoices = getLicenceInvoices;
 exports.getLicencesByInvoiceAccountId = getLicencesByInvoiceAccountId;
 exports.getReturnsByLicenceId = getReturnsByLicenceId;
 exports.getScheduledNotificationsByLicenceId = getScheduledNotificationsByLicenceId;
+exports.getLicenceVersionPurposeConditionsByLicenceId = getLicenceVersionPurposeConditionsByLicenceId;
