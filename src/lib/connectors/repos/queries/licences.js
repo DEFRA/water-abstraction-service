@@ -4,7 +4,8 @@ const findByBatchIdForTwoPartTariffReview = `
   select l.licence_ref, l.licence_id,
     array_agg(v.two_part_tariff_status) as "two_part_tariff_statuses",
     array_agg(v.two_part_tariff_error) as "two_part_tariff_errors",
-    cv.invoice_account_id
+    cv.invoice_account_id,
+    sum(case when v.calculated_volume <> v.volume then 1 else 0 end)::integer AS return_volume_edited
   from water.billing_batches b
   join water.billing_batch_charge_version_years y on b.billing_batch_id=y.billing_batch_id
   join water.charge_versions cv on y.charge_version_id=cv.charge_version_id
