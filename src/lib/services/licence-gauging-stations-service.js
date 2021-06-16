@@ -9,6 +9,6 @@ const createNewLicenceLink = async (gaugingStationId, licenceId, properties = {
   restrictionType: 'flow',
   alertType: 'reduce',
   source: 'wrls'
-}) => licenceGaugingStationsRepo.create({ gaugingStationId, licenceId, ...properties, date_status_updated: new Date() });
+}) => licenceGaugingStationsRepo.create({ gaugingStationId, licenceId, ...properties });
 
 exports.createNewLicenceLink = createNewLicenceLink;
