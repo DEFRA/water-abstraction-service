@@ -11,7 +11,7 @@ const LicenceVersionPurposeConditions = require('../bookshelf/LicenceVersionPurp
  */
 const findOneById = async id => helpers.findOne(LicenceVersionPurposeConditions, 'licenceVersionPurposeConditionId', id);
 
-const findManyByLicenceId = (licenceId) =>
+const findManyByLicenceId = licenceId =>
   bookshelf.knex.raw(queries.findLicenceVersionPurposeConditionsByLicenceId, { licenceId });
 
 exports.findOneById = findOneById;

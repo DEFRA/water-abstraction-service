@@ -142,10 +142,6 @@ module.exports = {
       validate: {
         params: Joi.object({
           licenceId: Joi.string().guid().required()
-        }),
-        query: Joi.object({
-          page: Joi.number().integer().min(1).default(1),
-          perPage: Joi.number().integer().min(1).default(10)
         })
       }
     }
