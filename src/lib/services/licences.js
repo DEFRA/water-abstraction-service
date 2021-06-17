@@ -199,19 +199,14 @@ const getScheduledNotificationsByLicenceId = async (licenceId, page, perPage) =>
   return scheduledNotifications.getScheduledNotificationsByLicenceNumber(licence.licenceNumber, page, perPage);
 };
 
-/**
- * Gets licence conditions
- *
- * @param {String} licenceId
- * @return {Promise<Object>} contains { data, pagination}
- */
-const getLicenceVersionPurposeConditionsByLicenceId = async (licenceId) => {
+const getLicenceVersionPurposeConditionsByLicenceId = async (licenceId, code) => {
   const licence = await getLicenceById(licenceId);
+
   if (!licence) {
     return null;
   }
 
-  return conditions.getLicenceVersionPurposeConditionsByLicenceId(licenceId);
+  return conditions.getLicenceVersionPurposeConditionsByLicenceId(licenceId, code);
 };
 
 exports.getLicenceById = getLicenceById;

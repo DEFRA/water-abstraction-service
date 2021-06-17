@@ -66,9 +66,9 @@ const getLicenceNotifications = async request => {
 
 const getLicenceVersionPurposeConditionsByLicenceId = async request => {
   const { licenceId } = request.params;
-  const { page, perPage } = request.query;
+  const { code } = request.query;
+  const result = await licencesService.getLicenceVersionPurposeConditionsByLicenceId(licenceId, code);
 
-  const result = await licencesService.getLicenceVersionPurposeConditionsByLicenceId(licenceId, page, perPage);
   return result || Boom.notFound(`Licence ${licenceId} not found`);
 };
 

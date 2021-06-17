@@ -10,13 +10,13 @@ const getLicenceVersionConditionById = id =>
 /**
  *
  * @param {String} licenceId
+ * @param code - optionally specify a code
  * @returns {Promise<Object>}
  */
-const getLicenceVersionPurposeConditionsByLicenceId = async (licenceId) => {
-  const data = await licenceVersionPurposeConditionsRepo.findManyByLicenceId(licenceId);
-
+const getLicenceVersionPurposeConditionsByLicenceId = async (licenceId, code) => {
+  const data = await licenceVersionPurposeConditionsRepo.findManyByLicenceId(licenceId, code);
   return {
-    data: data.rows
+    data: data.rows.map(mapper.dbToModel)
   };
 };
 

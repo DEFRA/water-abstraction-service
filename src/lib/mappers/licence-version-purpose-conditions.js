@@ -5,20 +5,13 @@ const { createMapper } = require('../object-mapper');
 const helpers = require('./lib/helpers');
 
 const dbToModelMapper = createMapper()
-  .map('licenceVersionPurposeCondition').to('id')
+  .map('licence_version_purpose_condition_id').to('licenceVersionPurposeConditionId')
+  .map('param_1').to('param1')
+  .map('param_2').to('param2')
   .copy(
-    'param1',
-    'param2',
-    'notes',
-    'dateCreated',
-    'dateUpdated'
+    'notes'
   );
 
-/**
- * Maps row from water.financial_agreement_types to Agreement service model
- * @return {Agreement}
- * @param row
- */
 const dbToModel = row =>
   helpers.createModel(LicenceVersionPurposeCondition, row, dbToModelMapper);
 
