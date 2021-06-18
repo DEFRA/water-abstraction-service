@@ -40,13 +40,12 @@ const getBatchLicenceVolumes = (request) => {
   const { batch } = request.pre;
 
   const billingVolumes = billingVolumesService.getLicenceBillingVolumes(batch, request.params.licenceId);
-  const dat = bluebird.mapSeries(billingVolumes, async billingVolume => {
+  return bluebird.mapSeries(billingVolumes, async billingVolume => {
     const chargeDetails = await billingVolumesService.getBillingVolumeChargePeriod(billingVolume, true);
     billingVolume.chargePeriod = chargeDetails.chargePeriod;
     billingVolume.invoiceAccount = await invoiceAccountService.getByInvoiceAccountId(chargeDetails.invoiceAccountId);
     return billingVolume;
   });
-  return dat;
 };
 
 /**
