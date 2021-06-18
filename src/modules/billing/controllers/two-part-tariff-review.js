@@ -10,7 +10,7 @@ const { createBatchEvent, EVENT_TYPES } = require('../lib/batch-event');
 const { envelope } = require('../../../lib/response');
 const bluebird = require('bluebird');
 const { jobName: processChargeVersionsJobName } = require('../jobs/process-charge-versions');
-
+const invoiceAccountService = require('../../../lib/services/invoice-accounts-service');
 /**
  * Gets a list of licences in the batch for two-part tariff review
  * GET /water/1.0/billing/batches/{batchId}/two-part-tariff-licences
@@ -36,14 +36,17 @@ const getBatchLicences = async (request, h) => {
  * @param {String} request.params.batchId
  * @param {String} request.params.licenceId
  */
-const getBatchLicenceVolumes = async (request) => {
+const getBatchLicenceVolumes = (request) => {
   const { batch } = request.pre;
 
-  const billingVolumes = await billingVolumesService.getLicenceBillingVolumes(batch, request.params.licenceId);
-  return bluebird.mapSeries(billingVolumes, async billingVolume => {
-    billingVolume.chargePeriod = await billingVolumesService.getBillingVolumeChargePeriod(billingVolume);
+  const billingVolumes = billingVolumesService.getLicenceBillingVolumes(batch, request.params.licenceId);
+  const dat = bluebird.mapSeries(billingVolumes, async billingVolume => {
+    const chargeDetails = await billingVolumesService.getBillingVolumeChargePeriod(billingVolume, true);
+    billingVolume.chargePeriod = chargeDetails.chargePeriod;
+    billingVolume.invoiceAccount = await invoiceAccountService.getByInvoiceAccountId(chargeDetails.invoiceAccountId);
     return billingVolume;
   });
+  return dat;
 };
 
 /**

@@ -5,6 +5,7 @@ const Batch = require('../../../lib/models/batch');
 const { BatchStatusError } = require('../lib/errors');
 const licencesService = require('../../../lib/services/licences');
 const invoiceAccountService = require('../../../lib/services/invoice-accounts-service');
+const { uniq } = require('lodash');
 const bluebird = require('bluebird');
 
 const mapItem = async (licence, invoiceAccountCompany) => ({
@@ -32,8 +33,10 @@ const mapItem = async (licence, invoiceAccountCompany) => ({
  */
 const getByBatchIdForTwoPartTariffReview = async batchId => {
   const data = await repos.licences.findByBatchIdForTwoPartTariffReview(batchId);
+  const uniqueIds = uniq(data.map(row => row.invoiceAccountId));
+  const invAccs = await invoiceAccountService.getByInvoiceAccountIds(uniqueIds);
   return bluebird.mapSeries(data, async row => {
-    const invoiceAccount = await invoiceAccountService.getByInvoiceAccountId(row.invoiceAccountId);
+    const invoiceAccount = await invAccs.find(invAcc => invAcc.id === row.invoiceAccountId);
     return mapItem(row, invoiceAccount.company);
   });
 };

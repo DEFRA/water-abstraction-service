@@ -33,7 +33,7 @@ experiment('modules/billing/services/licences-service', () => {
     sandbox.stub(repos.billingVolumes, 'deleteByBatchIdAndLicenceId');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchIdAndLicenceId');
     sandbox.stub(billingVolumesService, 'getLicenceBillingVolumes').resolves([{ calculatedVolume: new Decimal(10), volume: 100 }]);
-    sandbox.stub(invoiceAccountService, 'getByInvoiceAccountId').resolves({ company: { name: 'test company name' } });
+    sandbox.stub(invoiceAccountService, 'getByInvoiceAccountIds').resolves([{ id: 'test-invoice-account-id', company: { name: 'test company name' } }]);
   });
 
   afterEach(async () => {
@@ -46,7 +46,8 @@ experiment('modules/billing/services/licences-service', () => {
       licenceRef: '01/123',
       twoPartTariffErrors: [true, false, false, true],
       twoPartTariffStatuses: [10, null, null, 10, 20],
-      returnVolumeEdited: 1
+      returnVolumeEdited: 1,
+      invoiceAccountId: 'test-invoice-account-id'
     }];
 
     beforeEach(async () => {

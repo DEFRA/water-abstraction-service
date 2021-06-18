@@ -19,7 +19,7 @@ exports.deleteByBatchAndInvoiceId = `
     `;
 
 exports.findByBatchIdAndLicenceId = `
-select v.* 
+select v.*, cv.invoice_account_id
   from water.billing_volumes v
   join water.charge_elements ce on v.charge_element_id=ce.charge_element_id
   join water.charge_versions cv on ce.charge_version_id=cv.charge_version_id
