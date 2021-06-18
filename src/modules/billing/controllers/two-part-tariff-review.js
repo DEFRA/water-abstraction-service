@@ -36,10 +36,11 @@ const getBatchLicences = async (request, h) => {
  * @param {String} request.params.batchId
  * @param {String} request.params.licenceId
  */
-const getBatchLicenceVolumes = (request) => {
+const getBatchLicenceVolumes = async (request) => {
   const { batch } = request.pre;
 
-  const billingVolumes = billingVolumesService.getLicenceBillingVolumes(batch, request.params.licenceId);
+  const billingVolumes = await billingVolumesService.getLicenceBillingVolumes(batch, request.params.licenceId);
+  // console.log(billingVolumes);
   return bluebird.mapSeries(billingVolumes, async billingVolume => {
     const chargeDetails = await billingVolumesService.getBillingVolumeChargePeriod(billingVolume, true);
     billingVolume.chargePeriod = chargeDetails.chargePeriod;
