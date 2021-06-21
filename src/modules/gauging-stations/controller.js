@@ -21,6 +21,13 @@ const getGaugingStationConditionsById = async request =>
     gaugingStationService.getGaugingStationConditionsById
   );
 
+const getGaugingStationsByLicenceId = async request =>
+  controller.getEntities(
+    request.params.licenceId,
+    gaugingStationService.getGaugingStationsByLicenceId
+  );
+
 exports.getGaugingStation = getGaugingStation;
 exports.getGaugingStationByRef = getGaugingStationByRef;
 exports.getGaugingStationConditionsById = getGaugingStationConditionsById;
+exports.getGaugingStationsByLicenceId = getGaugingStationsByLicenceId;

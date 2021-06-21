@@ -10,6 +10,9 @@ const findOne = id =>
 const findLicenceConditionsByStationId = gaugingStationId =>
   raw.multiRow(queries.findGaugingStationWithLinkedLicences, { gaugingStationId });
 
+const findGaugingStationsByLicenceId = licenceId =>
+  raw.multiRow(queries.findGaugingStationsByLicenceId, { licenceId });
+
 const findOneByStationRef = async stationRef => {
   const model = await GaugingStation
     .forge()
@@ -52,6 +55,7 @@ const deleteOne = id =>
   helpers.deleteOne(GaugingStation, 'gaugingStationId', id);
 
 exports.findLicenceConditionsByStationId = findLicenceConditionsByStationId;
+exports.findGaugingStationsByLicenceId = findGaugingStationsByLicenceId;
 exports.findOneByStationRef = findOneByStationRef;
 exports.findAllByPartialNameMatch = findAllByPartialNameMatch;
 exports.findOneByWiskiId = findOneByWiskiId;

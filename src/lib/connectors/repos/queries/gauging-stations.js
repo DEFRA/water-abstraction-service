@@ -21,3 +21,5 @@ gs.northing from
 water.gauging_stations gs join water.licence_gauging_stations lgs on (lgs.gauging_station_id = gs.gauging_station_id)  
 join water.licences l on (l.licence_id = lgs.licence_id)
 where gs.gauging_station_id=:gaugingStationId;`;
+exports.findGaugingStationsByLicenceId = `SELECT gs.label, gs.gauging_station_id FROM water.licence_gauging_stations lgs 
+JOIN water.gauging_stations gs on lgs.gauging_station_id = gs.gauging_station_id WHERE lgs.licence_id = :licenceId;`;
