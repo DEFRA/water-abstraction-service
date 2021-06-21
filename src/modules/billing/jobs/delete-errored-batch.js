@@ -40,11 +40,11 @@ const handler = async job => {
 const onFailedHandler = async (job, err) => {
   const batchId = get(job, 'data.batchId');
 
-  // On final attempt, error the batch and log
+  // Log error on final attempt
   if (helpers.isFinalAttempt(job)) {
     logger.error(`Failed to delete charge module bill run for errored batch ${batchId} after ${job.attemptsMade} attempts`);
   } else {
-    // Do normal error logging
+    // Default failed job error logging
     helpers.onFailedHandler(job, err);
   }
 };
