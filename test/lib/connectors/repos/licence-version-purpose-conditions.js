@@ -15,8 +15,6 @@ const { bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 const queries = require('../../../../src/lib/connectors/repos/queries/licence-version-purpose-conditions');
 
 experiment('lib/connectors/repos/licence-version-purpose-conditions', () => {
-  let model, stub, result;
-
   beforeEach(async () => {
     sandbox.stub(helpers, 'findOne').returns();
     sandbox.stub(bookshelf.knex, 'raw').resolves();
