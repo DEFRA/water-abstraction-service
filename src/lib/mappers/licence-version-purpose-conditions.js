@@ -5,10 +5,10 @@ const { createMapper } = require('../object-mapper');
 const helpers = require('./lib/helpers');
 
 const dbToModelMapper = createMapper()
+  .map('licence_version_purpose_condition_id').to('licenceVersionPurposeConditionId')
+  .map('param_1').to('param1')
+  .map('param_2').to('param2')
   .copy(
-    'param1',
-    'param2',
-    'licenceVersionPurposeConditionId',
     'notes'
   );
 

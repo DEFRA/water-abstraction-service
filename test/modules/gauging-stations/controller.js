@@ -111,7 +111,7 @@ experiment('createLicenceGaugingStationLink', () => {
     },
     payload: {
       licenceId: '00000000-0000-0000-0000-000000000001',
-      licenceVersionPurposeConditionId: null,
+      licenceVersionPurposeConditionId: '00000000-0000-0000-0000-000000000002',
       thresholdUnit: 'm',
       thresholdValue: 10,
       abstractionPeriod: {
