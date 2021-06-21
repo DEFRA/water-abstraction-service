@@ -2,27 +2,35 @@
 
 const { partialRight, startCase } = require('lodash');
 const Boom = require('@hapi/boom');
-
-const newRepos = require('../../../lib/connectors/repos');
-const mappers = require('../mappers');
-const { BATCH_STATUS, BATCH_TYPE } = require('../../../lib/models/batch');
-const { logger } = require('../../../logger');
-const Event = require('../../../lib/models/event');
-const eventService = require('../../../lib/services/events');
-const { BatchStatusError } = require('../lib/errors');
-const { NotFoundError } = require('../../../lib/errors');
-const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/constants');
-const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 const bluebird = require('bluebird');
 
-const Batch = require('../../../lib/models/batch');
+const mappers = require('../mappers');
+const { logger } = require('../../../logger');
+const messageQueue = require('../../../lib/message-queue-v2');
 
+// Constants
+const { BatchStatusError } = require('../lib/errors');
+const { NotFoundError } = require('../../../lib/errors');
+const { BATCH_STATUS, BATCH_TYPE } = require('../../../lib/models/batch');
+const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/constants');
+const config = require('../../../../config');
+
+// Services
+const newRepos = require('../../../lib/connectors/repos');
+const eventService = require('../../../lib/services/events');
 const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
 const billingVolumesService = require('./billing-volumes-service');
 const invoiceService = require('../../../lib/services/invoice-service');
 const licencesService = require('../../../lib/services/licences');
-const config = require('../../../../config');
+const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
+
+// Models
+const Event = require('../../../lib/models/event');
+const Batch = require('../../../lib/models/batch');
+
+// Jobs
+const { jobName: deleteErroredBatchName } = require('../jobs/delete-errored-batch');
 
 /**
  * Loads a Batch instance by ID
@@ -152,11 +160,16 @@ const setStatus = (batchId, status) =>
  */
 const setErrorStatus = async (batchId, errorCode) => {
   logger.error(`Batch ${batchId} failed with error code ${errorCode}`);
-  return Promise.all([
-    newRepos.billingVolumes.markVolumesAsErrored(batchId, { require: false }),
-    newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error, errorCode }),
-    licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId)
-  ]);
+
+  await newRepos.billingVolumes.markVolumesAsErrored(batchId, { require: false });
+
+  // Mark local batch as errored and delete CM batch
+  await newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error, errorCode });
+  if (errorCode !== Batch.BATCH_ERROR_CODE.failedToCreateBillRun) {
+    await messageQueue.getQueueManager().add(deleteErroredBatchName, batchId);
+  };
+
+  await licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId);
 };
 
 const approveBatch = async (batch, internalCallingUser) => {
