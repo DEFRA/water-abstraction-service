@@ -1,5 +1,8 @@
 'use strict';
 
+const { createMapper } = require('../object-mapper');
+const helpers = require('./lib/helpers');
+
 const GaugingStation = require('../models/gauging-station');
 
 const csvToModel = data => {
@@ -39,4 +42,35 @@ const csvToModel = data => {
   });
 };
 
+/* Humanize and copy fields */
+const dbToModelMapper = createMapper()
+  .map('gauging_station_id').to('gaugingStationId')
+  .map('hydrology_station_id').to('hydrologyStationId')
+  .map('wiski_id').to('wiskiId')
+  .map('grid_reference').to('gridReference')
+  .map('catchment_name').to('catchmentName')
+  .map('river_name').to('riverName')
+  .map('station_reference').to('stationReference')
+  .copy(
+    'gaugingStationId',
+    'hydrologyStationId',
+    'wiskiId',
+    'gridReference',
+    'catchmentName',
+    'riverName',
+    'stationReference',
+    'label',
+    'lat',
+    'long',
+    'easting',
+    'northing',
+    'status',
+    'metadata',
+    'dateCreated',
+    'dateUpdated'
+  );
+
+const dbToModel = row => helpers.createModel(GaugingStation, row, dbToModelMapper);
+
+exports.dbToModel = dbToModel;
 exports.csvToModel = csvToModel;
