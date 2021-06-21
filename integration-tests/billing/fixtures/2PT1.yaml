@@ -29,7 +29,7 @@
     description: Section 127 (Two Part Tariff)
     disabled: false
   constraints:
-    code_is_unique:
+    uniq_financial_agreement_code:
       - financialAgreementCode
 
 - model: LicenceAgreement
