@@ -6,6 +6,7 @@ const controller = require('../controller');
 
 const VALID_DAY = Joi.number().integer().min(1).max(31);
 const VALID_MONTH = Joi.number().integer().min(1).max(12);
+const VALID_THRESHOLD_UNITS = Joi.string().required().allow('Ml/d', 'm3/s', 'm3/d', 'l/s', 'mAOD', 'mASD', 'm');
 
 module.exports = {
   getGaugingStation: {
@@ -65,14 +66,14 @@ module.exports = {
         payload: Joi.object({
           licenceId: Joi.string().uuid().required(),
           licenceVersionPurposeConditionId: Joi.string().uuid().allow(null),
-          thresholdUnit: Joi.string().required(),
+          thresholdUnit: VALID_THRESHOLD_UNITS,
           thresholdValue: Joi.number().required(),
           abstractionPeriod: Joi.object({
             startDay: VALID_DAY,
             startMonth: VALID_MONTH,
             endDay: VALID_DAY,
             endMonth: VALID_MONTH
-          }).allow(null, {}),
+          }).required(),
           restrictionType: Joi.string().required().allow('flow', 'level'),
           alertType: Joi.string().required().allow('stop', 'reduce', 'stop_or_reduce')
         })
