@@ -43,7 +43,7 @@ experiment('src/lib/services/licence-version-purpose-conditions', () => {
     const tempGuid = uuid();
     experiment('when the licence is found', () => {
       beforeEach(async () => {
-        lvpcRepo.findManyByLicenceId.resolves([]);
+        lvpcRepo.findManyByLicenceId.resolves({ rows: [] });
         await lvpcService.getLicenceVersionPurposeConditionsByLicenceId(tempGuid);
       });
 
