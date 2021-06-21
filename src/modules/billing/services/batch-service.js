@@ -167,7 +167,7 @@ const setErrorStatus = async (batchId, errorCode) => {
   await newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error, errorCode });
   if (errorCode !== Batch.BATCH_ERROR_CODE.failedToCreateBillRun) {
     await messageQueue.getQueueManager().add(deleteErroredBatchName, batchId);
-  };
+  }
 
   await licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId);
 };
