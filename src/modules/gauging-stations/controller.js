@@ -40,6 +40,12 @@ const createLicenceGaugingStationLink = async request => {
       alertType
     } = request.payload;
 
+    // Check that either an abstraction period or condition ID has been supplied.
+    if (!licenceVersionPurposeConditionId && (!abstractionPeriod.startDay || !abstractionPeriod.startMonth ||
+      !abstractionPeriod.endDay || !abstractionPeriod.endMonth)) {
+      return Boom.badData('Either a licence version purpose condition ID or an abstraction period must be supplied');
+    }
+
     // Check that the licence ID belongs to an actual licence.
     const licence = await licencesService.getLicenceById(licenceId);
     if (!licence) {
@@ -48,6 +54,7 @@ const createLicenceGaugingStationLink = async request => {
 
     // Check that the gauging station ID belongs to an actual gauging station.
     const gaugingStation = await gaugingStationService.getGaugingStation(gaugingStationId);
+
     if (!gaugingStation) {
       return Boom.notFound(`Gauging Station with ID ${gaugingStationId} could not be found`);
     }

@@ -65,7 +65,7 @@ module.exports = {
         }),
         payload: Joi.object({
           licenceId: Joi.string().uuid().required(),
-          licenceVersionPurposeConditionId: Joi.string().uuid().allow(null),
+          licenceVersionPurposeConditionId: Joi.string().uuid(),
           thresholdUnit: VALID_THRESHOLD_UNITS,
           thresholdValue: Joi.number().required(),
           abstractionPeriod: Joi.object({
@@ -73,7 +73,7 @@ module.exports = {
             startMonth: VALID_MONTH,
             endDay: VALID_DAY,
             endMonth: VALID_MONTH
-          }).required(),
+          }),
           restrictionType: Joi.string().required().allow('flow', 'level'),
           alertType: Joi.string().required().allow('stop', 'reduce', 'stop_or_reduce')
         })
