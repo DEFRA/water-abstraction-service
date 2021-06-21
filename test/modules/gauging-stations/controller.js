@@ -13,6 +13,8 @@ const { v4: uuid } = require('uuid');
 
 const gaugingStationsRepo = require('../../../src/lib/connectors/repos/gauging-stations');
 const controller = require('../../../src/modules/gauging-stations/controller');
+const gaugingStationService = require('../../../src/lib/services/gauging-station-service');
+const entitiesController = require('../../../src/lib/controller');
 
 experiment('.getGaugingStation', () => {
   const tempGuid = uuid();
@@ -55,5 +57,43 @@ experiment('.getGaugingStation', () => {
       expect(result.output.statusCode).to.equal(404);
       expect(result.output.payload.message).to.equal(`Gauging station ${tempGuid} not found`);
     });
+  });
+});
+
+experiment('.getGaugingStationbyRef', () => {
+  beforeEach(() => {
+    sandbox.stub(entitiesController, 'getEntities').resolves();
+  });
+
+  afterEach(() => sandbox.restore());
+
+  const request = {
+    params: {
+      stationRef: 'some-ref'
+    }
+  };
+
+  test('calls getEntities', async () => {
+    await controller.getGaugingStationByRef(request);
+    expect(entitiesController.getEntities.calledWith(request.params.stationRef, gaugingStationService.getGaugingStationsByRef));
+  });
+});
+
+experiment('.getGaugingStationLicencesById', () => {
+  beforeEach(() => {
+    sandbox.stub(entitiesController, 'getEntities').resolves();
+  });
+
+  afterEach(() => sandbox.restore());
+
+  const request = {
+    params: {
+      gaugingStationId: 'some-guid'
+    }
+  };
+
+  test('calls getEntities', async () => {
+    await controller.getGaugingStationLicencesById(request);
+    expect(entitiesController.getEntities.calledWith(request.params.gaugingStationId, gaugingStationService.getGaugingStationLicencesById));
   });
 });

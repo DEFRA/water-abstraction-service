@@ -41,7 +41,24 @@ experiment('getGaugingStationLicencesById', () => {
   });
 });
 
-experiment('calls gaugingStation Api with id', () => {
+experiment('.getGaugingStationByRef', () => {
+  let result;
+  beforeEach(async () => {
+    sandbox.stub(gaugingStationRepo, 'findOneByStationRef'); /* simulate db results */
+    gaugingStationRepo.findOneByStationRef.resolves(data.dbRow);
+    result = await gaugingStationService.getGaugingStationsByRef(data.dbRow.stationReference);
+  });
+  afterEach(async () => {
+    sandbox.restore();
+  });
+  test('calls repos.gaugingStation.getGaugingStationsByRef()', async () => {
+    const [stationReference] = gaugingStationRepo.findOneByStationRef.lastCall.args;
+    expect(Array.isArray(result)).to.equal(false);
+    expect(stationReference).to.equal(data.dbRow.stationReference);
+  });
+});
+
+experiment('.getGaugingStationLicencesById', () => {
   let server, request;
   beforeEach(async () => {
     server = await testHelpers.createServerForRoute(routes.getGaugingStationLicencesById);
@@ -60,22 +77,5 @@ experiment('calls gaugingStation Api with id', () => {
     request.url = `/water/1.0/gauging-stations/${idshort}/licences`;
     const response = await server.inject(request);
     expect(response.statusCode).to.equal(400);
-  });
-});
-
-experiment('getGaugingStationByRef', () => {
-  let result;
-  beforeEach(async () => {
-    sandbox.stub(gaugingStationRepo, 'findOneByStationRef'); /* simulate db results */
-    gaugingStationRepo.findOneByStationRef.resolves(data.dbRow);
-    result = await gaugingStationService.getGaugingStationsByRef(data.dbRow.stationReference);
-  });
-  afterEach(async () => {
-    sandbox.restore();
-  });
-  test('calls repos.gaugingStation.getGaugingStationsByRef()', async () => {
-    const [stationReference] = gaugingStationRepo.findOneByStationRef.lastCall.args;
-    expect(Array.isArray(result)).to.equal(false);
-    expect(stationReference).to.equal(data.dbRow.stationReference);
   });
 });
