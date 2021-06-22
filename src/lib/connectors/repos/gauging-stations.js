@@ -1,9 +1,14 @@
 'use strict';
 const { GaugingStation } = require('../bookshelf');
 const helpers = require('./lib/helpers');
+const queries = require('./queries/gauging-stations');
+const raw = require('./lib/raw');
 
 const findOne = id =>
   helpers.findOne(GaugingStation, 'gaugingStationId', id);
+
+const findLicenceConditionsByStationId = gaugingStationId =>
+  raw.multiRow(queries.findGaugingStationWithLinkedLicences, { gaugingStationId });
 
 const findOneByStationRef = async stationRef => {
   const model = await GaugingStation
@@ -46,6 +51,7 @@ const update = (id, changes) => GaugingStation
 const deleteOne = id =>
   helpers.deleteOne(GaugingStation, 'gaugingStationId', id);
 
+exports.findLicenceConditionsByStationId = findLicenceConditionsByStationId;
 exports.findOneByStationRef = findOneByStationRef;
 exports.findAllByPartialNameMatch = findAllByPartialNameMatch;
 exports.findOneByWiskiId = findOneByWiskiId;
