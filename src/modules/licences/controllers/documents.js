@@ -238,6 +238,10 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
 
   try {
     const documentHeader = await getDocumentHeader(documentId, includeExpired);
+    if (!documentHeader) {
+      return Boom.notFound(`Document ${documentId} not found`);
+    }
+
     const licence = await getLicence(documentHeader, undefined, companyId);
 
     if (licence) {
