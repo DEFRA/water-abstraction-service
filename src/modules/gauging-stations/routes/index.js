@@ -68,11 +68,15 @@ module.exports = {
           licenceVersionPurposeConditionId: Joi.string().uuid().allow(null),
           thresholdUnit: VALID_THRESHOLD_UNITS,
           thresholdValue: Joi.number().required(),
-          abstractionPeriod: Joi.object({
-            startDay: VALID_DAY,
-            startMonth: VALID_MONTH,
-            endDay: VALID_DAY,
-            endMonth: VALID_MONTH
+          abstractionPeriod: Joi.when('licenceVersionPurposeConditionId', {
+            is: Joi.string().uuid(),
+            then: Joi.forbidden().allow(null).allow({}),
+            otherwise: Joi.object({
+              startDay: VALID_DAY,
+              startMonth: VALID_MONTH,
+              endDay: VALID_DAY,
+              endMonth: VALID_MONTH
+            }).required()
           }),
           restrictionType: Joi.string().required().allow('flow', 'level'),
           alertType: Joi.string().required().allow('stop', 'reduce', 'stop_or_reduce')
