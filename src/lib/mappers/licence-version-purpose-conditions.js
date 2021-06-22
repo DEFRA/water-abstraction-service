@@ -5,14 +5,13 @@ const { createMapper } = require('../object-mapper');
 const helpers = require('./lib/helpers');
 
 const dbToModelMapper = createMapper()
+  .map('licenceVersionPurposeConditionId').to('id')
   .copy(
-    'licenceVersionPurposeConditionId',
     'param1',
     'param2',
     'notes'
   );
 
-const dbToModel = row =>
-  helpers.createModel(LicenceVersionPurposeCondition, row, dbToModelMapper);
+const dbToModel = row => helpers.createModel(LicenceVersionPurposeCondition, row, dbToModelMapper);
 
 exports.dbToModel = dbToModel;
