@@ -79,3 +79,20 @@ experiment('.getGaugingStationLicencesById', () => {
     expect(response.statusCode).to.equal(400);
   });
 });
+
+experiment('getGaugingStationByRef', () => {
+  let result;
+  beforeEach(async () => {
+    sandbox.stub(gaugingStationRepo, 'findOneByStationRef'); /* simulate db results */
+    gaugingStationRepo.findOneByStationRef.resolves(data.dbRow);
+    result = await gaugingStationService.getGaugingStationByRef(data.dbRow.stationReference);
+  });
+  afterEach(async () => {
+    sandbox.restore();
+  });
+  test('calls repos.gaugingStation.getGaugingStationsByRef()', async () => {
+    const [stationReference] = gaugingStationRepo.findOneByStationRef.lastCall.args;
+    expect(Array.isArray(result)).to.equal(false);
+    expect(stationReference).to.equal(data.dbRow.stationReference);
+  });
+});
