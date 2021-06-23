@@ -176,5 +176,35 @@
       "service": "water",
       "file": "2PT1.yaml"
     }
+  ],
+  "bulk-return": [
+    {
+      "service": "idm",
+      "file": "internal-users.yaml"
+    },
+    {
+      "service": "idm",
+      "file": "external-users.yaml"
+    },
+    {
+      "service": "permits",
+      "file": "test-permits.yaml"
+    },
+    {
+      "service": "crmV1",
+      "file": "crm-v1.yaml"
+    },
+    {
+      "service": "crmV2",
+      "file": "crm-v2.yaml"
+    },
+    {
+      "service": "water",
+      "file": "test-licences.yaml"
+    },
+    {
+      "service": "returns",
+      "file": "test-bulk-returns.yaml"
+    }
   ]
 }

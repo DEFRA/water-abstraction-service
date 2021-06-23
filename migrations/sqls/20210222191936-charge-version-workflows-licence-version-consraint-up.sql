@@ -18,21 +18,21 @@ ALTER COLUMN created_by DROP NOT NULL;
 
 -- create a temp table to store the top licence version for each licence
 CREATE TEMP TABLE tmp_top_licence_versions AS
-(SELECT * FROM 
+(SELECT * FROM
  (SELECT *, rank() OVER (PARTITION BY licence_id ORDER BY ranked DESC)
   FROM (SELECT *,LPAD(concat(issue, increment)::TEXT, 9, '0') AS ranked FROM water.licence_versions) AS lvs) AS rankedLicences
 WHERE rank = 1);
 
 -- update the table with the licence_version_id selecting the latest version for each licence
 UPDATE water.charge_version_workflows cw  SET
-licence_version_id = lv.licence_version_id 
+licence_version_id = lv.licence_version_id
 FROM tmp_top_licence_versions lv
 WHERE lv.licence_id = cw.licence_id;
 
 -- remove the temp table
 DROP TABLE tmp_top_licence_versions;
 
--- this is precautionary 
+-- this is precautionary
 -- if the migration ran and the cron job created workflows, the migration was then reverted this will then rectify those records
 UPDATE water.charge_version_workflows SET
 status = 'to_setup',
