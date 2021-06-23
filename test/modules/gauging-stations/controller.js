@@ -84,7 +84,7 @@ experiment('getGaugingStationByRef', () => {
 
   test('calls getEntities', async () => {
     await controller.getGaugingStationByRef(request);
-    expect(entitiesController.getEntities.calledWith(request.params.stationRef, gaugingStationService.getGaugingStationsByRef));
+    expect(entitiesController.getEntities.calledWith(request.params.stationRef, gaugingStationService.getGaugingStationByRef));
   });
 });
 

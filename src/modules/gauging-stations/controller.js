@@ -18,7 +18,7 @@ const getGaugingStation = async request => {
 const getGaugingStationByRef = async request =>
   controllerHelper.getEntities(
     request.params.stationRef,
-    gaugingStationService.getGaugingStationsByRef
+    gaugingStationService.getGaugingStationByRef
   );
 
 const getGaugingStationLicencesById = async request =>
