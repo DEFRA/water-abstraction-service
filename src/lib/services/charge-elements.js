@@ -51,7 +51,7 @@ const getChargeElementsFromLicenceVersion = licenceVersion => {
     chargeElement.loss = licenceVersionPurpose.purposeUse.lossFactor;
     chargeElement.abstractionPeriod = licenceVersionPurpose.abstractionPeriod;
     chargeElement.authorisedAnnualQuantity = toFixed(
-      unitConversion.cubicMetresToMegalitres(licenceVersionPurpose.annualQuantity), 6
+      unitConversion.cubicMetresToMegalitres(licenceVersionPurpose.annualQuantity || 0), 6
     );
     chargeElement.billableAnnualQuantity = null;
     chargeElement.purposePrimary = licenceVersionPurpose.purposePrimary;
