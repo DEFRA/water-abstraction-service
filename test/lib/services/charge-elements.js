@@ -101,6 +101,22 @@ experiment('lib/services/charge-elements', () => {
       expect(element.authorisedAnnualQuantity).to.equal(0.100123);
     });
 
+    experiment('when the annual quantity is zero', () => {
+      beforeEach(() => {
+        licenceVersionPurpose.annualQuantity = 0;
+
+        licenceVersion = new LicenceVersion();
+        licenceVersion.licenceVersionPurposes = [licenceVersionPurpose];
+
+        setElements();
+      });
+
+      afterEach(() => sandbox.restore());
+      test('the season is set to winter', async () => {
+        expect(element.authorisedAnnualQuantity).to.equal(0);
+      });
+    });
+
     test('the billable annual quanity is set to null', async () => {
       expect(element.billableAnnualQuantity).to.equal(null);
     });
