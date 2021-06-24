@@ -122,9 +122,8 @@ experiment('modules/billing/controllers/two-part-tariff-review', () => {
       )).to.be.true();
     });
     test('gets the charge period', async () => {
-      const [billingVolume, includeInvoiceAcc] = billingVolumesService.getBillingVolumeChargePeriod.lastCall.args;
+      const [billingVolume] = billingVolumesService.getBillingVolumeChargePeriod.lastCall.args;
       expect(billingVolume).to.equal(billingVolumes[1]);
-      expect(includeInvoiceAcc).to.be.true();
     });
   });
 

@@ -6,16 +6,15 @@ const { BatchStatusError } = require('../lib/errors');
 const licencesService = require('../../../lib/services/licences');
 const invoiceAccountService = require('../../../lib/services/invoice-accounts-service');
 const { uniq } = require('lodash');
-const bluebird = require('bluebird');
 
-const mapItem = async (licence, invoiceAccountCompany) => ({
+const mapItem = (licence, invoiceAccount) => ({
   licenceId: licence.licenceId,
   licenceRef: licence.licenceRef,
   twoPartTariffError: licence.twoPartTariffErrors.includes(true),
   twoPartTariffStatuses: Array.from(
     licence.twoPartTariffStatuses.reduce((statuses, status) => (status === null) ? statuses : statuses.add(status), new Set())
   ),
-  billingContact: invoiceAccountCompany.name,
+  billingContact: invoiceAccount.company.name,
   billingVolumeEdited: licence.returnVolumeEdited > 0
 });
 
@@ -34,10 +33,10 @@ const mapItem = async (licence, invoiceAccountCompany) => ({
 const getByBatchIdForTwoPartTariffReview = async batchId => {
   const data = await repos.licences.findByBatchIdForTwoPartTariffReview(batchId);
   const uniqueIds = uniq(data.map(row => row.invoiceAccountId));
-  const invAccs = await invoiceAccountService.getByInvoiceAccountIds(uniqueIds);
-  return bluebird.mapSeries(data, async row => {
-    const invoiceAccount = await invAccs.find(invAcc => invAcc.id === row.invoiceAccountId);
-    return mapItem(row, invoiceAccount.company);
+  const invoiceAccounts = await invoiceAccountService.getByInvoiceAccountIds(uniqueIds);
+  return data.map(licence => {
+    const invoiceAccount = invoiceAccounts.find(invAcc => invAcc.id === licence.invoiceAccountId);
+    return mapItem(licence, invoiceAccount);
   });
 };
 

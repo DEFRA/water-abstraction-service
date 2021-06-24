@@ -154,14 +154,10 @@ const getBillingVolumesByChargeVersion = async (chargeVersionId, financialYear, 
  * @param {BillingVolume} billingVolume
  * @return {Promise<DateRange>, invoiceAccountId} invoiceAccountId is optional for the ui
  */
-const getBillingVolumeChargePeriod = async (billingVolume, includeTailData = false) => {
+const getBillingVolumeChargePeriod = async (billingVolume) => {
   const chargeVersionId = get(billingVolume, 'chargeElement.chargeVersionId');
   const chargeVersion = await chargeVersionService.getByChargeVersionId(chargeVersionId);
-  if (includeTailData) {
-    return { chargePeriod: chargePeriod.getChargePeriod(billingVolume.financialYear, chargeVersion), invoiceAccountId: chargeVersion.invoiceAccount.id };
-  } else {
-    return chargePeriod.getChargePeriod(billingVolume.financialYear, chargeVersion);
-  }
+  return { chargePeriod: chargePeriod.getChargePeriod(billingVolume.financialYear, chargeVersion), invoiceAccountId: chargeVersion.invoiceAccount.id };
 };
 
 exports.updateBillingVolume = updateBillingVolume;

@@ -12,7 +12,7 @@ const BillingVolume = require('../../../../src/lib/models/billing-volume');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const ChargeElement = require('../../../../src/lib/models/charge-element');
 const ChargeVersion = require('../../../../src/lib/models/charge-version');
-
+const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const billingVolumesRepo = require('../../../../src/lib/connectors/repos/billing-volumes');
 const chargePeriod = require('../../../../src/modules/billing/lib/charge-period');
 const { NotFoundError } = require('../../../../src/lib/errors');
@@ -322,6 +322,7 @@ experiment('modules/billing/services/billing-volumes-service', () => {
 
   experiment('.getBillingVolumeChargePeriod', () => {
     const chargeVersionId = uuid();
+    const invoiceAccountId = uuid();
     const financialYear = new FinancialYear(2021);
     const billingVolume = new BillingVolume().fromHash({
       financialYear
@@ -330,8 +331,10 @@ experiment('modules/billing/services/billing-volumes-service', () => {
       chargeVersionId
     });
     const chargeVersion = new ChargeVersion(chargeVersionId);
+    const invoiceAccount = new InvoiceAccount(invoiceAccountId);
 
     beforeEach(async () => {
+      chargeVersion.invoiceAccount = invoiceAccount;
       chargeVersionService.getByChargeVersionId.resolves(chargeVersion);
       await billingVolumesService.getBillingVolumeChargePeriod(billingVolume);
     });
