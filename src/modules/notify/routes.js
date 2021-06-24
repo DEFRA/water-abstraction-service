@@ -57,7 +57,9 @@ module.exports = {
           created_at: Joi.date().iso(),
           completed_at: Joi.date().iso(),
           sent_at: Joi.date().iso(),
-          notification_type: Joi.string().valid('sms', 'email')
+          notification_type: Joi.string().valid('sms', 'email'),
+          template_id: Joi.string().guid(),
+          template_version: Joi.number()
         }
       }
     }
