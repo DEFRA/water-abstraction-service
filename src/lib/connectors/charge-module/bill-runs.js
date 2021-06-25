@@ -74,6 +74,9 @@ const generate = CMBillRunId =>
 const rebillInvoice = async (billRunId, invoiceId) =>
   got.patch(`v2/wrls/bill-runs/${billRunId}/invoices/${invoiceId}/rebill`);
 
+const getStatus = async billRunId =>
+  got.get(`v2/wrls/bill-runs/${billRunId}/status`);
+
 exports.addTransaction = addTransaction;
 exports.approve = approve;
 exports.create = create;
@@ -85,3 +88,4 @@ exports.getInvoiceTransactions = getInvoiceTransactions;
 exports.deleteInvoiceFromBillRun = deleteInvoiceFromBillRun;
 exports.generate = generate;
 exports.rebillInvoice = rebillInvoice;
+exports.getStatus = getStatus;

@@ -29,6 +29,20 @@ const getInvoiceById = async invoiceId => {
   return mappers.invoice.dbToModel(data);
 };
 
+const getBatchCustomerInvoice = async (batchId, invoiceAccountId, financialYearEnding) => {
+  const billingInvoice = await repos.billingInvoices.findOneBy({
+    billingbatchId: batchId,
+    invoiceAccountId,
+    financialYearEnding,
+    rebillingState: null
+  });
+  return billingInvoice && mappers.invoice.dbToModel(billingInvoice);
+};
+
+const getOrCreateInvoice = async (batchId, invoiceAccountId, financialYearEnding) => {
+  const invoice = await getBatchCustomerInvoice(batchId, invoiceAccountId, financialYearEnding);
+  return invoice || createInvoice(batchId, invoiceAccountId, financialYearEnding);
+};
 /**
  * Saves an Invoice model to water.billing_invoices
  * @param {Batch} batch
@@ -181,34 +195,31 @@ const getInvoicesTransactionsForBatch = partialRight(getInvoicesForBatch, {
  * Gets or creates an invoice in the batch
  * If the invoice needs creating, the customer details are fetched from the CRM v2 API
  *
+ * @todo split into 2 functions
+ *
  * @param {String} batchId
  * @param {String} invoiceAccountId
  * @param {Number} financialYearEnding
  * @return {Promise<Object>} the new/existing invoice service model
  */
-const getOrCreateInvoice = async (batchId, invoiceAccountId, financialYearEnding, data = {}) => {
-  const existingRow = await repos.billingInvoices.findOneBy({
-    billingBatchId: batchId,
-    invoiceAccountId,
-    financialYearEnding
-  });
-  if (existingRow) {
-    return mappers.invoice.dbToModel(existingRow);
-  }
+
+/**
+ * Creates an Invoice model in the specified batch
+ */
+const createInvoice = async (batchId, invoiceAccountId, financialYearEnding, data = {}) => {
   // Look up invoice account in CRM and map to service model
   const [crmData] = await invoiceAccountsConnector.getInvoiceAccountsByIds([invoiceAccountId]);
   const modelFromCrm = mappers.invoice.crmToModel(crmData);
-  modelFromCrm.fromHash({
+  const model = modelFromCrm.fromHash({
     ...data,
-    batchId,
     financialYear: new FinancialYear(financialYearEnding)
   });
-
-  // Write to DB and map back to service model
+  // Persist
   const newRow = await repos.billingInvoices.create({
     billingBatchId: batchId,
-    ...mappers.invoice.modelToDb(modelFromCrm)
+    ...mappers.invoice.modelToDb(model)
   });
+  // Map back to service model
   return mappers.invoice.dbToModel(newRow);
 };
 
@@ -217,9 +228,14 @@ const getInvoicesForInvoiceAccount = async (invoiceAccountId, page, perPage) => 
   return { data: data.map(mappers.invoice.dbToModel), pagination };
 };
 
-const updateInvoice = async (invoiceAccountId, changes) => {
-  const invoice = await repos.billingInvoices.update(invoiceAccountId, changes);
+const updateInvoice = async (billingInvoiceId, changes) => {
+  const invoice = await repos.billingInvoices.update(billingInvoiceId, changes);
   return mappers.invoice.dbToModel(invoice);
+};
+
+const updateInvoiceModel = invoice => {
+  const changes = mappers.invoice.modelToDb(invoice);
+  return updateInvoice(invoice.id, changes);
 };
 
 const getInvoicesFlaggedForRebilling = async regionId => {
@@ -267,10 +283,13 @@ exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;
-exports.getOrCreateInvoice = getOrCreateInvoice;
 exports.getInvoicesForInvoiceAccount = getInvoicesForInvoiceAccount;
 exports.getInvoiceById = getInvoiceById;
+exports.getBatchCustomerInvoice = getBatchCustomerInvoice;
 exports.updateInvoice = updateInvoice;
+exports.updateInvoiceModel = updateInvoiceModel;
 exports.getInvoicesFlaggedForRebilling = getInvoicesFlaggedForRebilling;
 exports.rebillInvoice = rebillInvoice;
 exports.resetIsFlaggedForRebilling = resetIsFlaggedForRebilling;
+exports.createInvoice = createInvoice;
+exports.getOrCreateInvoice = getOrCreateInvoice;

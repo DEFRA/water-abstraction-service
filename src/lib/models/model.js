@@ -73,6 +73,11 @@ class Model {
 
     return momentDate;
   };
+
+  clearId () {
+    delete this._id;
+    return this;
+  }
 }
 
 module.exports = Model;
