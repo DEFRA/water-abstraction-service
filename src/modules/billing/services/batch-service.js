@@ -411,6 +411,9 @@ const deleteAllBillingData = async () => {
   return newRepos.billingBatches.deleteAllBillingData();
 };
 
+const getBatchTransactionCount = batchId =>
+  newRepos.billingTransactions.countByBatchId(batchId);
+
 /**
  * Updates batch from CM summary data
  * @param {String} batchId
@@ -427,7 +430,7 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
 
   // Get transaction count in local DB
   // if 0, the batch will be set to "empty" status
-  const count = await newRepos.billingTransactions.countByBatchId(batchId);
+  const count = await getBatchTransactionCount(batchId);
 
   const changes = count === 0
     ? { status: BATCH_STATUS.empty }
@@ -445,6 +448,14 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
 };
 
 const generateBatchById = CMBillRunId => chargeModuleBillRunConnector.generate(CMBillRunId);
+
+const requestCMBatchGeneration = async batchId => {
+  const batch = await getBatchById(batchId);
+  const transactionCount = await getBatchTransactionCount(batch.id);
+  if (transactionCount > 0) {
+    return chargeModuleBillRunConnector.generate(batch.externalId);
+  }
+};
 
 exports.approveBatch = approveBatch;
 exports.deleteBatch = deleteBatch;
@@ -466,3 +477,4 @@ exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteAllBillingData = deleteAllBillingData;
 exports.updateWithCMSummary = updateWithCMSummary;
 exports.generateBatchById = generateBatchById;
+exports.requestCMBatchGeneration = requestCMBatchGeneration;

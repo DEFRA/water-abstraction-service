@@ -25,12 +25,12 @@ const createMessage = batchId => ([
     batchId
   },
   {
-    jobId: `${JOB_NAME}.${batchId}`
-    // attempts: 6,
-    // backoff: {
-    //   type: 'exponential',
-    //   delay: 5000
-    // }
+    jobId: `${JOB_NAME}.${batchId}`,
+    attempts: 6,
+    backoff: {
+      type: 'exponential',
+      delay: 5000
+    }
   }
 ]);
 
