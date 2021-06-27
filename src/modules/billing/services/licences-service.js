@@ -4,16 +4,18 @@ const repos = require('../../../lib/connectors/repos');
 const Batch = require('../../../lib/models/batch');
 const { BatchStatusError } = require('../lib/errors');
 const licencesService = require('../../../lib/services/licences');
+const invoiceAccountService = require('../../../lib/services/invoice-accounts-service');
+const { uniq } = require('lodash');
 
-const mapItem = item => ({
-  licenceId: item.licenceId,
-  licenceRef: item.licenceRef,
-  twoPartTariffError: item.twoPartTariffErrors.includes(true),
+const mapItem = (licence, invoiceAccount) => ({
+  licenceId: licence.licenceId,
+  licenceRef: licence.licenceRef,
+  twoPartTariffError: licence.twoPartTariffErrors.includes(true),
   twoPartTariffStatuses: Array.from(
-    item.twoPartTariffStatuses.reduce((statuses, status) => {
-      return (status === null) ? statuses : statuses.add(status);
-    }, new Set())
-  )
+    licence.twoPartTariffStatuses.reduce((statuses, status) => (status === null) ? statuses : statuses.add(status), new Set())
+  ),
+  billingContact: invoiceAccount.company.name,
+  billingVolumeEdited: licence.returnVolumeEdited > 0
 });
 
 /**
@@ -21,16 +23,21 @@ const mapItem = item => ({
  * represents the billing invoice licence records that exist in a
  * batch, including the aggregated two part tariff status codes for the
  * underlying transactions.
- *
  * This shifts from the pattern of passing models around due to
  * the volume of data that would have to be serialized for annual batches.
+ * Invoice Account Company added to display the billing contact in the UI
  *
  * @param {String} batchId
  * @return {Promise<Array>}
  */
 const getByBatchIdForTwoPartTariffReview = async batchId => {
   const data = await repos.licences.findByBatchIdForTwoPartTariffReview(batchId);
-  return data.map(mapItem);
+  const uniqueIds = uniq(data.map(row => row.invoiceAccountId));
+  const invoiceAccounts = await invoiceAccountService.getByInvoiceAccountIds(uniqueIds);
+  return data.map(licence => {
+    const invoiceAccount = invoiceAccounts.find(invAcc => invAcc.id === licence.invoiceAccountId);
+    return mapItem(licence, invoiceAccount);
+  });
 };
 
 /**

@@ -73,9 +73,7 @@ experiment('modules/licences/routes/agreements', () => {
         url: `/water/1.0/licences/${validId}/agreements`,
         auth: {
           strategy: 'simple',
-          credentials: {
-            scope: [ROLES.manageAgreements]
-          }
+          credentials: {}
         }
       };
       server = await testHelpers.createServerForRoute(routes.getAgreementsForLicence, true);
@@ -84,12 +82,6 @@ experiment('modules/licences/routes/agreements', () => {
     test('responds with a 200 status code when the request is valid', async () => {
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(200);
-    });
-
-    test('responds with a 403 when the request has insufficient scope', async () => {
-      request.auth.credentials.scope = [];
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(403);
     });
 
     test('responds with a 400 when the id is not a valid guid', async () => {

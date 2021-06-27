@@ -14,6 +14,7 @@ const repos = require('../../../src/lib/connectors/repos');
 const gaugingStationRepo = require('../../../src/lib/connectors/repos/gauging-stations');
 
 const routes = require('../../../src/modules/gauging-stations/routes');
+
 const testHelpers = require('../../test-helpers');
 
 const data = {
@@ -23,17 +24,17 @@ const data = {
   }
 };
 
-experiment('getGaugingStationConditionsById', () => {
+experiment('getGaugingStationLicencesById', () => {
   let result;
   beforeEach(async () => {
     sandbox.stub(repos.gaugingStations, 'findLicenceConditionsByStationId'); /* simulate db results */
     gaugingStationRepo.findLicenceConditionsByStationId.resolves(data.dbRow);
-    result = await gaugingStationService.getGaugingStationConditionsById(data.dbRow.gaugingStationId);
+    result = await gaugingStationService.getGaugingStationLicencesById(data.dbRow.gaugingStationId);
   });
   afterEach(async () => {
     sandbox.restore();
   });
-  test('calls repos.gaugingStation.getGaugingStationConditionsById with id', async () => {
+  test('calls repos.gaugingStation.getGaugingStationLicencesById with id', async () => {
     const [id] = gaugingStationRepo.findLicenceConditionsByStationId.lastCall.args;
     expect(Array.isArray(result)).to.equal(false);
     expect(id).to.equal(data.dbRow.gaugingStationId);
@@ -43,7 +44,7 @@ experiment('getGaugingStationConditionsById', () => {
 experiment('calls gaugingStation Api with id', () => {
   let server, request;
   beforeEach(async () => {
-    server = await testHelpers.createServerForRoute(routes.getGaugingStationConditionsById);
+    server = await testHelpers.createServerForRoute(routes.getGaugingStationLicencesById);
     const id = data.dbRow.gaugingStationId;
     request = {
       method: 'GET',
@@ -67,7 +68,7 @@ experiment('getGaugingStationByRef', () => {
   beforeEach(async () => {
     sandbox.stub(gaugingStationRepo, 'findOneByStationRef'); /* simulate db results */
     gaugingStationRepo.findOneByStationRef.resolves(data.dbRow);
-    result = await gaugingStationService.getGaugingStationsByRef(data.dbRow.stationReference);
+    result = await gaugingStationService.getGaugingStationByRef(data.dbRow.stationReference);
   });
   afterEach(async () => {
     sandbox.restore();

@@ -31,19 +31,5 @@ module.exports = {
         })
       }
     }
-  },
-  getGaugingStationsByLicenceId: {
-    path: '/water/1.0/licences/{licenceId}/gauging-stations',
-    method: 'GET',
-    handler: controller.getGaugingStationsByLicenceId,
-    config: {
-      tags: ['api'],
-      description: 'Gets gauging stations by licenceId',
-      validate: {
-        params: Joi.object({
-          licenceId: Joi.string().required().guid()
-        })
-      }
-    }
   }
 };

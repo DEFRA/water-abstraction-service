@@ -8,12 +8,12 @@ const { set } = require('lodash');
  * @param  {Object|Array} data - the data to add
  */
 const buildResponse = (response, key, data) => {
-  if ('pagination' in data) {
+  if (data && 'pagination' in data) {
     if (data.data.length) {
       set(response, key, data.data);
       set(response, 'pagination', data.pagination);
     }
-  } else if (data.length) {
+  } else if (data && data.length) {
     set(response, key, data);
   } else if (data && ['billingAccount'].includes(key)) {
     set(response, key, data);

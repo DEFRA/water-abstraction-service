@@ -2,16 +2,12 @@
 const gaugingStationRepo = require('../connectors/repos/gauging-stations');
 const gaugingStationMapper = require('../mappers/gauging-station');
 const { NotFoundError } = require('../errors');
+const service = require('./service');
 
-const getGaugingStations = async gaugingStationId => {
-  const gaugingStationResponse = await gaugingStationRepo.findOne(gaugingStationId);
-  if (gaugingStationResponse) {
-    return gaugingStationMapper.dbToModel(gaugingStationResponse);
-  }
-  throw new NotFoundError(`Could not find gauging station with ID ${gaugingStationId}`);
-};
+const getGaugingStation = async gaugingStationId =>
+  service.findOne(gaugingStationId, gaugingStationRepo.findOne, gaugingStationMapper);
 
-const getGaugingStationsByRef = async stationRef => {
+const getGaugingStationByRef = async stationRef => {
   const gaugingStationResponseRef = await gaugingStationRepo.findOneByStationRef(stationRef);
   if (gaugingStationResponseRef) {
     return gaugingStationMapper.dbToModel(gaugingStationResponseRef);
@@ -19,7 +15,7 @@ const getGaugingStationsByRef = async stationRef => {
   throw new NotFoundError(`Could not find a gauging station with ref ${stationRef}`);
 };
 
-const getGaugingStationConditionsById = async gaugingStationId => {
+const getGaugingStationLicencesById = async gaugingStationId => {
   const gaugingStationConditions = await gaugingStationRepo.findLicenceConditionsByStationId(gaugingStationId);
   if (gaugingStationConditions) {
     return gaugingStationConditions;
@@ -35,7 +31,7 @@ const getGaugingStationsByLicenceId = async licenceId => {
   throw new NotFoundError(`Could not find gauging station conditions with ID ${licenceId}`);
 };
 
-exports.getGaugingStations = getGaugingStations;
-exports.getGaugingStationsByRef = getGaugingStationsByRef;
-exports.getGaugingStationConditionsById = getGaugingStationConditionsById;
+exports.getGaugingStation = getGaugingStation;
+exports.getGaugingStationByRef = getGaugingStationByRef;
+exports.getGaugingStationLicencesById = getGaugingStationLicencesById;
 exports.getGaugingStationsByLicenceId = getGaugingStationsByLicenceId;

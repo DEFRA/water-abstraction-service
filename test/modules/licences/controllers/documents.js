@@ -305,8 +305,8 @@ experiment('modules/licences/controllers/documents', () => {
       permitClient.licences.findMany.resolves(licences());
     });
 
-    test('returns 404 for unknown document id', async () => {
-      documentsClient.findMany.rejects({ statusCode: 404 });
+    test('returns 404 when document not found', async () => {
+      documentsClient.findMany.resolves({ data: [] });
       const response = await controller.getLicenceSummaryByDocumentId(testRequest);
       expect(response.output.statusCode).to.equal(404);
     });

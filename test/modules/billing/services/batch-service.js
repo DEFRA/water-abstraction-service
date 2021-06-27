@@ -38,6 +38,9 @@ const transactionsService = require('../../../../src/modules/billing/services/tr
 const { createBatch } = require('../test-data/test-billing-data');
 const config = require('../../../../config');
 
+const messageQueue = require('../../../../src/lib/message-queue-v2');
+const deleteErroredBatchJob = require('../../../../src/modules/billing/jobs/delete-errored-batch');
+
 const REGION_ID = '3e91fd44-dead-4748-a312-83806245c3da';
 const BATCH_ID = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
 
@@ -69,6 +72,7 @@ const data = {
 
 experiment('modules/billing/services/batch-service', () => {
   let result;
+  let queueManagerStub;
 
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
@@ -135,6 +139,11 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingInvoices, 'delete');
 
     sandbox.stub(billingVolumesService, 'approveVolumesForBatch');
+
+    queueManagerStub = {
+      add: sandbox.stub()
+    };
+    sandbox.stub(messageQueue, 'getQueueManager').returns(queueManagerStub);
   });
 
   afterEach(async () => {
@@ -520,28 +529,68 @@ experiment('modules/billing/services/batch-service', () => {
   });
 
   experiment('.setErrorStatus', () => {
-    beforeEach(async () => {
-      await batchService.setErrorStatus('batch-id', 10);
+    const batchId = 'batch-id';
+
+    experiment('when the error is not "failed to create batch"', () => {
+      beforeEach(async () => {
+        await batchService.setErrorStatus(batchId, Batch.BATCH_ERROR_CODE.failedToCreateCharge);
+      });
+
+      test('calls billingVolumes.markVolumesAsErrored() with correct params', async () => {
+        const [id, data] = newRepos.billingVolumes.markVolumesAsErrored.lastCall.args;
+        expect(id).to.equal(batchId);
+        expect(data).to.equal({ require: false });
+      });
+
+      test('calls billingBatches.update() with correct params', async () => {
+        const [id, data] = newRepos.billingBatches.update.lastCall.args;
+        expect(id).to.equal(batchId);
+        expect(data).to.equal({ status: 'error', errorCode: Batch.BATCH_ERROR_CODE.failedToCreateCharge });
+      });
+
+      test('calls licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch() with the batch ID', async () => {
+        expect(
+          licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.calledWith(
+            batchId
+          )
+        ).to.be.true();
+      });
+
+      test('publishes a job to delete the charge module batch', () => {
+        expect(queueManagerStub.add.calledWith(
+          deleteErroredBatchJob.jobName, batchId
+        )).to.be.true();
+      });
     });
 
-    test('calls billingVolumes.markVolumesAsErrored() with correct params', async () => {
-      const [id, data] = newRepos.billingVolumes.markVolumesAsErrored.lastCall.args;
-      expect(id).to.equal('batch-id');
-      expect(data).to.equal({ require: false });
-    });
+    experiment('when the error is "failed to create bill run"', () => {
+      beforeEach(async () => {
+        await batchService.setErrorStatus(batchId, Batch.BATCH_ERROR_CODE.failedToCreateBillRun);
+      });
 
-    test('calls billingBatches.update() with correct params', async () => {
-      const [id, data] = newRepos.billingBatches.update.lastCall.args;
-      expect(id).to.equal('batch-id');
-      expect(data).to.equal({ status: 'error', errorCode: 10 });
-    });
+      test('calls billingVolumes.markVolumesAsErrored() with correct params', async () => {
+        const [id, data] = newRepos.billingVolumes.markVolumesAsErrored.lastCall.args;
+        expect(id).to.equal(batchId);
+        expect(data).to.equal({ require: false });
+      });
 
-    test('calls licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch() with the batch ID', async () => {
-      expect(
-        licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.calledWith(
-          'batch-id'
-        )
-      ).to.be.true();
+      test('calls billingBatches.update() with correct params', async () => {
+        const [id, data] = newRepos.billingBatches.update.lastCall.args;
+        expect(id).to.equal(batchId);
+        expect(data).to.equal({ status: 'error', errorCode: Batch.BATCH_ERROR_CODE.failedToCreateBillRun });
+      });
+
+      test('calls licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch() with the batch ID', async () => {
+        expect(
+          licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.calledWith(
+            batchId
+          )
+        ).to.be.true();
+      });
+
+      test('does not publish a job to delete the charge module batch', () => {
+        expect(queueManagerStub.add.called).to.be.false();
+      });
     });
   });
 
