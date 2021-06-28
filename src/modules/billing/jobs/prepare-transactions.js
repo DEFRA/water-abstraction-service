@@ -61,14 +61,14 @@ const onComplete = async (job, queueManager) => {
     if (billingTransactionIds.length === 0) {
       logger.info(`0 transactions for batch ${batchId}, requesting CM batch generation`);
       await batchService.requestCMBatchGeneration(batchId);
-      return await queueManager.add(refreshTotalsJobName, batchId);
+      await queueManager.add(refreshTotalsJobName, batchId);
+    } else {
+      logger.info(`${billingTransactionIds.length} transactions produced for batch ${batchId} - creating charges`);
+      await bluebird.mapSeries(
+        billingTransactionIds,
+        billingTransactionId => queueManager.add(createChargeJobName, batchId, billingTransactionId)
+      );
     }
-
-    logger.info(`${billingTransactionIds.length} transactions produced for batch ${batchId} - creating charges`);
-    return await bluebird.mapSeries(
-      billingTransactionIds,
-      billingTransactionId => queueManager.add(createChargeJobName, batchId, billingTransactionId)
-    );
   } catch (err) {
     batchJob.logOnCompleteError(job, err);
   }
