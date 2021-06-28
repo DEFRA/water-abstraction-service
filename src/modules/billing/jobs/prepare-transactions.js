@@ -65,7 +65,7 @@ const onComplete = async (job, queueManager) => {
     }
 
     logger.info(`${billingTransactionIds.length} transactions produced for batch ${batchId} - creating charges`);
-    await bluebird.mapSeries(
+    return await bluebird.mapSeries(
       billingTransactionIds,
       billingTransactionId => queueManager.add(createChargeJobName, batchId, billingTransactionId)
     );

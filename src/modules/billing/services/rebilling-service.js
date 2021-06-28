@@ -75,20 +75,20 @@ const createInvoice = async (batch, sourceInvoice, cmInvoiceId) => {
   };
 
   // Create the new rebill invoice
-  const rebillInvoice = await invoiceService.createInvoice(
+  const rebilledInvoice = await invoiceService.createInvoice(
     batch.id,
     sourceInvoice.invoiceAccount.id,
     sourceInvoice.financialYear.yearEnding,
     invoiceData
   );
 
-  return createInvoiceLicences(sourceInvoice, rebillInvoice, cmInvoice);
+  return createInvoiceLicences(sourceInvoice, rebilledInvoice, cmInvoice);
 };
 
-const createInvoiceLicences = async (sourceInvoice, rebillInvoice, cmInvoice) => {
+const createInvoiceLicences = async (sourceInvoice, rebilledInvoice, cmInvoice) => {
   for (const sourceInvoiceLicence of sourceInvoice.invoiceLicences) {
     const cmLicence = getCMLicenceByLicenceNumber(cmInvoice, sourceInvoiceLicence.licence.licenceNumber);
-    await createInvoiceLicence(rebillInvoice, sourceInvoiceLicence, cmLicence);
+    await createInvoiceLicence(rebilledInvoice, sourceInvoiceLicence, cmLicence);
   }
 };
 
@@ -96,8 +96,8 @@ const getCMLicenceByLicenceNumber = (cmInvoice, licenceNumber) => cmInvoice.lice
   row => row.licenceNumber === licenceNumber
 );
 
-const createInvoiceLicence = async (rebillInvoice, sourceInvoiceLicence, cmLicence) => {
-  const rebillInvoiceLicence = await invoiceLicenceService.saveInvoiceLicenceToDB(rebillInvoice, sourceInvoiceLicence);
+const createInvoiceLicence = async (rebilledInvoice, sourceInvoiceLicence, cmLicence) => {
+  const rebillInvoiceLicence = await invoiceLicenceService.saveInvoiceLicenceToDB(rebilledInvoice, sourceInvoiceLicence);
   return createTransactions(rebillInvoiceLicence, sourceInvoiceLicence, cmLicence);
 };
 

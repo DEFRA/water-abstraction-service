@@ -32,9 +32,9 @@ const getInvoiceById = async invoiceId => {
 const getBatchCustomerInvoice = async (batchId, invoiceAccountId, financialYearEnding) => {
   const billingInvoice = await repos.billingInvoices.findOneBy({
     billingBatchId: batchId,
+    rebillingState: null,
     invoiceAccountId,
-    financialYearEnding,
-    rebillingState: null
+    financialYearEnding
   });
   return billingInvoice && mappers.invoice.dbToModel(billingInvoice);
 };

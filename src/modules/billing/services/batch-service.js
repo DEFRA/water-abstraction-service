@@ -192,7 +192,7 @@ const approveBatch = async (batch, internalCallingUser) => {
   }
 };
 
-const saveInvoiceLicenceTransactions = async (invoiceLicence) => {
+const saveInvoiceLicenceTransactions = async invoiceLicence => {
   for (const transaction of invoiceLicence.transactions) {
     const { billingTransactionId } = await transactionsService.saveTransactionToDB(invoiceLicence, transaction);
     transaction.id = billingTransactionId;
@@ -453,7 +453,7 @@ const requestCMBatchGeneration = async batchId => {
   const batch = await getBatchById(batchId);
   const transactionCount = await getBatchTransactionCount(batch.id);
   if (transactionCount > 0) {
-    return chargeModuleBillRunConnector.generate(batch.externalId);
+    await chargeModuleBillRunConnector.generate(batch.externalId);
   }
 };
 
