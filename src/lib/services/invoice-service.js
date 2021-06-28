@@ -276,10 +276,6 @@ const setIsFlaggedForRebilling = async (invoiceId, isFlaggedForRebilling) => {
     repos.billingInvoices.findOneBy({ originalBillingInvoiceId: invoiceId })
   ]);
 
-  if (!invoice) {
-    throw new NotFoundError(`Invoice ${invoiceId} not found`);
-  }
-
   if (!invoiceIsSent(invoice)) {
     throw new ConflictingDataError('Cannot update invoice that is not sent');
   }

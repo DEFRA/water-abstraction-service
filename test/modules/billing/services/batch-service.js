@@ -128,6 +128,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(chargeModuleBillRunConnector, 'approve').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'send').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'deleteInvoiceFromBillRun').resolves();
+    sandbox.stub(chargeModuleBillRunConnector, 'generate').resolves();
 
     sandbox.stub(eventService, 'create').resolves();
 
@@ -1376,6 +1377,42 @@ experiment('modules/billing/services/batch-service', () => {
 
       test('the billing / charge version data is deleted from water service tables', async () => {
         expect(newRepos.billingBatches.deleteAllBillingData.called).to.be.true();
+      });
+    });
+  });
+
+  experiment('.requestCMBatchGeneration', () => {
+    const batchId = uuid();
+
+    experiment('when there are >0 transactions', () => {
+      beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(1);
+        await batchService.requestCMBatchGeneration(batchId);
+      });
+
+      test('fetches the batch with the correct ID', () => {
+        expect(newRepos.billingBatches.findOne.calledWith(batchId)).to.be.true();
+      });
+
+      test('requests CM batch generation using batch external ID', () => {
+        expect(chargeModuleBillRunConnector.generate.calledWith(
+          data.batch.externalId
+        )).to.be.true();
+      });
+    });
+
+    experiment('when there are 0 transactions', () => {
+      beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(0);
+        await batchService.requestCMBatchGeneration(batchId);
+      });
+
+      test('fetches the batch with the correct ID', () => {
+        expect(newRepos.billingBatches.findOne.calledWith(batchId)).to.be.true();
+      });
+
+      test('does not request CM batch generation', () => {
+        expect(chargeModuleBillRunConnector.generate.called).to.be.false();
       });
     });
   });

@@ -29,7 +29,6 @@ const rebillInvoice = async (batch, sourceInvoiceId) => {
       await createInvoice(batch, sourceInvoice, cmInvoice.id);
     }
   } catch (err) {
-    console.error(err);
     logger.error(`Failed to mark invoice ${sourceInvoice.id} for rebilling in charge module`);
     throw err;
   }
