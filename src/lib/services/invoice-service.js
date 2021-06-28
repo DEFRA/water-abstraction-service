@@ -31,7 +31,7 @@ const getInvoiceById = async invoiceId => {
 
 const getBatchCustomerInvoice = async (batchId, invoiceAccountId, financialYearEnding) => {
   const billingInvoice = await repos.billingInvoices.findOneBy({
-    billingbatchId: batchId,
+    billingBatchId: batchId,
     invoiceAccountId,
     financialYearEnding,
     rebillingState: null

@@ -57,6 +57,12 @@ const onComplete = async (job, queueManager) => {
     const batchId = get(job, 'data.batchId');
     const { billingTransactionIds } = job.returnvalue;
 
+    // If there's nothing to process, skip to cm refresh
+    if (billingTransactionIds.length === 0) {
+      await batchService.requestCMBatchGeneration(batchId);
+      await queueManager.add(refreshTotalsJobName, batchId);
+    }
+
     logger.info(`${billingTransactionIds.length} transactions produced for batch ${batchId} - creating charges`);
     await bluebird.mapSeries(
       billingTransactionIds,
