@@ -619,7 +619,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     beforeEach(async () => {
       transactionsService.saveTransactionToDB.resolves({ billingTransactionId });
-      invoiceLicencesService.saveInvoiceLicenceToDB.resolves({ billingInvoiceLicenceId });
+      invoiceLicencesService.saveInvoiceLicenceToDB.resolves({ id: billingInvoiceLicenceId });
       invoiceService.saveInvoiceToDB.resolves({ billingInvoiceId });
 
       models = createModels();

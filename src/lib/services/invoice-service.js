@@ -14,7 +14,7 @@ const mappers = require('../../modules/billing/mappers');
 const FinancialYear = require('../models/financial-year');
 
 // Errors
-const { NotFoundError } = require('../errors');
+const { NotFoundError, ConflictingDataError } = require('../errors');
 
 const getInvoiceDataById = async invoiceId => {
   const data = await repos.billingInvoices.findOne(invoiceId);
@@ -192,18 +192,6 @@ const getInvoicesTransactionsForBatch = partialRight(getInvoicesForBatch, {
 });
 
 /**
- * Gets or creates an invoice in the batch
- * If the invoice needs creating, the customer details are fetched from the CRM v2 API
- *
- * @todo split into 2 functions
- *
- * @param {String} batchId
- * @param {String} invoiceAccountId
- * @param {Number} financialYearEnding
- * @return {Promise<Object>} the new/existing invoice service model
- */
-
-/**
  * Creates an Invoice model in the specified batch
  */
 const createInvoice = async (batchId, invoiceAccountId, financialYearEnding, data = {}) => {
@@ -279,6 +267,32 @@ const rebillInvoice = async (batch, invoice) => {
  */
 const resetIsFlaggedForRebilling = batchId => repos.billingInvoices.resetIsFlaggedForRebilling(batchId);
 
+const invoiceIsSent = invoice =>
+  invoice.invoiceNumber !== null;
+
+const setIsFlaggedForRebilling = async (invoiceId, isFlaggedForRebilling) => {
+  const [invoice, rebillingInvoice] = await Promise.all([
+    getInvoiceById(invoiceId),
+    repos.findOneBy({ originalBillingInvoiceId: invoiceId })
+  ]);
+
+  if (!invoice) {
+    throw new NotFoundError(`Invoice ${invoiceId} not found`);
+  }
+
+  if (!invoiceIsSent(invoice)) {
+    throw new ConflictingDataError('Cannot update invoice that is not sent');
+  }
+
+  if (rebillingInvoice) {
+    throw new ConflictingDataError('Cannot re-bill an invoice that is already re-billed');
+  }
+
+  return updateInvoice(invoiceId, {
+    isFlaggedForRebilling
+  });
+};
+
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
@@ -293,3 +307,4 @@ exports.rebillInvoice = rebillInvoice;
 exports.resetIsFlaggedForRebilling = resetIsFlaggedForRebilling;
 exports.createInvoice = createInvoice;
 exports.getOrCreateInvoice = getOrCreateInvoice;
+exports.setIsFlaggedForRebilling = setIsFlaggedForRebilling;

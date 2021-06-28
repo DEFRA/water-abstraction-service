@@ -233,6 +233,7 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(repos.billingInvoices, 'findByIsFlaggedForRebillingAndRegion').resolves();
     sandbox.stub(repos.billingInvoices, 'resetIsFlaggedForRebilling').resolves();
     sandbox.stub(repos.billingInvoices, 'deleteInvoicesByOriginalInvoiceId').resolves();
+    sandbox.stub(repos.billingInvoices, 'create');
 
     sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountsByIds').resolves(crmData);
 
@@ -556,7 +557,8 @@ experiment('modules/billing/services/invoiceService', () => {
   });
 
   experiment('.saveInvoiceToDB', () => {
-    const batch = new Batch();
+    const batchId = uuid();
+    const batch = new Batch(batchId);
     const invoice = new Invoice();
 
     beforeEach(async () => {
@@ -565,11 +567,14 @@ experiment('modules/billing/services/invoiceService', () => {
     });
 
     test('calls the relevant mapper with the batch and invoice', async () => {
-      expect(mappers.invoice.modelToDb.calledWith(batch, invoice)).to.be.true();
+      expect(mappers.invoice.modelToDb.calledWith(invoice)).to.be.true();
     });
 
     test('calls .upsert() on the repo with the result of the mapping', async () => {
-      expect(repos.billingInvoices.upsert.calledWith({ foo: 'bar' })).to.be.true();
+      expect(repos.billingInvoices.upsert.calledWith({
+        foo: 'bar',
+        billingBatchId: batchId
+      })).to.be.true();
     });
   });
 
@@ -590,7 +595,8 @@ experiment('modules/billing/services/invoiceService', () => {
         expect(repos.billingInvoices.findOneBy.calledWith({
           billingBatchId: IDS.batch,
           invoiceAccountId,
-          financialYearEnding
+          financialYearEnding,
+          rebillingState: null
         })).to.be.true();
       });
 
@@ -610,8 +616,10 @@ experiment('modules/billing/services/invoiceService', () => {
 
     experiment('when the invoice does not exist', () => {
       beforeEach(async () => {
+        repos.billingInvoices.create.resolves(
+          createBatchData().billingInvoices[0]
+        );
         repos.billingInvoices.findOneBy.resolves(null);
-        repos.billingInvoices.upsert.resolves(createBatchData().billingInvoices[0]);
         result = await invoiceService.getOrCreateInvoice(IDS.batch, invoiceAccountId, financialYearEnding);
       });
 
@@ -619,7 +627,8 @@ experiment('modules/billing/services/invoiceService', () => {
         expect(repos.billingInvoices.findOneBy.calledWith({
           billingBatchId: IDS.batch,
           invoiceAccountId,
-          financialYearEnding
+          financialYearEnding,
+          rebillingState: null
         })).to.be.true();
       });
 
@@ -630,7 +639,7 @@ experiment('modules/billing/services/invoiceService', () => {
       });
 
       test('the row is created', async () => {
-        expect(repos.billingInvoices.upsert.called).to.be.true();
+        expect(repos.billingInvoices.create.called).to.be.true();
       });
 
       test('resolves with an Invoice model', async () => {

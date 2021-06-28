@@ -1,6 +1,5 @@
 'use strict';
 
-const { get } = require('lodash');
 const uuid = require('uuid/v4');
 
 const JOB_NAME = 'billing.refresh-totals';

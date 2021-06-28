@@ -11,6 +11,9 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
+const { logger } = require('../../../../src/logger');
+
+// Models
 const Batch = require('../../../../src/lib/models/batch');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const Invoice = require('../../../../src/lib/models/invoice');
@@ -31,7 +34,6 @@ experiment('modules/billing/services/jobService', () => {
   const cmBillRunId = uuid();
   const rebilledInvoiceId = uuid();
   const cmInvoiceIds = [uuid(), uuid()];
-  // const transactionIds = [uuid(), uuid()];
   const cmTransactionIds = [uuid(), uuid()];
   const cmRebilledTransactionIds = [uuid(), uuid()];
   const licenceNumber = '01/123/ABC';
@@ -130,11 +132,18 @@ experiment('modules/billing/services/jobService', () => {
   });
 
   beforeEach(async () => {
+    sandbox.stub(logger, 'info');
+    sandbox.stub(logger, 'error');
+
     sandbox.stub(chargeModuleBillRunApi, 'rebillInvoice');
     sandbox.stub(chargeModuleBillRunApi, 'getInvoiceTransactions');
+    sandbox.stub(chargeModuleBillRunApi, 'getStatus');
+
     sandbox.stub(invoiceService, 'getInvoiceById');
-    sandbox.stub(invoiceService, 'getOrCreateInvoice');
+    sandbox.stub(invoiceService, 'createInvoice');
+
     sandbox.stub(invoiceLicenceService, 'saveInvoiceLicenceToDB');
+
     sandbox.stub(transactionService, 'saveTransactionToDB');
   });
 
@@ -146,6 +155,10 @@ experiment('modules/billing/services/jobService', () => {
     experiment('happy path', () => {
       beforeEach(async () => {
         invoiceService.getInvoiceById.resolves(invoice);
+
+        chargeModuleBillRunApi.getStatus.resolves({
+          status: 'initialised'
+        });
         chargeModuleBillRunApi.rebillInvoice.resolves(cmResponses.rebill);
         chargeModuleBillRunApi.getInvoiceTransactions.resolves(cmResponses.invoice);
         await rebillingService.rebillInvoice(batch, invoiceId);
@@ -168,7 +181,7 @@ experiment('modules/billing/services/jobService', () => {
       });
 
       test('creates 2x local invoices', () => {
-        expect(invoiceService.getOrCreateInvoice.callCount).to.equal(2);
+        expect(invoiceService.createInvoice.callCount).to.equal(2);
       });
 
       test('creates 4x local transactions', () => {

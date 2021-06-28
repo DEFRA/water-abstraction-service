@@ -93,6 +93,7 @@ const cmResponses = {
             deminimisInvoice: false,
             zeroValueInvoice: false,
             transactionReference: invoiceNumbers[0],
+            rebilledType: 'O',
             licences: [
               {
                 id: uuid(),
@@ -125,6 +126,7 @@ const cmResponses = {
             deminimisInvoice: false,
             zeroValueInvoice: false,
             transactionReference: invoiceNumbers[1],
+            rebilledType: 'O',
             licences: [
               {
                 id: uuid(),
@@ -173,6 +175,7 @@ const cmResponses = {
 
 const createInvoices = () => customerRefs.map((accountNumber, i) => {
   return new Invoice().fromHash({
+    id: uuid(),
     invoiceAccount: new InvoiceAccount().fromHash({
       accountNumber
     }),
@@ -189,7 +192,8 @@ const createInvoices = () => customerRefs.map((accountNumber, i) => {
           })
         ]
       })
-    ]
+    ],
+    rebillingState: null
   });
 });
 
@@ -204,7 +208,7 @@ experiment('modules/billing/services/cm-refresh-service', () => {
     sandbox.stub(cmBillRunsConnector, 'getInvoiceTransactions');
 
     sandbox.stub(invoiceService, 'getInvoicesForBatch');
-    sandbox.stub(invoiceService, 'saveInvoiceToDB');
+    sandbox.stub(invoiceService, 'updateInvoiceModel');
 
     sandbox.stub(transactionService, 'saveTransactionToDB');
     sandbox.stub(transactionService, 'deleteById');

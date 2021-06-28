@@ -59,8 +59,9 @@ const onComplete = async (job, queueManager) => {
 
     // If there's nothing to process, skip to cm refresh
     if (billingTransactionIds.length === 0) {
+      logger.info(`0 transactions for batch ${batchId}, requesting CM batch generation`);
       await batchService.requestCMBatchGeneration(batchId);
-      await queueManager.add(refreshTotalsJobName, batchId);
+      return await queueManager.add(refreshTotalsJobName, batchId);
     }
 
     logger.info(`${billingTransactionIds.length} transactions produced for batch ${batchId} - creating charges`);
