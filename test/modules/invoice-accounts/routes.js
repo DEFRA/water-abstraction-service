@@ -11,7 +11,7 @@ const {
 
 const testHelpers = require('../../test-helpers');
 const routes = require('../../../src/modules/invoice-accounts/routes');
-const { ROLES: { billing } } = require('../../../src/lib/roles');
+const { ROLES: { manageBillingAccounts } } = require('../../../src/lib/roles');
 
 experiment('modules/invoice-accounts/routes', () => {
   let server;
@@ -58,7 +58,7 @@ experiment('modules/invoice-accounts/routes', () => {
         auth: {
           strategy: 'basic',
           credentials: {
-            scope: [billing]
+            scope: [manageBillingAccounts]
           }
         },
         url: `/water/1.0/invoice-accounts/${uuid()}/addresses`

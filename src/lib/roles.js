@@ -53,7 +53,9 @@ const ROLES = {
   manageAgreements: 'manage_agreements',
   deleteAgreements: 'delete_agreements',
   billing: 'billing',
-  abstractionAlertsNotifications: 'hof_notifications'
+  abstractionAlertsNotifications: 'hof_notifications',
+  viewChargeVersions: 'view_charge_versions',
+  manageBillingAccounts: 'manage_billing_accounts'
 };
 
 exports.getRolesForPermissionKey = getRolesForPermissionKey;
