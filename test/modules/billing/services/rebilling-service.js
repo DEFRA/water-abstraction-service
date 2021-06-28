@@ -29,7 +29,7 @@ const invoiceLicenceService = require('../../../../src/modules/billing/services/
 const transactionService = require('../../../../src/modules/billing/services/transactions-service');
 const rebillingService = require('../../../../src/modules/billing/services/rebilling-service');
 
-experiment('modules/billing/services/jobService', () => {
+experiment('modules/billing/services/rebilling-service', () => {
   const invoiceId = uuid();
   const cmBillRunId = uuid();
   const rebilledInvoiceId = uuid();

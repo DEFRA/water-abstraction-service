@@ -10,6 +10,8 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
+const { cloneDeep } = require('lodash');
+
 // Services
 const cmBillRunsConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
 const cmRefreshService = require('../../../../src/modules/billing/services/cm-refresh-service');
@@ -193,7 +195,8 @@ const createInvoices = () => customerRefs.map((accountNumber, i) => {
         ]
       })
     ],
-    rebillingState: null
+    rebillingState: null,
+    externalId: invoiceIds[i]
   });
 });
 
@@ -255,36 +258,70 @@ experiment('modules/billing/services/cm-refresh-service', () => {
     experiment('when the CM batch is ready', () => {
       beforeEach(async () => {
         batch = createBatch();
-        invoices = createInvoices();
 
         batchService.getBatchById.resolves(batch);
         batchService.updateWithCMSummary.resolves(batch);
 
-        invoiceService.getInvoicesForBatch.resolves(invoices);
-
-        cmBillRunsConnector.get.resolves(cmResponses.batchSummary.ready);
         cmBillRunsConnector.getInvoiceTransactions.withArgs(externalId, invoiceIds[0]).resolves({
           invoice: cmResponses.batchSummary.ready.billRun.invoices[0]
         });
         cmBillRunsConnector.getInvoiceTransactions.withArgs(externalId, invoiceIds[1]).resolves({
           invoice: cmResponses.batchSummary.ready.billRun.invoices[1]
         });
-
-        result = await cmRefreshService.updateBatch(batchId);
       });
 
-      test('the correct batch is retrieved from the batch service', async () => {
-        expect(batchService.getBatchById.calledWith(batchId)).to.be.true();
+      experiment('and the invoices are ordinary', () => {
+        beforeEach(async () => {
+          invoices = createInvoices();
+          invoiceService.getInvoicesForBatch.resolves(invoices);
+
+          cmBillRunsConnector.get.resolves(cmResponses.batchSummary.ready);
+          result = await cmRefreshService.updateBatch(batchId);
+        });
+
+        test('the correct batch is retrieved from the batch service', async () => {
+          expect(batchService.getBatchById.calledWith(batchId)).to.be.true();
+        });
+
+        test('the batch is fetched from the CM on externalId', async () => {
+          expect(cmBillRunsConnector.get.calledWith(externalId)).to.be.true();
+        });
+
+        test('invoices are fetched for the batch from the db', async () => {
+          expect(invoiceService.getInvoicesForBatch.calledWith(
+            batch, { includeTransactions: true }
+          )).to.be.true();
+        });
       });
 
-      test('the batch is fetched from the CM on externalId', async () => {
-        expect(cmBillRunsConnector.get.calledWith(externalId)).to.be.true();
-      });
+      experiment('and the invoices are rebill invoices', () => {
+        beforeEach(async () => {
+          invoices = createInvoices();
+          invoices[0].rebillingState = Invoice.rebillingState.reversal;
+          invoices[1].rebillingState = Invoice.rebillingState.rebill;
 
-      test('invoices are fetched for the batch from the db', async () => {
-        expect(invoiceService.getInvoicesForBatch.calledWith(
-          batch, { includeTransactions: true }
-        )).to.be.true();
+          invoiceService.getInvoicesForBatch.resolves(invoices);
+
+          const batchSummary = cloneDeep(cmResponses.batchSummary.ready);
+          batchSummary.billRun.invoices[0].rebilledType = 'C';
+          batchSummary.billRun.invoices[1].rebilledType = 'R';
+          cmBillRunsConnector.get.resolves(batchSummary);
+          result = await cmRefreshService.updateBatch(batchId);
+        });
+
+        test('the correct batch is retrieved from the batch service', async () => {
+          expect(batchService.getBatchById.calledWith(batchId)).to.be.true();
+        });
+
+        test('the batch is fetched from the CM on externalId', async () => {
+          expect(cmBillRunsConnector.get.calledWith(externalId)).to.be.true();
+        });
+
+        test('invoices are fetched for the batch from the db', async () => {
+          expect(invoiceService.getInvoicesForBatch.calledWith(
+            batch, { includeTransactions: true }
+          )).to.be.true();
+        });
       });
     });
   });
