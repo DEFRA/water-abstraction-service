@@ -3,7 +3,6 @@ const {
   experiment,
   beforeEach,
   afterEach,
-  before,
   test
 } = exports.lab = require('@hapi/lab').script();
 
