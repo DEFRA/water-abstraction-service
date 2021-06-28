@@ -273,7 +273,7 @@ const invoiceIsSent = invoice =>
 const setIsFlaggedForRebilling = async (invoiceId, isFlaggedForRebilling) => {
   const [invoice, rebillingInvoice] = await Promise.all([
     getInvoiceById(invoiceId),
-    repos.findOneBy({ originalBillingInvoiceId: invoiceId })
+    repos.billingInvoices.findOneBy({ originalBillingInvoiceId: invoiceId })
   ]);
 
   if (!invoice) {

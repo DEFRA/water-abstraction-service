@@ -24,7 +24,7 @@ const { logger } = require('../../../src/logger');
 
 const invoiceService = require('../../../src/lib/services/invoice-service');
 
-const { NotFoundError } = require('../../../src/lib/errors');
+const { NotFoundError, ConflictingDataError } = require('../../../src/lib/errors');
 
 const IDS = {
   batch: uuid(),
@@ -828,6 +828,72 @@ experiment('modules/billing/services/invoiceService', () => {
         const func = () => invoiceService.rebillInvoice(batch, invoice);
         await expect(func()).to.reject();
         expect(logger.error.called).to.be.true();
+      });
+    });
+  });
+
+  experiment('.setIsFlaggedForRebilling', () => {
+    const invoiceId = uuid();
+
+    experiment('when the invoice is not found', () => {
+      beforeEach(() => {
+        repos.billingInvoices.findOne.resolves(null);
+      });
+
+      test('throws a NotFoundError', async () => {
+        const func = () => invoiceService.setIsFlaggedForRebilling(invoiceId, true);
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.instanceOf(NotFoundError);
+      });
+    });
+
+    experiment('when the invoice found is not sent', () => {
+      beforeEach(() => {
+        repos.billingInvoices.findOne.resolves({
+          billingInvoiceId: invoiceId,
+          invoiceNumber: null
+        });
+      });
+
+      test('throws a ConflictingDataError', async () => {
+        const func = () => invoiceService.setIsFlaggedForRebilling(invoiceId, true);
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.instanceOf(ConflictingDataError);
+      });
+    });
+
+    experiment('when the invoice is already re-billed', () => {
+      beforeEach(() => {
+        repos.billingInvoices.findOne.resolves({
+          billingInvoiceId: invoiceId,
+          invoiceNumber: 'A123'
+        });
+        repos.billingInvoices.findOneBy.resolves({
+          id: 'old-invoice-id'
+        });
+      });
+
+      test('throws a ConflictingDataError', async () => {
+        const func = () => invoiceService.setIsFlaggedForRebilling(invoiceId, true);
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.instanceOf(ConflictingDataError);
+      });
+    });
+
+    experiment('when the invoice can be re-billed', () => {
+      beforeEach(async () => {
+        repos.billingInvoices.findOne.resolves({
+          billingInvoiceId: invoiceId,
+          invoiceNumber: 'A123'
+        });
+        repos.billingInvoices.findOneBy.resolves(null);
+        invoiceService.setIsFlaggedForRebilling(invoiceId, true);
+      });
+
+      test('sets the flag', () => {
+        expect(repos.billingInvoices.update.calledWith(
+          invoiceId, { isFlaggedForRebilling: true }
+        )).to.be.true();
       });
     });
   });
