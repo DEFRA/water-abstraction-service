@@ -18,6 +18,19 @@ const licencesService = require('../../../src/lib/services/licences');
 const controller = require('../../../src/modules/gauging-stations/controller');
 const controllerHelper = require('../../../src/lib/controller');
 
+experiment('.getGaugingStations', () => {
+  beforeEach(async () => {
+    sandbox.stub(gaugingStationsRepo, 'findAll').resolves([]);
+    await controller.getGaugingStations();
+  });
+
+  afterEach(() => sandbox.restore());
+
+  test('it calls the gauging stations repo findAll method', () => {
+    expect(gaugingStationsRepo.findAll.called).to.be.true();
+  });
+});
+
 experiment('.getGaugingStation', () => {
   const tempGuid = uuid();
 
@@ -138,5 +151,52 @@ experiment('createLicenceGaugingStationLink', () => {
   });
   test('calls gaugingStationService.getGaugingStation to ascertain if the station exists', () => {
     expect(gaugingStationService.getGaugingStation.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+  });
+});
+
+experiment('deleteLicenceGaugingStationLink', () => {
+  const request = {
+    params: {
+      licenceGaugingStationId: '00000000-0000-0000-0000-000000000000'
+    }
+  };
+  experiment('when given a valid GUID', () => {
+    beforeEach(async () => {
+      await sandbox.stub(licenceGaugingStationsService, 'getLicenceGaugingStationById').resolves({ id: '00000000-0000-0000-0000-000000000000' });
+      await sandbox.stub(licenceGaugingStationsService, 'deleteLicenceLink').resolves();
+      await controller.deleteLicenceGaugingStationLink(request);
+    });
+
+    afterEach(async () => {
+      await sandbox.restore();
+    });
+
+    test('calls licenceGaugingStationsService.getLicenceGaugingStationById to ascertain if the linkage exists', () => {
+      expect(licenceGaugingStationsService.getLicenceGaugingStationById.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+    });
+    test('calls licenceGaugingStationsService.deleteLicenceLink to delete the linkage', () => {
+      expect(licenceGaugingStationsService.deleteLicenceLink.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+    });
+  });
+
+  experiment('when given an invalid GUID', () => {
+    let result;
+    beforeEach(async () => {
+      await sandbox.stub(licenceGaugingStationsService, 'getLicenceGaugingStationById').returns(null);
+      await sandbox.stub(licenceGaugingStationsService, 'deleteLicenceLink').resolves();
+      result = await controller.deleteLicenceGaugingStationLink(request);
+    });
+    afterEach(async () => {
+      await sandbox.restore();
+    });
+
+    test('calls licenceGaugingStationsService.getLicenceGaugingStationById to ascertain if the linkage exists', () => {
+      expect(licenceGaugingStationsService.getLicenceGaugingStationById.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+    });
+    test('does not call licenceGaugingStationsService.deleteLicenceLink to delete the linkage', () => {
+      expect(licenceGaugingStationsService.deleteLicenceLink.called).to.be.false();
+      expect(result.isBoom).to.be.true();
+      expect(result.output.payload.statusCode).to.equal(404);
+    });
   });
 });

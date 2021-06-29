@@ -9,6 +9,8 @@ const Boom = require('@hapi/boom');
 const { abstractionPeriodInObjectParser } = require('./helpers');
 const { logger } = require('../../logger');
 
+const getGaugingStations = () => gaugingStationsRepo.findAll();
+
 const getGaugingStation = async request => {
   const { stationGuid } = request.params;
   const gaugingStation = await gaugingStationsRepo.findOne(stationGuid);
@@ -25,6 +27,12 @@ const getGaugingStationLicencesById = async request =>
   controllerHelper.getEntities(
     request.params.gaugingStationId,
     gaugingStationService.getGaugingStationLicencesById
+  );
+
+const getGaugingStationsByLicenceId = async request =>
+  controllerHelper.getEntities(
+    request.params.licenceId,
+    gaugingStationService.getGaugingStationsByLicenceId
   );
 
 const createLicenceGaugingStationLink = async request => {
@@ -72,7 +80,24 @@ const createLicenceGaugingStationLink = async request => {
   }
 };
 
+const deleteLicenceGaugingStationLink = async request => {
+  const { licenceGaugingStationId } = request.params;
+  try {
+    const licenceGaugingStation = await licenceGaugingStationsService.getLicenceGaugingStationById(licenceGaugingStationId);
+    if (!licenceGaugingStation) {
+      return Boom.notFound(`Licence Gauging Station record with ID ${licenceGaugingStationId} could not be found`);
+    }
+    return licenceGaugingStationsService.deleteLicenceLink(licenceGaugingStationId);
+  } catch (e) {
+    logger.error(`Something went wrong when attempting to destroy the linkage with ID ${licenceGaugingStationId}`, e);
+    return e;
+  }
+};
+
 exports.getGaugingStation = getGaugingStation;
+exports.getGaugingStations = getGaugingStations;
 exports.getGaugingStationByRef = getGaugingStationByRef;
 exports.getGaugingStationLicencesById = getGaugingStationLicencesById;
+exports.getGaugingStationsByLicenceId = getGaugingStationsByLicenceId;
 exports.createLicenceGaugingStationLink = createLicenceGaugingStationLink;
+exports.deleteLicenceGaugingStationLink = deleteLicenceGaugingStationLink;
