@@ -76,6 +76,9 @@ const rebillInvoice = async (billRunId, invoiceId) => {
   logger.info(`CM rebilling API for ${billRunId} ${invoiceId} not yet implemented`);
 };
 
+const deleteLicence = async (billRunId, licenceId) =>
+  got.delete(`v2/wrls/bill-runs/${billRunId}/licences/${licenceId}`);
+
 exports.addTransaction = addTransaction;
 exports.approve = approve;
 exports.create = create;
@@ -87,3 +90,4 @@ exports.getInvoiceTransactions = getInvoiceTransactions;
 exports.deleteInvoiceFromBillRun = deleteInvoiceFromBillRun;
 exports.generate = generate;
 exports.rebillInvoice = rebillInvoice;
+exports.deleteLicence = deleteLicence;
