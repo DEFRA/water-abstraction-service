@@ -29,6 +29,12 @@ const getGaugingStationLicencesById = async request =>
     gaugingStationService.getGaugingStationLicencesById
   );
 
+const getGaugingStationsByLicenceId = async request =>
+  controllerHelper.getEntities(
+    request.params.licenceId,
+    gaugingStationService.getGaugingStationsByLicenceId
+  );
+
 const createLicenceGaugingStationLink = async request => {
   try {
     const { gaugingStationId } = request.params;
@@ -92,5 +98,6 @@ exports.getGaugingStation = getGaugingStation;
 exports.getGaugingStations = getGaugingStations;
 exports.getGaugingStationByRef = getGaugingStationByRef;
 exports.getGaugingStationLicencesById = getGaugingStationLicencesById;
+exports.getGaugingStationsByLicenceId = getGaugingStationsByLicenceId;
 exports.createLicenceGaugingStationLink = createLicenceGaugingStationLink;
 exports.deleteLicenceGaugingStationLink = deleteLicenceGaugingStationLink;
