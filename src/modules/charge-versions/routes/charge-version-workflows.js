@@ -1,6 +1,6 @@
 'use strict';
 
-const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer } } = require('../../../lib/roles');
+const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer, viewChargeVersions } } = require('../../../lib/roles');
 
 const controller = require('../controllers/charge-version-workflow');
 const Joi = require('joi');
@@ -20,7 +20,7 @@ module.exports = {
       description: 'Lists all charge version workflows in progress',
       tags: ['api'],
       auth: {
-        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
+        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer, viewChargeVersions]
       },
       validate: {
         headers,
@@ -39,7 +39,7 @@ module.exports = {
       description: 'Gets a single charge version workflow record',
       tags: ['api'],
       auth: {
-        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
+        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer, viewChargeVersions]
       },
       validate: {
         headers,

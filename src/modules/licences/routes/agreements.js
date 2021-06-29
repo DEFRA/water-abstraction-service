@@ -53,9 +53,6 @@ module.exports = {
     path: '/water/1.0/licences/{licenceId}/agreements',
     handler: controller.getLicenceAgreements,
     config: {
-      auth: {
-        scope: [ROLES.manageAgreements]
-      },
       pre: [
         { method: preHandlers.getLicence, assign: 'licence' }
       ],
