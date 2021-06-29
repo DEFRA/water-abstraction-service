@@ -11,6 +11,15 @@ const BillingVolume = require('./billing-volume');
 
 const validators = require('./validators');
 
+
+/**
+ * @constant {Object} statuses - transaction statuses
+ * 
+ * "candidate": charge created in WRLS but not yet transferred to CM
+ * "charge_created": successfully transferred to CM
+ * "approved": not used
+ * "error": error transferring charge to CM
+ */
 const statuses = {
   candidate: 'candidate',
   chargeCreated: 'charge_created',
