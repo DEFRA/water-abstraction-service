@@ -1,7 +1,7 @@
 exports.findGaugingStationWithLinkedLicences = `select 
 lgs.abstraction_period_start_day,
 lgs.abstraction_period_start_month,
-lgs.abstraction_period_end_date as abstraction_period_end_day,
+lgs.abstraction_period_end_day,
 lgs.abstraction_period_end_month,
 lgs.restriction_type,
 lgs.threshold_value,
