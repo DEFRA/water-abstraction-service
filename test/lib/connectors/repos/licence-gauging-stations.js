@@ -15,9 +15,25 @@ const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
 experiment('lib/connectors/repos/licence-gauging-stations', () => {
   beforeEach(async () => {
     sandbox.stub(helpers, 'create').resolves({});
+    sandbox.stub(helpers, 'findOne').resolves({});
+    sandbox.stub(helpers, 'deleteOne').resolves({});
   });
 
   afterEach(async () => sandbox.restore());
+
+  experiment('.findOneById', () => {
+    const tempGuid = uuid();
+    beforeEach(async () => {
+      await licenceGaugingStations.findOneById(tempGuid);
+    });
+
+    test('calls helpers .findOne() with the correct params', async () => {
+      const [bookShelfModel, identifierName, identifierValue] = helpers.findOne.lastCall.args;
+      expect(bookShelfModel).to.equal(LicenceGaugingStations);
+      expect(identifierName).to.equal('licenceGaugingStationId');
+      expect(identifierValue).to.equal(tempGuid);
+    });
+  });
 
   experiment('.create', () => {
     const data = {
@@ -39,6 +55,20 @@ experiment('lib/connectors/repos/licence-gauging-stations', () => {
       const [bookShelfModel, createdData] = helpers.create.lastCall.args;
       expect(bookShelfModel).to.equal(LicenceGaugingStations);
       expect(createdData).to.equal(data);
+    });
+  });
+
+  experiment('.deleteOne', () => {
+    const tempGuid = uuid();
+    beforeEach(async () => {
+      await licenceGaugingStations.deleteOne(tempGuid);
+    });
+
+    test('calls helpers .deleteOne() with the correct params', async () => {
+      const [bookShelfModel, identifierName, identifierValue] = helpers.deleteOne.lastCall.args;
+      expect(bookShelfModel).to.equal(LicenceGaugingStations);
+      expect(identifierName).to.equal('licenceGaugingStationId');
+      expect(identifierValue).to.equal(tempGuid);
     });
   });
 });
