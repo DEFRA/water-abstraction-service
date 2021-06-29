@@ -52,7 +52,10 @@ const ROLES = {
   chargeVersionWorkflowReviewer: 'charge_version_workflow_reviewer',
   manageAgreements: 'manage_agreements',
   deleteAgreements: 'delete_agreements',
-  billing: 'billing'
+  billing: 'billing',
+  abstractionAlertsNotifications: 'hof_notifications',
+  viewChargeVersions: 'view_charge_versions',
+  manageBillingAccounts: 'manage_billing_accounts'
 };
 
 exports.getRolesForPermissionKey = getRolesForPermissionKey;

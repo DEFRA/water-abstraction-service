@@ -14,8 +14,7 @@ const repos = require('../../../src/lib/connectors/repos');
 const gaugingStationRepo = require('../../../src/lib/connectors/repos/gauging-stations');
 
 const routes = require('../../../src/modules/gauging-stations/routes');
-console.log('§§§§§§§§§');
-console.log(routes);
+
 const testHelpers = require('../../test-helpers');
 
 const data = {
@@ -69,7 +68,7 @@ experiment('getGaugingStationByRef', () => {
   beforeEach(async () => {
     sandbox.stub(gaugingStationRepo, 'findOneByStationRef'); /* simulate db results */
     gaugingStationRepo.findOneByStationRef.resolves(data.dbRow);
-    result = await gaugingStationService.getGaugingStationsByRef(data.dbRow.stationReference);
+    result = await gaugingStationService.getGaugingStationByRef(data.dbRow.stationReference);
   });
   afterEach(async () => {
     sandbox.restore();
