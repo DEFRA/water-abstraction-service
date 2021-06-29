@@ -94,7 +94,7 @@ const dbToModelMapper = createMapper()
   .map('chargeType').to('isCompensationCharge', isValueEqualTo('compensation'))
   .map('chargeType').to('isMinimumCharge', isValueEqualTo('minimum_charge'))
   .map('chargeElement').to('chargeElement', chargeElementMapper.dbToModel)
-  .map('volume').to('volume', volume => isNull(volume) ? null :  parseFloat(volume))
+  .map('volume').to('volume', volume => isNull(volume) ? null : parseFloat(volume))
   .map().to('agreements', mapDBToAgreements)
   .map(['billingVolume', 'endDate', 'season']).to('billingVolume',
     (billingVolume, endDate, season) => billingVolume ? getBillingVolumeForTransaction({ billingVolume, endDate, season }) : null)

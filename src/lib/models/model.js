@@ -74,7 +74,6 @@ class Model {
     return momentDate;
   };
 
-
   /**
    * Clears the .id property of this model.
    * This can be useful if you wish to clone a model but omit the ID so that
