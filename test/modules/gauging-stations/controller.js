@@ -19,6 +19,19 @@ const gaugingStationService = require('../../../src/lib/services/gauging-station
 const entitiesController = require('../../../src/lib/controller');
 const controllerHelper = require('../../../src/lib/controller');
 
+experiment('.getGaugingStations', () => {
+  beforeEach(async () => {
+    sandbox.stub(gaugingStationsRepo, 'findAll').resolves([]);
+    await controller.getGaugingStations();
+  });
+
+  afterEach(() => sandbox.restore());
+
+  test('it calls the gauging stations repo findAll method', () => {
+    expect(gaugingStationsRepo.findAll.called).to.be.true();
+  });
+});
+
 experiment('.getGaugingStation', () => {
   const tempGuid = uuid();
 
