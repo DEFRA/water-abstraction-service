@@ -9,6 +9,8 @@ const Boom = require('@hapi/boom');
 const { abstractionPeriodInObjectParser } = require('./helpers');
 const { logger } = require('../../logger');
 
+const getGaugingStations = () => gaugingStationsRepo.findAll();
+
 const getGaugingStation = async request => {
   const { stationGuid } = request.params;
   const gaugingStation = await gaugingStationsRepo.findOne(stationGuid);
@@ -87,6 +89,7 @@ const deleteLicenceGaugingStationLink = async request => {
 };
 
 exports.getGaugingStation = getGaugingStation;
+exports.getGaugingStations = getGaugingStations;
 exports.getGaugingStationByRef = getGaugingStationByRef;
 exports.getGaugingStationLicencesById = getGaugingStationLicencesById;
 exports.createLicenceGaugingStationLink = createLicenceGaugingStationLink;
