@@ -4,7 +4,7 @@
     chargeRegionId: A
     naldRegionId: 1
     name: Test Region
-    displayName: Test Region 
+    displayName: Test Region
     isTest: true
 
 - ref: $licence
@@ -24,13 +24,15 @@
 
 - ref: $twoPartTariffAgreement
   model: FinancialAgreementType
-  fields: 
+  fields:
     financialAgreementCode: S127
     description: Section 127 (Two Part Tariff)
     disabled: false
     isTest: true
   constraints:
     uniq_financial_agreement_code:
+      - financialAgreementCode
+    code_is_unique:
       - financialAgreementCode
 
 - model: LicenceAgreement
@@ -138,7 +140,7 @@
     externalId: 1:12345679
 
 - model: ReturnRequirementPurpose
-  fields: 
+  fields:
     returnRequirementId: $returnRequirement.returnRequirementId
     purposePrimaryId: $purposePrimary.purposePrimaryId
     purposeSecondaryId: $purposeSecondary.purposeSecondaryId
