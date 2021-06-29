@@ -9,6 +9,8 @@ const Boom = require('@hapi/boom');
 const { abstractionPeriodInObjectParser } = require('./helpers');
 const { logger } = require('../../logger');
 
+const getGaugingStations = () => gaugingStationsRepo.findAll();
+
 const getGaugingStation = async request => {
   const { stationGuid } = request.params;
   const gaugingStation = await gaugingStationsRepo.findOne(stationGuid);
@@ -25,6 +27,12 @@ const getGaugingStationLicencesById = async request =>
   controllerHelper.getEntities(
     request.params.gaugingStationId,
     gaugingStationService.getGaugingStationLicencesById
+  );
+
+const getGaugingStationsByLicenceId = async request =>
+  controllerHelper.getEntities(
+    request.params.licenceId,
+    gaugingStationService.getGaugingStationsByLicenceId
   );
 
 const createLicenceGaugingStationLink = async request => {
@@ -87,7 +95,9 @@ const deleteLicenceGaugingStationLink = async request => {
 };
 
 exports.getGaugingStation = getGaugingStation;
+exports.getGaugingStations = getGaugingStations;
 exports.getGaugingStationByRef = getGaugingStationByRef;
 exports.getGaugingStationLicencesById = getGaugingStationLicencesById;
+exports.getGaugingStationsByLicenceId = getGaugingStationsByLicenceId;
 exports.createLicenceGaugingStationLink = createLicenceGaugingStationLink;
 exports.deleteLicenceGaugingStationLink = deleteLicenceGaugingStationLink;

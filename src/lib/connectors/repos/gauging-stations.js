@@ -10,6 +10,9 @@ const findOne = id =>
 const findLicenceConditionsByStationId = gaugingStationId =>
   raw.multiRow(queries.findGaugingStationWithLinkedLicences, { gaugingStationId });
 
+const findGaugingStationByLicenceId = licenceId =>
+  raw.multiRow(queries.findGaugingStationByLicenceId, { licenceId });
+
 const findOneByStationRef = async stationRef => {
   const model = await GaugingStation
     .forge()
@@ -60,3 +63,4 @@ exports.findAll = findAll;
 exports.create = create;
 exports.update = update;
 exports.deleteOne = deleteOne;
+exports.findGaugingStationByLicenceId = findGaugingStationByLicenceId;

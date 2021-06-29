@@ -29,7 +29,7 @@ module.exports = {
     createChargeJobConcurrency: isLocal ? 16 : 1,
     // Some billing logic is handled differently depending on whether the
     // transaction is pre/post NALD switchover date
-    naldSwitchOverDate: process.env.BILLING_GO_LIVE_DATE || '2021-04-01',
+    naldSwitchOverDate: process.env.BILLING_GO_LIVE_DATE || '2021-06-10',
     // The grace period (in days) following the return due date during which time
     // the submitted return will be considered for billing
     returnsGracePeriod: process.env.RETURNS_GRACE_PERIOD || 21
