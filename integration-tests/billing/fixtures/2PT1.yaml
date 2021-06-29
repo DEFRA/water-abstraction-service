@@ -31,6 +31,8 @@
   constraints:
     uniq_financial_agreement_code:
       - financialAgreementCode
+    code_is_unique:
+      - financialAgreementCode
 
 - model: LicenceAgreement
   fields:
