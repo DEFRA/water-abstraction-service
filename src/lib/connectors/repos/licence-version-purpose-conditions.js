@@ -1,7 +1,7 @@
 'use strict';
-const { bookshelf } = require('../bookshelf');
 const queries = require('./queries/licence-version-purpose-conditions');
 const helpers = require('./lib/helpers');
+const raw = require('./lib/raw');
 
 const LicenceVersionPurposeConditions = require('../bookshelf/LicenceVersionPurposeConditions');
 /**
@@ -13,8 +13,8 @@ const findOneById = async id => helpers.findOne(LicenceVersionPurposeConditions,
 
 const findManyByLicenceId = (licenceId, code = null) => {
   return !code
-    ? bookshelf.knex.raw(queries.findLicenceVersionPurposeConditionsByLicenceId, { licenceId })
-    : bookshelf.knex.raw(queries.findLicenceVersionPurposeConditionsByLicenceIdWithSpecificCode, { licenceId, code });
+    ? raw.multiRow(queries.findLicenceVersionPurposeConditionsByLicenceId, { licenceId })
+    : raw.multiRow(queries.findLicenceVersionPurposeConditionsByLicenceIdWithSpecificCode, { licenceId, code });
 };
 
 exports.findOneById = findOneById;

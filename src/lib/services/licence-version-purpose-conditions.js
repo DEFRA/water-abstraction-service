@@ -16,7 +16,7 @@ const getLicenceVersionConditionById = id =>
 const getLicenceVersionPurposeConditionsByLicenceId = async (licenceId, code) => {
   const data = await licenceVersionPurposeConditionsRepo.findManyByLicenceId(licenceId, code);
   return {
-    data: data.rows.map(mapper.dbToModel)
+    data: data.map(mapper.dbToModel)
   };
 };
 

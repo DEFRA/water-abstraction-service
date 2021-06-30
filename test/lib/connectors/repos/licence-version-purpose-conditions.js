@@ -11,13 +11,13 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
 const testSubject = require('../../../../src/lib/connectors/repos/licence-version-purpose-conditions');
-const { bookshelf } = require('../../../../src/lib/connectors/bookshelf');
+const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 const queries = require('../../../../src/lib/connectors/repos/queries/licence-version-purpose-conditions');
 
 experiment('lib/connectors/repos/licence-version-purpose-conditions', () => {
   beforeEach(async () => {
     sandbox.stub(helpers, 'findOne').returns();
-    sandbox.stub(bookshelf.knex, 'raw').resolves();
+    sandbox.stub(raw, 'multiRow').resolves();
   });
 
   afterEach(async () => {
@@ -35,16 +35,16 @@ experiment('lib/connectors/repos/licence-version-purpose-conditions', () => {
   // findManyByLicenceId
   experiment('.findManyByLicenceId', () => {
     experiment('when a code is not supplied', () => {
-      test('calls knex.raw with the right query', async () => {
+      test('calls the multiRow helper with the right query', async () => {
         await testSubject.findManyByLicenceId('licence-id');
-        expect(bookshelf.knex.raw.calledWith(queries.findLicenceVersionPurposeConditionsByLicenceId, { licenceId: 'licence-id' })).to.be.true();
+        expect(raw.multiRow.calledWith(queries.findLicenceVersionPurposeConditionsByLicenceId, { licenceId: 'licence-id' })).to.be.true();
       });
     });
 
     experiment('when a code is supplied', () => {
       test('calls knex.raw with the right query', async () => {
         await testSubject.findManyByLicenceId('licence-id', 'BOP');
-        expect(bookshelf.knex.raw.calledWith(queries.findLicenceVersionPurposeConditionsByLicenceIdWithSpecificCode, { licenceId: 'licence-id', code: 'BOP' })).to.be.true();
+        expect(raw.multiRow.calledWith(queries.findLicenceVersionPurposeConditionsByLicenceIdWithSpecificCode, { licenceId: 'licence-id', code: 'BOP' })).to.be.true();
       });
     });
   });
