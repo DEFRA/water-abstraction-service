@@ -12,10 +12,11 @@ const sandbox = sinon.createSandbox();
 const { v4: uuid } = require('uuid');
 
 const gaugingStationsRepo = require('../../../src/lib/connectors/repos/gauging-stations');
-const gaugingStationService = require('../../../src/lib/services/gauging-station-service');
 const licenceGaugingStationsService = require('../../../src/lib/services/licence-gauging-stations-service');
 const licencesService = require('../../../src/lib/services/licences');
 const controller = require('../../../src/modules/gauging-stations/controller');
+const gaugingStationService = require('../../../src/lib/services/gauging-station-service');
+const entitiesController = require('../../../src/lib/controller');
 const controllerHelper = require('../../../src/lib/controller');
 
 experiment('.getGaugingStations', () => {
@@ -76,12 +77,10 @@ experiment('.getGaugingStation', () => {
 });
 
 experiment('getGaugingStationByRef', () => {
-  let result;
-
   beforeEach(async () => {
     sandbox.stub(controllerHelper, 'getEntities').resolves();
     sandbox.stub(gaugingStationsRepo, 'findOneByStationRef').resolves('some station');
-    result = controller.getGaugingStationByRef({
+    controller.getGaugingStationByRef({
       params: {
         stationRef: 'someRef'
       }
@@ -90,9 +89,15 @@ experiment('getGaugingStationByRef', () => {
 
   afterEach(() => sandbox.restore());
 
-  test('it calls the getEntities helper', () => {
-    expect(controllerHelper.getEntities.called).to.be.true();
-    expect(result);
+  const request = {
+    params: {
+      stationRef: 'some-ref'
+    }
+  };
+
+  test('calls getEntities', async () => {
+    await controller.getGaugingStationByRef(request);
+    expect(entitiesController.getEntities.calledWith(request.params.stationRef, gaugingStationService.getGaugingStationByRef));
   });
 });
 
@@ -111,6 +116,16 @@ experiment('getGaugingStationLicencesById', () => {
 
   afterEach(() => sandbox.restore());
 
+  const request = {
+    params: {
+      gaugingStationId: 'some-guid'
+    }
+  };
+
+  test('calls getEntities', async () => {
+    await controller.getGaugingStationLicencesById(request);
+    expect(entitiesController.getEntities.calledWith(request.params.gaugingStationId, gaugingStationService.getGaugingStationLicencesById));
+  });
   test('it calls the getEntities helper', () => {
     expect(controllerHelper.getEntities.called).to.be.true();
     expect(result);
