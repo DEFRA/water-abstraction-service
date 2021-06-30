@@ -123,14 +123,13 @@ const deleteBatch = async (batch, internalCallingUser) => {
     await chargeModuleBillRunConnector.delete(batch.externalId);
 
     // These are populated at every stage in the bill run
-    await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batch.id);
+    await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batch.id, false);
     await newRepos.billingVolumes.deleteByBatchId(batch.id);
 
     // These tables are not yet populated at review stage in TPT
     await newRepos.billingTransactions.deleteByBatchId(batch.id);
     await newRepos.billingInvoiceLicences.deleteByBatchId(batch.id);
     await newRepos.billingInvoices.deleteByBatchId(batch.id, false);
-
     await newRepos.billingBatches.delete(batch.id);
 
     await saveEvent('billing-batch:cancel', 'delete', internalCallingUser, batch);
