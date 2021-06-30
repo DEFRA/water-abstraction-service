@@ -9,6 +9,11 @@ const VALID_MONTH = Joi.number().integer().min(1).max(12);
 const VALID_THRESHOLD_UNITS = Joi.string().required().allow('Ml/d', 'm3/s', 'm3/d', 'l/s', 'mAOD', 'mASD', 'm');
 
 module.exports = {
+  getGaugingStations: {
+    method: 'GET',
+    path: '/water/1.0/gauging-stations',
+    handler: controller.getGaugingStations
+  },
   getGaugingStation: {
     method: 'GET',
     path: '/water/1.0/gauging-stations/{stationGuid}',
@@ -45,6 +50,20 @@ module.exports = {
       validate: {
         params: Joi.object({
           ref: Joi.string().required().min(2)
+        })
+      }
+    }
+  },
+  getGaugingStationsByLicenceId: {
+    path: '/water/1.0/licences/{licenceId}/gauging-stations',
+    method: 'GET',
+    handler: controller.getGaugingStationsByLicenceId,
+    config: {
+      tags: ['api'],
+      description: 'Gets gauging stations by licenceId',
+      validate: {
+        params: Joi.object({
+          licenceId: Joi.string().required().guid()
         })
       }
     }

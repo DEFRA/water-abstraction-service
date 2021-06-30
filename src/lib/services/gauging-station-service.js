@@ -23,6 +23,9 @@ const getGaugingStationLicencesById = async gaugingStationId => {
   throw new NotFoundError(`Could not find gauging station conditions with ID ${gaugingStationId}`);
 };
 
+const getGaugingStationsByLicenceId = async licenceId => gaugingStationRepo.findGaugingStationByLicenceId(licenceId);
+
 exports.getGaugingStation = getGaugingStation;
 exports.getGaugingStationByRef = getGaugingStationByRef;
 exports.getGaugingStationLicencesById = getGaugingStationLicencesById;
+exports.getGaugingStationsByLicenceId = getGaugingStationsByLicenceId;
