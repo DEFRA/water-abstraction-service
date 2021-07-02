@@ -9,7 +9,7 @@ const create = data =>
   helpers.create(LicenceGaugingStations, data);
 
 const deleteOne = licenceGaugingStationId =>
-  helpers.deleteOne(LicenceGaugingStations, 'licenceGaugingStationId', licenceGaugingStationId);
+  helpers.update(LicenceGaugingStations, 'licenceGaugingStationId', licenceGaugingStationId, { date_deleted: new Date() });
 
 exports.findOneById = findOneById;
 exports.create = create;
