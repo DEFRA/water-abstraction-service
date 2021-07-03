@@ -5,7 +5,6 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
-const moment = require('moment');
 const sandbox = require('sinon').createSandbox();
 const { v4: uuid } = require('uuid');
 
