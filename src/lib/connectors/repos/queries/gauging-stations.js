@@ -27,6 +27,7 @@ join water.licences l on
 (l.licence_id = lgs.licence_id)
 where
 lgs.licence_version_purpose_condition_id is null
+and lgs.date_deleted is null
 and gs.gauging_station_id=:gaugingStationId
 union all
 select
@@ -62,8 +63,9 @@ join water.licence_version_purposes lvp on
 lvp.licence_version_purpose_id = lvpc.licence_version_purpose_id
 where
 lgs.licence_version_purpose_condition_id is not null
+and lgs.date_deleted is null
 and gs.gauging_station_id=:gaugingStationId;`;
 
 exports.findGaugingStationByLicenceId = `SELECT gs.label, gs.gauging_station_id FROM water.licence_gauging_stations lgs 
 JOIN water.gauging_stations gs on lgs.gauging_station_id = gs.gauging_station_id
-WHERE lgs.licence_id=:licenceId;`;
+WHERE lgs.licence_id=:licenceId and lgs.date_deleted is null;`;
