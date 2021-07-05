@@ -31,6 +31,6 @@ experiment('lib/connectors/bookshelf/LicenceGaugingStations.js', () => {
   });
 
   test('configures timestamps', async () => {
-    expect(instance.hasTimestamps).to.equal(['date_created', 'date_updated']);
+    expect(instance.hasTimestamps).to.equal(['date_created', 'date_updated', 'date_deleted']);
   });
 });

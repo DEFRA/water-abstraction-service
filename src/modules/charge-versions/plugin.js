@@ -12,7 +12,7 @@ const addJobToQueue = queueManager => async licenceVersion => {
 };
 
 const publishJobs = async queueManager => {
-  const batch = await licenceVersions.findIdsByDateNotInChargeVersionWorkflows(moment().add(-24, 'hour').toISOString());
+  const batch = await licenceVersions.findIdsByDateNotInChargeVersionWorkflows(moment().add(-2, 'month').toISOString());
   logger.info(`Creating charge version workflow batch - ${batch.length} item(s) found`);
   return bluebird.map(batch, addJobToQueue(queueManager));
 };

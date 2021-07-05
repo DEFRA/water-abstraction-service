@@ -16,7 +16,7 @@ experiment('lib/connectors/repos/licence-gauging-stations', () => {
   beforeEach(async () => {
     sandbox.stub(helpers, 'create').resolves({});
     sandbox.stub(helpers, 'findOne').resolves({});
-    sandbox.stub(helpers, 'deleteOne').resolves({});
+    sandbox.stub(helpers, 'update').resolves({});
   });
 
   afterEach(async () => sandbox.restore());
@@ -64,11 +64,13 @@ experiment('lib/connectors/repos/licence-gauging-stations', () => {
       await licenceGaugingStations.deleteOne(tempGuid);
     });
 
-    test('calls helpers .deleteOne() with the correct params', async () => {
-      const [bookShelfModel, identifierName, identifierValue] = helpers.deleteOne.lastCall.args;
+    test('calls helpers .update() with the correct params', async () => {
+      const [bookShelfModel, identifierName, identifierValue, changes] = helpers.update.lastCall.args;
       expect(bookShelfModel).to.equal(LicenceGaugingStations);
       expect(identifierName).to.equal('licenceGaugingStationId');
       expect(identifierValue).to.equal(tempGuid);
+      expect(changes).to.be.object();
+      expect(changes.date_deleted).to.be.date();
     });
   });
 });
