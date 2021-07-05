@@ -48,7 +48,8 @@ const createTransaction = (billingBatchId, id, overrides = {}) => {
     financialYearEnding: 2021,
     invoiceAccountId: 'invoice-account-1',
     billingBatchId,
-    isSummer: false
+    isSummer: false,
+    rebillingState: null
   };
 
   return Object.assign(defaults, overrides);

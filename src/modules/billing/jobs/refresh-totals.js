@@ -1,6 +1,5 @@
 'use strict';
 
-const { get } = require('lodash');
 const uuid = require('uuid/v4');
 
 const JOB_NAME = 'billing.refresh-totals';
@@ -33,7 +32,7 @@ const createMessage = batchId => ([
 const handler = async job => {
   batchJob.logHandling(job);
 
-  const batchId = get(job, 'data.batchId');
+  const { batchId } = job.data;
 
   // Load batch
   const batch = await batchService.getBatchById(batchId);

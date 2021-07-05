@@ -58,12 +58,11 @@ const mapAddress = invoice =>
  * @param {Invoice} invoice
  * @return {Object}
  */
-const modelToDb = (batch, invoice) => ({
+const modelToDb = invoice => ({
   externalId: invoice.externalId || null,
   invoiceAccountId: invoice.invoiceAccount.id,
   invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
   address: mapAddress(invoice),
-  billingBatchId: batch.id,
   financialYearEnding: invoice.financialYear.endYear,
   invoiceNumber: invoice.invoiceNumber || null,
   isCredit: isNull(invoice.netTotal) ? null : invoice.netTotal < 0,
@@ -96,6 +95,42 @@ const crmToModel = row => {
   return invoice;
 };
 
+/**
+  * Gets transaction reference from cmTransactions
+  * NB. it is not guaranteed to be present in all transactions
+  * @param {Array<Object>} cmTransactions
+  */
+const getInvoiceNumber = cmTransactions => {
+  const transactionsWithRef = cmTransactions.filter(trans => trans.transactionReference !== null);
+  return transactionsWithRef[0] ? transactionsWithRef[0].transactionReference : null;
+};
+
+const cmRebilledTypes = new Map()
+  .set('C', 'reversal')
+  .set('R', 'rebill')
+  .set('O', null);
+
+const cmToPojoMapper = createMapper()
+  .map('id').to('externalId')
+  .copy('netTotal')
+  .map('deminimisInvoice').to('isDeMinimis')
+  .map('debitLineValue').to('invoiceValue')
+  .map('creditLineValue').to('creditNoteValue', value => -value)
+  .map('rebilledType').to('rebillingState', value => cmRebilledTypes.get(value));
+
+/**
+ * Maps Charge Module invoice data to POJO model with WRLS naming
+ *
+ * @param {Object} cmInvoiceSummary
+ * @param {Array} cmTransactions
+ * @returns {Object}
+ */
+const cmToPojo = (cmInvoiceSummary, cmTransactions = []) => ({
+  ...cmToPojoMapper.execute(cmInvoiceSummary),
+  invoiceNumber: getInvoiceNumber(cmTransactions)
+});
+
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
 exports.crmToModel = crmToModel;
+exports.cmToPojo = cmToPojo;

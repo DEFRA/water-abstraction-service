@@ -150,4 +150,31 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
       expect(path).to.equal('v2/wrls/bill-runs/test-id/invoices/test-invoice-id');
     });
   });
+
+  experiment('.rebillInvoice', () => {
+    const batchId = 'test-batch-id';
+    const invoiceId = 'test-invoice-id';
+
+    beforeEach(async () => {
+      await billRunsApiConnector.rebillInvoice(batchId, invoiceId);
+    });
+
+    test('the correct patch endpoint is called', async () => {
+      const [path] = gotCM.patch.lastCall.args;
+      expect(path).to.equal(`v2/wrls/bill-runs/${batchId}/invoices/${invoiceId}/rebill`);
+    });
+  });
+
+  experiment('.getStatus', () => {
+    const batchId = 'test-batch-id';
+
+    beforeEach(async () => {
+      await billRunsApiConnector.getStatus(batchId);
+    });
+
+    test('the correct get endpoint is called', async () => {
+      const [path] = gotCM.get.lastCall.args;
+      expect(path).to.equal(`v2/wrls/bill-runs/${batchId}/status`);
+    });
+  });
 });

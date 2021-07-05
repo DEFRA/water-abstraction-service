@@ -1,6 +1,6 @@
 'use strict';
 
-const { groupBy, pick } = require('lodash');
+const { groupBy, pick, isNull } = require('lodash');
 
 // Models
 const Transaction = require('../../../../lib/models/transaction');
@@ -57,6 +57,8 @@ const getReversedTransaction = (invoiceLicence, sourceTransaction) => {
   };
 };
 
+const isNotRebillingTransaction = transaction => isNull(transaction.rebillingState);
+
 /**
  * Gets a list of transactions in the current batch plus historical transactions
  * for the licences in the supplementary batch
@@ -69,7 +71,8 @@ const getTransactions = async batchId => {
     billingTransactionsRepo.findByBatchId(batchId),
     billingTransactionsRepo.findHistoryByBatchId(batchId)
   ]);
-  return [...batchTransactions, ...historicalTransactions];
+  const transactions = [...batchTransactions, ...historicalTransactions];
+  return transactions.filter(isNotRebillingTransaction);
 };
 
 /**

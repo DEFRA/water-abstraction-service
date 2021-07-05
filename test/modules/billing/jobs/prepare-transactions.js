@@ -13,6 +13,8 @@ const sandbox = sinon.createSandbox();
 
 const { logger } = require('../../../../src/logger');
 const prepareTransactions = require('../../../../src/modules/billing/jobs/prepare-transactions');
+const refreshTotals = require('../../../../src/modules/billing/jobs/refresh-totals');
+
 const billingTransactionsRepo = require('../../../../src/lib/connectors/repos/billing-transactions');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
@@ -26,9 +28,11 @@ const BATCH_ID = uuid();
 const data = {
   eventId: 'test-event-id',
   transactions: [{
-    billingTransactionId: '00000000-0000-0000-0000-000000000001'
+    billingTransactionId: '00000000-0000-0000-0000-000000000001',
+    status: 'candidate'
   }, {
-    billingTransactionId: '00000000-0000-0000-0000-000000000002'
+    billingTransactionId: '00000000-0000-0000-0000-000000000002',
+    status: 'candidate'
   }],
   batch: {
     id: BATCH_ID
@@ -47,6 +51,8 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
     batch = new Batch(BATCH_ID);
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
     sandbox.stub(batchService, 'setErrorStatus').resolves();
+    sandbox.stub(batchService, 'requestCMBatchGeneration').resolves();
+
     sandbox.stub(supplementaryBillingService, 'processBatch');
     sandbox.stub(batch, 'isSupplementary');
 
@@ -141,7 +147,7 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
         expect(batchId).to.equal(BATCH_ID);
       });
 
-      test('resolves with batch and transactions', async () => {
+      test('resolves with candidate transaction IDs', async () => {
         expect(result.billingTransactionIds).to.equal([
           data.transactions[0].billingTransactionId,
           data.transactions[1].billingTransactionId
@@ -194,6 +200,10 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
           'billing.create-charge', BATCH_ID, data.transactions[1].billingTransactionId
         )).to.be.true();
       });
+
+      test('charge module batch summary is not generated', () => {
+        expect(batchService.requestCMBatchGeneration.called).to.be.false();
+      });
     });
 
     experiment('when there is an error', () => {
@@ -207,6 +217,24 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
 
       test('a message is logged', async () => {
         expect(batchJob.logOnCompleteError.calledWith(job, err)).to.be.true();
+      });
+    });
+
+    experiment('when there are 0 transactions to process', () => {
+      beforeEach(async () => {
+        job.returnvalue.billingTransactionIds = [];
+        await prepareTransactions.onComplete(job, queueManager);
+      });
+
+      test('charge module batch summary is generated', () => {
+        expect(batchService.requestCMBatchGeneration.calledWith(BATCH_ID)).to.be.true();
+      });
+
+      test('the refresh totals job is added to the message queue', () => {
+        expect(queueManager.add.callCount).to.equal(1);
+        expect(queueManager.add.calledWith(
+          refreshTotals.jobName, BATCH_ID
+        )).to.be.true();
       });
     });
   });

@@ -1,6 +1,7 @@
 'use strict';
 
 const { get, partial } = require('lodash');
+const bluebird = require('bluebird');
 
 const JOB_NAME = 'billing.prepare-transactions';
 
@@ -9,13 +10,18 @@ const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 const { jobName: createChargeJobName } = require('./create-charge');
+const { jobName: refreshTotalsJobName } = require('./refresh-totals');
+
 const { logger } = require('../../../logger');
 const supplementaryBillingService = require('../services/supplementary-billing-service');
 const billingTransactionsRepo = require('../../../lib/connectors/repos/billing-transactions');
+const Transaction = require('../../../lib/models/transaction');
 
 const createMessage = partial(helpers.createMessage, JOB_NAME);
 
 const getTransactionId = transaction => transaction.billingTransactionId;
+
+const isCandidateTransaction = transaction => transaction.status === Transaction.statuses.candidate;
 
 const handler = async job => {
   batchJob.logHandling(job);
@@ -31,9 +37,11 @@ const handler = async job => {
       await supplementaryBillingService.processBatch(batch.id);
     }
 
-    // Get all transactions now in batch
+    // Get all candidate transactions now in batch
     const transactions = await billingTransactionsRepo.findByBatchId(batch.id);
-    const billingTransactionIds = transactions.map(getTransactionId);
+    const billingTransactionIds = transactions
+      .filter(isCandidateTransaction)
+      .map(getTransactionId);
 
     return {
       billingTransactionIds
@@ -49,11 +57,17 @@ const onComplete = async (job, queueManager) => {
     const batchId = get(job, 'data.batchId');
     const { billingTransactionIds } = job.returnvalue;
 
-    logger.info(`${billingTransactionIds.length} transactions produced for batch ${batchId}, creating charges...`);
-
-    // Note: publish jobs in series to avoid overwhelming message queue
-    for (const billingTransactionId of billingTransactionIds) {
-      await queueManager.add(createChargeJobName, batchId, billingTransactionId);
+    // If there's nothing to process, skip to cm refresh
+    if (billingTransactionIds.length === 0) {
+      logger.info(`0 transactions for batch ${batchId}, requesting CM batch generation`);
+      await batchService.requestCMBatchGeneration(batchId);
+      await queueManager.add(refreshTotalsJobName, batchId);
+    } else {
+      logger.info(`${billingTransactionIds.length} transactions produced for batch ${batchId} - creating charges`);
+      await bluebird.mapSeries(
+        billingTransactionIds,
+        billingTransactionId => queueManager.add(createChargeJobName, batchId, billingTransactionId)
+      );
     }
   } catch (err) {
     batchJob.logOnCompleteError(job, err);
