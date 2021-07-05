@@ -1,11 +1,10 @@
-const { naldSwitchOverDate } = require('../../../../../config').billing;
 
 exports.findIdsCreatedAfterDate = `select
 distinct licenceVersions.licence_version_id,
   licenceVersions.licence_id
 from
 (select * from water.licence_versions where
-date_created >= ${naldSwitchOverDate}::timestamp
+date_created >= :dateAndTime
 union
 select lv.* from water.licences l
 inner join water.licence_versions lv on
