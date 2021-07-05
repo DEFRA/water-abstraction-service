@@ -42,9 +42,16 @@ experiment('modules/billing/services/invoice-licences-service', () => {
   experiment('.saveInvoiceLicenceToDB', () => {
     const invoice = new Invoice('40283a80-766f-481f-ba54-484ac0b7ea6d');
     const invoiceLicence = new InvoiceLicence('399282c3-f9b4-4a4b-af1b-0019e040ad61');
+    let result;
 
     beforeEach(async () => {
-      await invoiceLicencesService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
+      newRepos.billingInvoiceLicences.upsert.resolves({
+        billingInvoiceLicenceId: uuid(),
+        licenceId: uuid(),
+        licenceRef: '01/123',
+        billingInvoiceId: uuid()
+      });
+      result = await invoiceLicencesService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
     });
 
     test('passes the models to the correct mapper', async () => {
@@ -57,6 +64,10 @@ experiment('modules/billing/services/invoice-licences-service', () => {
       expect(data).to.equal({
         licenceRef: '01/123'
       });
+    });
+
+    test('resolves with an InvoiceLicence instance', () => {
+      expect(result).to.be.an.instanceOf(InvoiceLicence);
     });
   });
 

@@ -9,7 +9,6 @@ const { expect } = require('@hapi/code');
 
 const uuid = require('uuid/v4');
 
-const Batch = require('../../../src/lib/models/batch');
 const Company = require('../../../src/lib/models/company');
 const Contact = require('../../../src/lib/models/contact-v2');
 const Invoice = require('../../../src/lib/models/invoice');
@@ -97,10 +96,9 @@ experiment('lib/mappers/invoice', () => {
   });
 
   experiment('.modelToDB', () => {
-    let result, batch, invoice;
+    let result, invoice;
 
     beforeEach(async () => {
-      batch = new Batch(uuid());
       invoice = new Invoice();
       invoice.invoiceAccount = new InvoiceAccount(uuid());
       invoice.invoiceAccount.accountNumber = 'A12345678A';
@@ -120,14 +118,17 @@ experiment('lib/mappers/invoice', () => {
           postcode: 'TT1 1TT',
           country: 'UK'
         });
-        result = invoiceMapper.modelToDb(batch, invoice);
+        invoice.invoiceAccount = new InvoiceAccount().fromHash({
+          accountNumber: 'A00000000A'
+        });
+        result = invoiceMapper.modelToDb(invoice);
       });
 
       test('maps to expected shape for the DB row', async () => {
         expect(result.invoiceAccountId).to.equal(invoice.invoiceAccount.id);
         expect(result.invoiceAccountNumber).to.equal(invoice.invoiceAccount.accountNumber);
         expect(result.address).to.equal(invoice.address.toJSON());
-        expect(result.billingBatchId).to.equal(batch.id);
+        // expect(result.billingBatchId).to.equal(batch.id);
         expect(result.financialYearEnding).to.equal(invoice.financialYear.yearEnding);
         expect(result.invoiceNumber).to.be.null();
         expect(result.netAmount).to.be.null();
@@ -137,7 +138,7 @@ experiment('lib/mappers/invoice', () => {
 
     experiment('when the address is not populated', () => {
       beforeEach(async () => {
-        result = invoiceMapper.modelToDb(batch, invoice);
+        result = invoiceMapper.modelToDb(invoice);
       });
 
       test('the address property is an empty object', async () => {
@@ -148,7 +149,7 @@ experiment('lib/mappers/invoice', () => {
     experiment('when the invoice number is populated', () => {
       test('it is mapped', () => {
         invoice.invoiceNumber = 'AAI1000000';
-        const { invoiceNumber } = invoiceMapper.modelToDb(batch, invoice);
+        const { invoiceNumber } = invoiceMapper.modelToDb(invoice);
         expect(invoiceNumber).to.equal('AAI1000000');
       });
     });
@@ -158,7 +159,7 @@ experiment('lib/mappers/invoice', () => {
         invoice.netTotal = 123;
         invoice.invoiceValue = 200;
         invoice.creditNoteValue = -77;
-        result = invoiceMapper.modelToDb(batch, invoice);
+        result = invoiceMapper.modelToDb(invoice);
       });
       test('the totals are mapped', async () => {
         expect(invoice.netTotal).to.equal(123);

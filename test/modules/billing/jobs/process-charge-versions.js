@@ -36,6 +36,7 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
 
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
     sandbox.stub(batchService, 'setErrorStatus');
+    sandbox.stub(batchService, 'requestCMBatchGeneration');
 
     sandbox.stub(chargeVersionYearService, 'getForBatch').resolves(billingBatchChargeVersionYears);
 
@@ -181,6 +182,12 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
       beforeEach(async () => {
         job.returnvalue.billingBatchChargeVersionYearIds = [];
         processChargeVersionsJob.onComplete(job, queueManager);
+      });
+
+      test('charge module batch summary generation is requested', async () => {
+        expect(batchService.requestCMBatchGeneration.calledWith(
+          batchId
+        )).to.be.true();
       });
 
       test('a job is published to refresh the totals', async () => {
