@@ -101,7 +101,26 @@ licences.getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise = () =
   return licences.findAll(filter, null, ['licence_ref']);
 };
 
-licences.getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise();
+/**
+ * Grabs all licences that are overdue for having their
+ * licence_gauging_stations records copied from Digitise entries
+ * @return {Promise<Array>}
+ */
+licences.getWaterLicencesThatHaveGaugingStationLinkagesThatNeedToBeCopiedFromDigitise = () => {
+  const filter = {
+    $or: [
+      {
+        date_gauging_station_links_last_copied: {
+          $gte: moment().subtract(3, 'd')
+        }
+      },
+      {
+        date_gauging_station_links_last_copied: null
+      }
+    ]
+  };
+  return licences.findAll(filter, null, ['licence_ref']);
+};
 
 const deleteAcceptanceTestData = () => {
   const url = urlJoin(config.services.permits, 'acceptance-tests');
