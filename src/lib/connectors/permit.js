@@ -2,8 +2,9 @@
 
 const { get } = require('lodash');
 const urlJoin = require('url-join');
-const helpers = require('@envage/water-abstraction-helpers');
+const moment = require('moment');
 
+const helpers = require('@envage/water-abstraction-helpers');
 const apiClientFactory = require('./api-client-factory');
 const config = require('../../../config');
 const { licence: { regimeId, typeId } } = config;
@@ -78,6 +79,29 @@ licences.getWaterLicence = async (licenceNumber) => {
   const licenceResponse = await licences.findMany(filter);
   return get(licenceResponse, 'data[0]');
 };
+
+/**
+ * Grabs all licences that are overdue for having their
+ * licence_version_purpose_condition records copied from Digitise entries
+ * @return {Promise<Array>}
+ */
+licences.getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise = () => {
+  const filter = {
+    $or: [
+      {
+        date_licence_version_purpose_conditions_last_copied: {
+          $gte: moment().subtract(3, 'd')
+        }
+      },
+      {
+        date_licence_version_purpose_conditions_last_copied: null
+      }
+    ]
+  };
+  return licences.findAll(filter, null, ['licence_ref']);
+};
+
+licences.getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise();
 
 const deleteAcceptanceTestData = () => {
   const url = urlJoin(config.services.permits, 'acceptance-tests');
