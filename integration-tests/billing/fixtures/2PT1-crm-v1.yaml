@@ -28,7 +28,8 @@
     system_external_id: 'L1'
     company_entity_id: $companyEntity.entity_id
     system_internal_id: $l1Licence.licence_id
+    document_name : 'the L1 temporary licence'
     metadata:
-      Name: 'the L1 temporary licence'
+      Name: 'test environment agency'
       dataType: 'acceptance-test-setup'
       IsCurrent: true
