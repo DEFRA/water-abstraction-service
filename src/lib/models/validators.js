@@ -4,7 +4,7 @@ const { isArray } = require('lodash');
 const hoek = require('@hapi/hoek');
 const Joi = require('joi');
 
-const assert = (value, schema) => Joi.assert(value, schema, { convert: false });
+const assert = (value, schema) => schema.validate(value);
 
 const dateRegex = /^\d{4}-([0][1-9]|[1][0-2])-([0][1-9]|[1-2][0-9]|[3][0-1])$/;
 const { returnIDRegex } = require('@envage/water-abstraction-helpers').returns;
