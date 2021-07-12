@@ -1,5 +1,6 @@
 exports.findGaugingStationWithLinkedLicences = `select
-lgs.abstraction_period_start_day,
+  lgs.licence_gauging_station_id,
+  lgs.abstraction_period_start_day,
   lgs.abstraction_period_start_month,
   lgs.abstraction_period_end_day,
   lgs.abstraction_period_end_month,
@@ -33,7 +34,8 @@ and lgs.date_deleted is null
 and gs.gauging_station_id=:gaugingStationId
 union all
 select
-lvp.abstraction_period_start_day,
+  lgs.licence_gauging_station_id,
+  lvp.abstraction_period_start_day,
   lvp.abstraction_period_start_month,
   lvp.abstraction_period_end_day,
   lvp.abstraction_period_end_month,
