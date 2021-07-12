@@ -4,7 +4,7 @@ const { isArray } = require('lodash');
 const hoek = require('@hapi/hoek');
 const Joi = require('joi');
 
-const assert = (value, schema) => schema.validate(value);
+const assert = (value, schema) => Joi.assert(value, schema);
 
 const dateRegex = /^\d{4}-([0][1-9]|[1][0-2])-([0][1-9]|[1-2][0-9]|[3][0-1])$/;
 const { returnIDRegex } = require('@envage/water-abstraction-helpers').returns;
@@ -66,8 +66,8 @@ const assertNullableString = value => assert(value, VALID_NULLABLE_STRING);
 const assertIsBoolean = value => assert(value, Joi.boolean().required());
 const assertDate = date => assert(date, VALID_DATE);
 const assertNullableDate = date => assert(date, VALID_NULLABLE_DATE);
-const assertEnum = (str, values) => assert(str, VALID_STRING.valid(values));
-const assertNullableEnum = (str, values) => assert(str, VALID_NULLABLE_STRING.valid(values));
+const assertEnum = (str, values) => assert(str, VALID_STRING.valid(...values));
+const assertNullableEnum = (str, values) => assert(str, VALID_NULLABLE_STRING.valid(...values));
 const assertDaysInYear = value => assert(value, VALID_INTEGER.min(0).max(366).allow(null));
 const assertPositiveInteger = value => assert(value, VALID_POSITIVE_INTEGER);
 const assertNullablePositiveInteger = value => assert(value, VALID_POSITIVE_INTEGER.allow(null));

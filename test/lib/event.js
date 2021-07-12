@@ -1,5 +1,5 @@
 const sinon = require('sinon');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const sandbox = sinon.createSandbox();
 const { expect } = require('@hapi/code');
 const eventsService = require('../../src/lib/services/events');

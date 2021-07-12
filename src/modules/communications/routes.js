@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const controller = require('./controller');
 const { version } = require('../../../config');
 
@@ -10,9 +10,9 @@ module.exports = {
     config: {
       description: 'Gets details of a sent notification and the associated CRM docs',
       validate: {
-        params: {
+        params: Joi.object().keys({
           communicationId: Joi.string().guid()
-        }
+        })
       }
     }
   }

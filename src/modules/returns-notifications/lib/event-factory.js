@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const evt = require('../../../lib/event');
 const { uniq } = require('lodash');
 

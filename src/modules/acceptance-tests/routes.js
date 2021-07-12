@@ -1,5 +1,5 @@
 'use strict';
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const controller = require('./controller');
 const { isAcceptanceTestTarget } = require('../../../config');
@@ -21,9 +21,9 @@ if (isAcceptanceTestTarget) {
     config: {
       description: 'Creates test data from specified Yaml files',
       validate: {
-        params: {
+        params: Joi.object().keys({
           key: Joi.string().required()
-        }
+        })
       }
     }
   };

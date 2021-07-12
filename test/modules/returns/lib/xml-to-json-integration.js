@@ -18,7 +18,7 @@ const { mapXml } = require('../../../../src/modules/returns/lib/xml-adapter/mapp
 const path = require('path');
 const fs = require('fs');
 const util = require('util');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const readFile = util.promisify(fs.readFile);
 
 const permitConnector = require('../../../../src/lib/connectors/permit');

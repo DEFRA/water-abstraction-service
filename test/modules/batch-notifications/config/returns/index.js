@@ -4,7 +4,7 @@ const {
   test
 } = exports.lab = require('@hapi/lab').script();
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const [invitationConfig, reminderConfig] =
   require('../../../../../src/modules/batch-notifications/config/returns/index');

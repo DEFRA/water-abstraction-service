@@ -2,7 +2,7 @@
 
 const Model = require('./model');
 const validators = require('./validators');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { identity, pick } = require('lodash');
 const { VALID_ADDRESS } = require('@envage/water-abstraction-helpers').validators;
 
