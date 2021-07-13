@@ -25,3 +25,17 @@
         "source": "acceptance-test-setup"
       }
 
+- ref: $externalUser
+  model: User
+  fields:
+    user_name: 'acceptance-test-access-sharing.external@example.com'
+    password: 'P@55word'
+    reset_required: 0
+    application: 'water_vml'
+    bad_logins: 0
+    enabled: true
+    user_data: >
+      {
+        "source": "acceptance-test-setup"
+      }
+
