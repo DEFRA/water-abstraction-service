@@ -25,7 +25,7 @@
         "source": "acceptance-test-setup"
       }
 
-- ref: $externalUser
+- ref: $secondaryExternalUser
   model: User
   fields:
     user_name: 'acceptance-test-access-sharing.external@example.com'
@@ -38,4 +38,3 @@
       {
         "source": "acceptance-test-setup"
       }
-
