@@ -109,7 +109,7 @@ class Company extends Model {
   }
 
   isValid () {
-    return Joi.validate(this.toJSON(), newCompanySchema, { abortEarly: false });
+    return newCompanySchema.validate(this.toJSON(), { abortEarly: false });
   }
 }
 

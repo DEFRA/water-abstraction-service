@@ -38,7 +38,7 @@ const schema = {
  * @param {String} name - a friendly name for this type of notification
  */
 function eventFactory (options, returns) {
-  const { error, value } = Joi.validate(options, schema);
+  const { error, value } = schema.validate(options);
   if (error) {
     throw error;
   }

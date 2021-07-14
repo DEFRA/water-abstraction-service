@@ -73,7 +73,7 @@ experiment('mapXml output validates the return model schema', () => {
     const returns = await mapXml(parsed, getTestUser(), today);
 
     returns.forEach(ret => {
-      const result = Joi.validate(ret, returnSchema);
+      const result = returnSchema.validate(ret);
       expect(result.error).to.be.null();
     });
   });
@@ -84,7 +84,7 @@ experiment('mapXml output validates the return model schema', () => {
     const returns = await mapXml(parsed, getTestUser(), today);
 
     returns.forEach(ret => {
-      const result = Joi.validate(ret, returnSchema);
+      const result = returnSchema.validate(ret);
       expect(result.error).to.be.null();
     });
   });
@@ -95,7 +95,7 @@ experiment('mapXml output validates the return model schema', () => {
     const returns = await mapXml(parsed, getTestUser(), today);
 
     returns.forEach(ret => {
-      const result = Joi.validate(ret, returnSchema);
+      const result = returnSchema.validate(ret);
       expect(result.error).to.be.null();
     });
   });

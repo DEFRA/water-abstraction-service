@@ -214,7 +214,7 @@ class Address extends Model {
       : VALID_ADDRESS;
 
     const mappedAddress = mapToValidator(this);
-    return Joi.validate(mappedAddress, schema, { abortEarly: false });
+    return schema.validate(mappedAddress, { abortEarly: false });
   }
 
   get sortKey () {

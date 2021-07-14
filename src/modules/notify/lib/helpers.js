@@ -20,7 +20,7 @@ const isPdf = (messageRef) => {
  */
 function validateEnqueueOptions (options, now) {
   // Validate input options
-  const schema = {
+  const schema = Joi.object({
     id: Joi.string().default(uuidv4()),
     messageRef: Joi.string().required(),
     recipient: Joi.string().default('n/a'),
@@ -32,9 +32,9 @@ function validateEnqueueOptions (options, now) {
     eventId: Joi.string().guid(),
     metadata: Joi.object().default({}),
     messageType: Joi.string().valid('letter', 'email', 'sms')
-  };
+  });
 
-  return Joi.validate(options, schema);
+  return schema.validate(options);
 }
 
 /**

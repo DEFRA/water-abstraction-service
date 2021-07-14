@@ -137,7 +137,7 @@ class Contact extends Model {
 
   isValid () {
     const schema = this._type === CONTACT_TYPES.person ? contactPersonSchema : contactDepartmentSchema;
-    return Joi.validate(omit(this.toJSON(), ['type', 'fullName']), schema, { abortEarly: false });
+    return schema.validate(omit(this.toJSON(), ['type', 'fullName']), { abortEarly: false });
   }
 }
 

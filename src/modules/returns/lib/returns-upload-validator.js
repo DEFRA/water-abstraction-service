@@ -188,7 +188,7 @@ const validateReturnDue = (ret, context) => {
  * @return {Boolean}         true if schema passes
  */
 const validateReturnSchema = (ret, context) => {
-  const { error } = Joi.validate(ret, schema.returnSchema);
+  const { error } = schema.returnSchema.validate(ret);
   return !error;
 };
 
