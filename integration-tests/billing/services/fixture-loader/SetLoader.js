@@ -46,7 +46,7 @@ class SetLoader {
     const loader = this.get(name);
 
     await loader
-      .setRefs(this._refs)
+      .addRefs(this._refs)
       .load(yamlFile);
 
     // Update refs

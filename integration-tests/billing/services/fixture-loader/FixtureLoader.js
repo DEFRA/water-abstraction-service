@@ -35,12 +35,17 @@ class FixtureLoader {
    * @param {Object} adapter - adapter
    * @param {String} dir - path to YAML files
    */
-  constructor (adapter, dir) {
+  constructor (adapter, dir, refs = null) {
     this._adapter = adapter;
     this._dir = dir || __dirname;
 
     // Tracks references
     this._refs = new Map();
+
+    // add custom calculated data as a reference
+    if (refs) {
+      this.setRef(refs.name, refs.obj);
+    }
 
     // Tracks created models
     this._models = [];
@@ -64,6 +69,15 @@ class FixtureLoader {
    */
   setRefs (refs) {
     this._refs = refs;
+    return this;
+  }
+
+  /**
+   * Sets initial value for refs
+   * @param {Map}
+   */
+  addRefs (refs) {
+    this._refs = new Map([...this._refs, ...refs]);
     return this;
   }
 

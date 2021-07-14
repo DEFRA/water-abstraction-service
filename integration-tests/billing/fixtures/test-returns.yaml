@@ -135,7 +135,7 @@
     licence_type: abstraction
     start_date: '2021-01-01'
     end_date: '2021-02-28'
-    due_date:	'2021-03-31'
+    due_date:	$returnDates.dueDate
     returns_frequency: month
     status: due
     source: NALD
@@ -253,3 +253,67 @@
     under_query: false
     is_test: true
 
+# completed return
+- ref: $returnMonthlyE
+  model: Return
+  fields:
+    return_id: v1:1:AT/CURR/MONTHLY/02:9999992:2020-01-01:2020-02-28
+    regime: water
+    licence_ref : 'AT/CURR/MONTHLY/02'
+    licence_type: abstraction
+    start_date: '2020-01-01'
+    end_date: '2020-02-28'
+    due_date:	'2020-04-28'
+    returns_frequency: month
+    status: completed
+    source: NALD
+    metadata: >
+      {
+        "nald":{
+            "areaCode":"AREA",
+            "formatId":9999992,
+            "regionCode":6,
+            "periodEndDay":"28",
+            "periodEndMonth":"02",
+            "periodStartDay":"1",
+            "periodStartMonth":"1"
+        },
+        "points":[
+            {
+              "name":"Winter",
+              "ngr1":"TG 123 456",
+              "ngr2":null,
+              "ngr3":null,
+              "ngr4":null
+            }
+        ],
+        "isFinal":false,
+        "version":1,
+        "isSummer":false,
+        "isUpload":false,
+        "purposes":[
+            {
+              "alias":"SPRAY IRRIGATION STORAGE",
+              "primary":{
+                  "code":"A",
+                  "description":"Agriculture"
+              },
+              "secondary":{
+                  "code":"AGR",
+                  "description":"General Agriculture"
+              },
+              "tertiary":{
+                  "code":"420",
+                  "description":"Spray Irrigation - Storage"
+              }
+            }
+        ],
+        "isCurrent":true,
+        "description":"Its all about the description",
+        "isTwoPartTariff":true
+      }
+    received_date: null
+    return_requirement: '9999992'
+    under_query: false
+    is_test: true
+    
