@@ -441,7 +441,7 @@ experiment('modules/licences/controllers/documents', () => {
       expect(data.entityId).to.equal(documentResponse.data[0].company_entity_id);
       expect(data.companyName).to.equal(companyData.data.entityName);
       expect(data.licenceNumber).to.equal(documentResponse.data[0].system_external_id);
-      expect(error).to.be.null();
+      expect(error).to.be.false();
     });
   });
 

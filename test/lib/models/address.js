@@ -165,7 +165,7 @@ experiment('lib/models/address', () => {
         address.uprn = 12345678;
 
         const { error } = address.validate();
-        expect(error).to.be.null();
+        expect(error).to.be.false();
       });
 
       test('for an invalid address', async () => {
@@ -201,7 +201,7 @@ experiment('lib/models/address', () => {
         address.uprn = 12345678;
 
         const { error } = address.validate();
-        expect(error).to.be.null();
+        expect(error).to.be.false();
       });
     });
   });
