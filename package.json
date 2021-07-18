@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@envage/hapi-pg-rest-api": "github:DEFRA/hapi-pg-rest-api#master",
-    "@envage/water-abstraction-helpers": "^4.3.9",
+    "@envage/water-abstraction-helpers": "github:DEFRA/water-abstraction-helpers#Upgrade-to-joi-17",
     "@hapi/boom": "^7.4.11",
     "@hapi/catbox-redis": "^6.0.1",
     "@hapi/good": "^8.2.4",
