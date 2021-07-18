@@ -1,5 +1,5 @@
 const controllers = require('./controllers');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { ROLES: { billing } } = require('../../lib/roles');
 
 module.exports = {
@@ -13,13 +13,13 @@ module.exports = {
         scope: [billing]
       },
       validate: {
-        params: {
+        params: Joi.object().keys({
           reportIdentifier: Joi.string().valid(
             'billedActiveLicencesReport',
             'uncreditedInactiveLicencesReport',
             'unbilledActiveLicencesReport'
           ).required()
-        },
+        }),
         headers: async values => {
           Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
         }

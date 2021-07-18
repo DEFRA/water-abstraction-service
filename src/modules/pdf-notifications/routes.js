@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const controller = require('./controller');
 
 module.exports = {
@@ -9,9 +9,9 @@ module.exports = {
     config: {
       description: 'Renders a notification ready for conversion to PDF',
       validate: {
-        params: {
+        params: Joi.object().keys({
           notificationId: Joi.string().guid().required()
-        }
+        })
       }
     }
   }

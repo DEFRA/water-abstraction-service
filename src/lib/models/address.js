@@ -2,7 +2,7 @@
 
 const Model = require('./model');
 const validators = require('./validators');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { identity, pick } = require('lodash');
 const { VALID_ADDRESS } = require('@envage/water-abstraction-helpers').validators;
 
@@ -214,7 +214,7 @@ class Address extends Model {
       : VALID_ADDRESS;
 
     const mappedAddress = mapToValidator(this);
-    return Joi.validate(mappedAddress, schema, { abortEarly: false });
+    return schema.validate(mappedAddress, { abortEarly: false });
   }
 
   get sortKey () {

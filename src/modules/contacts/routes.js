@@ -1,5 +1,5 @@
 const controller = require('./controller');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const OPTIONAL_STRING = Joi.string().allow('', null).optional();
 
@@ -11,7 +11,7 @@ module.exports = {
     config: {
       description: 'Proxy for CRM to create a contact entity',
       validate: {
-        payload: {
+        payload: Joi.object().keys({
           type: Joi.string().required().valid('person', 'department'),
           salutation: OPTIONAL_STRING,
           firstName: OPTIONAL_STRING,
@@ -21,7 +21,7 @@ module.exports = {
           suffix: OPTIONAL_STRING,
           isTest: Joi.boolean().optional().default(false),
           source: Joi.string().valid('wrls', 'nald').default('wrls')
-        },
+        }),
         headers: async values => {
           Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
         }

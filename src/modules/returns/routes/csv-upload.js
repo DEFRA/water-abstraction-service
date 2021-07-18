@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const controller = require('../controllers/csv-upload');
 const { set } = require('lodash');
 const pre = require('../pre-handlers');
@@ -13,14 +13,14 @@ const getSubmitConfig = (isSingleReturn) => {
       { method: pre.preCheckIssuer }
     ],
     validate: {
-      params: {
+      params: Joi.object().keys({
         eventId: Joi.string().uuid().required()
-      },
-      query: {
+      }),
+      query: Joi.object().keys({
         entityId: Joi.string().uuid().required(),
         companyId: Joi.string().uuid().required(),
         userName: Joi.string().email().required()
-      }
+      })
     }
   };
 
@@ -41,14 +41,14 @@ module.exports = {
         maxBytes: 1000 * 1000 * 50
       },
       validate: {
-        params: {
-          type: Joi.string().required().valid(['xml', 'csv'])
-        },
-        payload: {
+        params: Joi.object().keys({
+          type: Joi.string().required().valid('xml', 'csv')
+        }),
+        payload: Joi.object().keys({
           fileData: Joi.binary().required(),
           userName: Joi.string().email().required(),
           companyId: Joi.string().uuid().required()
-        }
+        })
       }
     }
   },

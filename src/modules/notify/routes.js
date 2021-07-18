@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const controller = require('./controller');
 const version = '1.0';
 
@@ -10,14 +10,14 @@ module.exports = {
     config: {
       description: 'Send a notify message',
       validate: {
-        params: {
+        params: Joi.object().keys({
           message_ref: Joi.string().required()
-        },
-        payload: {
+        }),
+        payload: Joi.object().keys({
           id: Joi.string(),
           recipient: Joi.string().required(),
           personalisation: Joi.object().required()
-        }
+        })
       }
     }
   },
@@ -29,15 +29,15 @@ module.exports = {
     config: {
       description: 'Send a notify message',
       validate: {
-        params: {
+        params: Joi.object().keys({
           message_ref: Joi.string().required()
-        },
-        payload: {
+        }),
+        payload: Joi.object().keys({
           id: Joi.string(),
           recipient: Joi.string().required(),
           personalisation: Joi.object(),
           sendafter: Joi.date().iso()
-        }
+        })
       }
     }
   },
@@ -49,7 +49,7 @@ module.exports = {
     config: {
       description: 'Accept callback from Notify',
       validate: {
-        payload: {
+        payload: Joi.object().keys({
           id: Joi.string().required().guid(),
           reference: Joi.any(),
           to: Joi.string(),
@@ -60,7 +60,7 @@ module.exports = {
           notification_type: Joi.string().valid('sms', 'email'),
           template_id: Joi.string().guid(),
           template_version: Joi.number()
-        }
+        })
       }
     }
   },
@@ -72,7 +72,7 @@ module.exports = {
     config: {
       description: 'proxy to send notify emails',
       validate: {
-        payload: Joi.object({
+        payload: Joi.object().keys({
           templateId: Joi.string().required().guid(),
           recipient: Joi.string().email().required(),
           personalisation: Joi.object().required()

@@ -355,7 +355,7 @@ experiment('lib/models/contact-v2 model', () => {
 
           test('is valid when present', async () => {
             const { error, value } = contact.isValid();
-            expect(error).to.be.null();
+            expect(error).to.be.false();
             expect(value.firstName).to.equal(contact.firstName);
           });
         });
@@ -370,7 +370,7 @@ experiment('lib/models/contact-v2 model', () => {
 
           test('is valid when present', async () => {
             const { error, value } = contact.isValid();
-            expect(error).to.be.null();
+            expect(error).to.be.false();
             expect(value.lastName).to.equal(contact.lastName);
           });
         });
@@ -394,7 +394,7 @@ experiment('lib/models/contact-v2 model', () => {
 
           test('is valid when present', async () => {
             const { error, value } = contact.isValid();
-            expect(error).to.be.null();
+            expect(error).to.be.false();
             expect(value.department).to.equal(contact.department);
           });
         });
@@ -410,13 +410,13 @@ experiment('lib/models/contact-v2 model', () => {
           test('is valid when set to nald', async () => {
             contact.dataSource = Contact.DATA_SOURCE_TYPES.nald;
             const { error } = contact.isValid();
-            expect(error).to.be.null();
+            expect(error).to.be.false();
           });
 
           test('is valid when set to wrls', async () => {
             contact.dataSource = Contact.DATA_SOURCE_TYPES.wrls;
             const { error } = contact.isValid();
-            expect(error).to.be.null();
+            expect(error).to.be.false();
           });
         });
       });

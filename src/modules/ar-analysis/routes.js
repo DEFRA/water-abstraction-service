@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const controller = require('./controller');
 const version = '1.0';
 
@@ -10,9 +10,9 @@ module.exports = {
     config: {
       description: 'A webhook to update the AR analysis table for a single licence',
       validate: {
-        params: {
+        params: Joi.object().keys({
           licenceRef: Joi.string().required()
-        }
+        })
       }
     }
   }

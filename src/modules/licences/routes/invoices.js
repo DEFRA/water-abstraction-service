@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const controller = require('../controllers/invoices');
 
@@ -11,10 +11,10 @@ module.exports = {
     handler: controller.getLicenceInvoices,
     config: {
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           licenceId: Joi.string().uuid().required()
         }),
-        query: Joi.object({
+        query: Joi.object().keys({
           page: Joi.number().default(1),
           perPage: Joi.number().default(10)
         })

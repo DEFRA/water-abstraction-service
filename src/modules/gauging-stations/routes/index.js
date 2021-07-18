@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { ROLES: { manageGaugingStationLicenceLinks } } = require('../../../lib/roles');
 const controller = require('../controller');
 
@@ -20,7 +20,7 @@ module.exports = {
     handler: controller.getGaugingStation,
     config: {
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           stationGuid: Joi.string().uuid().required()
         })
       }
@@ -34,7 +34,7 @@ module.exports = {
       tags: ['api'],
       description: 'Gets a gauging station by id',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           gaugingStationId: Joi.string().required().guid()
         })
       }
@@ -48,7 +48,7 @@ module.exports = {
       tags: ['api'],
       description: 'Gets a gauging station by ref',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           ref: Joi.string().required().min(2)
         })
       }
@@ -62,7 +62,7 @@ module.exports = {
       tags: ['api'],
       description: 'Gets gauging stations by licenceId',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           licenceId: Joi.string().required().guid()
         })
       }
@@ -79,10 +79,10 @@ module.exports = {
       },
       description: 'Creates a link between a gauging station and a licence',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           gaugingStationId: Joi.string().uuid().required()
         }),
-        payload: Joi.object({
+        payload: Joi.object().keys({
           licenceId: Joi.string().uuid().required(),
           licenceVersionPurposeConditionId: Joi.string().uuid().allow(null),
           thresholdUnit: VALID_THRESHOLD_UNITS,
@@ -114,7 +114,7 @@ module.exports = {
       },
       description: 'Destroys a link between a gauging station and a licence',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           licenceGaugingStationId: Joi.string().uuid().required()
         })
       }

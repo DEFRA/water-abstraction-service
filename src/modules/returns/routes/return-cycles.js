@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const controller = require('../controllers/return-cycles');
 const preHandlers = require('../pre-handlers');
 
@@ -24,7 +24,7 @@ module.exports = {
       tags: ['api'],
       description: 'Gets a single return cycle',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           returnCycleId: Joi.string().guid().required()
         })
       },
@@ -43,7 +43,7 @@ module.exports = {
       tags: ['api'],
       description: 'Gets returns for the specified return cycle',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           returnCycleId: Joi.string().guid().required()
         })
       },

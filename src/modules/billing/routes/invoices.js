@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const controller = require('../controllers/invoices');
 const { ROLES: { billing } } = require('../../../lib/roles');
@@ -11,10 +11,10 @@ exports.patchInvoice = {
   handler: controller.patchInvoice,
   config: {
     validate: {
-      params: Joi.object({
+      params: Joi.object().keys({
         invoiceId: Joi.string().guid().required()
       }),
-      payload: Joi.object({
+      payload: Joi.object().keys({
         isFlaggedForRebilling: Joi.boolean().required()
       })
     },

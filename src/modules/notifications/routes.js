@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const controller = require('./controller');
 
 const exampleGuid = '00000000-0000-0000-0000-000000000000';
@@ -30,9 +30,9 @@ module.exports = {
       tags: ['api'],
       description: 'Gets a list of sent notifications',
       validate: {
-        query: {
+        query: Joi.object().keys({
           page: Joi.number().integer().min(1).default(1).example(5)
-        }
+        })
       }
     }
   },
@@ -45,9 +45,9 @@ module.exports = {
       tags: ['api'],
       description: 'Gets a single notification including its messages',
       validate: {
-        params: {
+        params: Joi.object().keys({
           eventId: Joi.string().guid().required().example(exampleGuid)
-        }
+        })
       },
       pre: [{
         method: preHandlers.getEvent, assign: 'event'
@@ -63,9 +63,9 @@ module.exports = {
       tags: ['api'],
       description: 'Gets the messages for a notification',
       validate: {
-        params: {
+        params: Joi.object().keys({
           eventId: Joi.string().guid().required().example(exampleGuid)
-        }
+        })
       },
       pre: [{
         method: preHandlers.getEvent, assign: 'event'

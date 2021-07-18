@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const controller = require('./controller');
 const { version } = require('../../../config');
 
@@ -10,12 +10,12 @@ module.exports = {
     config: {
       description: 'Unlinks the licence from user account',
       validate: {
-        params: {
+        params: Joi.object().keys({
           documentId: Joi.string().guid()
-        },
-        payload: {
+        }),
+        payload: Joi.object().keys({
           callingUserId: Joi.number().integer().required()
-        }
+        })
       }
     }
   }

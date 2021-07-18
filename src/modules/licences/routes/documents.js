@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const controller = require('../controllers/documents');
 const { version } = require('../../../../config');
 
@@ -13,13 +13,13 @@ module.exports = {
     config: {
       description: 'Returns the current version of the licence for a given document',
       validate: {
-        params: {
+        params: Joi.object().keys({
           documentId: Joi.string().guid().required()
-        },
-        query: {
+        }),
+        query: Joi.object().keys({
           companyId: Joi.string().guid(),
           includeExpired: Joi.boolean().optional().default(false)
-        }
+        })
       }
     }
   },
@@ -31,13 +31,13 @@ module.exports = {
     config: {
       description: 'Returns the conditions of the current version of the licence for a given document',
       validate: {
-        params: {
+        params: Joi.object().keys({
           documentId: Joi.string().guid().required()
-        },
-        query: {
+        }),
+        query: Joi.object().keys({
           companyId: Joi.string().guid(),
           includeExpired: Joi.boolean().optional().default(false)
-        }
+        })
       }
     }
   },
@@ -49,13 +49,13 @@ module.exports = {
     config: {
       description: 'Returns the points of the current version of the licence for a given document',
       validate: {
-        params: {
+        params: Joi.object().keys({
           documentId: Joi.string().guid().required()
-        },
-        query: {
+        }),
+        query: Joi.object().keys({
           companyId: Joi.string().guid(),
           includeExpired: Joi.boolean().optional().default(false)
-        }
+        })
       }
     }
   },
@@ -67,13 +67,13 @@ module.exports = {
     config: {
       description: 'Returns the users that are able to access the licence for a given document',
       validate: {
-        params: {
+        params: Joi.object().keys({
           documentId: Joi.string().guid().required()
-        },
-        query: {
+        }),
+        query: Joi.object().keys({
           companyId: Joi.string().guid(),
           includeExpired: Joi.boolean().optional().default(false)
-        }
+        })
       }
     }
   },
@@ -85,13 +85,13 @@ module.exports = {
     config: {
       description: 'Returns the licence summary details for a given document',
       validate: {
-        params: {
+        params: Joi.object().keys({
           documentId: Joi.string().guid().required()
-        },
-        query: {
+        }),
+        query: Joi.object().keys({
           companyId: Joi.string().guid(),
           includeExpired: Joi.boolean().optional().default(false)
-        }
+        })
       }
     }
   },
@@ -103,13 +103,13 @@ module.exports = {
     config: {
       description: 'Returns the sent licence notifications for a given document',
       validate: {
-        params: {
+        params: Joi.object().keys({
           documentId: Joi.string().guid().required()
-        },
-        query: {
+        }),
+        query: Joi.object().keys({
           includeExpired: Joi.boolean().optional().default(false),
           companyId: Joi.string().guid()
-        }
+        })
       }
     }
   },
@@ -121,9 +121,9 @@ module.exports = {
     config: {
       description: 'Returns the company details for a given document',
       validate: {
-        params: {
+        params: Joi.object().keys({
           documentId: Joi.string().guid().required()
-        }
+        })
       }
     }
   },
@@ -135,13 +135,13 @@ module.exports = {
     config: {
       description: 'Sets name for a licence',
       validate: {
-        params: {
+        params: Joi.object().keys({
           documentId: Joi.string().guid().required()
-        },
-        payload: {
+        }),
+        payload: Joi.object().keys({
           documentName: Joi.string().required().allow(''),
           userName: Joi.string().email().required()
-        }
+        })
       }
     }
   }

@@ -1,5 +1,5 @@
 const controller = require('./controller');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const config = require('../../../config');
 
 const getEmailRegex = () => {
@@ -8,7 +8,7 @@ const getEmailRegex = () => {
     : /\.gov\.uk$/;
 };
 
-const VALID_PERMISSIONS_KEY = Joi.string().valid([
+const VALID_PERMISSIONS_KEY = Joi.string().valid(
   'basic',
   'billing_and_data',
   'environment_officer',
@@ -17,7 +17,7 @@ const VALID_PERMISSIONS_KEY = Joi.string().valid([
   'nps_ar_approver',
   'psc',
   'wirs'
-]).required();
+).required();
 const VALID_USER_ID = Joi.number().integer().required();
 const VALID_NEW_USER_EMAIL = Joi.string().email().lowercase().trim().regex(getEmailRegex());
 
@@ -28,9 +28,9 @@ module.exports = {
     handler: controller.getStatus,
     options: {
       validate: {
-        params: {
+        params: Joi.object().keys({
           id: VALID_USER_ID
-        }
+        })
       }
     }
   },
@@ -41,11 +41,11 @@ module.exports = {
     handler: controller.postUserInternal,
     options: {
       validate: {
-        payload: {
+        payload: Joi.object().keys({
           callingUserId: VALID_USER_ID,
           newUserEmail: VALID_NEW_USER_EMAIL,
           permissionsKey: VALID_PERMISSIONS_KEY
-        }
+        })
       }
     }
   },
@@ -56,13 +56,13 @@ module.exports = {
     handler: controller.patchUserInternal,
     options: {
       validate: {
-        params: {
+        params: Joi.object().keys({
           userId: VALID_USER_ID
-        },
-        payload: {
+        }),
+        payload: Joi.object().keys({
           callingUserId: VALID_USER_ID,
           permissionsKey: VALID_PERMISSIONS_KEY
-        }
+        })
       }
     }
   },
@@ -73,12 +73,12 @@ module.exports = {
     handler: controller.deleteUserInternal,
     options: {
       validate: {
-        params: {
+        params: Joi.object().keys({
           userId: VALID_USER_ID
-        },
-        payload: {
+        }),
+        payload: Joi.object().keys({
           callingUserId: VALID_USER_ID
-        }
+        })
       }
     }
   }

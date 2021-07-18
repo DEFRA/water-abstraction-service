@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const Boom = require('@hapi/boom');
 const { logger } = require('../../logger');
 const { get, find } = require('lodash');
@@ -26,7 +26,7 @@ const postPrepare = async (request, h) => {
     const config = find(configs, { messageType });
 
     // Validate payload against schema defined in message config
-    const { error } = Joi.validate(data, config.schema);
+    const { error } = config.schema.validate(data);
     if (error) {
       throw Boom.badRequest('Invalid payload', error);
     }

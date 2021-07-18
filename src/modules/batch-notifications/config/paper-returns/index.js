@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const eventHelpers = require('../../lib/event-helpers');
 const { returnIDRegex } = require('@envage/water-abstraction-helpers').returns;

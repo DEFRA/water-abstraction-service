@@ -1,5 +1,5 @@
 'use strict';
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const controller = require('../controllers/two-part-tariff-review');
 const preHandlers = require('../pre-handlers');
 const { ROLES: { billing } } = require('../../../lib/roles');
@@ -11,7 +11,7 @@ const getBatchLicences = {
   config: {
     description: 'Gets a list of licences in billing batch for two-part tariff review with statuses',
     validate: {
-      params: Joi.object({
+      params: Joi.object().keys({
         batchId: Joi.string().uuid().required()
       })
     },
@@ -31,7 +31,7 @@ const getBatchLicenceVolumes = {
   config: {
     description: 'Gets a list of licences in billing batch for two-part tariff review with statuses',
     validate: {
-      params: Joi.object({
+      params: Joi.object().keys({
         batchId: Joi.string().uuid().required(),
         licenceId: Joi.string().uuid().required()
       })
@@ -52,7 +52,7 @@ const deleteBatchLicence = {
   config: {
     description: 'Deletes specified licence from batch',
     validate: {
-      params: Joi.object({
+      params: Joi.object().keys({
         batchId: Joi.string().uuid().required(),
         licenceId: Joi.string().uuid().required()
       })
@@ -73,7 +73,7 @@ const getBillingVolume = {
   config: {
     description: 'Deletes specified licence from batch',
     validate: {
-      params: Joi.object({
+      params: Joi.object().keys({
         billingVolumeId: Joi.string().uuid().required()
       })
     },
@@ -90,10 +90,10 @@ const patchBillingVolume = {
   config: {
     description: 'Updates billing volume',
     validate: {
-      params: Joi.object({
+      params: Joi.object().keys({
         billingVolumeId: Joi.string().uuid().required()
       }),
-      payload: Joi.object({
+      payload: Joi.object().keys({
         volume: Joi.number().positive().allow(0).required()
       })
     },
@@ -109,7 +109,7 @@ const postApproveReviewBatch = {
   handler: controller.postApproveReviewBatch,
   config: {
     validate: {
-      params: Joi.object({
+      params: Joi.object().keys({
         batchId: Joi.string().uuid().required()
       })
     },

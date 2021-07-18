@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const controller = require('./controller');
 const { statuses } = require('../returns/schema');
 const { ROLES: { billing } } = require('../../lib/roles');
@@ -13,16 +13,16 @@ module.exports = {
     config: {
       description: 'Gets a list of returns for the specified company',
       validate: {
-        params: {
+        params: Joi.object().keys({
           entityId: Joi.string().guid().required()
-        },
-        query: {
+        }),
+        query: Joi.object().keys({
           startDate: Joi.string().isoDate(),
           endDate: Joi.string().isoDate(),
           isSummer: Joi.boolean(),
-          status: Joi.string().valid(statuses),
+          status: Joi.string().valid(...statuses),
           excludeNaldReturns: Joi.boolean().default(true)
-        }
+        })
       }
     }
   },
@@ -34,9 +34,9 @@ module.exports = {
     config: {
       description: 'Gets the company with the specified ID',
       validate: {
-        params: {
+        params: Joi.object().keys({
           companyId: Joi.string().guid().required()
-        }
+        })
       }
     }
   },
@@ -48,10 +48,10 @@ module.exports = {
     config: {
       description: 'Soft-search companies by name',
       validate: {
-        query: {
+        query: Joi.object().keys({
           name: Joi.string().required().min(2),
           soft: Joi.boolean().optional().default(true)
-        }
+        })
       }
     }
   },
@@ -63,9 +63,9 @@ module.exports = {
     config: {
       description: 'Gets the addresses for the specified company',
       validate: {
-        params: {
+        params: Joi.object().keys({
           companyId: Joi.string().guid().required()
-        }
+        })
       }
     }
   },
@@ -78,10 +78,10 @@ module.exports = {
       tags: ['api'],
       description: 'Creates a new invoice account for the specified company and region',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           companyId: Joi.string().guid().required().example(EXAMPLE_GUID)
         }),
-        payload: Joi.object({
+        payload: Joi.object().keys({
           startDate: Joi.string().isoDate().required().example('2021-01-01'),
           regionId: Joi.string().guid().required().example(EXAMPLE_GUID)
         })
@@ -99,9 +99,9 @@ module.exports = {
     config: {
       description: 'Gets the CompanyContact entities for the company',
       validate: {
-        params: {
+        params: Joi.object().keys({
           companyId: Joi.string().uuid().required()
-        }
+        })
       }
     }
   },
@@ -114,12 +114,12 @@ module.exports = {
       description: 'Gets all invoice accounts for company, optionally filtered by region',
       tags: ['api'],
       validate: {
-        params: {
+        params: Joi.object().keys({
           companyId: Joi.string().guid().required().example(EXAMPLE_GUID)
-        },
-        query: {
+        }),
+        query: Joi.object().keys({
           regionId: Joi.string().guid().optional().example(EXAMPLE_GUID)
-        }
+        })
       }
     }
   }

@@ -1,9 +1,9 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const controller = require('./controller');
 
-const headers = Joi.object({
+const headers = Joi.object().keys({
   authorization: Joi.string().required().example('Bearer {{JWT_TOKEN}}')
 }).unknown(true);
 
@@ -16,10 +16,10 @@ module.exports = {
       description: 'Gets a list of companies from Companies House for the specified search query',
       tags: ['api'],
       validate: {
-        query: {
+        query: Joi.object().keys({
           q: Joi.string().required().example('Big Supply Co'),
           page: Joi.number().integer().min(1).default(1).example(1)
-        },
+        }),
         headers
       }
     }
@@ -33,9 +33,9 @@ module.exports = {
       tags: ['api'],
       description: 'Gets a Companies House company',
       validate: {
-        params: {
+        params: Joi.object().keys({
           companyNumber: Joi.string().required().example('01234')
-        },
+        }),
         headers
       }
     }

@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { get } = require('lodash');
 const uuidv4 = require('uuid/v4');
 
@@ -20,7 +20,7 @@ const isPdf = (messageRef) => {
  */
 function validateEnqueueOptions (options, now) {
   // Validate input options
-  const schema = {
+  const schema = Joi.object({
     id: Joi.string().default(uuidv4()),
     messageRef: Joi.string().required(),
     recipient: Joi.string().default('n/a'),
@@ -31,10 +31,10 @@ function validateEnqueueOptions (options, now) {
     companyEntityId: Joi.string().guid().allow(null),
     eventId: Joi.string().guid(),
     metadata: Joi.object().default({}),
-    messageType: Joi.string().valid(['letter', 'email', 'sms'])
-  };
+    messageType: Joi.string().valid('letter', 'email', 'sms')
+  });
 
-  return Joi.validate(options, schema);
+  return schema.validate(options);
 }
 
 /**

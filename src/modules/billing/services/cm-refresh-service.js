@@ -197,8 +197,10 @@ const updateInvoices = async (batch, cmResponse) => {
   };
 
   // Iterate through invoices in series, to avoid overwhelming CM with too many simultaneous requests
-  return Bluebird.mapSeries(invoiceMaps.cm, async ([key, cmInvoice]) =>
-    updateInvoice(batch, invoiceMaps.wrls.get(key), cmInvoice)
+  return Bluebird.mapSeries(invoiceMaps.cm, async ([key, cmInvoice]) => {
+    const inv = invoiceMaps.wrls.get(key);
+    inv && updateInvoice(batch, inv, cmInvoice);
+  }
   );
 };
 

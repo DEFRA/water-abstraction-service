@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const { version } = require('../../../config');
 
@@ -29,17 +29,17 @@ const addressSchema = Joi.object({
   source: OPTIONAL_NULLABLE_STRING.example('wrls')
 }).required();
 
-const companySchema = Joi.object({
+const companySchema = Joi.object().keys({
   id: OPTIONAL_GUID,
-  type: Joi.string().valid(Object.values(COMPANY_TYPES)).optional(),
-  organisationType: Joi.string().valid(Object.values(ORGANISATION_TYPES)).optional(),
+  type: Joi.string().valid(...Object.values(COMPANY_TYPES)).optional(),
+  organisationType: Joi.string().valid(...Object.values(ORGANISATION_TYPES)).optional(),
   name: Joi.string().trim().replace(/\./g, '').optional().example('Bottled Water Limited'),
   companyNumber: Joi.string().trim().replace(/\./g, '').uppercase().optional().example('012345678')
 }).allow(null).required();
 
-const contactSchema = Joi.object({
+const contactSchema = Joi.object().keys({
   id: OPTIONAL_GUID,
-  type: Joi.string().valid(Object.values(CONTACT_TYPES)).optional(),
+  type: Joi.string().valid(...Object.values(CONTACT_TYPES)).optional(),
   title: OPTIONAL_NULLABLE_STRING.example('Ms'),
   firstName: OPTIONAL_NULLABLE_STRING.example('Janice'),
   initials: OPTIONAL_NULLABLE_STRING,
@@ -60,7 +60,7 @@ module.exports = {
       tags: ['api'],
       description: 'Gets invoice account by ID',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           invoiceAccountId: REQUIRED_GUID
         })
       }
@@ -75,10 +75,10 @@ module.exports = {
       tags: ['api'],
       description: 'Creates a new invoice account address on the invoice account',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           invoiceAccountId: REQUIRED_GUID
         }),
-        payload: Joi.object({
+        payload: Joi.object().keys({
           address: addressSchema,
           agentCompany: companySchema,
           contact: contactSchema
@@ -98,7 +98,7 @@ module.exports = {
       tags: ['api'],
       description: 'Gets the licences with current versions linked to this invoice account',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           invoiceAccountId: REQUIRED_GUID
         })
       }
@@ -113,10 +113,10 @@ module.exports = {
       tags: ['api'],
       description: 'Gets sent invoices for a given invoice account',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           invoiceAccountId: REQUIRED_GUID
         }),
-        query: Joi.object({
+        query: Joi.object().keys({
           page: Joi.number().default(1).example(1),
           perPage: Joi.number().default(10).example(10)
         })

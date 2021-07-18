@@ -4,7 +4,7 @@
  */
 const PgBoss = require('pg-boss');
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const config = require('../../config.js');
 const { logger } = require('../logger');
 const { pool } = require('./connectors/db');

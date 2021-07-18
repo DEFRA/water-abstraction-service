@@ -13,9 +13,9 @@ module.exports = {
     handler: controller.getChargeVersion,
     options: {
       validate: {
-        params: {
+        params: Joi.object().keys({
           versionId: VALID_GUID
-        }
+        })
       }
     }
   },
@@ -25,9 +25,9 @@ module.exports = {
     handler: controller.getChargeVersionsByLicenceId,
     options: {
       validate: {
-        params: {
+        params: Joi.object().keys({
           licenceId: VALID_GUID
-        }
+        })
       }
     }
   },
@@ -37,9 +37,9 @@ module.exports = {
     handler: controller.getChargeVersionsByDocumentId,
     options: {
       validate: {
-        params: {
+        params: Joi.object().keys({
           documentId: VALID_GUID
-        }
+        })
       }
     }
   },
@@ -50,9 +50,9 @@ module.exports = {
     handler: controller.getDefaultChargesForLicenceVersion,
     options: {
       validate: {
-        params: {
+        params: Joi.object().keys({
           licenceVersionId: VALID_GUID
-        }
+        })
       }
     }
   },
@@ -63,9 +63,9 @@ module.exports = {
     handler: controller.postCreateFromWorkflow,
     options: {
       validate: {
-        params: {
+        params: Joi.object().keys({
           chargeVersionWorkflowId: VALID_GUID
-        }
+        })
       }
     }
   }
