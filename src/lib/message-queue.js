@@ -26,15 +26,15 @@ boss.on('error', error => {
 
 const jobContainerSchema = Joi.object({
   job: Joi.object({
-    createMessage: Joi.func().required(),
+    createMessage: Joi.function().required(),
     jobName: Joi.string().required(),
     options: Joi.object().optional(),
-    handler: Joi.func().required()
+    handler: Joi.function().required()
   }),
   onCompleteHandler: Joi.alternatives(
-    Joi.func(),
+    Joi.function(),
     Joi.object({
-      handler: Joi.func(),
+      handler: Joi.function(),
       options: Joi.object().optional()
     })
   ).optional()
