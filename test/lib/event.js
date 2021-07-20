@@ -14,10 +14,7 @@ const {
 const Event = require('../../src/lib/models/event');
 const moment = require('moment');
 
-const isDateString = str => {
-  const { error } = Joi.object().keys({}).validate(str);
-  return error === null;
-};
+const isDateString = str => Joi.date().iso().validate(str).error === undefined;
 
 const event = require('../../src/lib/event');
 const arr = ['foo', 'bar'];

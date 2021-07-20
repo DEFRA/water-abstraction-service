@@ -165,7 +165,8 @@ experiment('lib/models/address', () => {
         address.uprn = 12345678;
 
         const { error } = address.validate();
-        expect(error).to.be.false();
+
+        expect(error).to.be.undefined();
       });
 
       test('for an invalid address', async () => {
@@ -180,7 +181,7 @@ experiment('lib/models/address', () => {
         address.uprn = 12345678;
 
         const { error } = address.validate();
-        expect(error).to.not.be.null();
+        expect(error).to.not.be.undefined();
       });
     });
 
@@ -200,8 +201,8 @@ experiment('lib/models/address', () => {
         address.country = 'United Kingdom';
         address.uprn = 12345678;
 
-        const { error } = address.validate();
-        expect(error).to.be.false();
+        const { error } = address.validate(address);
+        expect(error).to.be.undefined();
       });
     });
   });

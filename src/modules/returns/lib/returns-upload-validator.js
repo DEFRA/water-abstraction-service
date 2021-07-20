@@ -18,7 +18,6 @@
   }
 ]
  */
-const Joi = require('joi');
 const { chunk, flatMap, find, uniq, cond, negate, get, isEqual, pick } = require('lodash');
 
 const returnsConnector = require('../../../lib/connectors/returns');

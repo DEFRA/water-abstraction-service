@@ -1,4 +1,3 @@
-const Joi = require('joi');
 const controller = require('./controller');
 const { version } = require('../../../config');
 

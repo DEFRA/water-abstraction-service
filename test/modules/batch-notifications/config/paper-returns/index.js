@@ -52,7 +52,7 @@ experiment('modules/batch-notifications/config/paper-returns', () => {
 
     test('validates for valid data', async () => {
       const { error } = config.schema.validate(fullData);
-      expect(error).to.equal(null);
+      expect(error).to.equal(undefined);
     });
 
     test('does not validate if the return id is not valid', async () => {
@@ -79,25 +79,25 @@ experiment('modules/batch-notifications/config/paper-returns', () => {
     test('tolerates extra address data', async () => {
       fullData.forms[0].address.potatoes = 'mashed';
       const { error } = config.schema.validate(fullData);
-      expect(error).to.equal(null);
+      expect(error).to.equal(undefined);
     });
 
     test('tolerates extra company data', async () => {
       fullData.forms[0].company.potatoes = 'mashed';
       const { error } = config.schema.validate(fullData);
-      expect(error).to.equal(null);
+      expect(error).to.equal(undefined);
     });
 
     test('tolerates extra contact data', async () => {
       fullData.forms[0].contact.potatoes = 'mashed';
       const { error } = config.schema.validate(fullData);
-      expect(error).to.equal(null);
+      expect(error).to.equal(undefined);
     });
 
     test('tolerates extra return data', async () => {
       fullData.forms[0].returns[0].potatoes = 'mashed';
       const { error } = config.schema.validate(fullData);
-      expect(error).to.equal(null);
+      expect(error).to.equal(undefined);
     });
   });
 

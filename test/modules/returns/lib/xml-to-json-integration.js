@@ -18,7 +18,6 @@ const { mapXml } = require('../../../../src/modules/returns/lib/xml-adapter/mapp
 const path = require('path');
 const fs = require('fs');
 const util = require('util');
-const Joi = require('joi');
 const readFile = util.promisify(fs.readFile);
 
 const permitConnector = require('../../../../src/lib/connectors/permit');
@@ -74,7 +73,7 @@ experiment('mapXml output validates the return model schema', () => {
 
     returns.forEach(ret => {
       const result = returnSchema.validate(ret);
-      expect(result.error).to.be.null();
+      expect(result.error).to.be.undefined();
     });
   });
 
@@ -85,7 +84,7 @@ experiment('mapXml output validates the return model schema', () => {
 
     returns.forEach(ret => {
       const result = returnSchema.validate(ret);
-      expect(result.error).to.be.null();
+      expect(result.error).to.be.undefined();
     });
   });
 
@@ -96,7 +95,7 @@ experiment('mapXml output validates the return model schema', () => {
 
     returns.forEach(ret => {
       const result = returnSchema.validate(ret);
-      expect(result.error).to.be.null();
+      expect(result.error).to.be.undefined();
     });
   });
 });

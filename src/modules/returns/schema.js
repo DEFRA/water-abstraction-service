@@ -43,7 +43,7 @@ const validMeterDetail = Joi.when('meterDetailsProvided', { is: true, then: Joi.
  * Schema for return
  * @type {Object}
  */
-const returnSchema = {
+const returnSchema = Joi.object({
   returnId: Joi.string().regex(returnIDRegex).required(),
   licenceNumber: Joi.string().required(),
   receivedDate: Joi.string().regex(isoDateRegex).allow(null).required(),
@@ -98,7 +98,7 @@ const returnSchema = {
   metadata: Joi.object(),
   user: userSchema,
   isUnderQuery: Joi.boolean()
-};
+});
 
 /**
  * Schema for updating under query / received date only

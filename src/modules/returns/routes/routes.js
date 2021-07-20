@@ -30,7 +30,7 @@ module.exports = {
       description: 'Accepts posted return data from UI layer',
       validate: {
         failAction,
-        payload: Joi.object().keys(returnSchema)
+        payload: returnSchema
       }
     }
   },

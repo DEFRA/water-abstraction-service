@@ -4,8 +4,6 @@ const {
   test
 } = exports.lab = require('@hapi/lab').script();
 
-const Joi = require('joi');
-
 const [invitationConfig, reminderConfig] =
   require('../../../../../src/modules/batch-notifications/config/returns/index');
 const { getRecipients } =
@@ -32,14 +30,14 @@ experiment('returns notifications config', () => {
     experiment('schema', () => {
       test('can be an empty object', async () => {
         const { error } = invitationConfig.schema.validate({});
-        expect(error).to.equal(null);
+        expect(error).to.equal(undefined);
       });
 
       test('can contain an array of licence numbers to exclude from the notification', async () => {
         const { error } = invitationConfig.schema.validate({
           excludeLicences: ['01/123', '04/567']
         });
-        expect(error).to.equal(null);
+        expect(error).to.equal(undefined);
       });
     });
   });
@@ -64,14 +62,14 @@ experiment('returns notifications config', () => {
     experiment('schema', () => {
       test('can be an empty object', async () => {
         const { error } = reminderConfig.schema.validate({});
-        expect(error).to.equal(null);
+        expect(error).to.equal(undefined);
       });
 
       test('can contain an array of licence numbers to exclude from the notification', async () => {
         const { error } = reminderConfig.schema.validate({
           excludeLicences: ['01/123', '04/567']
         });
-        expect(error).to.equal(null);
+        expect(error).to.equal(undefined);
       });
     });
   });
