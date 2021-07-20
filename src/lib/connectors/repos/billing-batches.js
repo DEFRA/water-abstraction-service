@@ -1,7 +1,7 @@
 'use strict';
 
 const { BillingBatch } = require('../bookshelf');
-const { BATCH_STATUS, BATCH_TYPE } = require('../../models/batch');
+const { BATCH_STATUS } = require('../../models/batch');
 const { paginatedEnvelope } = require('./lib/envelope');
 const helpers = require('./lib/helpers');
 const queries = require('./queries/billing-batches');
