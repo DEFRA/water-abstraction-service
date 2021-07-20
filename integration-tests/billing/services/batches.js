@@ -34,6 +34,7 @@ const tearDown = async () => {
   await bookshelf.knex.raw(queries.deleteBillingInvoices);
   await bookshelf.knex.raw(queries.deleteBillingBatchChargeVersionYears);
   await bookshelf.knex.raw(queries.deleteBillingBatches);
+  await bookshelf.knex.raw(queries.deletelicenceagreements);
 };
 
 exports.getBatchById = getBatchById;
