@@ -119,9 +119,9 @@ const create = async data => {
 const findByRegionId = async regionId =>
   helpers.findMany(BillingBatch, { region_id: regionId }, ['region']);
 
-const findSentTptBatchesForFinancialYearAndRegion = async (financialYear, regionId) => {
+const findSentTptBatchesForFinancialYearAndRegion = async (financialYear, regionId, batchType) => {
   const conditions = {
-    batch_type: BATCH_TYPE.twoPartTariff,
+    batch_type: batchType,
     to_financial_year_ending: financialYear,
     status: BATCH_STATUS.sent,
     region_id: regionId
