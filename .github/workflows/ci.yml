@@ -61,7 +61,9 @@ jobs:
       redis:
         # Docker Hub image
         image: redis
-
+      ports:
+        # Maps port 6379 on service container to the host
+        - 6379:6379
     steps:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Checkout repository
@@ -116,7 +118,7 @@ jobs:
         uses: paambaati/codeclimate-action@v2.7.4
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-          REDIS_HOST: redis
+          REDIS_HOST: localhost
           REDIS_PORT: 6379
         with:
           coverageCommand: npm run test:ci
