@@ -10,7 +10,7 @@
   "scripts": {
     "test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test LAZY_REDIS=1 lab",
     "test:bail": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test LAZY_REDIS=1 lab --bail",
-    "test:ci": "CHARGE_MODULE_ORIGIN=https://charging.defra.net LAZY_REDIS=1 lab -t 55 -m 0 --coverage-path ./src/ -r lcov -o coverage/lcov.info -r console -o stdout",
+    "test:ci": "CHARGE_MODULE_ORIGIN=https://charging.defra.net LAZY_REDIS=1 lab --bail  -t 55 -m 0 --coverage-path ./src/ -r lcov -o coverage/lcov.info -r console -o stdout",
     "test:integration": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test lab integration-tests/ --silence --bail",
     "codecov": "codecov",
     "migrate": "node scripts/create-schema && db-migrate up --verbose && node scripts/migrate-task-config",
