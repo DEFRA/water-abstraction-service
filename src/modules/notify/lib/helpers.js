@@ -21,7 +21,7 @@ const isPdf = (messageRef) => {
 function validateEnqueueOptions (options, now = new Date()) {
   // Validate input options
 
-  const JoiCustomisedToAcceptStringAsObject = Joi.extend((joi) => {
+  const JoiCustomisedToAcceptStringAsObject = Joi.extend(joi => {
     return {
       type: 'objectOrStringifiedObject',
       base: joi.any(),

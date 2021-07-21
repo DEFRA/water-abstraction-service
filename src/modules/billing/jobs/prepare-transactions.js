@@ -69,7 +69,7 @@ const onComplete = async (job, queueManager) => {
 
       if (numberOfTransactionsInBatch.length === 0) {
         logger.info(`Batch ${batchId} is empty - WRLS will mark is as Empty, and will not ask the Charging module to generate it.`);
-        return billingBatchesRepo.update(batchId, { status: BATCH_STATUS.empty });
+        await billingBatchesRepo.update(batchId, { status: BATCH_STATUS.empty });
       } else {
         await batchService.requestCMBatchGeneration(batchId);
         await queueManager.add(refreshTotalsJobName, batchId);
