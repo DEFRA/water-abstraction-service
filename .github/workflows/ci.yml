@@ -36,7 +36,7 @@ jobs:
       CRM_URI: http://127.0.0.1:8002/crm/1.0
       RETURNS_URI: http://127.0.0.1:8006/returns/1.0
       NALD_SERVICE_MAILBOX: some@mailbox.com
-      REDIS_HOST: localhost
+      REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD:
     # Service containers to run with `runner-job`
@@ -116,6 +116,8 @@ jobs:
         uses: paambaati/codeclimate-action@v2.7.4
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+          REDIS_HOST: redis
+          REDIS_PORT: 6379
         with:
           coverageCommand: npm run test:ci
           debug: true
