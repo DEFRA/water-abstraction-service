@@ -56,8 +56,6 @@ exports.deleteBillingVolumes = `delete from water.billing_volumes v
     and b.region_id=r.region_id 
     and r.is_test=true`;
 
-exports.deletelicenceagreements = `delete  FROM water.licence_agreements a
-using 
-water.licences c
-WHERE 
-l.licence_ref =  c.licence_ref`;
+exports.deleteLicenceAgreements = `delete FROM water.licence_agreements a
+join water.licences l on a.licence_ref =l.licence_ref 
+where l.is_test is true;`;
