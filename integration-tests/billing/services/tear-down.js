@@ -32,7 +32,7 @@ const tearDown = async (...batchesToDelete) => {
   await returnRequirements.tearDown();
 
   await tearDownTable('water.licence_agreements');
-  await licenceAgreements.tearDownTestLicenceAgreements();
+  await licenceAgreements.tearDownCypressCreatedLicenceAgreements();
   await tearDownTable('water.financial_agreement_types');
   await tearDownTable('water.licence_versions');
   await tearDownTable('water.licences');
