@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const isoDateRegex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 const allowedPeriods = ['year', 'month', 'week', 'day'];
 const methods = ['abstractionVolumes', 'oneMeter'];
@@ -14,7 +14,7 @@ const { returnIDRegex } = waterHelpers.returns;
 
 const userSchema = Joi.object().required().keys({
   email: Joi.string().required(),
-  type: Joi.string().valid(userTypes).required(),
+  type: Joi.string().valid(...userTypes).required(),
   entityId: Joi.string().guid().required()
 });
 
@@ -26,13 +26,13 @@ const lines = Joi.when('isNil', {
   is: false,
   then:
       Joi.array().required().items({
-        unit: Joi.string().valid(units).optional(),
-        userUnit: Joi.string().valid(units).optional(),
+        unit: Joi.string().valid(...units).optional(),
+        userUnit: Joi.string().valid(...units).optional(),
         startDate: Joi.string().regex(isoDateRegex).required(),
         endDate: Joi.string().regex(isoDateRegex).required(),
-        timePeriod: Joi.string().valid(allowedPeriods).required(),
+        timePeriod: Joi.string().valid(...allowedPeriods).required(),
         quantity: Joi.number().allow(null, 0).positive().required(),
-        readingType: Joi.string().valid(readingTypes)
+        readingType: Joi.string().valid(...readingTypes)
       })
 });
 
@@ -43,7 +43,7 @@ const validMeterDetail = Joi.when('meterDetailsProvided', { is: true, then: Joi.
  * Schema for return
  * @type {Object}
  */
-const returnSchema = {
+const returnSchema = Joi.object({
   returnId: Joi.string().regex(returnIDRegex).required(),
   licenceNumber: Joi.string().required(),
   receivedDate: Joi.string().regex(isoDateRegex).allow(null).required(),
@@ -52,19 +52,19 @@ const returnSchema = {
   dueDate: Joi.string().regex(isoDateRegex),
   frequency: Joi.when('isNil', {
     is: false,
-    then: Joi.string().valid(allowedPeriods).required()
+    then: Joi.string().valid(...allowedPeriods).required()
   }),
   isNil: Joi.boolean().required(),
-  status: Joi.string().valid(statuses).required(),
+  status: Joi.string().valid(...statuses).required(),
   versionNumber: Joi.number().required().min(1),
   isCurrent: Joi.boolean().required().allow(null),
   reading: Joi.when('isNil', {
     is: false,
     then:
     {
-      type: Joi.string().valid(readingTypes).required(),
-      method: Joi.string().valid(methods).required(),
-      units: Joi.string().valid(units),
+      type: Joi.string().valid(...readingTypes).required(),
+      method: Joi.string().valid(...methods).required(),
+      units: Joi.string().valid(...units),
       totalFlag: Joi.boolean().required(),
       total: Joi.when('totalFlag', { is: true, then: Joi.number().required() }),
       totalCustomDates: Joi.when('totalFlag', { is: true, then: Joi.boolean().required() }),
@@ -82,7 +82,7 @@ const returnSchema = {
         serialNumber: validMeterDetail,
         multiplier: Joi.number().valid(1, 10).required()
       }),
-      else: Joi.array().items({
+      otherwise: Joi.array().items({
         meterDetailsProvided: Joi.boolean().required(),
         manufacturer: validMeterDetail,
         serialNumber: validMeterDetail,
@@ -98,7 +98,7 @@ const returnSchema = {
   metadata: Joi.object(),
   user: userSchema,
   isUnderQuery: Joi.boolean()
-};
+});
 
 /**
  * Schema for updating under query / received date only
@@ -106,7 +106,7 @@ const returnSchema = {
  */
 const headerSchema = {
   returnId: Joi.string().required(),
-  status: Joi.string().valid(statuses).required(),
+  status: Joi.string().valid(...statuses).required(),
   receivedDate: Joi.string().regex(isoDateRegex).allow(null).required(),
   user: userSchema,
   isUnderQuery: Joi.boolean().required()

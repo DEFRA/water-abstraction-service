@@ -9,7 +9,6 @@ const Hapi = require('@hapi/hapi');
 const HapiAuthJwt2 = require('hapi-auth-jwt2');
 const Vision = require('@hapi/vision');
 const Nunjucks = require('nunjucks');
-
 const moment = require('moment');
 moment.locale('en-gb');
 

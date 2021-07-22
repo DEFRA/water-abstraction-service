@@ -3,7 +3,7 @@
  * Scheduler defines and reports on tasks
  */
 const HAPIRestAPI = require('@envage/hapi-pg-rest-api');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { pool } = require('../lib/connectors/db.js');
 const uuidv4 = require('uuid/v4');
 
@@ -19,7 +19,7 @@ const NotificationsApi = new HAPIRestAPI({
     set: ['id']
   },
   validation: {
-    id: Joi.string().guid().default(() => uuidv4(), 'GUID'),
+    id: Joi.string().guid().default(() => uuidv4()),
     recipient: Joi.string(),
     message_ref: Joi.string(),
     personalisation: Joi.object(),
