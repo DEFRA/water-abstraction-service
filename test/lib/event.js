@@ -1,5 +1,5 @@
 const sinon = require('sinon');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const sandbox = sinon.createSandbox();
 const { expect } = require('@hapi/code');
 const eventsService = require('../../src/lib/services/events');
@@ -14,10 +14,7 @@ const {
 const Event = require('../../src/lib/models/event');
 const moment = require('moment');
 
-const isDateString = str => {
-  const { error } = Joi.validate(str, Joi.date().iso());
-  return error === null;
-};
+const isDateString = str => Joi.date().iso().validate(str).error === undefined;
 
 const event = require('../../src/lib/event');
 const arr = ['foo', 'bar'];

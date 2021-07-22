@@ -14,8 +14,12 @@ const { jobName: refreshTotalsJobName } = require('./refresh-totals');
 
 const { logger } = require('../../../logger');
 const supplementaryBillingService = require('../services/supplementary-billing-service');
+
+const billingBatchesRepo = require('../../../lib/connectors/repos/billing-batches');
 const billingTransactionsRepo = require('../../../lib/connectors/repos/billing-transactions');
+
 const Transaction = require('../../../lib/models/transaction');
+const { BATCH_STATUS } = require('../../../lib/models/batch');
 
 const createMessage = partial(helpers.createMessage, JOB_NAME);
 
@@ -59,9 +63,17 @@ const onComplete = async (job, queueManager) => {
 
     // If there's nothing to process, skip to cm refresh
     if (billingTransactionIds.length === 0) {
-      logger.info(`0 transactions for batch ${batchId}, requesting CM batch generation`);
-      await batchService.requestCMBatchGeneration(batchId);
-      await queueManager.add(refreshTotalsJobName, batchId);
+      logger.info(`No transactions left to process for batch ${batchId}. Requesting CM batch generation...`);
+
+      const numberOfTransactionsInBatch = await billingTransactionsRepo.findByBatchId(batchId);
+
+      if (numberOfTransactionsInBatch.length === 0) {
+        logger.info(`Batch ${batchId} is empty - WRLS will mark is as Empty, and will not ask the Charging module to generate it.`);
+        await billingBatchesRepo.update(batchId, { status: BATCH_STATUS.empty });
+      } else {
+        await batchService.requestCMBatchGeneration(batchId);
+        await queueManager.add(refreshTotalsJobName, batchId);
+      }
     } else {
       logger.info(`${billingTransactionIds.length} transactions produced for batch ${batchId} - creating charges`);
       await bluebird.mapSeries(
