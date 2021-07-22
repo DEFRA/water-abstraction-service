@@ -1,6 +1,6 @@
 
 const { bookshelf } = require('../../../src/lib/connectors/bookshelf');
-const queries = require('./queries/licence-agreements');
+const queries = require('./queries/licence-agremeents');
 
 const tearDownTestLicenceAgreements = () =>
   bookshelf.knex('water.licence_agreements')
@@ -10,4 +10,4 @@ const tearDownTestLicenceAgreements = () =>
 const tearDownCypressCreatedLicenceAgreements = () => bookshelf.knex.raw(queries.deleteLicenceAgreements);
 
 exports.tearDownTestLicenceAgreements = tearDownTestLicenceAgreements;
-exports.tearDownCypressCreatedLicenceAgreements = tearDownCypressCreatedLicenceAgreements
+exports.tearDownCypressCreatedLicenceAgreements = tearDownCypressCreatedLicenceAgreements;
