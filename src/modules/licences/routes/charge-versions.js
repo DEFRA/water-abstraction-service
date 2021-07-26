@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const controller = require('../controllers/charge-versions');
 
@@ -11,9 +11,9 @@ module.exports = {
     handler: controller.getLicenceChargeVersions,
     config: {
       validate: {
-        params: {
+        params: Joi.object().keys({
           licenceId: Joi.string().uuid().required()
-        }
+        })
       }
     }
   }

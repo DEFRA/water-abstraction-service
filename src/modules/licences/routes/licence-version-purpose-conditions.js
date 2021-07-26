@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const { version } = require('../../../../config');
 
@@ -12,7 +12,7 @@ module.exports = {
     handler: controller.getLicenceVersionPurposeConditionById,
     config: {
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           licenceVersionPurposeConditionId: Joi.string().uuid().required()
         })
       }

@@ -4,7 +4,7 @@ const CompanyAddress = require('./company-address');
 const CompanyContact = require('./company-contact');
 
 const validators = require('./validators');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const COMPANY_TYPES = {
   person: 'person',
@@ -18,9 +18,9 @@ const ORGANISATION_TYPES = {
   publicLimitedCompany: 'publicLimitedCompany'
 };
 
-const newCompanySchema = Joi.object({
-  type: Joi.string().valid(Object.values(COMPANY_TYPES)).required(),
-  organisationType: Joi.string().valid(Object.values(ORGANISATION_TYPES)).required(),
+const newCompanySchema = Joi.object().keys({
+  type: Joi.string().valid(...Object.values(COMPANY_TYPES)).required(),
+  organisationType: Joi.string().valid(...Object.values(ORGANISATION_TYPES)).required(),
   name: Joi.string().required(),
   companyNumber: Joi.string().length(8).optional(),
   companyAddresses: Joi.array().optional(),
@@ -109,7 +109,7 @@ class Company extends Model {
   }
 
   isValid () {
-    return Joi.validate(this.toJSON(), newCompanySchema, { abortEarly: false });
+    return newCompanySchema.validate(this.toJSON(), { abortEarly: false });
   }
 }
 
