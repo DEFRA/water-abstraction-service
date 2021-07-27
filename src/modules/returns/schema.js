@@ -86,7 +86,7 @@ const returnSchema = Joi.object({
         meterDetailsProvided: Joi.boolean().required(),
         manufacturer: validMeterDetail,
         serialNumber: validMeterDetail,
-        startReading: Joi.number().positive().required(),
+        startReading: Joi.number().positive().allow(0).required(),
         multiplier: Joi.number().valid(1, 10).required(),
         units: Joi.string().required(),
         readings: Joi.object()
