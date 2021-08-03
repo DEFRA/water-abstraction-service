@@ -315,8 +315,9 @@ const approveTptBatchReview = async batch => {
 };
 
 const getSentTptBatchesForFinancialYearAndRegion = async (financialYear, region) => {
-  const result = await newRepos.billingBatches.findSentTptBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id);
-  return result.map(mappers.batch.dbToModel);
+  const tptBatches = await newRepos.billingBatches.findSentTptBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id, BATCH_TYPE.twoPartTariff);
+  const suppBatches = await newRepos.billingBatches.findSentTptBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id, BATCH_TYPE.supplementary);
+  return [...tptBatches, ...suppBatches].map(mappers.batch.dbToModel);
 };
 
 /**

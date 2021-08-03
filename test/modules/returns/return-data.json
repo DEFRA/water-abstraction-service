@@ -211,6 +211,7 @@
           "2018-09-01_2018-09-30": null,
           "2018-10-01_2018-10-31": 619
         },
+        "meterDetailsProvided": true,
         "multiplier": 10,
         "manufacturer": "AccuratePro",
         "serialNumber": "123456",

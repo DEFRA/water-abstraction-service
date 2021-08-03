@@ -1,10 +1,10 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { getRecipients } = require('./lib/get-recipients');
 const { createEvent } = require('./lib/create-event');
 
-const schema = {
+const schema = Joi.object().keys({
   excludeLicences: Joi.array().items(Joi.string().trim())
-};
+});
 
 module.exports = [{
   prefix: 'RINV-',

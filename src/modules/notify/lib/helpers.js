@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { get } = require('lodash');
 const uuidv4 = require('uuid/v4');
 
@@ -18,23 +18,40 @@ const isPdf = (messageRef) => {
  * @param {String} now - ISO 8601 current timestamp
  * @return {Object} - with {error, value }
  */
-function validateEnqueueOptions (options, now) {
+function validateEnqueueOptions (options, now = new Date()) {
   // Validate input options
-  const schema = {
+
+  const JoiCustomisedToAcceptStringAsObject = Joi.extend(joi => {
+    return {
+      type: 'objectOrStringifiedObject',
+      base: joi.any(),
+      coerce (value, helpers) {
+        if (['undefined', 'object'].includes(typeof value)) {
+          return { value };
+        } else if (value[0] === '{') {
+          return { value: JSON.parse(value) };
+        } else {
+          return { value, errors: helpers.error('object.invalid') };
+        }
+      }
+    };
+  });
+
+  const schema = Joi.object({
     id: Joi.string().default(uuidv4()),
     messageRef: Joi.string().required(),
     recipient: Joi.string().default('n/a'),
-    personalisation: Joi.object(),
+    personalisation: JoiCustomisedToAcceptStringAsObject.objectOrStringifiedObject(),
     sendAfter: Joi.string().default(now),
     licences: Joi.array().items(Joi.string()).default([]),
     individualEntityId: Joi.string().guid().allow(null),
     companyEntityId: Joi.string().guid().allow(null),
     eventId: Joi.string().guid(),
-    metadata: Joi.object().default({}),
-    messageType: Joi.string().valid(['letter', 'email', 'sms'])
-  };
+    metadata: JoiCustomisedToAcceptStringAsObject.objectOrStringifiedObject(),
+    messageType: Joi.string().valid('letter', 'email', 'sms')
+  });
 
-  return Joi.validate(options, schema);
+  return schema.validate(options);
 }
 
 /**

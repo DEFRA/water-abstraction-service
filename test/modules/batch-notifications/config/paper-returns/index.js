@@ -1,6 +1,5 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
 const {
   experiment,
   test,
@@ -52,8 +51,8 @@ experiment('modules/batch-notifications/config/paper-returns', () => {
     });
 
     test('validates for valid data', async () => {
-      const { error } = Joi.validate(fullData, config.schema);
-      expect(error).to.equal(null);
+      const { error } = config.schema.validate(fullData);
+      expect(error).to.equal(undefined);
     });
 
     test('does not validate if the return id is not valid', async () => {
@@ -61,44 +60,44 @@ experiment('modules/batch-notifications/config/paper-returns', () => {
         { returnId: 'one' }
       ];
 
-      const { error } = Joi.validate(fullData, config.schema);
+      const { error } = config.schema.validate(fullData);
       expect(error).to.not.equal(null);
     });
 
     test('the company name must be present', async () => {
       delete fullData.forms[0].company.name;
-      const { error } = Joi.validate(fullData, config.schema);
+      const { error } = config.schema.validate(fullData);
       expect(error).to.not.equal(null);
     });
 
     test('the company type must be present', async () => {
       delete fullData.forms[0].company.type;
-      const { error } = Joi.validate(fullData, config.schema);
+      const { error } = config.schema.validate(fullData);
       expect(error).to.not.equal(null);
     });
 
     test('tolerates extra address data', async () => {
       fullData.forms[0].address.potatoes = 'mashed';
-      const { error } = Joi.validate(fullData, config.schema);
-      expect(error).to.equal(null);
+      const { error } = config.schema.validate(fullData);
+      expect(error).to.equal(undefined);
     });
 
     test('tolerates extra company data', async () => {
       fullData.forms[0].company.potatoes = 'mashed';
-      const { error } = Joi.validate(fullData, config.schema);
-      expect(error).to.equal(null);
+      const { error } = config.schema.validate(fullData);
+      expect(error).to.equal(undefined);
     });
 
     test('tolerates extra contact data', async () => {
       fullData.forms[0].contact.potatoes = 'mashed';
-      const { error } = Joi.validate(fullData, config.schema);
-      expect(error).to.equal(null);
+      const { error } = config.schema.validate(fullData);
+      expect(error).to.equal(undefined);
     });
 
     test('tolerates extra return data', async () => {
       fullData.forms[0].returns[0].potatoes = 'mashed';
-      const { error } = Joi.validate(fullData, config.schema);
-      expect(error).to.equal(null);
+      const { error } = config.schema.validate(fullData);
+      expect(error).to.equal(undefined);
     });
   });
 

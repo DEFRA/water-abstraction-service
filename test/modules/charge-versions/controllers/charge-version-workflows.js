@@ -181,8 +181,8 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
     experiment('when there are no errors and createdBy is included in the payload', () => {
       test('the service update() method is called with the correct ID and params', async () => {
         delete request.payload.approverComments;
-        request.payload.createdBy = { id: 19, email: 'test@email.test' };
-        const user = new User(19, 'test@email.test');
+        request.payload.createdBy = { id: 19, email: 'test@example.com' };
+        const user = new User(19, 'test@example.com');
         const args = [
           request.params.chargeVersionWorkflowId,
           {

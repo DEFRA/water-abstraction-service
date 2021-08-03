@@ -318,7 +318,7 @@ experiment('lib/models/contact-v2 model', () => {
       experiment('type', () => {
         test('is required', async () => {
           const { error } = contact.isValid();
-          expect(error).to.not.be.null();
+          expect(error).to.not.be.undefined();
         });
       });
 
@@ -334,12 +334,12 @@ experiment('lib/models/contact-v2 model', () => {
               contact[key] = null;
 
               const { error } = contact.isValid();
-              expect(error).to.equal(null);
+              expect(error).to.equal(undefined);
             });
 
             test(`${key}: is valid when present`, async () => {
               const { error, value } = contact.isValid();
-              expect(error).to.equal(null);
+              expect(error).to.equal(undefined);
               expect(value[key]).to.equal(contact[key]);
             });
           });
@@ -350,12 +350,12 @@ experiment('lib/models/contact-v2 model', () => {
             contact.firstName = null;
 
             const { error } = contact.isValid();
-            expect(error).to.not.be.null();
+            expect(error).to.not.be.undefined();
           });
 
           test('is valid when present', async () => {
             const { error, value } = contact.isValid();
-            expect(error).to.be.null();
+            expect(error).to.be.undefined();
             expect(value.firstName).to.equal(contact.firstName);
           });
         });
@@ -365,12 +365,12 @@ experiment('lib/models/contact-v2 model', () => {
             contact.lastName = null;
 
             const { error } = contact.isValid();
-            expect(error).to.not.be.null();
+            expect(error).to.not.be.undefined();
           });
 
           test('is valid when present', async () => {
             const { error, value } = contact.isValid();
-            expect(error).to.be.null();
+            expect(error).to.be.undefined();
             expect(value.lastName).to.equal(contact.lastName);
           });
         });
@@ -389,12 +389,12 @@ experiment('lib/models/contact-v2 model', () => {
             contact.department = null;
 
             const { error } = contact.isValid();
-            expect(error).to.not.be.null();
+            expect(error).to.not.be.undefined();
           });
 
           test('is valid when present', async () => {
             const { error, value } = contact.isValid();
-            expect(error).to.be.null();
+            expect(error).to.be.undefined();
             expect(value.department).to.equal(contact.department);
           });
         });
@@ -404,19 +404,19 @@ experiment('lib/models/contact-v2 model', () => {
             delete contact._dataSource;
 
             const { error } = contact.isValid();
-            expect(error).to.not.be.null();
+            expect(error).to.not.be.undefined();
           });
 
           test('is valid when set to nald', async () => {
             contact.dataSource = Contact.DATA_SOURCE_TYPES.nald;
             const { error } = contact.isValid();
-            expect(error).to.be.null();
+            expect(error).to.be.undefined();
           });
 
           test('is valid when set to wrls', async () => {
             contact.dataSource = Contact.DATA_SOURCE_TYPES.wrls;
             const { error } = contact.isValid();
-            expect(error).to.be.null();
+            expect(error).to.be.undefined();
           });
         });
       });
