@@ -310,9 +310,17 @@ const cmToDb = cmTransaction => modelToDbMapper.execute(
   cmToPojo(cmTransaction)
 );
 
+const inverseCreditNoteSign = transaction => {
+  if (transaction.credit === true) {
+    transaction.chargeValue = -transaction.chargeValue;
+  }
+  return transaction;
+};
+
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
 exports.modelToChargeModule = modelToChargeModule;
 exports.cmToModel = cmToModel;
 exports.cmToPojo = cmToPojo;
 exports.cmToDb = cmToDb;
+exports.inverseCreditNoteSign = inverseCreditNoteSign;
