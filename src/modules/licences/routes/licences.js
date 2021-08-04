@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const { version } = require('../../../../config');
 
@@ -15,9 +15,9 @@ module.exports = {
     config: {
       description: 'Gets licence by ID',
       validate: {
-        params: {
+        params: Joi.object().keys({
           licenceId: Joi.string().guid().required()
-        }
+        })
       }
     }
   },
@@ -29,7 +29,7 @@ module.exports = {
     config: {
       description: 'Gets licence by licence number',
       validate: {
-        query: Joi.object({
+        query: Joi.object().keys({
           licenceNumber: Joi.string().required()
         })
       }
@@ -43,9 +43,9 @@ module.exports = {
     config: {
       description: 'Gets the licence versions by licence ID',
       validate: {
-        params: {
+        params: Joi.object().keys({
           licenceId: Joi.string().uuid().required()
-        }
+        })
       }
     }
   },
@@ -57,10 +57,10 @@ module.exports = {
     config: {
       description: 'Gets the licence accounts by licence ref and a date',
       validate: {
-        query: {
+        query: Joi.object().keys({
           documentRef: Joi.string().required(),
           date: Joi.string().required()
-        }
+        })
       }
     }
   },
@@ -72,10 +72,10 @@ module.exports = {
     config: {
       description: 'Gets the CRM v1 document for the licence with the given ID',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           licenceId: Joi.string().guid().required()
         }),
-        query: Joi.object({
+        query: Joi.object().keys({
           includeExpired: Joi.boolean().optional().default(true)
         })
       }
@@ -89,10 +89,10 @@ module.exports = {
     config: {
       description: 'Gets the CRM document for the given licence ID and start date',
       validate: {
-        params: {
+        params: Joi.object().keys({
           licenceId: Joi.string().guid().required(),
           date: Joi.date().iso().required()
-        }
+        })
       }
     }
   },
@@ -104,10 +104,10 @@ module.exports = {
     config: {
       description: 'Gets paginated returns for the given licence ID',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           licenceId: Joi.string().guid().required()
         }),
-        query: Joi.object({
+        query: Joi.object().keys({
           page: Joi.number().integer().min(1).default(1),
           perPage: Joi.number().integer().min(1).default(10)
         })
@@ -122,12 +122,29 @@ module.exports = {
     config: {
       description: 'Gets paginated sent notifications for the licence',
       validate: {
-        params: Joi.object({
+        params: Joi.object().keys({
           licenceId: Joi.string().guid().required()
         }),
-        query: Joi.object({
+        query: Joi.object().keys({
           page: Joi.number().integer().min(1).default(1),
           perPage: Joi.number().integer().min(1).default(10)
+        })
+      }
+    }
+  },
+
+  getLicenceConditions: {
+    method: 'GET',
+    path: `${pathPrefix}{licenceId}/licence-version-purpose-conditions`,
+    handler: controller.getLicenceVersionPurposeConditionsByLicenceId,
+    config: {
+      description: 'Gets conditions associated with the licence through its licence versions',
+      validate: {
+        params: Joi.object().keys({
+          licenceId: Joi.string().guid().required()
+        }),
+        query: Joi.object().keys({
+          code: Joi.string()
         })
       }
     }

@@ -12,11 +12,25 @@ const sandbox = sinon.createSandbox();
 const { v4: uuid } = require('uuid');
 
 const gaugingStationsRepo = require('../../../src/lib/connectors/repos/gauging-stations');
-const gaugingStationService = require('../../../src/lib/services/gauging-station-service');
 const licenceGaugingStationsService = require('../../../src/lib/services/licence-gauging-stations-service');
 const licencesService = require('../../../src/lib/services/licences');
 const controller = require('../../../src/modules/gauging-stations/controller');
+const gaugingStationService = require('../../../src/lib/services/gauging-station-service');
+const entitiesController = require('../../../src/lib/controller');
 const controllerHelper = require('../../../src/lib/controller');
+
+experiment('.getGaugingStations', () => {
+  beforeEach(async () => {
+    sandbox.stub(gaugingStationsRepo, 'findAll').resolves([]);
+    await controller.getGaugingStations();
+  });
+
+  afterEach(() => sandbox.restore());
+
+  test('it calls the gauging stations repo findAll method', () => {
+    expect(gaugingStationsRepo.findAll.called).to.be.true();
+  });
+});
 
 experiment('.getGaugingStation', () => {
   const tempGuid = uuid();
@@ -63,12 +77,10 @@ experiment('.getGaugingStation', () => {
 });
 
 experiment('getGaugingStationByRef', () => {
-  let result;
-
   beforeEach(async () => {
     sandbox.stub(controllerHelper, 'getEntities').resolves();
     sandbox.stub(gaugingStationsRepo, 'findOneByStationRef').resolves('some station');
-    result = controller.getGaugingStationByRef({
+    controller.getGaugingStationByRef({
       params: {
         stationRef: 'someRef'
       }
@@ -77,9 +89,15 @@ experiment('getGaugingStationByRef', () => {
 
   afterEach(() => sandbox.restore());
 
-  test('it calls the getEntities helper', () => {
-    expect(controllerHelper.getEntities.called).to.be.true();
-    expect(result);
+  const request = {
+    params: {
+      stationRef: 'some-ref'
+    }
+  };
+
+  test('calls getEntities', async () => {
+    await controller.getGaugingStationByRef(request);
+    expect(entitiesController.getEntities.calledWith(request.params.stationRef, gaugingStationService.getGaugingStationByRef));
   });
 });
 
@@ -98,6 +116,16 @@ experiment('getGaugingStationLicencesById', () => {
 
   afterEach(() => sandbox.restore());
 
+  const request = {
+    params: {
+      gaugingStationId: 'some-guid'
+    }
+  };
+
+  test('calls getEntities', async () => {
+    await controller.getGaugingStationLicencesById(request);
+    expect(entitiesController.getEntities.calledWith(request.params.gaugingStationId, gaugingStationService.getGaugingStationLicencesById));
+  });
   test('it calls the getEntities helper', () => {
     expect(controllerHelper.getEntities.called).to.be.true();
     expect(result);
@@ -138,5 +166,52 @@ experiment('createLicenceGaugingStationLink', () => {
   });
   test('calls gaugingStationService.getGaugingStation to ascertain if the station exists', () => {
     expect(gaugingStationService.getGaugingStation.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+  });
+});
+
+experiment('deleteLicenceGaugingStationLink', () => {
+  const request = {
+    params: {
+      licenceGaugingStationId: '00000000-0000-0000-0000-000000000000'
+    }
+  };
+  experiment('when given a valid GUID', () => {
+    beforeEach(async () => {
+      await sandbox.stub(licenceGaugingStationsService, 'getLicenceGaugingStationById').resolves({ id: '00000000-0000-0000-0000-000000000000' });
+      await sandbox.stub(licenceGaugingStationsService, 'deleteLicenceLink').resolves();
+      await controller.deleteLicenceGaugingStationLink(request);
+    });
+
+    afterEach(async () => {
+      await sandbox.restore();
+    });
+
+    test('calls licenceGaugingStationsService.getLicenceGaugingStationById to ascertain if the linkage exists', () => {
+      expect(licenceGaugingStationsService.getLicenceGaugingStationById.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+    });
+    test('calls licenceGaugingStationsService.deleteLicenceLink to delete the linkage', () => {
+      expect(licenceGaugingStationsService.deleteLicenceLink.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+    });
+  });
+
+  experiment('when given an invalid GUID', () => {
+    let result;
+    beforeEach(async () => {
+      await sandbox.stub(licenceGaugingStationsService, 'getLicenceGaugingStationById').returns(null);
+      await sandbox.stub(licenceGaugingStationsService, 'deleteLicenceLink').resolves();
+      result = await controller.deleteLicenceGaugingStationLink(request);
+    });
+    afterEach(async () => {
+      await sandbox.restore();
+    });
+
+    test('calls licenceGaugingStationsService.getLicenceGaugingStationById to ascertain if the linkage exists', () => {
+      expect(licenceGaugingStationsService.getLicenceGaugingStationById.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+    });
+    test('does not call licenceGaugingStationsService.deleteLicenceLink to delete the linkage', () => {
+      expect(licenceGaugingStationsService.deleteLicenceLink.called).to.be.false();
+      expect(result.isBoom).to.be.true();
+      expect(result.output.payload.statusCode).to.equal(404);
+    });
   });
 });

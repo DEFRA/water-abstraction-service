@@ -559,4 +559,28 @@ experiment('modules/billing/mappers/transaction', () => {
       expect(result.isNewLicence).to.equal(cmData.subjectToMinimumCharge);
     });
   });
+
+  experiment('.inverseCreditNoteSign', () => {
+    experiment('when the transaction is a credit note', () => {
+      test('it returns a negative figure', () => {
+        expect(
+          transactionMapper.inverseCreditNoteSign({
+            credit: true,
+            chargeValue: 500
+          }).chargeValue
+        ).to.equal(-500);
+      });
+    });
+
+    experiment('when the transaction is not a credit note', () => {
+      test('it returns the original figure', () => {
+        expect(
+          transactionMapper.inverseCreditNoteSign({
+            credit: false,
+            chargeValue: 877
+          }).chargeValue
+        ).to.equal(877);
+      });
+    });
+  });
 });

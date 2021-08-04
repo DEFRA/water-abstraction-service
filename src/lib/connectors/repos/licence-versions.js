@@ -4,6 +4,8 @@ const LicenceVersion = require('../bookshelf/LicenceVersion');
 const queries = require('./queries/licence-versions');
 const raw = require('./lib/raw');
 const helpers = require('./lib/helpers');
+const moment = require('moment');
+const { naldSwitchOverDate } = require('../../../../config').billing;
 
 /**
  * Gets a licence version including any licenceVersionPurposes,
@@ -44,7 +46,7 @@ const findByLicenceId = async licenceId => {
  * Finds licence version id created on or after a timestamp
  * @param {String} dateAndTime timestamp
  */
-const findIdsByDateNotInChargeVersionWorkflows = dateAndTime => raw.multiRow(queries.findIdsCreatedAfterDate, { dateAndTime });
+const findIdsByDateNotInChargeVersionWorkflows = dateAndTime => raw.multiRow(queries.findIdsCreatedAfterDate, { dateAndTime: dateAndTime || moment(naldSwitchOverDate).toISOString() });
 
 exports.create = data => helpers.create(LicenceVersion, data);
 

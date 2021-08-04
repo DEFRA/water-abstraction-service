@@ -88,6 +88,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingBatches, 'findByRegionId').resolves([]);
     sandbox.stub(newRepos.billingBatches, 'find').resolves();
     sandbox.stub(newRepos.billingBatches, 'deleteAllBillingData').resolves();
+    sandbox.stub(newRepos.billingBatches, 'findSentTptBatchesForFinancialYearAndRegion').resolves([batch]);
 
     sandbox.stub(newRepos.billingInvoices, 'deleteEmptyByBatchId').resolves();
     sandbox.stub(newRepos.billingInvoices, 'deleteByBatchId').resolves();
@@ -128,6 +129,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(chargeModuleBillRunConnector, 'approve').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'send').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'deleteInvoiceFromBillRun').resolves();
+    sandbox.stub(chargeModuleBillRunConnector, 'generate').resolves();
 
     sandbox.stub(eventService, 'create').resolves();
 
@@ -619,7 +621,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     beforeEach(async () => {
       transactionsService.saveTransactionToDB.resolves({ billingTransactionId });
-      invoiceLicencesService.saveInvoiceLicenceToDB.resolves({ billingInvoiceLicenceId });
+      invoiceLicencesService.saveInvoiceLicenceToDB.resolves({ id: billingInvoiceLicenceId });
       invoiceService.saveInvoiceToDB.resolves({ billingInvoiceId });
 
       models = createModels();
@@ -963,7 +965,7 @@ experiment('modules/billing/services/batch-service', () => {
         newRepos.billingBatches.create.resolves({
           billingBatchId: uuid()
         });
-        sandbox.stub(config.billing, 'supplementaryYears').value(6);
+        sandbox.stub(config.billing, 'supplementaryYears').value(5);
       });
 
       experiment('and the batch type is annual', () => {
@@ -1377,6 +1379,48 @@ experiment('modules/billing/services/batch-service', () => {
       test('the billing / charge version data is deleted from water service tables', async () => {
         expect(newRepos.billingBatches.deleteAllBillingData.called).to.be.true();
       });
+    });
+  });
+
+  experiment('.requestCMBatchGeneration', () => {
+    const batchId = uuid();
+
+    experiment('when there are >0 transactions', () => {
+      beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(1);
+        await batchService.requestCMBatchGeneration(batchId);
+      });
+
+      test('fetches the batch with the correct ID', () => {
+        expect(newRepos.billingBatches.findOne.calledWith(batchId)).to.be.true();
+      });
+
+      test('requests CM batch generation using batch external ID', () => {
+        expect(chargeModuleBillRunConnector.generate.calledWith(
+          data.batch.externalId
+        )).to.be.true();
+      });
+    });
+
+    experiment('when there are 0 transactions', () => {
+      beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(0);
+        await batchService.requestCMBatchGeneration(batchId);
+      });
+
+      test('fetches the batch with the correct ID', () => {
+        expect(newRepos.billingBatches.findOne.calledWith(batchId)).to.be.true();
+      });
+
+      test('does not request CM batch generation', () => {
+        expect(chargeModuleBillRunConnector.generate.called).to.be.false();
+      });
+    });
+  });
+  experiment('getSentTptBatchesForFinancialYearAndRegion', () => {
+    test('returns 2 batches', async () => {
+      const result = await batchService.getSentTptBatchesForFinancialYearAndRegion(2020, 'test-region');
+      expect(result.length).to.equal(2);
     });
   });
 });

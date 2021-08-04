@@ -28,6 +28,12 @@
     system_external_id: 'AT/CURR/DAILY/01'
     company_entity_id: $companyEntity.entity_id
     system_internal_id: $dailyLicence.licence_id
+    document_name: 'the daily cupcake licence'
+    metadata:
+      Name: 'cupcake factory'
+      dataType: 'acceptance-test-setup'
+      IsCurrent: true
+
 
 - ref: $weeklyDocumentHeader
   model: DocumentHeader
@@ -37,6 +43,11 @@
     system_external_id: 'AT/CURR/WEEKLY/01'
     company_entity_id: $companyEntity.entity_id
     system_internal_id: $weeklyLicence.licence_id
+    document_name : 'the weekly crumpet licence'
+    metadata:
+      Name: 'barber bakery'
+      dataType: 'acceptance-test-setup'
+      IsCurrent: true
 
 - ref: $monthlyDocumentHeader
   model: DocumentHeader
@@ -46,6 +57,11 @@
     system_external_id: 'AT/CURR/MONTHLY/01'
     company_entity_id: $companyEntity.entity_id
     system_internal_id: $monthlyLicence1.licence_id
+    document_name: 'the monthly pie licence'
+    metadata:
+      Name: 'shop'
+      dataType: 'acceptance-test-setup'
+      IsCurrent: true
 
 - ref: $monthlyDocument2Header
   model: DocumentHeader
@@ -55,3 +71,8 @@
     system_external_id: 'AT/CURR/MONTHLY/02'
     company_entity_id: $companyEntity.entity_id
     system_internal_id: $monthlyLicence2.licence_id
+    document_name: 'the monthly doughnut licence'
+    metadata:
+      Name: 'doughnut store'
+      dataType: 'acceptance-test-setup'
+      IsCurrent: true

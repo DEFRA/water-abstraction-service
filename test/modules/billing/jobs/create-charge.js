@@ -127,6 +127,7 @@ experiment('modules/billing/jobs/create-charge', () => {
       charge_created: 4
     });
     sandbox.stub(batchService, 'cleanup');
+    sandbox.stub(batchService, 'requestCMBatchGeneration');
 
     sandbox.stub(chargeModuleBillRunConnector, 'addTransaction').resolves(data.chargeModuleResponse);
     sandbox.stub(chargeModuleBillRunConnector, 'generate').resolves();
@@ -358,6 +359,10 @@ experiment('modules/billing/jobs/create-charge', () => {
           returnvalue: true
         };
         await createChargeJob.onComplete(job, queueManager);
+      });
+
+      test('charge module batch generation is requested', async () => {
+        expect(batchService.requestCMBatchGeneration.called).to.be.true();
       });
 
       test('the next job is published', async () => {

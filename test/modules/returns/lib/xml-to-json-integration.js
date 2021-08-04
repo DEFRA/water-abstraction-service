@@ -18,7 +18,6 @@ const { mapXml } = require('../../../../src/modules/returns/lib/xml-adapter/mapp
 const path = require('path');
 const fs = require('fs');
 const util = require('util');
-const Joi = require('@hapi/joi');
 const readFile = util.promisify(fs.readFile);
 
 const permitConnector = require('../../../../src/lib/connectors/permit');
@@ -73,8 +72,8 @@ experiment('mapXml output validates the return model schema', () => {
     const returns = await mapXml(parsed, getTestUser(), today);
 
     returns.forEach(ret => {
-      const result = Joi.validate(ret, returnSchema);
-      expect(result.error).to.be.null();
+      const result = returnSchema.validate(ret);
+      expect(result.error).to.be.undefined();
     });
   });
 
@@ -84,8 +83,8 @@ experiment('mapXml output validates the return model schema', () => {
     const returns = await mapXml(parsed, getTestUser(), today);
 
     returns.forEach(ret => {
-      const result = Joi.validate(ret, returnSchema);
-      expect(result.error).to.be.null();
+      const result = returnSchema.validate(ret);
+      expect(result.error).to.be.undefined();
     });
   });
 
@@ -95,8 +94,8 @@ experiment('mapXml output validates the return model schema', () => {
     const returns = await mapXml(parsed, getTestUser(), today);
 
     returns.forEach(ret => {
-      const result = Joi.validate(ret, returnSchema);
-      expect(result.error).to.be.null();
+      const result = returnSchema.validate(ret);
+      expect(result.error).to.be.undefined();
     });
   });
 });

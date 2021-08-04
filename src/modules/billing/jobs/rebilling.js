@@ -15,6 +15,8 @@ const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const invoiceService = require('../../../lib/services/invoice-service');
 const batchService = require('../services/batch-service');
 
+const rebillingService = require('../services/rebilling-service');
+
 const { jobName: populateBatchChargeVersionJobName } = require('./populate-batch-charge-versions');
 
 const createMessage = batchId => ([
@@ -49,7 +51,7 @@ const handler = async job => {
 
   // Process each invoice that needs rebilling
   for (const invoice of invoices) {
-    await invoiceService.rebillInvoice(batch, invoice);
+    await rebillingService.rebillInvoice(batch, invoice.id);
   }
 };
 

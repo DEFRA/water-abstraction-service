@@ -14,12 +14,12 @@ module.exports = {
     handler: controller.postStartEmailAddressChange,
     options: {
       validate: {
-        params: {
+        params: Joi.object().keys({
           userId: VALID_USER_ID
-        },
-        payload: {
+        }),
+        payload: Joi.object().keys({
           email: VALID_EMAIL
-        }
+        })
       }
     }
   },
@@ -29,13 +29,12 @@ module.exports = {
     handler: controller.postSecurityCode,
     options: {
       validate: {
-        params: {
+        params: Joi.object().keys({
           userId: VALID_USER_ID
-        },
-        payload: {
-
+        }),
+        payload: Joi.object().keys({
           securityCode: VALID_SECURITY_CODE
-        }
+        })
       }
     }
   },
@@ -45,9 +44,9 @@ module.exports = {
     handler: controller.getStatus,
     options: {
       validate: {
-        params: {
+        params: Joi.object().keys({
           userId: VALID_USER_ID
-        }
+        })
       }
     }
   }

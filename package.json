@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "2.2.0",
+  "version": "2.5.0",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "repository": {
@@ -10,7 +10,7 @@
   "scripts": {
     "test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test LAZY_REDIS=1 lab",
     "test:bail": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test LAZY_REDIS=1 lab --bail",
-    "test:ci": "CHARGE_MODULE_ORIGIN=https://charging.defra.net LAZY_REDIS=1 lab -t 55 -m 0 --coverage-path ./src/ -r lcov -o coverage/lcov.info -r console -o stdout",
+    "test:ci": "CHARGE_MODULE_ORIGIN=https://charging.defra.net LAZY_REDIS=1 lab --bail  -t 55 -m 0 --coverage-path ./src/ -r lcov -o coverage/lcov.info -r console -o stdout",
     "test:integration": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test lab integration-tests/ --silence --bail",
     "codecov": "codecov",
     "migrate": "node scripts/create-schema && db-migrate up --verbose && node scripts/migrate-task-config",
@@ -46,14 +46,13 @@
     "sinon": "^7.5.0"
   },
   "dependencies": {
-    "@envage/hapi-pg-rest-api": "^5.0.0",
-    "@envage/water-abstraction-helpers": "^4.3.9",
+    "@envage/hapi-pg-rest-api": "github:DEFRA/hapi-pg-rest-api#master",
+    "@envage/water-abstraction-helpers": "github:DEFRA/water-abstraction-helpers#Upgrade-to-joi-17",
     "@hapi/boom": "^7.4.11",
     "@hapi/catbox-redis": "^6.0.1",
     "@hapi/good": "^8.2.4",
     "@hapi/hapi": "^18.4.1",
     "@hapi/inert": "^5.2.2",
-    "@hapi/joi": "^15.1.1",
     "@hapi/vision": "^5.5.4",
     "@sindresorhus/is": "^4.0.0",
     "acorn": "^6.4.1",
@@ -77,6 +76,7 @@
     "handlebars": "^4.7.6",
     "hapi-auth-jwt2": "^8.8.1",
     "hapi-swagger": "^10.3.0",
+    "joi": "^17.4.1",
     "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.1",
     "libxmljs": "^0.19.7",
