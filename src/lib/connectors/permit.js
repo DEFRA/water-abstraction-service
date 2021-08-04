@@ -87,10 +87,11 @@ licences.getWaterLicence = async (licenceNumber) => {
  */
 licences.getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise = () => {
   const filter = {
+    licence_type_id: 10,
     $or: [
       {
         date_licence_version_purpose_conditions_last_copied: {
-          $gte: moment().subtract(3, 'd')
+          $gte: moment().subtract(1, 'd')
         }
       },
       {
@@ -98,7 +99,7 @@ licences.getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise = () =
       }
     ]
   };
-  return licences.findAll(filter, null, ['licence_ref']);
+  return licences.findAll(filter, null, ['licence_ref', 'licence_data_value']);
 };
 
 /**
@@ -108,6 +109,7 @@ licences.getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise = () =
  */
 licences.getWaterLicencesThatHaveGaugingStationLinkagesThatNeedToBeCopiedFromDigitise = () => {
   const filter = {
+    licence_type_id: 10,
     $or: [
       {
         date_gauging_station_links_last_copied: {
@@ -119,7 +121,7 @@ licences.getWaterLicencesThatHaveGaugingStationLinkagesThatNeedToBeCopiedFromDig
       }
     ]
   };
-  return licences.findAll(filter, null, ['licence_ref']);
+  return licences.findAll(filter, null, ['licence_ref', 'licence_data_value']);
 };
 
 const deleteAcceptanceTestData = () => {

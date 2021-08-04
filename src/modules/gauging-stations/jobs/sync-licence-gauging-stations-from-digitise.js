@@ -24,19 +24,6 @@ const createMessage = () => ([
 
 const handler = async () => {
   logger.info(`${JOB_NAME}: Job has started`);
-
-  // Find out which licences need to be processed
-
-  // Iterate through each licence.
-  // Grab the licence's Digitise data and put it through the reducer
-
-  // Look for the relevant sub-part of the object, if one exists
-
-  // Collect the necessary data to complete the record in `water.licence_gauging_stations`
-
-  // For the successful records,
-  // mark them as processed by updating the datestamp
-  // in permit.licence.date_gauging_station_links_last_copied
 };
 
 const onFailedHandler = async (job, err) => {
