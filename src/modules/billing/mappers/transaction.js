@@ -312,7 +312,7 @@ const cmToDb = cmTransaction => modelToDbMapper.execute(
 
 const inverseCreditNoteSign = transaction => {
   if (transaction.credit === true) {
-    transaction.chargeValue = -transaction.chargeValue;
+    transaction.chargeValue = transaction.chargeValue * -1;
   }
   return transaction;
 };
