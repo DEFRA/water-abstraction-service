@@ -965,7 +965,7 @@ experiment('modules/billing/services/batch-service', () => {
         newRepos.billingBatches.create.resolves({
           billingBatchId: uuid()
         });
-        sandbox.stub(config.billing, 'supplementaryYears').value(6);
+        sandbox.stub(config.billing, 'supplementaryYears').value(5);
       });
 
       experiment('and the batch type is annual', () => {
