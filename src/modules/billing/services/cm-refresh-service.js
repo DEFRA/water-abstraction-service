@@ -36,7 +36,7 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
     const { invoice } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, invoiceId);
     return invoice.licences.map(lic => lic.transactions.map(transaction => {
       return {
-        ...transaction,
+        ...transactionMapper.inverseCreditNoteSign(transaction),
         transactionReference: invoice.transactionReference,
         isDeminimis: invoice.deminimisInvoice,
         licenceNumber: lic.licenceNumber

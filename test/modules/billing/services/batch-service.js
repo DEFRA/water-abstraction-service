@@ -88,6 +88,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingBatches, 'findByRegionId').resolves([]);
     sandbox.stub(newRepos.billingBatches, 'find').resolves();
     sandbox.stub(newRepos.billingBatches, 'deleteAllBillingData').resolves();
+    sandbox.stub(newRepos.billingBatches, 'findSentTptBatchesForFinancialYearAndRegion').resolves([batch]);
 
     sandbox.stub(newRepos.billingInvoices, 'deleteEmptyByBatchId').resolves();
     sandbox.stub(newRepos.billingInvoices, 'deleteByBatchId').resolves();
@@ -964,7 +965,7 @@ experiment('modules/billing/services/batch-service', () => {
         newRepos.billingBatches.create.resolves({
           billingBatchId: uuid()
         });
-        sandbox.stub(config.billing, 'supplementaryYears').value(6);
+        sandbox.stub(config.billing, 'supplementaryYears').value(5);
       });
 
       experiment('and the batch type is annual', () => {
@@ -1414,6 +1415,12 @@ experiment('modules/billing/services/batch-service', () => {
       test('does not request CM batch generation', () => {
         expect(chargeModuleBillRunConnector.generate.called).to.be.false();
       });
+    });
+  });
+  experiment('getSentTptBatchesForFinancialYearAndRegion', () => {
+    test('returns 2 batches', async () => {
+      const result = await batchService.getSentTptBatchesForFinancialYearAndRegion(2020, 'test-region');
+      expect(result.length).to.equal(2);
     });
   });
 });

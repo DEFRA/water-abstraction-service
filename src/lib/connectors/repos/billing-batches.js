@@ -1,7 +1,7 @@
 'use strict';
 
 const { BillingBatch } = require('../bookshelf');
-const { BATCH_STATUS, BATCH_TYPE } = require('../../models/batch');
+const { BATCH_STATUS } = require('../../models/batch');
 const { paginatedEnvelope } = require('./lib/envelope');
 const helpers = require('./lib/helpers');
 const queries = require('./queries/billing-batches');
@@ -119,9 +119,9 @@ const create = async data => {
 const findByRegionId = async regionId =>
   helpers.findMany(BillingBatch, { region_id: regionId }, ['region']);
 
-const findSentTptBatchesForFinancialYearAndRegion = async (financialYear, regionId) => {
+const findSentTptBatchesForFinancialYearAndRegion = async (financialYear, regionId, batchType) => {
   const conditions = {
-    batch_type: BATCH_TYPE.twoPartTariff,
+    batch_type: batchType,
     to_financial_year_ending: financialYear,
     status: BATCH_STATUS.sent,
     region_id: regionId
