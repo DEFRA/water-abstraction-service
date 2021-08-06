@@ -6,6 +6,7 @@ const batches = require('./batches');
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs');
 const returnsConnector = require('../services/connectors/returns');
 const returnRequirements = require('../services/return-requirements');
+const licenceAgreements = require('../services/licence-agreements');
 
 const messageQueue = require('../../../src/lib/message-queue-v2');
 
@@ -31,6 +32,7 @@ const tearDown = async (...batchesToDelete) => {
   await returnRequirements.tearDown();
 
   await tearDownTable('water.licence_agreements');
+  await licenceAgreements.tearDownCypressCreatedLicenceAgreements();
   await tearDownTable('water.financial_agreement_types');
   await tearDownTable('water.licence_versions');
   await tearDownTable('water.licences');
