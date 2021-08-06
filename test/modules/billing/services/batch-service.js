@@ -785,7 +785,7 @@ experiment('modules/billing/services/batch-service', () => {
     const cmResponse = {
       billRun: {
         invoiceCount,
-        creditLineCount: creditNoteCount,
+        creditNoteCount,
         invoiceValue,
         creditLineValue: creditNoteValue,
         netTotal,
