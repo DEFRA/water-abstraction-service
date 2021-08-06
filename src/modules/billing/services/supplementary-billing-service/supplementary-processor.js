@@ -73,7 +73,7 @@ const getGroupingKey = transaction => {
   // Get the data and serialize to a JSON string
   const data = {
     ...pick(transaction, keys),
-    description: transaction.chargeElementPurposeUseCode,
+    chargeElementPurposeUseCode: transaction.chargeElementPurposeUseCode,
     abstractionPeriod: pick(transaction.abstractionPeriod, abstractionPeriodKeys)
   };
   return hashers.createMd5Hash(JSON.stringify(data));
