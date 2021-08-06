@@ -27,6 +27,7 @@ const chargeTestDataTearDown = require('../../../integration-tests/billing/servi
 
 const regions = require('./lib/regions');
 const setLoader = require('../../../integration-tests/billing/services/loader');
+const integrationTestTearDownService = require('../../../integration-tests/billing/services/tear-down');
 
 const {
   TEST_EXTERNAL_USER_EMAIL,
@@ -291,6 +292,8 @@ const postSetupFromYaml = async (request, h) => {
 };
 
 const postTearDown = async () => {
+  console.log('Tearing down integration test data');
+  await integrationTestTearDownService.tearDown();
   console.log('Tearing down acceptance test returns');
   await returns.delete();
   console.log('Tearing down acceptance test return requirement purposes');
