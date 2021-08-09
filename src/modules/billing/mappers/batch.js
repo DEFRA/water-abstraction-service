@@ -18,13 +18,13 @@ const dbToModelMapper = createMapper({ mapNull: false })
     'errorCode',
     'externalId',
     'billRunNumber',
-    'creditNoteCount',
     'invoiceCount',
     'netTotal',
     'invoiceValue',
-    'creditNoteValue',
+    'creditNoteCount',
     'source'
   )
+  .map('creditNoteValue').to('creditNoteValue', value => -Math.abs(value))
   .map('billingBatchId').to('id')
   .map('batchType').to('type')
   .map('fromFinancialYearEnding').to('startYear', fromFinancialYearEnding => new FinancialYear(fromFinancialYearEnding))
