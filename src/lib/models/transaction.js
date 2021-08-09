@@ -171,6 +171,15 @@ class Transaction extends Model {
   }
 
   /**
+   * Gets the purpose use code for the transaction
+   * that is used for creating the transaction hash
+   * @return {String}
+   */
+  get chargeElementPurposeUseCode () {
+    return this.chargeElement.purposeUse.code;
+  }
+
+  /**
    * Gets the charge element instance that created this transaction
    * @return {ChargeElement}
    */

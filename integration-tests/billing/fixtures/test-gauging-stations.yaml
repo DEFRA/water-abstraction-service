@@ -1,0 +1,4 @@
+- model: GaugingStation
+  fields:
+    label: Test Station 500
+    isTest: true
