@@ -438,8 +438,8 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
       invoiceCount,
       creditNoteCount,
       invoiceValue,
-      creditNoteValue: -Math.abs(creditNoteValue),
-      netTotal
+      netTotal,
+      creditNoteValue: -Math.abs(creditNoteValue)
     };
 
   const data = await newRepos.billingBatches.update(batchId, changes);
