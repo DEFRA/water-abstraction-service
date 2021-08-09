@@ -48,9 +48,10 @@ experiment('lib/models/totals', () => {
       expect(func).to.throw();
     });
 
-    test('cannot be set to a positive number', async () => {
-      const func = () => { totals[key] = 1; };
-      expect(func).to.throw();
+    // E.g. Summary page can show number without minus sign
+    test('can be set to a positive number', async () => {
+      totals[key] = 1;
+      expect(totals[key]).to.equal(1);
     });
   });
 

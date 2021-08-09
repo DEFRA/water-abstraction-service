@@ -1,7 +1,6 @@
 const Model = require('./model');
 const {
   assertNullablePositiveOrZeroInteger,
-  assertNullableNegativeOrZeroInteger,
   assertNullableInteger
 } = require('./validators');
 
@@ -33,7 +32,10 @@ class Totals extends Model {
    * @param {Number} value - in pence
    */
   set creditNoteValue (value) {
-    assertNullableNegativeOrZeroInteger(value);
+    // creditNoteValue in totals model can be either be positive or negative
+    // For example page billing/batch/[id]/summary shows credits without minus sign
+    // example: 1 credit note: 332, 8 invoices: 1,411, totals: 1,079
+    assertNullableInteger(value);
     this._creditNoteValue = value;
   }
 

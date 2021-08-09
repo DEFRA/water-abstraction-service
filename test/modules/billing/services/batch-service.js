@@ -787,7 +787,7 @@ experiment('modules/billing/services/batch-service', () => {
         invoiceCount,
         creditNoteCount,
         invoiceValue,
-        creditLineValue: creditNoteValue,
+        creditNoteValue,
         netTotal,
         status
       }
