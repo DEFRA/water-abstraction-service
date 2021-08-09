@@ -73,7 +73,6 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(returnVersions, 'create').resolves({});
     sandbox.stub(returnRequirements, 'create').resolves({});
     sandbox.stub(returnRequirementPurposes, 'create').resolves({});
-    sandbox.stub(returnRequirementPurposes, 'delete').resolves();
     sandbox.stub(returnRequirements, 'delete').resolves();
     sandbox.stub(notifications, 'delete').resolves();
     sandbox.stub(events, 'delete').resolves();
@@ -107,7 +106,6 @@ experiment('modules/acceptance-tests/controller', () => {
       });
 
       test('the existing data is torn down', async () => {
-        expect(returnRequirementPurposes.delete.called).to.be.true();
         expect(returnRequirements.delete.called).to.be.true();
         expect(events.delete.called).to.be.true();
         expect(permits.delete.called).to.be.true();
@@ -317,7 +315,6 @@ experiment('modules/acceptance-tests/controller', () => {
   experiment('postTearDown', () => {
     test('deletes the test data that has been created', async () => {
       await controller.postTearDown();
-      expect(returnRequirementPurposes.delete.called).to.be.true();
       expect(returnRequirements.delete.called).to.be.true();
       expect(events.delete.called).to.be.true();
       expect(permits.delete.called).to.be.true();

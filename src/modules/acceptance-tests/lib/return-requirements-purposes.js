@@ -1,16 +1,4 @@
 const { returnRequirementPurposes } = require('../../../lib/connectors/repos');
-const { bookshelf } = require('../../../lib/connectors/bookshelf');
-
-const deleteReturnRequirementPurposes = `delete from water.return_requirement_purposes rp
-using 
-    water.licences l,
-    water.return_requirements rr,
-    water.return_versions rv
-  where
-    rp.return_requirement_id=rr.return_requirement_id
-    and rr.return_version_id=rv.return_version_id
-    and rv.licence_id=l.licence_id 
-    and l.is_test=true;`;
 
 /**
  * Create the test licence in the region with the specified
@@ -30,7 +18,4 @@ const createReturnRequirementPurpose = async (returnRequirementId, formatId, pur
   return returnRequirementPurposes.create(purpose);
 };
 
-const deleteReturnPurpose = async () => bookshelf.knex.raw(deleteReturnRequirementPurposes);
-
 exports.create = createReturnRequirementPurpose;
-exports.delete = deleteReturnPurpose;
