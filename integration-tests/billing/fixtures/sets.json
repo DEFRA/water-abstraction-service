@@ -35,6 +35,10 @@
       "file": "test-licences.yaml"
     },
     {
+      "service": "water",
+      "file": "test-gauging-stations.yaml"
+    },
+    {
       "service": "returns",
       "file": "test-returns.yaml"
     }
