@@ -25,7 +25,6 @@ const sessions = require('./lib/sessions');
 const purposes = require('./lib/purposes');
 const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
 
-const regions = require('./lib/regions');
 const setLoader = require('../../../integration-tests/billing/services/loader');
 
 const {
@@ -219,8 +218,8 @@ const createInternalUsers = async () => {
   const createdUsers = await Promise.all(
     toCreate.map(async user => {
       const email = `acceptance-test.internal.${user.id || user.group}@defra.gov.uk`;
-      const response = await users.createInternalUser(email, user.group, user.roles);
-      return response;
+
+      return await users.createInternalUser(email, user.group, user.roles);
     })
   );
   return createdUsers
@@ -240,7 +239,7 @@ const createAgents = async (company) => {
   return { agent, agentWithReturns };
 };
 
-const postSetup = async (request, h) => {
+const postSetup = async (request) => {
   await postTearDown();
   const includeAgents = get(request, 'payload.includeAgents', false);
   const includeInternalUsers = get(request, 'payload.includeInternalUsers', false);
@@ -329,8 +328,6 @@ const postTearDown = async () => {
   await licenceVersions.delete();
   console.log('Tearing down acceptance test licences');
   await licences.delete();
-  console.log('Tearing down acceptance test regions');
-  await regions.delete();
 
   return 'tear down complete';
 };

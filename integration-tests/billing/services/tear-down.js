@@ -20,7 +20,7 @@ const tearDownTable = tableName => bookshelf.knex(tableName)
 /**
  * Removes all created test data
  *
- * @param {Array} [batches] - billing batch data to delete
+ * @param {Array} [batchesToDelete] - billing batch data to delete
  * @return {Promise}
  */
 const tearDown = async (...batchesToDelete) => {
@@ -39,6 +39,8 @@ const tearDown = async (...batchesToDelete) => {
   await tearDownTable('water.financial_agreement_types');
   await tearDownTable('water.licence_versions');
   await tearDownTable('water.licences');
+
+  console.log('Tearing down acceptance test regions');
   await tearDownTable('water.regions');
 
   await crmConnector.tearDown();
