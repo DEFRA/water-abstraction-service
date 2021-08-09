@@ -9,6 +9,7 @@ const returnRequirements = require('../services/return-requirements');
 const licenceAgreements = require('../services/licence-agreements');
 const chargeVersions = require('../services/charge-versions');
 const gaugingStations = require('../services/gauging-stations');
+const returnVersions = require('./return-versions');
 
 const messageQueue = require('../../../src/lib/message-queue-v2');
 
@@ -41,12 +42,14 @@ const tearDown = async (...batchesToDelete) => {
   await tearDownTable('water.licence_versions');
   await tearDownTable('water.licences');
 
-  console.log('Tearing down acceptance test regions');
+  console.log('- Tearing down acceptance test regions');
   await tearDownTable('water.regions');
 
   await crmConnector.tearDown();
 
-  console.log('Tearing down acceptance test returns');
+  console.log('- Tearing down acceptance test return versions');
+  await returnVersions.delete();
+  console.log('- Tearing down acceptance test returns');
   await returnsConnector.tearDown();
 
   await tearDownTable('water.purposes_primary');

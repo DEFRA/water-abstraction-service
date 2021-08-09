@@ -298,8 +298,6 @@ const postTearDown = async () => {
   await returnRequirementPurposes.delete();
   console.log('Tearing down acceptance test return requirements');
   await returnRequirements.delete();
-  console.log('Tearing down acceptance test return versions');
-  await returnVersions.delete();
   console.log('Tearing down acceptance test notifications');
   await notifications.delete();
   console.log('Tearing down acceptance test events');
