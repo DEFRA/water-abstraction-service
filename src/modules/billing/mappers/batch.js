@@ -18,10 +18,10 @@ const dbToModelMapper = createMapper({ mapNull: false })
     'errorCode',
     'externalId',
     'billRunNumber',
+    'creditNoteCount',
     'invoiceCount',
     'netTotal',
     'invoiceValue',
-    'creditNoteCount',
     'source'
   )
   .map('creditNoteValue').to('creditNoteValue', value => -Math.abs(value))
