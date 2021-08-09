@@ -45,6 +45,8 @@ const tearDown = async (...batchesToDelete) => {
   await tearDownTable('water.regions');
 
   await crmConnector.tearDown();
+
+  console.log('Tearing down acceptance test returns');
   await returnsConnector.tearDown();
 
   await tearDownTable('water.purposes_primary');
