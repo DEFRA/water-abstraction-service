@@ -38,18 +38,20 @@ const handler = async () => {
     return licences.map(async eachLicence => {
       const edits = get(eachLicence, 'licence_data_value', {});
       if (edits.status === 'Approved') {
-      // put it through the reducer
+        // put it through the reducer
         // console.log(edits.actions.map(n => n.payload.data));
         console.log(edits.actions);
         const { payload: finalShape } = merge({}, ...edits.actions);
 
-        const { max_rate: maxRate, max_rate_unit, gauging_station: GaugingStation } = finalShape.data;
-        const maxRateUnit = max_rate_unit.replace('³', '3');
-        const { id: gaugingStationId } = GaugingStation;
+        const { max_rate: maxRate, max_rate_unit: maxRateUnit, gauging_station: GaugingStation } = finalShape.data;
+
         // Look for the relevant sub-part of the object, if one exists
-        if (maxRate && maxRateUnit && gaugingStationId) {
+        if (maxRate && maxRateUnit && GaugingStation) {
+          const { id: gaugingStationId } = GaugingStation;
+          const parsedMaxRateUnit = maxRateUnit.replace('³', '3');
+
           const flowUnits = ['Ml/d', 'm3/s', 'm3/d', 'l/s'];
-          const isFlowOrLevel = flowUnits.includes(maxRateUnit) ? 'flow' : 'level';
+          const isFlowOrLevel = flowUnits.includes(parsedMaxRateUnit) ? 'flow' : 'level';
 
           // Check if an identical linkage already exists
           const licenceRecord = await licencesService.getLicenceByLicenceRef(eachLicence.licence_ref);
@@ -63,7 +65,7 @@ const handler = async () => {
             licence_id: licenceRecord.id,
             gauging_station_id: gaugingStationId,
             restriction_type: isFlowOrLevel,
-            threshold_unit: maxRateUnit,
+            threshold_unit: parsedMaxRateUnit,
             threshold_value: maxRate
           });
 
@@ -71,20 +73,23 @@ const handler = async () => {
             console.log('CREATING A LINKAGE');
             await licenceGaugingStationsService.createNewLicenceLink(gaugingStationId, licenceRecord.id, {
               licenceVersionPurposeConditionId: null, // Todo
-              thresholdUnit: maxRateUnit,
+              thresholdUnit: parsedMaxRateUnit,
               thresholdValue: maxRate,
-              abstractionPeriod: null,
+              abstractionPeriodStartDay: null,
+              abstractionPeriodStartMonth: null,
+              abstractionPeriodEndDay: null,
+              abstractionPeriodEndMonth: null,
               restrictionType: isFlowOrLevel,
               alertType: 'reduce', // TODO
-              source: 'digitse'
+              source: 'digitise'
             });
           } else {
             console.log('LINKAGE ALREADY EXISTS');
           }
 
-        // For the successful records,
-        // mark them as processed by updating the datestamp
-        // in permit.licence.date_licence_version_purpose_conditions_last_copied
+          // For the successful records,
+          // mark them as processed by updating the datestamp
+          // in permit.licence.date_licence_version_purpose_conditions_last_copied
         }
       }
     });
