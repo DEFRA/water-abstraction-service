@@ -27,8 +27,6 @@ const tearDownTable = tableName => bookshelf.knex(tableName)
  * @return {Promise}
  */
 const tearDown = async (...batchesToDelete) => {
-  await batches.tearDown();
-
   await gaugingStations.tearDownCypressCreatedLinkages();
   await tearDownTable('water.gauging_stations');
   await tearDownTable('water.charge_elements');
@@ -41,18 +39,27 @@ const tearDown = async (...batchesToDelete) => {
   await licenceAgreements.tearDownCypressCreatedLicenceAgreements();
   await tearDownTable('water.financial_agreement_types');
 
+  console.log('Tearing down acceptance test batches');
+  await batches.tearDown();
+
   console.log('- Tearing down acceptance test licence versions');
   await tearDownTable('water.licence_versions');
+
   console.log('- Tearing down acceptance test licences');
   await tearDownTable('water.licences');
+
   console.log('- Tearing down acceptance test regions');
   await tearDownTable('water.regions');
-  console.log('- Tearing down crm connector');
+
+  console.log('- Tearing down acceptance test crm');
   await crmConnector.tearDown();
+
   console.log('- Tearing down acceptance test return requirement purposes');
   await returnRequirementPurposes.delete();
+
   console.log('- Tearing down acceptance test return versions');
   await returnVersions.delete();
+
   console.log('- Tearing down acceptance test returns');
   await returnsConnector.tearDown();
 
