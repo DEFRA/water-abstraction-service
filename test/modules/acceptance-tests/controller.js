@@ -18,7 +18,6 @@ const returns = require('../../../src/modules/acceptance-tests/lib/returns');
 const events = require('../../../src/modules/acceptance-tests/lib/events');
 const sessions = require('../../../src/modules/acceptance-tests/lib/sessions');
 const licences = require('../../../src/modules/acceptance-tests/lib/licences');
-const licenceVersions = require('../../../src/modules/acceptance-tests/lib/licence-versions');
 const notifications = require('../../../src/modules/acceptance-tests/lib/notifications');
 const returnRequirements = require('../../../src/modules/acceptance-tests/lib/return-requirements');
 const returnRequirementPurposes = require('../../../src/modules/acceptance-tests/lib/return-requirements-purposes');
@@ -86,7 +85,6 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(invoiceLicences, 'delete').resolves();
     sandbox.stub(invoices, 'delete').resolves();
     sandbox.stub(batches, 'delete').resolves();
-    sandbox.stub(licenceVersions, 'delete').resolves();
     sandbox.stub(chargeTestDataTearDown, 'tearDown').resolves();
 
     sandbox.stub(setLoader, 'createSetLoader');
@@ -118,7 +116,6 @@ experiment('modules/acceptance-tests/controller', () => {
         expect(invoices.delete.called).to.be.true();
         expect(batches.delete.called).to.be.true();
         expect(chargeTestDataTearDown.tearDown.called).to.be.true();
-        expect(licenceVersions.delete.called).to.be.true();
       });
 
       test('the expected current licence response is created', async () => {
@@ -326,7 +323,6 @@ experiment('modules/acceptance-tests/controller', () => {
       expect(invoices.delete.called).to.be.true();
       expect(batches.delete.called).to.be.true();
       expect(chargeTestDataTearDown.tearDown.called).to.be.true();
-      expect(licenceVersions.delete.called).to.be.true();
     });
   });
 });

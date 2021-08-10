@@ -39,16 +39,15 @@ const tearDown = async (...batchesToDelete) => {
   await tearDownTable('water.licence_agreements');
   await licenceAgreements.tearDownCypressCreatedLicenceAgreements();
   await tearDownTable('water.financial_agreement_types');
-  await tearDownTable('water.licence_versions');
 
+  console.log('- Tearing down acceptance test licence versions');
+  await tearDownTable('water.licence_versions');
   console.log('- Tearing down acceptance test licences');
   await tearDownTable('water.licences');
-
   console.log('- Tearing down acceptance test regions');
   await tearDownTable('water.regions');
-
+  console.log('- Tearing down crm connector');
   await crmConnector.tearDown();
-
   console.log('- Tearing down acceptance test return requirement purposes');
   await returnRequirementPurposes.delete();
   console.log('- Tearing down acceptance test return versions');
