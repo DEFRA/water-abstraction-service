@@ -40,6 +40,8 @@ const tearDown = async (...batchesToDelete) => {
   await licenceAgreements.tearDownCypressCreatedLicenceAgreements();
   await tearDownTable('water.financial_agreement_types');
   await tearDownTable('water.licence_versions');
+
+  console.log('- Tearing down acceptance test licences');
   await tearDownTable('water.licences');
 
   console.log('- Tearing down acceptance test regions');

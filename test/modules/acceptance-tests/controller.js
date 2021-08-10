@@ -87,7 +87,6 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(invoices, 'delete').resolves();
     sandbox.stub(batches, 'delete').resolves();
     sandbox.stub(licenceVersions, 'delete').resolves();
-    sandbox.stub(licences, 'delete').resolves();
     sandbox.stub(chargeTestDataTearDown, 'tearDown').resolves();
 
     sandbox.stub(setLoader, 'createSetLoader');
@@ -120,7 +119,6 @@ experiment('modules/acceptance-tests/controller', () => {
         expect(batches.delete.called).to.be.true();
         expect(chargeTestDataTearDown.tearDown.called).to.be.true();
         expect(licenceVersions.delete.called).to.be.true();
-        expect(licences.delete.called).to.be.true();
       });
 
       test('the expected current licence response is created', async () => {
@@ -329,7 +327,6 @@ experiment('modules/acceptance-tests/controller', () => {
       expect(batches.delete.called).to.be.true();
       expect(chargeTestDataTearDown.tearDown.called).to.be.true();
       expect(licenceVersions.delete.called).to.be.true();
-      expect(licences.delete.called).to.be.true();
     });
   });
 });

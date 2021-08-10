@@ -320,8 +320,6 @@ const postTearDown = async () => {
   await batches.delete();
   console.log('Tearing down acceptance test licence versions');
   await licenceVersions.delete();
-  console.log('Tearing down acceptance test licences');
-  await licences.delete();
 
   return 'tear down complete';
 };
