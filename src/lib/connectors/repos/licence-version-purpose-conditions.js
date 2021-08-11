@@ -18,7 +18,8 @@ const findManyByLicenceId = (licenceId, code = null) => {
 };
 
 const getLicenceVersionConditionByPartialExternalId = async partialExternalId => {
-  const { licenceVersionPurposeConditionId, licenceVersionPurposeId } = await raw.singleRow(queries.getLicenceVersionConditionByPartialExternalId, { partialExternalId: `${partialExternalId}%` });
+  const { licenceVersionPurposeConditionId, licenceVersionPurposeId } =
+    await raw.singleRow(queries.getLicenceVersionConditionByPartialExternalId, { partialExternalId: `${partialExternalId}%` });
   return { licenceVersionPurposeConditionId, licenceVersionPurposeId };
 };
 
