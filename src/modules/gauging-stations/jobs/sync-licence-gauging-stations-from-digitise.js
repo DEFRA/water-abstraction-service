@@ -1,4 +1,4 @@
-// Syncs licence conditions from Digitise data with the into `water.licence_version_purpose_conditions`
+// Syncs licence gauging station linkages from Digitise data with the into `water.licence_gauging_stations`
 'use strict';
 
 // Dependencies

@@ -22,6 +22,12 @@ const getLicenceVersionConditionByPartialExternalId = async partialExternalId =>
   return licenceVersionPurposeConditionId;
 };
 
+const getLicenceVersionConditionType = async id => {
+  const { licenceVersionPurposeConditionTypeId } = await raw.singleRow(queries.getLicenceVersionConditionType, { id });
+  return licenceVersionPurposeConditionTypeId;
+};
+
 exports.findOneById = findOneById;
 exports.findManyByLicenceId = findManyByLicenceId;
 exports.getLicenceVersionConditionByPartialExternalId = getLicenceVersionConditionByPartialExternalId;
+exports.getLicenceVersionConditionType = getLicenceVersionConditionType;

@@ -22,6 +22,9 @@ const getLicenceVersionPurposeConditionsByLicenceId = async (licenceId, code) =>
 
 const getLicenceVersionConditionByPartialExternalId = licenceVersionPurposeConditionsRepo.getLicenceVersionConditionByPartialExternalId;
 
+const getLicenceVersionConditionType = licenceVersionPurposeConditionsRepo.getLicenceVersionConditionType;
+
 exports.getLicenceVersionConditionById = getLicenceVersionConditionById;
 exports.getLicenceVersionPurposeConditionsByLicenceId = getLicenceVersionPurposeConditionsByLicenceId;
 exports.getLicenceVersionConditionByPartialExternalId = getLicenceVersionConditionByPartialExternalId;
+exports.getLicenceVersionConditionType = getLicenceVersionConditionType;

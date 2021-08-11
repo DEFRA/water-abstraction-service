@@ -19,3 +19,9 @@ exports.getLicenceVersionConditionByPartialExternalId = `
   FROM water.licence_version_purpose_conditions lvpc
   WHERE lvpc.external_id LIKE :partialExternalId
 `;
+
+exports.getLicenceVersionConditionType = `
+  SELECT lvpc.licence_version_purpose_condition_type_id 
+  FROM water.licence_version_purpose_conditions lvpc
+  WHERE lvpc.licence_version_purpose_condition_id = :id 
+`;

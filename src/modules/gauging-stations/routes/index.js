@@ -12,7 +12,7 @@ module.exports = {
   getTempo: {
     method: 'GET',
     path: '/water/1.0/testo',
-    handler: () => require('../jobs/sync-licence-gauging-stations-from-digitise').handler()
+    handler: () => require('../jobs/sync-licence-version-purpose-conditions-from-digitise').handler()
   },
   getGaugingStations: {
     method: 'GET',
