@@ -483,6 +483,11 @@ experiment('lib/models/invoice', () => {
       expect(invoice.rebillingState).to.equal('reversal');
     });
 
+    test('can be set to "reversal"', async () => {
+      invoice.rebillingState = 'rebilled';
+      expect(invoice.rebillingState).to.equal('rebilled');
+    });
+
     test('can be set to null', async () => {
       invoice.rebillingState = null;
       expect(invoice.rebillingState).to.equal(null);

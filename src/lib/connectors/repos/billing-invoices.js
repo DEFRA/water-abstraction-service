@@ -38,7 +38,8 @@ const findOne = async id => {
         'billingInvoiceLicences.billingTransactions.billingVolume',
         'billingInvoiceLicences.billingTransactions.chargeElement',
         'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse',
-        'linkedBillingInvoices'
+        'linkedBillingInvoices',
+        'originalBillingInvoice'
       ]
     });
 
