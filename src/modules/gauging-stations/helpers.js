@@ -51,13 +51,13 @@ const abstractionPeriodInObjectParser = inputObject => {
 };
 
 const measurementPoint = data => {
-  if (data.measurement_point_type == 'Upstream') {
+  if (data.measurement_point_type === 'Upstream') {
     return 'immediately upstream of the authorised point of abstraction,';
   }
-  if (data.measurement_point_type == 'Downstream') {
+  if (data.measurement_point_type === 'Downstream') {
     return 'immediately downstream of the authorised point of abstraction,';
   }
-  if (data.measurement_point_type == 'NGR' && data.measurement_point_place) {
+  if (data.measurement_point_type === 'NGR' && data.measurement_point_place) {
     return `at National Grid Reference ${data.measurement_point_ngr},`;
   }
 
@@ -87,14 +87,14 @@ is equal to or greater than ${data.hol_rate_level}${data.hol_rate_level_unit}.`;
   }
 
   if (schema === '/wr22/2.3') {
-    const abstractionPoint = data.measurement_point.measurement_point_diagram_type == 'None' ? 'abstraction point' : 'reference point';
-    return `No ${data.purpose_type == 'Abstraction' ? 'abstraction' : 'power production'} shall
+    const abstractionPoint = data.measurement_point.measurement_point_diagram_type === 'None' ? 'abstraction point' : 'reference point';
+    return `No ${data.purpose_type === 'Abstraction' ? 'abstraction' : 'power production'} shall
  take place unless the rate of flow in the ${data.water_body_name.name} as measured ${measurementPoint(data.measurement_point)} 
  is equal to or greater than ${data.hof_hol_flow}${data.hof_hol_flow_unit} and the 
- ${data.purpose_type == 'Abstraction'
+ ${data.purpose_type === 'Abstraction'
       ? 'abstraction' : (
-        data.purpose_type == 'Power production' ? 'power production' : 'turbine'
-      )} shall not cause the ${data.hof_type == 'Hands off flow' ? `flow immediately downstream of the said ${abstractionPoint} 
+        data.purpose_type === 'Power production' ? 'power production' : 'turbine'
+      )} shall not cause the ${data.hof_type === 'Hands off flow' ? `flow immediately downstream of the said ${abstractionPoint} 
       to fall below that rate.` : `water level at of the said ${abstractionPoint} to fall below that level.`} 
  This shall be known as the ${data.hof_type}.`;
   }

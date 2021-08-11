@@ -13,9 +13,7 @@ const JOB_NAME = 'gauging-stations.copy-lvpc-from-digitise';
 
 // Handy stuff
 const config = require('../../../../config');
-const licenceGaugingStationsService = require('../../../lib/services/licence-gauging-stations-service');
 const licenceVersionPurposeConditionsService = require('../../../lib/services/licence-version-purpose-conditions');
-const licencesService = require('../../../lib/services/licences');
 
 const createMessage = () => ([
   JOB_NAME,
