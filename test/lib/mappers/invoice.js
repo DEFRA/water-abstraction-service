@@ -17,6 +17,7 @@ const FinancialYear = require('../../../src/lib/models/financial-year');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 
 const invoiceMapper = require('../../../src/lib/mappers/invoice');
+const instance = require('../../../src/lib/connectors/charge-module/lib/got-cm');
 
 const invoiceRow = {
   billingInvoiceId: '5a1577d7-8dc9-4d67-aadc-37d7ea85abca',
@@ -35,7 +36,11 @@ const invoiceRow = {
   },
   {
     billingInvoiceId: '4139a53a-a1f0-4dc9-bf1a-b97e41c5e866'
-  }]
+  }],
+  originalBillingInvoice: {
+    billingInvoiceId: '4139a53a-a1f0-4dc9-bf1a-b97e41c5e899'
+  },
+  originalBillingInvoiceId: '4139a53a-a1f0-4dc9-bf1a-b97e41c5e899'
 };
 
 experiment('lib/mappers/invoice', () => {
@@ -90,8 +95,9 @@ experiment('lib/mappers/invoice', () => {
 
     test('maps the linked billing invoices for re-billing, excluding the current invoice', () => {
       const { linkedInvoices } = result;
-      expect(linkedInvoices).to.be.an.array().length(1);
+      expect(linkedInvoices).to.be.an.array().length(2);
       expect(linkedInvoices[0].id).to.equal(invoiceRow.linkedBillingInvoices[1].billingInvoiceId);
+      expect(linkedInvoices[1].id).to.equal(invoiceRow.originalBillingInvoiceId);
     });
   });
 

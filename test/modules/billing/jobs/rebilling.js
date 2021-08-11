@@ -137,6 +137,14 @@ experiment('modules/billing/jobs/rebilling', () => {
           batch, invoice.id
         )).to.be.true();
       });
+
+      test('calls the .invoice service method for each invoice retrieved', async () => {
+        expect(invoiceService.updateInvoice.callCount).to.equal(1);
+        expect(invoiceService.updateInvoice.calledWith(
+          invoice.id,
+          { rebillingState: 'rebilled' }
+        )).to.be.true();
+      });
     });
 
     experiment('when the batch status is not "processing"', () => {

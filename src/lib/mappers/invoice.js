@@ -18,6 +18,7 @@ const mapLinkedInvoices = (billingInvoiceId, linkedBillingInvoices = [], origina
   const invoices = linkedBillingInvoices
     .filter(linkedBillingInvoice => linkedBillingInvoice.billingInvoiceId !== billingInvoiceId)
     .map(dbToModel);
+
   if (!(isEmpty(originalBillingInvoice))) {
     invoices.push(dbToModel(originalBillingInvoice));
   }
