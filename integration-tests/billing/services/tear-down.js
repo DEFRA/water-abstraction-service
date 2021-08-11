@@ -12,6 +12,7 @@ const gaugingStations = require('../services/gauging-stations');
 const returnVersions = require('./return-versions');
 const returnRequirementPurposes = require('./return-requirements-purpose');
 const invoices = require('./invoices');
+const invoiceLicenses = require('./invoice-licenses');
 
 const messageQueue = require('../../../src/lib/message-queue-v2');
 
@@ -54,6 +55,9 @@ const tearDown = async (...batchesToDelete) => {
 
   console.log('- Tearing down acceptance test crm');
   await crmConnector.tearDown();
+
+  console.log('Tearing down acceptance test invoiceLicences');
+  await invoiceLicenses.delete();
 
   console.log('- Tearing down acceptance test invoices');
   await invoices.delete();

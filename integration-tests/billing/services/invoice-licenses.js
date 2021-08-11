@@ -1,5 +1,5 @@
-const { bookshelf } = require('../../../lib/connectors/bookshelf');
-const { ACCEPTANCE_TEST_SOURCE } = require('./constants');
+const { bookshelf } = require('../../../src/lib/connectors/bookshelf');
+const { ACCEPTANCE_TEST_SOURCE } = require('../../../src/modules/acceptance-tests/lib/constants');
 
 const deleteInvoiceLicencesQuery = `delete from water.billing_invoice_licences il
 using 
