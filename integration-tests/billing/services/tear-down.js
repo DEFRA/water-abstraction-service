@@ -13,6 +13,7 @@ const returnVersions = require('./return-versions');
 const returnRequirementPurposes = require('./return-requirements-purpose');
 const invoices = require('./invoices');
 const invoiceLicenses = require('./invoice-licenses');
+const permits = require('./permits');
 
 const messageQueue = require('../../../src/lib/message-queue-v2');
 
@@ -41,33 +42,26 @@ const tearDown = async (...batchesToDelete) => {
   await licenceAgreements.tearDownCypressCreatedLicenceAgreements();
   await tearDownTable('water.financial_agreement_types');
 
-  console.log('Tearing down acceptance test batches');
+  console.log('- Tearing down acceptance test batches');
   await batches.tearDown();
-
   console.log('- Tearing down acceptance test licence versions');
   await tearDownTable('water.licence_versions');
-
   console.log('- Tearing down acceptance test licences');
   await tearDownTable('water.licences');
-
   console.log('- Tearing down acceptance test regions');
   await tearDownTable('water.regions');
-
   console.log('- Tearing down acceptance test crm');
   await crmConnector.tearDown();
-
-  console.log('Tearing down acceptance test invoiceLicences');
+  console.log('- Tearing down acceptance test invoiceLicences');
   await invoiceLicenses.delete();
-
   console.log('- Tearing down acceptance test invoices');
   await invoices.delete();
-
+  console.log('- Tearing down acceptance test permits');
+  await permits.delete();
   console.log('- Tearing down acceptance test return requirement purposes');
   await returnRequirementPurposes.delete();
-
   console.log('- Tearing down acceptance test return versions');
   await returnVersions.delete();
-
   console.log('- Tearing down acceptance test returns');
   await returnsConnector.tearDown();
 

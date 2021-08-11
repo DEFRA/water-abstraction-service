@@ -38,11 +38,4 @@ experiment('modules/acceptance-tests/lib/permits', () => {
       expect(JSON.parse(permit.metadata).source).to.equal('acceptance-test-setup');
     });
   });
-
-  experiment('.delete', () => {
-    test('calls the expected function on the connector', async () => {
-      await permits.delete();
-      expect(permitsConnector.deleteAcceptanceTestData.called).to.be.true();
-    });
-  });
 });
