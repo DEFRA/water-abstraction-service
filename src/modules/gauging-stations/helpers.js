@@ -107,7 +107,7 @@ is equal to or greater than ${data.hol_rate_level}${data.hol_rate_level_unit}.`;
   if (schema === '/wr22/2.5') {
     return `No abstraction shall take place when the flow in the ${data.water_body_name.name}
 as gauged by the Agency at its flow gauging station at ${data.gauging_station.value}
-is equal to or less than ${data.max_rate}${data.max_rate_unit}</b>
+is equal to or less than ${data.max_rate}${data.max_rate_unit}
 as may be notified by the Agency. The Agency’s said gauging of the flow shall be conclusive.`;
   }
 

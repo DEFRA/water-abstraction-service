@@ -15,7 +15,7 @@ exports.findLicenceVersionPurposeConditionsByLicenceIdWithSpecificCode = `
   AND lvpct.code = :code;`;
 
 exports.getLicenceVersionConditionByPartialExternalId = `
-  SELECT lvpc.licence_version_purpose_condition_id 
+  SELECT lvpc.licence_version_purpose_condition_id, lvpc.licence_version_purpose_id
   FROM water.licence_version_purpose_conditions lvpc
   WHERE lvpc.external_id LIKE :partialExternalId
 `;
@@ -24,4 +24,15 @@ exports.getLicenceVersionConditionType = `
   SELECT lvpc.licence_version_purpose_condition_type_id 
   FROM water.licence_version_purpose_conditions lvpc
   WHERE lvpc.licence_version_purpose_condition_id = :id 
+`;
+
+exports.upsertByExternalId = `
+  INSERT INTO water.licence_version_purpose_conditions 
+  (external_id, licence_version_purpose_id, licence_version_purpose_condition_type_id, notes, source)
+  VALUES (:externalId, :licenceVersionPurposeId, :licenceVersionPurposeConditionTypeId, :notes, :source)
+  ON CONFLICT (external_id) DO UPDATE SET 
+  notes=:notes,
+  licence_version_purpose_id=:licenceVersionPurposeId, 
+  licence_version_purpose_condition_type_id=:licenceVersionPurposeConditionTypeId, 
+  source=:source
 `;

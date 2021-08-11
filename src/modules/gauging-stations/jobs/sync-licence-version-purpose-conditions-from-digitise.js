@@ -7,6 +7,7 @@ const { get } = require('lodash');
 const { logger } = require('../../../logger');
 const permitConnector = require('../../../lib/connectors/permit');
 const { digitise } = require('@envage/water-abstraction-helpers');
+const { getDigitiseText } = require('../helpers');
 // Constants
 const JOB_NAME = 'gauging-stations.copy-lvpc-from-digitise';
 
@@ -48,28 +49,25 @@ const handler = async () => {
       const { arData } = licence;
 
       arData.map(async eachArSegment => {
+        const thisSchema = eachArSegment.schema;
         const licenceVersionPurposeConditionURI = get(eachArSegment, 'content.nald_condition.id', null);
         const parts = licenceVersionPurposeConditionURI.split('/');
         const licenceVersionPurposeConditionLegacyId = `${parts[parts.length - 1]}:${parts[parts.length - 2]}`;
-        const licenceVersionPurposeConditionId = await licenceVersionPurposeConditionsService.getLicenceVersionConditionByPartialExternalId(licenceVersionPurposeConditionLegacyId);
+        const { licenceVersionPurposeConditionId, licenceVersionPurposeId } = await licenceVersionPurposeConditionsService.getLicenceVersionConditionByPartialExternalId(licenceVersionPurposeConditionLegacyId);
         const licenceVersionPurposeConditionTypeId = await licenceVersionPurposeConditionsService.getLicenceVersionConditionType(licenceVersionPurposeConditionId);
-        const notes = getDigitiseText();
+        const notes = getDigitiseText(thisSchema, eachArSegment.content).replace(/\n/g, ' '); ;
         const externalId = `digitise:${eachLicence.licence_id}:${eachLicence.licence_ref}`;
 
-        console.log({
-          licenceVersionPurposeConditionId,
-          licenceVersionPurposeConditionTypeId,
-          notes,
-          externalId
-        });
+        // Upsert the record
+        licenceVersionPurposeConditionsService.upsertByExternalId(externalId, licenceVersionPurposeId, licenceVersionPurposeConditionTypeId, notes, 'digitise');
+
         // For the successful records,
         // mark them as processed by updating the datestamp
         // in permit.licence.date_licence_version_purpose_conditions_last_copied
-        /*
+
         await permitConnector.licences.updateOne(eachLicence.licence_id, {
           date_licence_version_purpose_conditions_last_copied: new Date()
         });
-         */
       });
     }
   });

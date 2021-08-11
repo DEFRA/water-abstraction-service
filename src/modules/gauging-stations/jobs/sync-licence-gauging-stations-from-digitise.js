@@ -35,7 +35,7 @@ const handler = async () => {
   // Find out which licences need to be processed
   // Call the permit repo, and fetch any licence refs plus licence_data_value
   // where permit.licence.date_licence_version_purpose_conditions_last_copied is either null or before today
-  const licences = await permitConnector.licences.getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise();
+  const licences = await permitConnector.licences.getWaterLicencesThatHaveGaugingStationLinkagesThatNeedToBeCopiedFromDigitise();
 
   // Iterate through each licence's licence_data_value column.
   return licences.map(async eachLicence => {
@@ -80,7 +80,7 @@ const handler = async () => {
         const licenceVersionPurposeConditionURI = get(eachArSegment, 'content.nald_condition.id', null);
         const parts = licenceVersionPurposeConditionURI.split('/');
         const licenceVersionPurposeConditionLegacyId = `${parts[parts.length - 1]}:${parts[parts.length - 2]}`;
-        const licenceVersionPurposeConditionId = await licenceVersionPurposeConditionsService.getLicenceVersionConditionByPartialExternalId(licenceVersionPurposeConditionLegacyId);
+        const { licenceVersionPurposeConditionId } = await licenceVersionPurposeConditionsService.getLicenceVersionConditionByPartialExternalId(licenceVersionPurposeConditionLegacyId);
         const thresholdUnit = (get(eachArSegment, 'content.unit', null) || get(eachArSegment, 'content.max_rate_unit', null)).replace('³', '3');
         const thresholdValue = get(eachArSegment, 'content.max_rate', null) || get(eachArSegment, 'content.hol_rate_level', null);
         const flowUnits = ['Ml/d', 'm3/s', 'm3/d', 'l/s'];
@@ -96,7 +96,8 @@ const handler = async () => {
             threshold_unit: thresholdUnit,
             threshold_value: thresholdValue
           });
-          if (existingLinkage) {
+
+          if (existingLinkage.length > 0) {
             logger.info(`Linkage already exists between ${eachLicence.licence_ref} and ${gaugingStationId} at ${thresholdValue} ${thresholdUnit} - Skipping.`);
           } else {
             logger.info(`New linkage detected between ${eachLicence.licence_ref} and ${gaugingStationId} at ${thresholdValue} ${thresholdUnit} - Copying to water.licence_gauging_stations.`);

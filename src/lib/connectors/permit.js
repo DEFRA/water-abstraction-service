@@ -91,7 +91,7 @@ licences.getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise = () =
     $or: [
       {
         date_licence_version_purpose_conditions_last_copied: {
-          $gte: moment().subtract(1, 'd')
+          $lte: moment().subtract(1, 'd')
         }
       },
       {
@@ -113,7 +113,7 @@ licences.getWaterLicencesThatHaveGaugingStationLinkagesThatNeedToBeCopiedFromDig
     $or: [
       {
         date_gauging_station_links_last_copied: {
-          $gte: moment().subtract(3, 'd')
+          $lte: moment().subtract(1, 'd')
         }
       },
       {

@@ -18,8 +18,8 @@ const findManyByLicenceId = (licenceId, code = null) => {
 };
 
 const getLicenceVersionConditionByPartialExternalId = async partialExternalId => {
-  const { licenceVersionPurposeConditionId } = await raw.singleRow(queries.getLicenceVersionConditionByPartialExternalId, { partialExternalId: `${partialExternalId}\%` });
-  return licenceVersionPurposeConditionId;
+  const { licenceVersionPurposeConditionId, licenceVersionPurposeId } = await raw.singleRow(queries.getLicenceVersionConditionByPartialExternalId, { partialExternalId: `${partialExternalId}\%` });
+  return { licenceVersionPurposeConditionId, licenceVersionPurposeId };
 };
 
 const getLicenceVersionConditionType = async id => {
@@ -27,7 +27,18 @@ const getLicenceVersionConditionType = async id => {
   return licenceVersionPurposeConditionTypeId;
 };
 
+const upsertByExternalId = async (externalId, licenceVersionPurposeId, licenceVersionPurposeConditionTypeId, notes, source) => {
+  await raw.multiRow(queries.upsertByExternalId, {
+    externalId,
+    licenceVersionPurposeId,
+    licenceVersionPurposeConditionTypeId,
+    notes,
+    source
+  });
+};
+
 exports.findOneById = findOneById;
 exports.findManyByLicenceId = findManyByLicenceId;
 exports.getLicenceVersionConditionByPartialExternalId = getLicenceVersionConditionByPartialExternalId;
 exports.getLicenceVersionConditionType = getLicenceVersionConditionType;
+exports.upsertByExternalId = upsertByExternalId;
