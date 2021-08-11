@@ -1,6 +1,5 @@
 const { usersClient } = require('../../../lib/connectors/idm');
 const { setInternalUserRoles } = require('../../../lib/connectors/idm/user-roles');
-const acceptanceTestsConnector = require('../../../lib/connectors/idm/acceptance-tests');
 
 const {
   TEST_USER_PASSWORD,
@@ -36,4 +35,3 @@ const createInternalUser = async (email, group, roles = []) => {
 
 exports.createExternalUser = createExternalUser;
 exports.createInternalUser = createInternalUser;
-exports.delete = () => acceptanceTestsConnector.deleteAcceptanceTestData();

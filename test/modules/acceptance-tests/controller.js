@@ -73,7 +73,6 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(notifications, 'delete').resolves();
     sandbox.stub(events, 'delete').resolves();
     sandbox.stub(documents, 'delete').resolves();
-    sandbox.stub(users, 'delete').resolves();
     sandbox.stub(sessions, 'delete').resolves();
     sandbox.stub(chargeVersionWorkflows, 'delete').resolves();
     sandbox.stub(transactions, 'delete').resolves();
@@ -98,7 +97,6 @@ experiment('modules/acceptance-tests/controller', () => {
         expect(returnRequirements.delete.called).to.be.true();
         expect(events.delete.called).to.be.true();
         expect(documents.delete.called).to.be.true();
-        expect(users.delete.called).to.be.true();
         expect(sessions.delete.called).to.be.true();
         expect(chargeVersionWorkflows.delete.called).to.be.true();
         expect(transactions.delete.called).to.be.true();
@@ -300,7 +298,6 @@ experiment('modules/acceptance-tests/controller', () => {
       expect(returnRequirements.delete.called).to.be.true();
       expect(events.delete.called).to.be.true();
       expect(documents.delete.called).to.be.true();
-      expect(users.delete.called).to.be.true();
       expect(sessions.delete.called).to.be.true();
       expect(chargeVersionWorkflows.delete.called).to.be.true();
       expect(transactions.delete.called).to.be.true();

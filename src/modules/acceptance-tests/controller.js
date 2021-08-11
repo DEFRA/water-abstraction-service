@@ -296,8 +296,6 @@ const postTearDown = async () => {
   await events.delete();
   console.log('Tearing down acceptance test documents');
   await documents.delete();
-  console.log('Tearing down acceptance test users');
-  await users.delete();
   console.log('Tearing down acceptance test sessions');
   await sessions.delete();
   console.log('Tearing down acceptance test charge version workflows');

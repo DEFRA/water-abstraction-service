@@ -14,6 +14,7 @@ const invoices = require('./invoices');
 const invoiceLicenses = require('./invoice-licenses');
 const permits = require('./permits');
 const entities = require('./entities');
+const users = require('./users');
 
 const messageQueue = require('../../../src/lib/message-queue-v2');
 
@@ -54,6 +55,8 @@ const tearDown = async (...batchesToDelete) => {
   await crmConnector.tearDown();
   console.log('- Tearing down acceptance test entities');
   await entities.delete();
+  console.log('- Tearing down acceptance test users');
+  await users.delete();
   console.log('- Tearing down acceptance test invoiceLicences');
   await invoiceLicenses.delete();
   console.log('- Tearing down acceptance test invoices');
