@@ -20,5 +20,8 @@ const getLicenceVersionPurposeConditionsByLicenceId = async (licenceId, code) =>
   };
 };
 
+const getLicenceVersionConditionByPartialExternalId = licenceVersionPurposeConditionsRepo.getLicenceVersionConditionByPartialExternalId;
+
 exports.getLicenceVersionConditionById = getLicenceVersionConditionById;
 exports.getLicenceVersionPurposeConditionsByLicenceId = getLicenceVersionPurposeConditionsByLicenceId;
+exports.getLicenceVersionConditionByPartialExternalId = getLicenceVersionConditionByPartialExternalId;

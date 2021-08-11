@@ -13,3 +13,9 @@ exports.findLicenceVersionPurposeConditionsByLicenceIdWithSpecificCode = `
   JOIN water.licence_versions lv on lv.licence_version_id = lvp.licence_version_id
   WHERE lv.licence_id = :licenceId
   AND lvpct.code = :code;`;
+
+exports.getLicenceVersionConditionByPartialExternalId = `
+  SELECT lvpc.licence_version_purpose_condition_id 
+  FROM water.licence_version_purpose_conditions lvpc
+  WHERE lvpc.external_id LIKE :partialExternalId
+`;
