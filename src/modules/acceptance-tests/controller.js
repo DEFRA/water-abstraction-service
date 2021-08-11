@@ -294,8 +294,6 @@ const postTearDown = async () => {
   await notifications.delete();
   console.log('Tearing down acceptance test events');
   await events.delete();
-  console.log('Tearing down acceptance test permits');
-  await permits.delete();
   console.log('Tearing down acceptance test entities');
   await entities.delete();
   console.log('Tearing down acceptance test documents');

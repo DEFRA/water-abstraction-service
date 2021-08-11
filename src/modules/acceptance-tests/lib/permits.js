@@ -322,4 +322,3 @@ const createCurrentLicence = async (licenceRef) => {
 };
 
 exports.createCurrentLicence = createCurrentLicence;
-exports.delete = () => permitsConnector.deleteAcceptanceTestData();
