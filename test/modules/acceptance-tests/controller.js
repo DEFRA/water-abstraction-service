@@ -23,7 +23,6 @@ const returnRequirements = require('../../../src/modules/acceptance-tests/lib/re
 const returnRequirementPurposes = require('../../../src/modules/acceptance-tests/lib/return-requirements-purposes');
 const returnVersions = require('../../../src/modules/acceptance-tests/lib/return-versions');
 const transactions = require('../../../src/modules/acceptance-tests/lib/billing-transactions');
-const invoiceLicences = require('../../../src/modules/acceptance-tests/lib/billing-invoice-licences');
 const setLoader = require('../../../integration-tests/billing/services/loader');
 
 const controller = require('../../../src/modules/acceptance-tests/controller');
@@ -80,7 +79,6 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(sessions, 'delete').resolves();
     sandbox.stub(chargeVersionWorkflows, 'delete').resolves();
     sandbox.stub(transactions, 'delete').resolves();
-    sandbox.stub(invoiceLicences, 'delete').resolves();
     sandbox.stub(chargeTestDataTearDown, 'tearDown').resolves();
 
     sandbox.stub(setLoader, 'createSetLoader');
@@ -108,7 +106,6 @@ experiment('modules/acceptance-tests/controller', () => {
         expect(sessions.delete.called).to.be.true();
         expect(chargeVersionWorkflows.delete.called).to.be.true();
         expect(transactions.delete.called).to.be.true();
-        expect(invoiceLicences.delete.called).to.be.true();
         expect(chargeTestDataTearDown.tearDown.called).to.be.true();
       });
 
@@ -313,7 +310,6 @@ experiment('modules/acceptance-tests/controller', () => {
       expect(sessions.delete.called).to.be.true();
       expect(chargeVersionWorkflows.delete.called).to.be.true();
       expect(transactions.delete.called).to.be.true();
-      expect(invoiceLicences.delete.called).to.be.true();
       expect(chargeTestDataTearDown.tearDown.called).to.be.true();
     });
   });

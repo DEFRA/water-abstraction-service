@@ -11,7 +11,6 @@ const returnRequirementPurposes = require('./lib/return-requirements-purposes');
 const permits = require('./lib/permits');
 const entities = require('./lib/entities');
 const transactions = require('./lib/billing-transactions');
-const invoiceLicences = require('./lib/billing-invoice-licences');
 const chargeVersionWorkflows = require('./lib/charge-version-workflows');
 const licences = require('./lib/licences');
 const users = require('./lib/users');
@@ -309,8 +308,6 @@ const postTearDown = async () => {
   await chargeVersionWorkflows.delete();
   console.log('Tearing down acceptance test transactions');
   await transactions.delete();
-  console.log('Tearing down acceptance test invoiceLicences');
-  await invoiceLicences.delete();
 
   return 'tear down complete';
 };
