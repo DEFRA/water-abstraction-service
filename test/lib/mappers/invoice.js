@@ -17,7 +17,6 @@ const FinancialYear = require('../../../src/lib/models/financial-year');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 
 const invoiceMapper = require('../../../src/lib/mappers/invoice');
-const instance = require('../../../src/lib/connectors/charge-module/lib/got-cm');
 
 const invoiceRow = {
   billingInvoiceId: '5a1577d7-8dc9-4d67-aadc-37d7ea85abca',
