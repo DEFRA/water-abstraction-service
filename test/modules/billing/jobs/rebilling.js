@@ -57,6 +57,7 @@ experiment('modules/billing/jobs/rebilling', () => {
     sandbox.stub(batchService, 'setErrorStatus');
 
     sandbox.stub(invoiceService, 'getInvoicesFlaggedForRebilling');
+    sandbox.stub(invoiceService, 'updateInvoice').resolves();
 
     sandbox.stub(rebillingService, 'rebillInvoice');
 
