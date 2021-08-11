@@ -77,11 +77,4 @@ experiment('modules/acceptance-tests/lib/entities', () => {
       expect(companyId).to.equal('comp-id');
     });
   });
-
-  experiment('.delete', () => {
-    test('calls the expected function on the connector', async () => {
-      await entities.delete();
-      expect(entityConnector.deleteAcceptanceTestData.called).to.be.true();
-    });
-  });
 });

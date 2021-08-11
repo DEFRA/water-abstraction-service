@@ -39,4 +39,3 @@ exports.createV1Company = createV1Company;
 exports.createV2Company = createV2Company;
 exports.createV2Address = createV2Address;
 exports.createEntityRole = createEntityRole;
-exports.delete = () => entityConnector.deleteAcceptanceTestData();
