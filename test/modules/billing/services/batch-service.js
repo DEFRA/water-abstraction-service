@@ -778,16 +778,16 @@ experiment('modules/billing/services/batch-service', () => {
     const invoiceCount = 2;
     const creditNoteCount = 3;
     const netTotal = 1234;
-    const creditNoteValue = 500;
+    const creditNoteValue = -500;
     const invoiceValue = 750000;
     const status = 'generated';
 
     const cmResponse = {
       billRun: {
         invoiceCount,
-        creditLineCount: creditNoteCount,
+        creditNoteCount,
         invoiceValue,
-        creditLineValue: creditNoteValue,
+        creditNoteValue,
         netTotal,
         status
       }
