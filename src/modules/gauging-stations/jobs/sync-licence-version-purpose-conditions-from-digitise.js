@@ -53,7 +53,7 @@ const handler = async () => {
         const licenceVersionPurposeConditionLegacyId = `${parts[parts.length - 1]}:${parts[parts.length - 2]}`;
         const { licenceVersionPurposeConditionId, licenceVersionPurposeId } = await licenceVersionPurposeConditionsService.getLicenceVersionConditionByPartialExternalId(licenceVersionPurposeConditionLegacyId);
         const licenceVersionPurposeConditionTypeId = await licenceVersionPurposeConditionsService.getLicenceVersionConditionType(licenceVersionPurposeConditionId);
-        const notes = getDigitiseText(thisSchema, eachArSegment.content).replace(/\n/g, ' '); ;
+        const notes = getDigitiseText(thisSchema, eachArSegment.content).replace(/\n/g, ' ');
         const externalId = `digitise:${eachLicence.licence_id}:${eachLicence.licence_ref}`;
 
         // Upsert the record
