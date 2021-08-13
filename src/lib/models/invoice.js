@@ -24,7 +24,8 @@ const Totals = require('./totals');
 const rebillingState = {
   rebill: 'rebill',
   reversal: 'reversal',
-  rebilled: 'rebilled'
+  rebilled: 'rebilled',
+  unrebillable: 'unrebillable'
 };
 
 class Invoice extends Totals {
