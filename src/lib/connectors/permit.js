@@ -121,7 +121,7 @@ licences.getWaterLicencesThatHaveGaugingStationLinkagesThatNeedToBeCopiedFromDig
       }
     ]
   };
-  return licences.findAll(filter, null, ['licence_ref', 'licence_data_value']);
+  return licences.findAll(filter, null, ['licence_id', 'licence_ref', 'licence_data_value']);
 };
 
 const deleteAcceptanceTestData = () => {
