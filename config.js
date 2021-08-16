@@ -204,8 +204,7 @@ module.exports = {
   },
 
   redis: {
-    // Note: this limit needs increasing when further Bull MQ job queues are added
-    maxListenerCount: 33,
+    maxListenerCount: 64,
     connection: {
       host: process.env.REDIS_HOST || '127.0.0.1',
       port: process.env.REDIS_PORT || 6379,
