@@ -52,8 +52,12 @@ const handler = async job => {
   // Process each invoice that needs rebilling
   for (const invoice of invoices) {
     await rebillingService.rebillInvoice(batch, invoice.id);
-    await invoiceService.updateInvoice(invoice.id, { rebillingState: 'rebilled' });
-  }
+    const changes = {
+      rebillingState: 'rebilled',
+      originalBillingInvoiceId: invoice.originalBillingInvoiceId || invoice.id
+    };
+    await invoiceService.updateInvoice(invoice.id, changes);
+  };
 };
 
 const onComplete = async (job, queueManager) => {
