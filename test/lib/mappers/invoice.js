@@ -39,7 +39,8 @@ const invoiceRow = {
   originalBillingInvoice: {
     billingInvoiceId: '4139a53a-a1f0-4dc9-bf1a-b97e41c5e899'
   },
-  originalBillingInvoiceId: '4139a53a-a1f0-4dc9-bf1a-b97e41c5e899'
+  originalBillingInvoiceId: '4139a53a-a1f0-4dc9-bf1a-b97e41c5e899',
+  billingBatchId: '4139a53a-a1f0-4dc9-bf1a-b97e41c5e899'
 };
 
 experiment('lib/mappers/invoice', () => {
@@ -97,6 +98,10 @@ experiment('lib/mappers/invoice', () => {
       expect(linkedInvoices).to.be.an.array().length(2);
       expect(linkedInvoices[0].id).to.equal(invoiceRow.linkedBillingInvoices[1].billingInvoiceId);
       expect(linkedInvoices[1].id).to.equal(invoiceRow.originalBillingInvoiceId);
+    });
+
+    test('maps the batch id', () => {
+      expect(result.billingBatchId).to.equal(invoiceRow.billingBatchId);
     });
   });
 
