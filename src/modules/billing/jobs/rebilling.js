@@ -8,7 +8,7 @@ const { logger } = require('../../../logger');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 const batchStatus = require('./lib/batch-status');
-
+const { isEmpty } = require('lodash');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 
 // Services
@@ -54,7 +54,7 @@ const handler = async job => {
     await rebillingService.rebillInvoice(batch, invoice.id);
     const changes = {
       rebillingState: 'rebilled',
-      originalBillingInvoiceId: invoice.originalBillingInvoiceId || invoice.id
+      originalBillingInvoiceId: isEmpty(invoice.originalBillingInvoiceId) ? invoice.id : invoice.originalBillingInvoiceId
     };
     await invoiceService.updateInvoice(invoice.id, changes);
   };
