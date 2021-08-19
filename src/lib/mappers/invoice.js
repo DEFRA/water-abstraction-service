@@ -37,7 +37,8 @@ const dbToModelMapper = createMapper()
     'legacyId',
     'metadata',
     'isFlaggedForRebilling',
-    'rebillingState'
+    'rebillingState',
+    'billingBatchId'
   )
   .map('netAmount').to('netTotal')
   .map('billingInvoiceId').to('id')
