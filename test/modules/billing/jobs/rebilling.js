@@ -142,7 +142,10 @@ experiment('modules/billing/jobs/rebilling', () => {
         expect(invoiceService.updateInvoice.callCount).to.equal(1);
         expect(invoiceService.updateInvoice.calledWith(
           invoice.id,
-          { rebillingState: 'rebilled' }
+          {
+            rebillingState: 'rebilled',
+            originalBillingInvoiceId: invoice.id
+          }
         )).to.be.true();
       });
     });

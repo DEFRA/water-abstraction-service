@@ -10,7 +10,8 @@ const {
   assertNullablePositiveOrZeroInteger,
   assertNullableNegativeOrZeroInteger,
   assertIsNullableBoolean,
-  assertNullableEnum
+  assertNullableEnum,
+  assertId
 } = require('./validators');
 
 const Address = require('./address');
@@ -294,6 +295,18 @@ class Invoice extends Totals {
   set externalId (externalId) {
     assertNullableId(externalId);
     this._externalId = externalId;
+  }
+
+  get billingBatchId () {
+    return this._billingBatchId;
+  }
+
+  /**
+   * Sets the batch ID.
+   */
+  set billingBatchId (billingBatchId) {
+    assertId(billingBatchId);
+    this._billingBatchId = billingBatchId;
   }
 
   /**
