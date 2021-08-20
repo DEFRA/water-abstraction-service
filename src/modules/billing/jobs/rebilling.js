@@ -54,7 +54,7 @@ const handler = async job => {
     await rebillingService.rebillInvoice(batch, invoice.id);
     const changes = {
       rebillingState: 'rebilled',
-      originalBillingInvoiceId: isEmpty(invoice.originalBillingInvoiceId) ? invoice.id : invoice.originalBillingInvoiceId
+      originalBillingInvoiceId: isEmpty(invoice.originalInvoiceId) ? invoice.id : invoice.originalInvoiceId
     };
     await invoiceService.updateInvoice(invoice.id, changes);
   }
