@@ -57,7 +57,7 @@ const handler = async job => {
       originalBillingInvoiceId: isEmpty(invoice.originalBillingInvoiceId) ? invoice.id : invoice.originalBillingInvoiceId
     };
     await invoiceService.updateInvoice(invoice.id, changes);
-  };
+  }
 };
 
 const onComplete = async (job, queueManager) => {
