@@ -48,6 +48,7 @@ const dbToModelMapper = createMapper()
   .map('billingBatch').to('batch', batchMapper.dbToModel)
   .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding))
   .map('originalBillingInvoiceId').to('originalInvoiceId')
+  .map('rebillingState').to('rebillingStateLabel')
   .map(['billingInvoiceId', 'linkedBillingInvoices', 'originalBillingInvoice']).to('linkedInvoices', mapLinkedInvoices);
 
 /**

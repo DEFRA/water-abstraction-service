@@ -339,25 +339,23 @@ class Invoice extends Totals {
     return null;
   }
 
+  set rebillingStateLabel (rebillingStateLabel) {
+    assertNullableString(rebillingStateLabel);
+    this._rebillingStateLabel = rebillingStateLabel;
+  }
+
   get rebillingStateLabel () {
-    if (this.rebillingState === 'rebilled' && this.originalInvoiceId === this.id) {
-      return 'original';
-    }
-    if (this.linkedInvoices.length > 0) {
-      return this.linkedInvoices[0].originalInvoiceId === this.id ? 'original' : this.rebillingState;
-    } else {
-      return this.rebillingState;
-    }
+    return this._rebillingStateLabel;
   }
 
   toJSON () {
-    const { hasTransactionErrors, displayLabel, rebillingStateLabel } = this;
-    return {
+    const { hasTransactionErrors, displayLabel } = this;
+    const invoice = {
       hasTransactionErrors,
       displayLabel,
-      rebillingStateLabel,
       ...super.toJSON()
     };
+    return getRebillingStateLabels(invoice);
   }
 
   /**
@@ -402,6 +400,28 @@ class Invoice extends Totals {
     return this._linkedInvoices;
   }
 }
+
+/**
+ * This is a helper method to correct the rebilling state labels for the invoice and linked invoices.
+ * @param {Object} invoice
+ * @returns JSON Object
+ */
+const getRebillingStateLabels = (invoice) => {
+  if (invoice.rebillingState === 'rebilled' && invoice.originalInvoiceId === invoice.id) {
+    invoice.rebillingStateLabel = 'original';
+    return invoice;
+  }
+  if (invoice.linkedInvoices.length > 0) {
+    if (invoice.linkedInvoices[0].rebillingStateLabel === 'rebilled' && invoice.linkedInvoices[0].originalInvoiceId === invoice.id) {
+      invoice.linkedInvoices[0].rebillingStateLabel = 'original';
+      return invoice;
+    } else {
+      invoice.linkedInvoices[1].rebillingStateLabel = 'original';
+      return invoice;
+    }
+  }
+  return invoice;
+};
 
 module.exports = Invoice;
 module.exports.rebillingState = rebillingState;

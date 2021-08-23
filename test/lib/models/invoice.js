@@ -421,7 +421,7 @@ experiment('lib/models/invoice', () => {
       test('"de minimis bill" when isDeMinimis is true', async () => {
         invoice = new Invoice();
         invoice.fromHash({
-          billingInvoiceId: uuid(),
+          id: uuid(),
           isDeMinimis: true,
           legacyId: null,
           netTotal: 0,
@@ -434,7 +434,7 @@ experiment('lib/models/invoice', () => {
       test('"NALD revised bill" when a legacy id is present', async () => {
         invoice = new Invoice();
         invoice.fromHash({
-          billingInvoiceId: uuid(),
+          id: uuid(),
           isDeMinimis: false,
           legacyId: '12345:583',
           netTotal: 0,
@@ -447,7 +447,7 @@ experiment('lib/models/invoice', () => {
       test('"zero value bill" when net amount is 0', async () => {
         invoice = new Invoice();
         invoice.fromHash({
-          billingInvoiceId: uuid(),
+          id: uuid(),
           isDeMinimis: false,
           legacyId: null,
           netTotal: 0,
@@ -460,7 +460,7 @@ experiment('lib/models/invoice', () => {
       test('null if none of the expected criteria are met', async () => {
         invoice = new Invoice();
         invoice.fromHash({
-          billingInvoiceId: uuid(),
+          id: uuid(),
           isDeMinimis: false,
           legacyId: null,
           netTotal: 50,
@@ -469,6 +469,64 @@ experiment('lib/models/invoice', () => {
         const result = invoice.toJSON();
         expect(result.displayLabel).to.equal(null);
       });
+    });
+
+    experiment('rebillinStateLabel, set to', () => {
+      test('"original" when the id === original invoice id', async () => {
+        const id = uuid();
+        invoice = new Invoice();
+        invoice.fromHash({
+          id: id,
+          legacyId: null,
+          netTotal: 0,
+          invoiceNumber: null,
+          rebillingState: 'rebilled',
+          originalInvoiceId: id
+        });
+        const result = invoice.toJSON();
+        expect(result.rebillingStateLabel).to.equal('original');
+      });
+
+      test('"NALD revised bill" when a legacy id is present', async () => {
+        const id = uuid();
+        invoice = new Invoice();
+        invoice.fromHash({
+          id: id,
+          legacyId: null,
+          netTotal: 0,
+          invoiceNumber: null,
+          rebillingState: 'rebilled',
+          originalInvoiceId: id
+        });
+        const result = invoice.toJSON();
+        expect(result.displayLabel).to.equal('NALD revised bill');
+      });
+
+      // test('"zero value bill" when net amount is 0', async () => {
+      //   invoice = new Invoice();
+      //   invoice.fromHash({
+      //     billingInvoiceId: uuid(),
+      //     isDeMinimis: false,
+      //     legacyId: null,
+      //     netTotal: 0,
+      //     invoiceNumber: null
+      //   });
+      //   const result = invoice.toJSON();
+      //   expect(result.displayLabel).to.equal('Zero value bill');
+      // });
+
+      // test('null if none of the expected criteria are met', async () => {
+      //   invoice = new Invoice();
+      //   invoice.fromHash({
+      //     billingInvoiceId: uuid(),
+      //     isDeMinimis: false,
+      //     legacyId: null,
+      //     netTotal: 50,
+      //     invoiceNumber: null
+      //   });
+      //   const result = invoice.toJSON();
+      //   expect(result.displayLabel).to.equal(null);
+      // });
     });
   });
 
