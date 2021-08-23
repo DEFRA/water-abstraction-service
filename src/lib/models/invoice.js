@@ -339,11 +339,23 @@ class Invoice extends Totals {
     return null;
   }
 
+  get rebillingStateLabel () {
+    if (this.rebillingState === 'rebilled' && this.originalInvoiceId === this.id) {
+      return 'original';
+    }
+    if (this.linkedInvoices.length > 0) {
+      return this.linkedInvoices[0].originalInvoiceId === this.id ? 'original' : this.rebillingState;
+    } else {
+      return this.rebillingState;
+    }
+  }
+
   toJSON () {
-    const { hasTransactionErrors, displayLabel } = this;
+    const { hasTransactionErrors, displayLabel, rebillingStateLabel } = this;
     return {
       hasTransactionErrors,
       displayLabel,
+      rebillingStateLabel,
       ...super.toJSON()
     };
   }
