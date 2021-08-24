@@ -113,6 +113,14 @@ experiment('lib/mappers/invoice', () => {
       expect(result.linkedInvoices[0].rebillingStateLabel).to.equal('reversal');
       expect(result.linkedInvoices[1].rebillingStateLabel).to.equal('original');
     });
+
+    test('maps the rebillingStateLabels correctly when the original invoice is the billingInvoice row', () => {
+      invoiceRow.billingInvoiceId = invoiceRow.originalBillingInvoiceId;
+      const invoiceModel = invoiceMapper.dbToModel(invoiceRow);
+      expect(invoiceModel.rebillingStateLabel).to.equal('original');
+      expect(invoiceModel.linkedInvoices[0].rebillingStateLabel).to.equal('rebilled');
+      expect(invoiceModel.linkedInvoices[1].rebillingStateLabel).to.equal('reversal');
+    });
   });
 
   experiment('.modelToDB', () => {
