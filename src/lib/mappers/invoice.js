@@ -66,7 +66,7 @@ const dbToModel = row => {
  * @param {Invoice} invoice the invoice service model
  * @returns Invoice service model with corrected rebilling state labels for the UI
  */
-const getRebillingStateLabels = (invoice) => {
+const getRebillingStateLabels = invoice => {
   if (invoice.rebillingState === 'rebilled' && invoice.originalInvoiceId === invoice.id) {
     invoice.rebillingStateLabel = 'original';
     return invoice;
