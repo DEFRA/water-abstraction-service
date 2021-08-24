@@ -1,5 +1,4 @@
 // Syncs gauging stations from CSV on S3
-
 'use strict';
 
 // Dependencies

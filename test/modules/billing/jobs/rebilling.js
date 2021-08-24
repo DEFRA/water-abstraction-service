@@ -57,6 +57,7 @@ experiment('modules/billing/jobs/rebilling', () => {
     sandbox.stub(batchService, 'setErrorStatus');
 
     sandbox.stub(invoiceService, 'getInvoicesFlaggedForRebilling');
+    sandbox.stub(invoiceService, 'updateInvoice').resolves();
 
     sandbox.stub(rebillingService, 'rebillInvoice');
 
@@ -134,6 +135,32 @@ experiment('modules/billing/jobs/rebilling', () => {
         expect(rebillingService.rebillInvoice.callCount).to.equal(1);
         expect(rebillingService.rebillInvoice.calledWith(
           batch, invoice.id
+        )).to.be.true();
+      });
+
+      test('calls the .invoice service method for each invoice retrieved', async () => {
+        expect(invoiceService.updateInvoice.callCount).to.equal(1);
+        expect(invoiceService.updateInvoice.calledWith(
+          invoice.id,
+          {
+            rebillingState: 'rebilled',
+            originalBillingInvoiceId: invoice.id
+          }
+        )).to.be.true();
+      });
+
+      test('the original invoice id is updated with the correct id', async () => {
+        invoice.originalInvoiceId = uuid();
+        invoiceService.getInvoicesFlaggedForRebilling.resolves([
+          invoice
+        ]);
+        await rebillingJob.handler(job);
+        expect(invoiceService.updateInvoice.calledWith(
+          invoice.id,
+          {
+            rebillingState: 'rebilled',
+            originalBillingInvoiceId: invoice.originalInvoiceId
+          }
         )).to.be.true();
       });
     });

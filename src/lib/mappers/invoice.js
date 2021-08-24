@@ -12,10 +12,18 @@ const batchMapper = require('../../modules/billing/mappers/batch');
 
 const { createMapper } = require('../object-mapper');
 const { createModel } = require('./lib/helpers');
+const { isEmpty } = require('lodash');
 
-const mapLinkedInvoices = (billingInvoiceId, linkedBillingInvoices = []) => linkedBillingInvoices
-  .filter(linkedBillingInvoice => linkedBillingInvoice.billingInvoiceId !== billingInvoiceId)
-  .map(dbToModel);
+const mapLinkedInvoices = (billingInvoiceId, linkedBillingInvoices = [], originalBillingInvoice = {}) => {
+  const invoices = linkedBillingInvoices
+    .filter(linkedBillingInvoice => ![billingInvoiceId, originalBillingInvoice.billingInvoiceId].includes(linkedBillingInvoice.billingInvoiceId))
+    .map(dbToModel);
+
+  if (!(isEmpty(originalBillingInvoice)) && billingInvoiceId !== originalBillingInvoice.billingInvoiceId) {
+    invoices.push(dbToModel(originalBillingInvoice));
+  }
+  return invoices;
+};
 
 const dbToModelMapper = createMapper()
   .copy(
@@ -29,7 +37,8 @@ const dbToModelMapper = createMapper()
     'legacyId',
     'metadata',
     'isFlaggedForRebilling',
-    'rebillingState'
+    'rebillingState',
+    'billingBatchId'
   )
   .map('netAmount').to('netTotal')
   .map('billingInvoiceId').to('id')
@@ -39,7 +48,7 @@ const dbToModelMapper = createMapper()
   .map('billingBatch').to('batch', batchMapper.dbToModel)
   .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding))
   .map('originalBillingInvoiceId').to('originalInvoiceId')
-  .map(['billingInvoiceId', 'linkedBillingInvoices']).to('linkedInvoices', mapLinkedInvoices);
+  .map(['billingInvoiceId', 'linkedBillingInvoices', 'originalBillingInvoice']).to('linkedInvoices', mapLinkedInvoices);
 
 /**
  * Converts DB representation to a Invoice service model

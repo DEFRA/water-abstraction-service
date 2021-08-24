@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "repository": {
@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@envage/hapi-pg-rest-api": "github:DEFRA/hapi-pg-rest-api#master",
-    "@envage/water-abstraction-helpers": "github:DEFRA/water-abstraction-helpers#Upgrade-to-joi-17",
+    "@envage/water-abstraction-helpers": "github:DEFRA/water-abstraction-helpers#add-digitise-helpers",
     "@hapi/boom": "^7.4.11",
     "@hapi/catbox-redis": "^6.0.1",
     "@hapi/good": "^8.2.4",
