@@ -28,6 +28,12 @@ const rebillingState = {
   rebilled: 'rebilled',
   unrebillable: 'unrebillable'
 };
+const rebillingStateLabel = {
+  rebill: 'rebill',
+  reversal: 'reversal',
+  rebilled: 'rebilled',
+  unrebillable: 'original'
+};
 
 class Invoice extends Totals {
   constructor (id) {
@@ -339,9 +345,12 @@ class Invoice extends Totals {
     return null;
   }
 
-  set rebillingStateLabel (rebillingStateLabel) {
-    assertNullableString(rebillingStateLabel);
-    this._rebillingStateLabel = rebillingStateLabel;
+  /**
+   * sets the rebilling state label only used by the UI
+   */
+  set rebillingStateLabel (value) {
+    assertNullableEnum(value, Object.values(rebillingStateLabel));
+    this._rebillingStateLabel = value;
   }
 
   get rebillingStateLabel () {
@@ -350,12 +359,11 @@ class Invoice extends Totals {
 
   toJSON () {
     const { hasTransactionErrors, displayLabel } = this;
-    const invoice = {
+    return {
       hasTransactionErrors,
       displayLabel,
       ...super.toJSON()
     };
-    return getRebillingStateLabels(invoice);
   }
 
   /**
@@ -400,28 +408,6 @@ class Invoice extends Totals {
     return this._linkedInvoices;
   }
 }
-
-/**
- * This is a helper method to correct the rebilling state labels for the invoice and linked invoices.
- * @param {Object} invoice
- * @returns JSON Object
- */
-const getRebillingStateLabels = (invoice) => {
-  if (invoice.rebillingState === 'rebilled' && invoice.originalInvoiceId === invoice.id) {
-    invoice.rebillingStateLabel = 'original';
-    return invoice;
-  }
-  if (invoice.linkedInvoices.length > 0) {
-    if (invoice.linkedInvoices[0].rebillingStateLabel === 'rebilled' && invoice.linkedInvoices[0].originalInvoiceId === invoice.id) {
-      invoice.linkedInvoices[0].rebillingStateLabel = 'original';
-      return invoice;
-    } else {
-      invoice.linkedInvoices[1].rebillingStateLabel = 'original';
-      return invoice;
-    }
-  }
-  return invoice;
-};
 
 module.exports = Invoice;
 module.exports.rebillingState = rebillingState;

@@ -470,63 +470,39 @@ experiment('lib/models/invoice', () => {
         expect(result.displayLabel).to.equal(null);
       });
     });
+  });
 
-    experiment('rebillinStateLabel, set to', () => {
-      test('"original" when the id === original invoice id', async () => {
-        const id = uuid();
-        invoice = new Invoice();
-        invoice.fromHash({
-          id: id,
-          legacyId: null,
-          netTotal: 0,
-          invoiceNumber: null,
-          rebillingState: 'rebilled',
-          originalInvoiceId: id
-        });
-        const result = invoice.toJSON();
-        expect(result.rebillingStateLabel).to.equal('original');
-      });
+  experiment('.rebillingStateLabel', () => {
+    test('can be set to "rebill"', async () => {
+      invoice.rebillingStateLabel = 'rebill';
+      expect(invoice.rebillingStateLabel).to.equal('rebill');
+    });
 
-      test('"NALD revised bill" when a legacy id is present', async () => {
-        const id = uuid();
-        invoice = new Invoice();
-        invoice.fromHash({
-          id: id,
-          legacyId: null,
-          netTotal: 0,
-          invoiceNumber: null,
-          rebillingState: 'rebilled',
-          originalInvoiceId: id
-        });
-        const result = invoice.toJSON();
-        expect(result.displayLabel).to.equal('NALD revised bill');
-      });
+    test('can be set to "reversal"', async () => {
+      invoice.rebillingStateLabel = 'reversal';
+      expect(invoice.rebillingStateLabel).to.equal('reversal');
+    });
 
-      // test('"zero value bill" when net amount is 0', async () => {
-      //   invoice = new Invoice();
-      //   invoice.fromHash({
-      //     billingInvoiceId: uuid(),
-      //     isDeMinimis: false,
-      //     legacyId: null,
-      //     netTotal: 0,
-      //     invoiceNumber: null
-      //   });
-      //   const result = invoice.toJSON();
-      //   expect(result.displayLabel).to.equal('Zero value bill');
-      // });
+    test('can be set to "reversal"', async () => {
+      invoice.rebillingStateLabel = 'rebilled';
+      expect(invoice.rebillingStateLabel).to.equal('rebilled');
+    });
 
-      // test('null if none of the expected criteria are met', async () => {
-      //   invoice = new Invoice();
-      //   invoice.fromHash({
-      //     billingInvoiceId: uuid(),
-      //     isDeMinimis: false,
-      //     legacyId: null,
-      //     netTotal: 50,
-      //     invoiceNumber: null
-      //   });
-      //   const result = invoice.toJSON();
-      //   expect(result.displayLabel).to.equal(null);
-      // });
+    test('can be set to "original"', async () => {
+      invoice.rebillingStateLabel = 'original';
+      expect(invoice.rebillingStateLabel).to.equal('original');
+    });
+
+    test('can be set to null', async () => {
+      invoice.rebillingStateLabel = null;
+      expect(invoice.rebillingStateLabel).to.equal(null);
+    });
+
+    test('throws an error if set to another string', async () => {
+      const func = () => {
+        invoice.rebillingStateLabel = 'invalid-state';
+      };
+      expect(func).to.throw();
     });
   });
 
