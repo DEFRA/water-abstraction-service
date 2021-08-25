@@ -483,6 +483,11 @@ experiment('lib/models/invoice', () => {
       expect(invoice.rebillingState).to.equal('reversal');
     });
 
+    test('can be set to "reversal"', async () => {
+      invoice.rebillingState = 'rebilled';
+      expect(invoice.rebillingState).to.equal('rebilled');
+    });
+
     test('can be set to null', async () => {
       invoice.rebillingState = null;
       expect(invoice.rebillingState).to.equal(null);
@@ -511,6 +516,28 @@ experiment('lib/models/invoice', () => {
     test('throws an error if not a guid', async () => {
       const func = () => {
         invoice.originalInvoiceId = 'invalid-state';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.billingBatchId', () => {
+    test('can be set to guid', async () => {
+      const id = uuid();
+      invoice.billingBatchId = id;
+      expect(invoice.billingBatchId).to.equal(id);
+    });
+
+    test('can be set to null', async () => {
+      const func = () => {
+        invoice.billingBatchId = null;
+      };
+      expect(func).to.throw();
+    });
+
+    test('throws an error if not a guid', async () => {
+      const func = () => {
+        invoice.billingBatchId = 'invalid-state';
       };
       expect(func).to.throw();
     });
