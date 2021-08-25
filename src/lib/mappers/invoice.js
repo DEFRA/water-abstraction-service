@@ -16,10 +16,10 @@ const { isEmpty } = require('lodash');
 
 const mapLinkedInvoices = (billingInvoiceId, linkedBillingInvoices = [], originalBillingInvoice = {}) => {
   const invoices = linkedBillingInvoices
-    .filter(linkedBillingInvoice => linkedBillingInvoice.billingInvoiceId !== billingInvoiceId)
+    .filter(linkedBillingInvoice => ![billingInvoiceId, originalBillingInvoice.billingInvoiceId].includes(linkedBillingInvoice.billingInvoiceId))
     .map(dbToModel);
 
-  if (!(isEmpty(originalBillingInvoice))) {
+  if (!(isEmpty(originalBillingInvoice)) && billingInvoiceId !== originalBillingInvoice.billingInvoiceId) {
     invoices.push(dbToModel(originalBillingInvoice));
   }
   return invoices;
@@ -37,7 +37,8 @@ const dbToModelMapper = createMapper()
     'legacyId',
     'metadata',
     'isFlaggedForRebilling',
-    'rebillingState'
+    'rebillingState',
+    'billingBatchId'
   )
   .map('netAmount').to('netTotal')
   .map('billingInvoiceId').to('id')

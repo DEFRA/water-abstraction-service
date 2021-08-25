@@ -9,6 +9,7 @@ const purposePrimaryMapper = require('./purpose-primary');
 const purposeSecondaryMapper = require('./purpose-secondary');
 const purposeUseMapper = require('./purpose-use');
 const abstractionPeriodMapper = require('./abstraction-period');
+const dateRangeMapper = require('./date-range');
 const helpers = require('./lib/helpers');
 
 const timeLimitedDateMapper = (startDate, endDate) =>
@@ -56,7 +57,8 @@ const pojoToModelMapper = createMapper()
   .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel)
   .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.pojoToModel)
   .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.pojoToModel)
-  .map('purposeUse').to('purposeUse', purposeUseMapper.pojoToModel);
+  .map('purposeUse').to('purposeUse', purposeUseMapper.pojoToModel)
+  .map('timeLimitedPeriod').to('timeLimitedPeriod', dateRangeMapper.pojoToModel);
 
 /**
  * Converts a plain object representation of a ChargeElement to a ChargeElement model
