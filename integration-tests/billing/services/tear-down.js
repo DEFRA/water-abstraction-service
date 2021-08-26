@@ -7,6 +7,7 @@ const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs
 const returnsConnector = require('../services/connectors/returns');
 const returnRequirements = require('../services/return-requirements');
 const licenceAgreements = require('../services/licence-agreements');
+const chargeVersions = require('../services/charge-versions');
 const gaugingStations = require('../services/gauging-stations');
 
 const messageQueue = require('../../../src/lib/message-queue-v2');
@@ -29,7 +30,7 @@ const tearDown = async (...batchesToDelete) => {
   await gaugingStations.tearDownCypressCreatedLinkages();
   await tearDownTable('water.gauging_stations');
   await tearDownTable('water.charge_elements');
-  await tearDownTable('water.charge_versions');
+  await chargeVersions.tearDown();
   await tearDownTable('water.licence_agreements');
 
   await returnRequirements.tearDown();
