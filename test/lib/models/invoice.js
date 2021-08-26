@@ -521,6 +521,28 @@ experiment('lib/models/invoice', () => {
     });
   });
 
+  experiment('.billingBatchId', () => {
+    test('can be set to guid', async () => {
+      const id = uuid();
+      invoice.billingBatchId = id;
+      expect(invoice.billingBatchId).to.equal(id);
+    });
+
+    test('can be set to null', async () => {
+      const func = () => {
+        invoice.billingBatchId = null;
+      };
+      expect(func).to.throw();
+    });
+
+    test('throws an error if not a guid', async () => {
+      const func = () => {
+        invoice.billingBatchId = 'invalid-state';
+      };
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.linkedInvoices', () => {
     test('can be set to an array of invoice instances', async () => {
       const arr = [

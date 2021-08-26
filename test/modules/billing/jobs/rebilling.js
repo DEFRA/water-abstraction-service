@@ -142,7 +142,25 @@ experiment('modules/billing/jobs/rebilling', () => {
         expect(invoiceService.updateInvoice.callCount).to.equal(1);
         expect(invoiceService.updateInvoice.calledWith(
           invoice.id,
-          { rebillingState: 'rebilled' }
+          {
+            rebillingState: 'rebilled',
+            originalBillingInvoiceId: invoice.id
+          }
+        )).to.be.true();
+      });
+
+      test('the original invoice id is updated with the correct id', async () => {
+        invoice.originalInvoiceId = uuid();
+        invoiceService.getInvoicesFlaggedForRebilling.resolves([
+          invoice
+        ]);
+        await rebillingJob.handler(job);
+        expect(invoiceService.updateInvoice.calledWith(
+          invoice.id,
+          {
+            rebillingState: 'rebilled',
+            originalBillingInvoiceId: invoice.originalInvoiceId
+          }
         )).to.be.true();
       });
     });
