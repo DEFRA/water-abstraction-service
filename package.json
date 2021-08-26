@@ -46,8 +46,8 @@
     "sinon": "^7.5.0"
   },
   "dependencies": {
-    "@envage/hapi-pg-rest-api": "github:DEFRA/hapi-pg-rest-api#master",
-    "@envage/water-abstraction-helpers": "github:DEFRA/water-abstraction-helpers#add-digitise-helpers",
+    "@envage/hapi-pg-rest-api": "^7.0.0",
+    "@envage/water-abstraction-helpers": "^4.5.0",
     "@hapi/boom": "^7.4.11",
     "@hapi/catbox-redis": "^6.0.1",
     "@hapi/good": "^8.2.4",
