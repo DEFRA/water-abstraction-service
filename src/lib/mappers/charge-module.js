@@ -71,7 +71,7 @@ const extractAddress = (address, fao = null) => {
     response[key] = truncate(value, { length: 240 });
   }
 
-  let line6;
+  let line6 = '';
   if (address.county && address.country) {
     line6 = `${address.county}, ${address.country}`;
   } else {
