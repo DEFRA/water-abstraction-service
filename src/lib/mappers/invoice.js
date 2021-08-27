@@ -48,6 +48,7 @@ const dbToModelMapper = createMapper()
   .map('billingBatch').to('batch', batchMapper.dbToModel)
   .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding))
   .map('originalBillingInvoiceId').to('originalInvoiceId')
+  .map('rebillingState').to('rebillingStateLabel')
   .map(['billingInvoiceId', 'linkedBillingInvoices', 'originalBillingInvoice']).to('linkedInvoices', mapLinkedInvoices);
 
 /**
@@ -55,8 +56,32 @@ const dbToModelMapper = createMapper()
  * @param {Object} row
  * @return {Invoice}
  */
-const dbToModel = row =>
-  createModel(Invoice, row, dbToModelMapper);
+const dbToModel = row => {
+  const invoice = createModel(Invoice, row, dbToModelMapper);
+  return getRebillingStateLabels(invoice);
+};
+
+/**
+ * Corrects the rebilling state label when a rebilled invoice has been rebilled again
+ * @param {Invoice} invoice the invoice service model
+ * @returns Invoice service model with corrected rebilling state labels for the UI
+ */
+const getRebillingStateLabels = invoice => {
+  if (invoice.rebillingState === 'rebilled' && invoice.originalInvoiceId === invoice.id) {
+    invoice.rebillingStateLabel = 'original';
+    return invoice;
+  }
+  if (invoice.linkedInvoices.length > 0) {
+    if (invoice.linkedInvoices[0].rebillingStateLabel === 'rebilled' && invoice.linkedInvoices[0].originalInvoiceId === invoice.id) {
+      invoice.linkedInvoices[0].rebillingStateLabel = 'original';
+      return invoice;
+    } else {
+      invoice.linkedInvoices[1].rebillingStateLabel = 'original';
+      return invoice;
+    }
+  }
+  return invoice;
+};
 
 const mapAddress = invoice =>
   invoice.address ? omit(invoice.address.toJSON(), 'id') : {};
