@@ -32,7 +32,8 @@ const rebillingStateLabel = {
   rebill: 'rebill',
   reversal: 'reversal',
   rebilled: 'rebilled',
-  unrebillable: 'original'
+  unrebillable: 'original',
+  original: 'original'
 };
 
 class Invoice extends Totals {
@@ -349,7 +350,7 @@ class Invoice extends Totals {
    * sets the rebilling state label only used by the UI
    */
   set rebillingStateLabel (value) {
-    assertNullableEnum(value, Object.values(rebillingStateLabel));
+    assertNullableEnum(value, Object.keys(rebillingStateLabel));
     this._rebillingStateLabel = value;
   }
 
