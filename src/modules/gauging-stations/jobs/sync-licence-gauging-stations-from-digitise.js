@@ -8,7 +8,7 @@ const { logger } = require('../../../logger');
 const permitConnector = require('../../../lib/connectors/permit');
 const { digitise } = require('@envage/water-abstraction-helpers');
 // Constants
-const JOB_NAME = 'gauging-stations.copy-lvpc-from-digitise';
+const JOB_NAME = 'gauging-stations.copy-licence-gauging-stations-from-digitise';
 
 // Handy stuff
 const config = require('../../../../config');
