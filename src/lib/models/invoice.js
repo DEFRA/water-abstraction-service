@@ -28,6 +28,12 @@ const rebillingState = {
   rebilled: 'rebilled',
   unrebillable: 'unrebillable'
 };
+const rebillingStateLabel = {
+  rebill: 'rebill',
+  reversal: 'reversal',
+  rebilled: 'rebilled',
+  unrebillable: 'original'
+};
 
 class Invoice extends Totals {
   constructor (id) {
@@ -337,6 +343,18 @@ class Invoice extends Totals {
     }
     // Prevents an error being thrown if there is an unexpected case
     return null;
+  }
+
+  /**
+   * sets the rebilling state label only used by the UI
+   */
+  set rebillingStateLabel (value) {
+    assertNullableEnum(value, Object.values(rebillingStateLabel));
+    this._rebillingStateLabel = value;
+  }
+
+  get rebillingStateLabel () {
+    return this._rebillingStateLabel;
   }
 
   toJSON () {
