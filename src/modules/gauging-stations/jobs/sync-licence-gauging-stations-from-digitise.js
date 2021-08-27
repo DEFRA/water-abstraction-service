@@ -81,7 +81,7 @@ const handler = async () => {
           const parts = licenceVersionPurposeConditionURI.split('/');
           const licenceVersionPurposeConditionLegacyId = `${parts[parts.length - 1]}:${parts[parts.length - 2]}`;
           const { licenceVersionPurposeConditionId } = await licenceVersionPurposeConditionsService.getLicenceVersionConditionByPartialExternalId(licenceVersionPurposeConditionLegacyId);
-          const thresholdUnit = (get(eachArSegment, 'content.unit', null) || get(eachArSegment, 'content.max_rate_unit', null)).replace('³', '3');
+          const thresholdUnit = (get(eachArSegment, 'content.unit', null) || get(eachArSegment, 'content.max_rate_unit', '')).replace('³', '3');
           const thresholdValue = get(eachArSegment, 'content.max_rate', null) || get(eachArSegment, 'content.hol_rate_level', null);
           const flowUnits = ['Ml/d', 'm3/s', 'm3/d', 'l/s'];
           const restrictionType = flowUnits.includes(thresholdUnit) ? 'flow' : 'level';
