@@ -291,6 +291,8 @@ const postSetupFromYaml = async (request, h) => {
 };
 
 const postTearDown = async () => {
+  console.log('Tearing down acceptance test charge data');
+  await chargeTestDataTearDown.tearDown();
   console.log('Tearing down acceptance test returns');
   await returns.delete();
   console.log('Tearing down acceptance test return requirement purposes');
@@ -323,8 +325,6 @@ const postTearDown = async () => {
   await invoices.delete();
   console.log('Tearing down acceptance test batches');
   await batches.delete();
-  console.log('Tearing down acceptance test charge data');
-  await chargeTestDataTearDown.tearDown();
   console.log('Tearing down acceptance test licence versions');
   await licenceVersions.delete();
   console.log('Tearing down acceptance test licences');
