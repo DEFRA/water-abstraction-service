@@ -38,10 +38,13 @@ const handler = async () => {
   logger.info(`Found ${licences.length} candidate licences that have licence gauging station linkages that may be copied from digitise...`);
   // Iterate through each licence's licence_data_value column.
   return licences.map(async eachLicence => {
+    logger.info(`Processing ${eachLicence.licence_ref}...`);
     const edits = get(eachLicence, 'licence_data_value', {});
     if (edits.status === 'Approved') {
+      logger.info(`Processing ${eachLicence.licence_ref}: Status is approved...`);
       // Take the permit data, and put it through the Digitise reducer
-      const initialState = digitise.getInitialState(eachLicence);
+      const originalLicence = await permitConnector.licences.getWaterLicence(eachLicence.licence_ref);
+      const initialState = digitise.getInitialState(originalLicence);
       const hasData = get(initialState, 'licence.data.current_version') !== undefined;
       if (hasData) {
         const finalState = digitise.stateManager(initialState, edits.actions);
@@ -124,6 +127,8 @@ const handler = async () => {
           });
         }
       }
+    } else {
+      logger.info(`Processing ${eachLicence.licence_ref}: Status is not approved - skipping...`);
     }
   });
 };
