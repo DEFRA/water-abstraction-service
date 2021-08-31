@@ -7,7 +7,11 @@ const DateRange = require('../models/date-range');
  * @param {Object} dateRange
  * @return {DateRange}
  */
-const pojoToModel = dateRange =>
-  new DateRange(dateRange.startDate, dateRange.endDate);
+const pojoToModel = dateRange => {
+  if (!dateRange) {
+    return null;
+  }
+  return new DateRange(dateRange.startDate, dateRange.endDate);
+};
 
 exports.pojoToModel = pojoToModel;
