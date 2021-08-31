@@ -46,7 +46,7 @@ const handler = async () => {
       logger.info(`Processing ${eachLicence.licence_ref}: Status is approved...`);
       // Take the permit data, and put it through the Digitise reducer
       const originalLicence = await permitConnector.licences.getWaterLicence(eachLicence.licence_ref);
-      const initialState = digitise.getInitialState(originalLicence);
+      const initialState = originalLicence && digitise.getInitialState(originalLicence);
       const hasData = get(initialState, 'licence.data.current_version') !== undefined;
       if (hasData) {
         const finalState = digitise.stateManager(initialState, edits.actions);
