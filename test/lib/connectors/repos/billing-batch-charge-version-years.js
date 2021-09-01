@@ -207,13 +207,17 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
     const billingBatchId = 'test-batch-id';
     const licenceId = 'test-licence-id';
 
-    beforeEach(async () => {
-      await repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId(billingBatchId, licenceId);
-    });
-
-    test('calls knex raw method with correct query', async () => {
+    test('calls knex raw method with correct query to delete 2PT transaction types only', async () => {
+      await repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId(billingBatchId, licenceId, true);
       expect(bookshelf.knex.raw.calledWith(
         queries.delete2PTByBatchIdAndLicenceId, { billingBatchId, licenceId }
+      )).to.be.true();
+    });
+
+    test('calls knex raw method with correct query to delete 2PT transaction types only', async () => {
+      await repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId(billingBatchId, licenceId);
+      expect(bookshelf.knex.raw.calledWith(
+        queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId }
       )).to.be.true();
     });
   });

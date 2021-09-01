@@ -88,13 +88,14 @@ const findTwoPartTariffByBatchId = async billingBatchId => {
 
 /**
  * Deletes charge version years in a batch for a particular licence ID
+ * if twoPartTarrifOnly is true then delete only records for 2PT transaction types
  * @param {String} billingBatchId
  * @param {String} licenceId
  */
 const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId, twoPartTarrifOnly = false) => {
   return twoPartTarrifOnly
-    ? bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId })
-    : bookshelf.knex.raw(queries.delete2PTByBatchIdAndLicenceId, { billingBatchId, licenceId });
+    ? bookshelf.knex.raw(queries.delete2PTByBatchIdAndLicenceId, { billingBatchId, licenceId })
+    : bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId });
 };
 
 /**
