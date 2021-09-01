@@ -213,7 +213,7 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
 
     test('calls knex raw method with correct query', async () => {
       expect(bookshelf.knex.raw.calledWith(
-        queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId }
+        queries.delete2PTByBatchIdAndLicenceId, { billingBatchId, licenceId }
       )).to.be.true();
     });
   });
