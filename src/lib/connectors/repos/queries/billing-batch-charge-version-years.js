@@ -37,5 +37,5 @@ where y.billing_batch_id=:billingBatchId
   and y.charge_version_id=cv.charge_version_id
   and cv.licence_ref=l.licence_ref
   and l.licence_id=:licenceId
-  and y.transaction_type = 'two_part_tarrif'
+  and y.transaction_type = 'two_part_tariff'
   `;
