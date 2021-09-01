@@ -1,6 +1,6 @@
 'use strict';
 
-const { groupBy, pick, isNull } = require('lodash');
+const { groupBy, pick } = require('lodash');
 
 // Models
 const Transaction = require('../../../../lib/models/transaction');
