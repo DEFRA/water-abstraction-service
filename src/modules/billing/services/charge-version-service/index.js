@@ -50,9 +50,9 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
   const twoPartTariffSeasons = await twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion(chargeVersion, existingTPTBatches);
 
   // find historic 2PT batch types for financial year
-  const historicTransactionTypes = existingTPTBatches.reduce((acc, batch) => {
-    if (batch.type === BATCH_TYPE.twoPartTariff) {
-      acc.push(batch.isSummer ? 'summer' : 'winter');
+  const historicTransactionTypes = existingTPTBatches.reduce((acc, batchRow) => {
+    if (batchRow.type === BATCH_TYPE.twoPartTariff) {
+      acc.push(batchRow.isSummer ? 'summer' : 'winter');
     }
     return acc;
   }, []);
