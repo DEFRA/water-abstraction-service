@@ -34,7 +34,8 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       fetch: sandbox.stub().resolves(model),
       fetchPage: sandbox.stub().resolves(model),
       query: sandbox.stub().returnsThis(),
-      destroy: sandbox.stub()
+      destroy: sandbox.stub(),
+      count: sandbox.stub()
     };
     sandbox.stub(billingInvoiceLicence, 'forge').returns(bookshelfStub);
     sandbox.stub(billingInvoiceLicence, 'collection').returns(bookshelfStub);
@@ -228,6 +229,28 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
 
     test('the models are destroyed', async () => {
       expect(bookshelfStub.destroy.called).to.be.true();
+    });
+  });
+
+  experiment('.findCountByInvoiceId', () => {
+    const billingInvoiceId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoiceLicences.findCountByInvoiceId(billingInvoiceId);
+    });
+
+    test('the model is forged', async () => {
+      expect(billingInvoiceLicence.forge.called).to.be.true();
+    });
+
+    test('selects the correct invoice licences', async () => {
+      expect(bookshelfStub.where.calledWith({
+        billing_invoice_id: billingInvoiceId
+      })).to.be.true();
+    });
+
+    test('calls count()', async () => {
+      expect(bookshelfStub.count.called).to.be.true();
     });
   });
 });
