@@ -18,6 +18,7 @@ experiment('lib/connectors/bookshelf/BillingInvoice', () => {
     instance = BillingInvoice.forge();
     sandbox.stub(instance, 'belongsTo');
     sandbox.stub(instance, 'hasMany');
+    sandbox.stub(instance, 'hasOne');
   });
 
   afterEach(async () => {
@@ -83,6 +84,23 @@ experiment('lib/connectors/bookshelf/BillingInvoice', () => {
       const [model, foreignKey, foreignKeyTarget] = instance.hasMany.lastCall.args;
       expect(model).to.equal('BillingInvoice');
       expect(foreignKey).to.equal('original_billing_invoice_id');
+      expect(foreignKeyTarget).to.equal('original_billing_invoice_id');
+    });
+  });
+
+  experiment('the .originalBillingInvoice() relation', () => {
+    beforeEach(async () => {
+      instance.originalBillingInvoice();
+    });
+
+    test('is a function', async () => {
+      expect(instance.originalBillingInvoice).to.be.a.function();
+    });
+
+    test('calls .belongsTo with correct params', async () => {
+      const [model, foreignKey, foreignKeyTarget] = instance.hasOne.lastCall.args;
+      expect(model).to.equal('BillingInvoice');
+      expect(foreignKey).to.equal('billing_invoice_id');
       expect(foreignKeyTarget).to.equal('original_billing_invoice_id');
     });
   });

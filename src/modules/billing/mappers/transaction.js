@@ -2,7 +2,7 @@
 
 const moment = require('moment');
 const { titleCase } = require('title-case');
-const { identity, get } = require('lodash');
+const { identity, get, isNull } = require('lodash');
 const helpers = require('@envage/water-abstraction-helpers').charging;
 
 const DateRange = require('../../../lib/models/date-range');
@@ -11,6 +11,7 @@ const Agreement = require('../../../lib/models/agreement');
 
 const chargeElementMapper = require('../../../lib/mappers/charge-element');
 const billingVolumeMapper = require('./billing-volume');
+const abstractionPeriodMapper = require('../../../lib/mappers/abstraction-period');
 
 const { createMapper } = require('../../../lib/object-mapper');
 const { createModel } = require('../../../lib/mappers/lib/helpers');
@@ -93,10 +94,11 @@ const dbToModelMapper = createMapper()
   .map('chargeType').to('isCompensationCharge', isValueEqualTo('compensation'))
   .map('chargeType').to('isMinimumCharge', isValueEqualTo('minimum_charge'))
   .map('chargeElement').to('chargeElement', chargeElementMapper.dbToModel)
-  .map('volume').to('volume', volume => volume ? parseFloat(volume) : null)
+  .map('volume').to('volume', volume => isNull(volume) ? null : parseFloat(volume))
   .map().to('agreements', mapDBToAgreements)
   .map(['billingVolume', 'endDate', 'season']).to('billingVolume',
-    (billingVolume, endDate, season) => billingVolume ? getBillingVolumeForTransaction({ billingVolume, endDate, season }) : null);
+    (billingVolume, endDate, season) => billingVolume ? getBillingVolumeForTransaction({ billingVolume, endDate, season }) : null)
+  .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel);
 
 /**
  * Converts DB representation to a Transaction service model
@@ -288,8 +290,8 @@ const cmToModelMapper = createMapper()
   .map('calculation.WRLSChargingResponse.seasonFactor').to('calcSeasonFactor')
   .map('calculation.WRLSChargingResponse.lossFactor').to('calcLossFactor')
   .map('calculation.WRLSChargingResponse.sucFactor').to('calcSucFactor')
-  .map('calculation.WRLSChargingResponse.abatementAdjustment').to('calcS126Factor', val => val ? `S126 x ${val}` : null)
-  .map('calculation.WRLSChargingResponse.s127Agreement').to('calcS127Factor', val => val ? `S127 x ${val}` : null)
+  .map('calculation.WRLSChargingResponse.abatementAdjustment').to('calcS126Factor')
+  .map('calculation.WRLSChargingResponse.s127Agreement').to('calcS127Factor')
   .map('calculation.WRLSChargingResponse.eiucFactor').to('calcEiucFactor')
   .map('calculation.WRLSChargingResponse.eiucSourceFactor').to('calcEiucSourceFactor');
 
@@ -302,7 +304,23 @@ const cmToModelMapper = createMapper()
 const cmToModel = data =>
   createModel(Transaction, data, cmToModelMapper);
 
+const cmToPojo = cmTransaction => cmToModelMapper.execute(cmTransaction);
+
+const cmToDb = cmTransaction => modelToDbMapper.execute(
+  cmToPojo(cmTransaction)
+);
+
+const inverseCreditNoteSign = transaction => {
+  if (transaction.credit === true) {
+    transaction.chargeValue = -Math.abs(transaction.chargeValue);
+  }
+  return transaction;
+};
+
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
 exports.modelToChargeModule = modelToChargeModule;
 exports.cmToModel = cmToModel;
+exports.cmToPojo = cmToPojo;
+exports.cmToDb = cmToDb;
+exports.inverseCreditNoteSign = inverseCreditNoteSign;

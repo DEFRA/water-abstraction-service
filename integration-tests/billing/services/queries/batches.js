@@ -54,4 +54,4 @@ exports.deleteBillingVolumes = `delete from water.billing_volumes v
   where
     v.billing_batch_id=b.billing_batch_id
     and b.region_id=r.region_id 
-    and r.is_test=true;`;
+    and r.is_test=true`;

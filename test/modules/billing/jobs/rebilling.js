@@ -20,6 +20,7 @@ const { logger } = require('../../../../src/logger');
 // Services
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const invoiceService = require('../../../../src/lib/services/invoice-service');
+const rebillingService = require('../../../../src/modules/billing/services/rebilling-service');
 
 // Models
 const Batch = require('../../../../src/lib/models/batch');
@@ -56,7 +57,9 @@ experiment('modules/billing/jobs/rebilling', () => {
     sandbox.stub(batchService, 'setErrorStatus');
 
     sandbox.stub(invoiceService, 'getInvoicesFlaggedForRebilling');
-    sandbox.stub(invoiceService, 'rebillInvoice');
+    sandbox.stub(invoiceService, 'updateInvoice').resolves();
+
+    sandbox.stub(rebillingService, 'rebillInvoice');
 
     queueManager = {
       add: sandbox.stub()
@@ -129,9 +132,35 @@ experiment('modules/billing/jobs/rebilling', () => {
       });
 
       test('calls the .rebillInvoice service method for each invoice retrieved', async () => {
-        expect(invoiceService.rebillInvoice.callCount).to.equal(1);
-        expect(invoiceService.rebillInvoice.calledWith(
-          batch, invoice
+        expect(rebillingService.rebillInvoice.callCount).to.equal(1);
+        expect(rebillingService.rebillInvoice.calledWith(
+          batch, invoice.id
+        )).to.be.true();
+      });
+
+      test('calls the .invoice service method for each invoice retrieved', async () => {
+        expect(invoiceService.updateInvoice.callCount).to.equal(1);
+        expect(invoiceService.updateInvoice.calledWith(
+          invoice.id,
+          {
+            rebillingState: 'rebilled',
+            originalBillingInvoiceId: invoice.id
+          }
+        )).to.be.true();
+      });
+
+      test('the original invoice id is updated with the correct id', async () => {
+        invoice.originalInvoiceId = uuid();
+        invoiceService.getInvoicesFlaggedForRebilling.resolves([
+          invoice
+        ]);
+        await rebillingJob.handler(job);
+        expect(invoiceService.updateInvoice.calledWith(
+          invoice.id,
+          {
+            rebillingState: 'rebilled',
+            originalBillingInvoiceId: invoice.originalInvoiceId
+          }
         )).to.be.true();
       });
     });

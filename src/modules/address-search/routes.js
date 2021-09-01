@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const controller = require('./controller');
 
 const postcodePart1 = '(([A-Z]{1,2}[0-9][A-Z0-9]?|ASCN|STHL|TDCU|BBND|[BFS]IQQ|PCRN|TKCA)';
@@ -18,7 +18,7 @@ module.exports = {
       tags: ['api'],
       description: 'Gets a list of addresses from the EA address facade matching the supplied postcode',
       validate: {
-        query: Joi.object({
+        query: Joi.object().keys({
           q: Joi.string().regex(postcodeRegex).required().example('SW1A 1AA')
         })
       }

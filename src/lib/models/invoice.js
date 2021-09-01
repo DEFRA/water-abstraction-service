@@ -10,7 +10,8 @@ const {
   assertNullablePositiveOrZeroInteger,
   assertNullableNegativeOrZeroInteger,
   assertIsNullableBoolean,
-  assertNullableEnum
+  assertNullableEnum,
+  assertId
 } = require('./validators');
 
 const Address = require('./address');
@@ -23,7 +24,16 @@ const Totals = require('./totals');
 
 const rebillingState = {
   rebill: 'rebill',
-  reversal: 'reversal'
+  reversal: 'reversal',
+  rebilled: 'rebilled',
+  unrebillable: 'unrebillable'
+};
+const rebillingStateLabel = {
+  rebill: 'rebill',
+  reversal: 'reversal',
+  rebilled: 'rebilled',
+  unrebillable: 'original',
+  original: 'original'
 };
 
 class Invoice extends Totals {
@@ -294,6 +304,18 @@ class Invoice extends Totals {
     this._externalId = externalId;
   }
 
+  get billingBatchId () {
+    return this._billingBatchId;
+  }
+
+  /**
+   * Sets the batch ID.
+   */
+  set billingBatchId (billingBatchId) {
+    assertId(billingBatchId);
+    this._billingBatchId = billingBatchId;
+  }
+
   /**
    * Sets the isFlaggedForRebilling flag
    * @param {Boolean} isFlaggedForRebilling
@@ -322,6 +344,18 @@ class Invoice extends Totals {
     }
     // Prevents an error being thrown if there is an unexpected case
     return null;
+  }
+
+  /**
+   * sets the rebilling state label only used by the UI
+   */
+  set rebillingStateLabel (value) {
+    assertNullableEnum(value, Object.keys(rebillingStateLabel));
+    this._rebillingStateLabel = value;
+  }
+
+  get rebillingStateLabel () {
+    return this._rebillingStateLabel;
   }
 
   toJSON () {

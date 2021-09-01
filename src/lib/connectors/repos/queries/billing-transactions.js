@@ -10,7 +10,7 @@ from water.billing_batches b
 join water.licences l on b.region_id=l.region_id and l.include_in_supplementary_billing='yes'
 join (
   select t.*, il.licence_id, il.licence_ref, i.invoice_account_number, i.invoice_account_id, i.financial_year_ending, 
-  b.billing_batch_id, b.is_summer
+  b.billing_batch_id, b.is_summer, i.rebilling_state
   from water.billing_transactions t
   join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
   join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
@@ -26,12 +26,14 @@ and l.licence_id not in (
   from water.charge_version_workflows cvw
   where cvw.date_deleted is null
 )
+and t.licence_ref IN (select licence_ref from water.billing_invoice_licences il join water.billing_invoices i ON il.billing_invoice_id = i.billing_invoice_id
+  join water.billing_batches b ON i.billing_batch_id = b.billing_batch_id where b.billing_batch_id=:batchId)
 order by t.date_created asc
 `;
 
 exports.findByBatchId = `
 select t.*, il.licence_id, il.licence_ref, i.invoice_account_number, i.financial_year_ending, i.invoice_account_id, 
-i.invoice_account_number, b.billing_batch_id, b.is_summer
+i.invoice_account_number, b.billing_batch_id, b.is_summer, i.rebilling_state
 from water.billing_transactions t
 join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
 join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id

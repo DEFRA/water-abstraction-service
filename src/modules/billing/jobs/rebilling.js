@@ -8,12 +8,14 @@ const { logger } = require('../../../logger');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 const batchStatus = require('./lib/batch-status');
-
+const { isEmpty } = require('lodash');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 
 // Services
 const invoiceService = require('../../../lib/services/invoice-service');
 const batchService = require('../services/batch-service');
+
+const rebillingService = require('../services/rebilling-service');
 
 const { jobName: populateBatchChargeVersionJobName } = require('./populate-batch-charge-versions');
 
@@ -49,7 +51,12 @@ const handler = async job => {
 
   // Process each invoice that needs rebilling
   for (const invoice of invoices) {
-    await invoiceService.rebillInvoice(batch, invoice);
+    await rebillingService.rebillInvoice(batch, invoice.id);
+    const changes = {
+      rebillingState: 'rebilled',
+      originalBillingInvoiceId: isEmpty(invoice.originalInvoiceId) ? invoice.id : invoice.originalInvoiceId
+    };
+    await invoiceService.updateInvoice(invoice.id, changes);
   }
 };
 

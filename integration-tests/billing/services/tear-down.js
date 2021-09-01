@@ -6,6 +6,9 @@ const batches = require('./batches');
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs');
 const returnsConnector = require('../services/connectors/returns');
 const returnRequirements = require('../services/return-requirements');
+const licenceAgreements = require('../services/licence-agreements');
+const chargeVersions = require('../services/charge-versions');
+const gaugingStations = require('../services/gauging-stations');
 
 const messageQueue = require('../../../src/lib/message-queue-v2');
 
@@ -24,13 +27,16 @@ const tearDownTable = tableName => bookshelf.knex(tableName)
 const tearDown = async (...batchesToDelete) => {
   await batches.tearDown();
 
+  await gaugingStations.tearDownCypressCreatedLinkages();
+  await tearDownTable('water.gauging_stations');
   await tearDownTable('water.charge_elements');
-  await tearDownTable('water.charge_versions');
+  await chargeVersions.tearDown();
   await tearDownTable('water.licence_agreements');
 
   await returnRequirements.tearDown();
 
   await tearDownTable('water.licence_agreements');
+  await licenceAgreements.tearDownCypressCreatedLicenceAgreements();
   await tearDownTable('water.financial_agreement_types');
   await tearDownTable('water.licence_versions');
   await tearDownTable('water.licences');

@@ -123,14 +123,13 @@ const deleteBatch = async (batch, internalCallingUser) => {
     await chargeModuleBillRunConnector.delete(batch.externalId);
 
     // These are populated at every stage in the bill run
-    await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batch.id);
+    await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batch.id, false);
     await newRepos.billingVolumes.deleteByBatchId(batch.id);
 
     // These tables are not yet populated at review stage in TPT
     await newRepos.billingTransactions.deleteByBatchId(batch.id);
     await newRepos.billingInvoiceLicences.deleteByBatchId(batch.id);
     await newRepos.billingInvoices.deleteByBatchId(batch.id, false);
-
     await newRepos.billingBatches.delete(batch.id);
 
     await saveEvent('billing-batch:cancel', 'delete', internalCallingUser, batch);
@@ -192,7 +191,7 @@ const approveBatch = async (batch, internalCallingUser) => {
   }
 };
 
-const saveInvoiceLicenceTransactions = async (batch, invoice, invoiceLicence) => {
+const saveInvoiceLicenceTransactions = async invoiceLicence => {
   for (const transaction of invoiceLicence.transactions) {
     const { billingTransactionId } = await transactionsService.saveTransactionToDB(invoiceLicence, transaction);
     transaction.id = billingTransactionId;
@@ -201,9 +200,9 @@ const saveInvoiceLicenceTransactions = async (batch, invoice, invoiceLicence) =>
 
 const saveInvoiceLicences = async (batch, invoice) => {
   for (const invoiceLicence of invoice.invoiceLicences) {
-    const { billingInvoiceLicenceId } = await invoiceLicenceService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
-    invoiceLicence.id = billingInvoiceLicenceId;
-    await saveInvoiceLicenceTransactions(batch, invoice, invoiceLicence);
+    const { id } = await invoiceLicenceService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
+    invoiceLicence.id = id;
+    await saveInvoiceLicenceTransactions(invoiceLicence);
   }
 };
 
@@ -316,8 +315,9 @@ const approveTptBatchReview = async batch => {
 };
 
 const getSentTptBatchesForFinancialYearAndRegion = async (financialYear, region) => {
-  const result = await newRepos.billingBatches.findSentTptBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id);
-  return result.map(mappers.batch.dbToModel);
+  const tptBatches = await newRepos.billingBatches.findSentTptBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id, BATCH_TYPE.twoPartTariff);
+  const suppBatches = await newRepos.billingBatches.findSentTptBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id, BATCH_TYPE.supplementary);
+  return [...tptBatches, ...suppBatches].map(mappers.batch.dbToModel);
 };
 
 /**
@@ -411,6 +411,9 @@ const deleteAllBillingData = async () => {
   return newRepos.billingBatches.deleteAllBillingData();
 };
 
+const getBatchTransactionCount = batchId =>
+  newRepos.billingTransactions.countByBatchId(batchId);
+
 /**
  * Updates batch from CM summary data
  * @param {String} batchId
@@ -419,15 +422,14 @@ const deleteAllBillingData = async () => {
  */
 const updateWithCMSummary = async (batchId, cmResponse) => {
   // Extract counts/totals from CM bill run response
-  const { invoiceCount, creditLineCount: creditNoteCount, invoiceValue, creditLineValue: creditNoteValue, netTotal, status: cmStatus } = cmResponse.billRun;
-
+  const { invoiceCount, creditNoteCount, invoiceValue, creditNoteValue, netTotal, status: cmStatus } = cmResponse.billRun;
   // Calculate next batch status
   const cmCompletedStatuses = ['pending', 'billed', 'billing_not_required'];
   const status = cmCompletedStatuses.includes(cmStatus) ? Batch.BATCH_STATUS.sent : Batch.BATCH_STATUS.ready;
 
   // Get transaction count in local DB
   // if 0, the batch will be set to "empty" status
-  const count = await newRepos.billingTransactions.countByBatchId(batchId);
+  const count = await getBatchTransactionCount(batchId);
 
   const changes = count === 0
     ? { status: BATCH_STATUS.empty }
@@ -436,8 +438,8 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
       invoiceCount,
       creditNoteCount,
       invoiceValue,
-      creditNoteValue,
-      netTotal
+      netTotal,
+      creditNoteValue: -Math.abs(creditNoteValue)
     };
 
   const data = await newRepos.billingBatches.update(batchId, changes);
@@ -445,6 +447,14 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
 };
 
 const generateBatchById = CMBillRunId => chargeModuleBillRunConnector.generate(CMBillRunId);
+
+const requestCMBatchGeneration = async batchId => {
+  const batch = await getBatchById(batchId);
+  const transactionCount = await getBatchTransactionCount(batch.id);
+  if (transactionCount > 0) {
+    await chargeModuleBillRunConnector.generate(batch.externalId);
+  }
+};
 
 exports.approveBatch = approveBatch;
 exports.deleteBatch = deleteBatch;
@@ -466,3 +476,4 @@ exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteAllBillingData = deleteAllBillingData;
 exports.updateWithCMSummary = updateWithCMSummary;
 exports.generateBatchById = generateBatchById;
+exports.requestCMBatchGeneration = requestCMBatchGeneration;

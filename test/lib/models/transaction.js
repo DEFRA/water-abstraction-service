@@ -43,6 +43,7 @@ const getTestDataForHashing = () => {
 
   const purpose = new PurposeUse();
   purpose.name = 'Spray Irrigation - Direct';
+  purpose.code = 'Test Code';
   chargeElement.purposeUse = purpose;
 
   const transaction = new Transaction();
@@ -294,6 +295,23 @@ experiment('lib/models/transaction', () => {
 
       const func = () => {
         transaction.description = 1234;
+      };
+
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.chargeElementPurposeUseCode', () => {
+    test('returns the correct charge element purpose code', async () => {
+      const testData = getTestDataForHashing();
+      expect(testData.transaction.chargeElementPurposeUseCode).to.equal(testData.transaction.chargeElement.purposeUse.code);
+    });
+
+    test('throws an error if trying to set to the value', async () => {
+      const transaction = new Transaction();
+
+      const func = () => {
+        transaction.chargeElementPurposeUseCode = 'test code';
       };
 
       expect(func).to.throw();

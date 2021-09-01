@@ -4,7 +4,7 @@
  * @module syncs the charge module invoices/licences/transactions
  * to the local WRLS DB
  */
-const { get, difference } = require('lodash');
+const { get, difference, isNull } = require('lodash');
 const Bluebird = require('bluebird');
 const errors = require('../../../lib/errors');
 
@@ -15,6 +15,7 @@ const { logger } = require('../../../logger');
 const Transaction = require('../../../lib/models/transaction');
 
 // Mappers
+const invoiceMapper = require('../../../lib/mappers/invoice');
 const transactionMapper = require('../mappers/transaction');
 
 // Services
@@ -35,7 +36,7 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
     const { invoice } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, invoiceId);
     return invoice.licences.map(lic => lic.transactions.map(transaction => {
       return {
-        ...transaction,
+        ...transactionMapper.inverseCreditNoteSign(transaction),
         transactionReference: invoice.transactionReference,
         isDeminimis: invoice.deminimisInvoice,
         licenceNumber: lic.licenceNumber
@@ -47,36 +48,43 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
   }
 };
 
-const getInvoiceKey = (invoiceAccountNumber, financialYearEnding) =>
+/**
+ * Creates a Map from the supplied array of items, using the supplied
+ * mapper to get the map key
+ *
+ * @param {Array<Object>} items
+ * @param {Function} keyMapper
+ * @returns {Map}
+ */
+const createMap = (items, keyMapper) => items.reduce(
+  (map, item) => map.set(keyMapper(item), item),
+  new Map()
+);
+
+const getCustomerFinancialYearKey = (invoiceAccountNumber, financialYearEnding) =>
   `${invoiceAccountNumber}_${financialYearEnding}`;
 
 /**
- * Get invoices mapped by account number / financial year
- * @param {Batch} batch
- * @return {Map}
+ * Gets a key for mapping charge module invoices.
+ * This is the id for rebilling, or the customer/financial year otherwise
+ *
+ * @param {Object} cmInvoice
+ * @returns {String}
  */
-const getInvoiceMap = invoices => {
-  return invoices.reduce((acc, invoice) => {
-    const key = getInvoiceKey(invoice.invoiceAccount.accountNumber, invoice.financialYear.endYear);
-    return acc.set(key, invoice);
-  }, new Map());
-};
+const getCMInvoiceKey = cmInvoice => cmInvoice.rebilledType === 'O'
+  ? getCustomerFinancialYearKey(cmInvoice.customerReference, cmInvoice.financialYear + 1)
+  : cmInvoice.id;
 
 /**
- * Gets a map of customer/financial year summaries
- * keyed by customerRef_financialYearEnding
+ * Gets a key for mapping WRLS invoices.
+ * This is the external (CM) id for rebilling, or the customer/financial year otherwise
  *
- * @param {Object} cmResponse - full CM batch summary data
- * @return {Map}
+ * @param {Object} invoice
+ * @returns {String}
  */
-const getCMInvoiceMap = cmResponse => {
-  return cmResponse.billRun.invoices.map(invoice => {
-    return {
-      ...invoice,
-      key: getInvoiceKey(invoice.customerReference, invoice.financialYear + 1)
-    };
-  });
-};
+const getWRLSInvoiceKey = invoice => isNull(invoice.rebillingState)
+  ? getCustomerFinancialYearKey(invoice.invoiceAccount.accountNumber, invoice.financialYear.endYear)
+  : invoice.externalId;
 
 /**
  * Indexes transactions in an invoice by external ID
@@ -92,40 +100,15 @@ const getTransactionMap = invoice => {
   }, new Map());
 };
 
-const mapTransaction = (invoice, transactionMap, cmTransaction) => {
-  // Update existing transaction
-  if (transactionMap.has(cmTransaction.id)) {
-    const calculation = get(cmTransaction, 'calculation.WRLSChargingResponse', {});
-    const { sourceFactor, seasonFactor, lossFactor, sucFactor, abatementAdjustment, s127Agreement, eiucFactor, eiucSourceFactor } = calculation;
+const mapTransaction = (transactionMap, cmTransaction) => {
+  const transaction = transactionMap.has(cmTransaction.id)
+    ? transactionMap.get(cmTransaction.id)
+    : new Transaction();
 
-    return transactionMap
-      .get(cmTransaction.id)
-      .fromHash({
-        isDeMinimis: cmTransaction.isDeminimis,
-        value: cmTransaction.chargeValue,
-        calcSourceFactor: sourceFactor,
-        calcSeasonFactor: seasonFactor,
-        calcLossFactor: lossFactor,
-        calcSucFactor: sucFactor,
-        calcS126Factor: abatementAdjustment,
-        calcS127Factor: s127Agreement,
-        calcEiucFactor: eiucFactor,
-        calcEiucSourceFactor: eiucSourceFactor
-      });
-  } else {
-    // Create a new min charge model and add to heirarchy
-    const newTransaction = transactionMapper.cmToModel({
-      ...cmTransaction,
-      twoPartTariff: false
-    }).fromHash({
-      status: Transaction.statuses.chargeCreated
-    });
-    invoice
-      .getInvoiceLicenceByLicenceNumber(cmTransaction.licenceNumber)
-      .transactions
-      .push(newTransaction);
-    return newTransaction;
-  }
+  return transaction.fromHash({
+    ...transactionMapper.cmToPojo(cmTransaction),
+    isTwoPartTariffSupplementary: false
+  });
 };
 
 const getCMTransactionId = cmTransaction => cmTransaction.id;
@@ -146,79 +129,89 @@ const deleteTransactions = (cmTransactions, transactionMap) => {
 };
 
 /**
-  * Gets transaction reference from cmTransactions
-  * NB. it is not guaranteed to be present in all transactions
-  * @param {Array<Object>} cmTransactions
-  */
-const getInvoiceNumber = cmTransactions => {
-  const transactionsWithRef = cmTransactions.filter(trans => trans.transactionReference !== null);
-  return transactionsWithRef[0] ? transactionsWithRef[0].transactionReference : null;
-};
-
-/**
- * Maps CM data to an Invoice model
+ * Updates the transactions within a particular invoice within a batch
+ * using the data from the CM
  *
- * @param {Batch} batch
  * @param {Invoice} invoice
- * @param {Object} cmInvoiceSummary - CM data for this customer/financial year
- * @param {Array<Object>} cmTransactions - transactions for this customer/financial year
- * @return {Invoice}
+ * @param {Array<Object>} cmTransactions
+ * @returns {Promise}
  */
-const updateInvoice = async (batch, invoice, cmInvoiceSummary, cmTransactions) => {
-  // Populate invoice model with updated CM data
-  invoice.fromHash({
-    isDeMinimis: cmInvoiceSummary.deminimisInvoice,
-    invoiceNumber: getInvoiceNumber(cmTransactions),
-    netTotal: cmInvoiceSummary.netTotal,
-    invoiceValue: cmInvoiceSummary.debitLineValue,
-    creditNoteValue: -cmInvoiceSummary.creditLineValue,
-    externalId: cmInvoiceSummary.id
-  });
-
-  // Persist
-  await invoiceService.saveInvoiceToDB(batch, invoice);
-
+const updateTransactions = async (invoice, cmTransactions) => {
   // Index WRLS transactions by external ID
   const transactionMap = getTransactionMap(invoice);
 
   // Create/update transactions
   for (const cmTransaction of cmTransactions) {
-    const invoiceLicence = invoice
-      .getInvoiceLicenceByLicenceNumber(cmTransaction.licenceNumber);
-    const transaction = mapTransaction(invoice, transactionMap, cmTransaction);
+    const invoiceLicence = invoice.getInvoiceLicenceByLicenceNumber(cmTransaction.licenceNumber);
+    const transaction = mapTransaction(transactionMap, cmTransaction);
+
     await transactionService.saveTransactionToDB(invoiceLicence, transaction);
   }
 
   // Delete transactions no longer on the CM side
-  await deleteTransactions(cmTransactions, transactionMap);
+  return deleteTransactions(cmTransactions, transactionMap);
+};
+
+/**
+ * Maps CM data to the Invoice model and saves it,
+ * then updates all transactions within the invoice
+ *
+ * @param {Batch} batch
+ * @param {Invoice} invoice
+ * @param {Object} cmInvoiceSummary - CM data for this customer/financial year
+ * @return {Invoice}
+ */
+const updateInvoice = async (batch, invoice, cmInvoiceSummary) => {
+  const cmTransactions = await getAllCmTransactionsForInvoice(
+    batch.externalId,
+    cmInvoiceSummary.id
+  );
+
+  // Populate invoice model with updated CM data
+  invoice.fromHash(
+    invoiceMapper.cmToPojo(cmInvoiceSummary, cmTransactions)
+  );
+
+  // Persist invoice and transactions to DB
+  await invoiceService.updateInvoiceModel(invoice);
+  await updateTransactions(invoice, cmTransactions);
 
   return invoice;
 };
 
+/**
+ * Updates all the invoices within a batch
+ *
+ * @param {Batch} batch
+ * @param {Object} cmResponse
+ * @return {Promise}
+ */
 const updateInvoices = async (batch, cmResponse) => {
   // Fetch WRLS batch invoices
   const invoices = await invoiceService.getInvoicesForBatch(batch, { includeTransactions: true });
 
-  // Map invoices in CM summary response
-  const cmInvoiceMap = getCMInvoiceMap(cmResponse);
-
-  // Get existing invoices in DB and map
-  const invoiceMap = await getInvoiceMap(invoices);
+  // Map WRLS invoices and CM invoices by the same keys
+  const invoiceMaps = {
+    wrls: createMap(invoices, getWRLSInvoiceKey),
+    cm: createMap(cmResponse.billRun.invoices, getCMInvoiceKey)
+  };
 
   // Iterate through invoices in series, to avoid overwhelming CM with too many simultaneous requests
-  Bluebird.mapSeries(cmInvoiceMap, async invoice => {
-    const cmTransactions = await getAllCmTransactionsForInvoice(
-      batch.externalId,
-      invoice.id
-    );
-    // Note: for now we don't need to expect invoices not in our DB
-    // this will likely change when the CM implements rebilling
-    await updateInvoice(batch, invoiceMap.get(invoice.key), invoice, cmTransactions);
-  });
+  return Bluebird.mapSeries(invoiceMaps.cm, async ([key, cmInvoice]) => {
+    const inv = invoiceMaps.wrls.get(key);
+    inv && updateInvoice(batch, inv, cmInvoice);
+  }
+  );
 };
 
 const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating';
 
+/**
+ * Updates the batch with the given batch ID
+ * with data retrieved from the CM
+ *
+ * @param {String} batchId
+ */
 const updateBatch = async batchId => {
   // Fetch WRLS batch
   const batch = await batchService.getBatchById(batchId);

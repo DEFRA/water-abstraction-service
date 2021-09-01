@@ -36,7 +36,9 @@ jobs:
       CRM_URI: http://127.0.0.1:8002/crm/1.0
       RETURNS_URI: http://127.0.0.1:8006/returns/1.0
       NALD_SERVICE_MAILBOX: some@mailbox.com
-
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD:
     # Service containers to run with `runner-job`
     services:
       # Label used to access the service container
@@ -56,7 +58,12 @@ jobs:
         # Set health checks to wait until postgres has started. You must have this so the runner knows to wait till
         # postgres is up and running before proceeding
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
+      redis:
+        # Docker Hub image
+        image: redis
+        ports:
+          # Maps port 6379 on service container to the host
+          - 6379:6379
     steps:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Checkout repository
@@ -92,7 +99,7 @@ jobs:
       # Performs a clean installation of all dependencies in the `package.json` file
       # For more information, see https://docs.npmjs.com/cli/ci.html
       - name: Install dependencies
-        run: npm ci
+        run: npm i
 
       # Run linting first. No point running the tests if there is a linting issue
       - name: Run lint check
@@ -111,6 +118,8 @@ jobs:
         uses: paambaati/codeclimate-action@v2.7.4
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
         with:
           coverageCommand: npm run test:ci
           debug: true

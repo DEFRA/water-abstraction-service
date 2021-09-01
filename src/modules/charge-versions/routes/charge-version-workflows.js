@@ -24,7 +24,7 @@ module.exports = {
       },
       validate: {
         headers,
-        query: Joi.object({
+        query: Joi.object().keys({
           licenceId: Joi.string().guid().optional()
         })
       }
@@ -43,7 +43,7 @@ module.exports = {
       },
       validate: {
         headers,
-        params: Joi.object({
+        params: Joi.object().keys({
           chargeVersionWorkflowId: Joi.string().guid().required()
         })
       }
@@ -62,7 +62,7 @@ module.exports = {
       },
       validate: {
         headers,
-        payload: Joi.object({
+        payload: Joi.object().keys({
           licenceId: Joi.string().guid().required(),
           chargeVersion: Joi.object().required()
         })
@@ -86,7 +86,7 @@ module.exports = {
       },
       validate: {
         headers,
-        payload: Joi.object({
+        payload: Joi.object().keys({
           status: Joi.string(),
           chargeVersion: Joi.object(),
           approverComments: Joi.string().allow(null),
@@ -114,7 +114,7 @@ module.exports = {
       },
       validate: {
         headers,
-        params: Joi.object({
+        params: Joi.object().keys({
           chargeVersionWorkflowId: Joi.string().guid().required()
         })
       },
