@@ -132,6 +132,15 @@ experiment('.handler', () => {
       sandbox.stub(LVPCService, 'upsertByExternalId').resolves({});
       sandbox.stub(permitsConnector.licences, 'getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise').resolves(licences);
       sandbox.stub(permitsConnector.licences, 'updateOne').resolves();
+      sandbox.stub(permitsConnector.licences, 'getWaterLicence').resolves({
+        licence_data_value: {
+          data: {
+            current_version: {
+              1: 1
+            }
+          }
+        }
+      });
       await syncLVPCFromDigitseJob.handler();
     });
 

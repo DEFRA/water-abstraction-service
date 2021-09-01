@@ -29,7 +29,8 @@ const mockedAddress = {
   town: 'Portstewart',
   county: 'Snatchington',
   postcode: 'BT55 7PP',
-  country: 'uk'
+  country: 'uk',
+  startDate: new Date()
 };
 
 const giveMeALongString = length => [...Array(length)].map(() => Math.random().toString(36)[2]).join('');
