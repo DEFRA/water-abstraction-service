@@ -41,7 +41,8 @@ const getByBatchIdForTwoPartTariffReview = async batchId => {
 };
 
 /**
- * Deletes a licence from the batch during TPT review stage
+ * Deletes the 2PT transactions types from the batch during TPT review stage
+ * First part charges will still be included in the batch
  * @param {Batch} batch
  * @param {String} licenceId
  */
@@ -51,7 +52,8 @@ const deleteBatchLicence = async (batch, licenceId) => {
     throw new BatchStatusError('Cannot delete licence unless batch is in "review" status');
   }
   await repos.billingVolumes.deleteByBatchIdAndLicenceId(batch.id, licenceId);
-  await repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId(batch.id, licenceId);
+  // only the 2PT part will be deleted from the bill run
+  await repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId(batch.id, licenceId, true);
   // flag for supplementary billing
   await licencesService.flagForSupplementaryBilling(licenceId);
 };

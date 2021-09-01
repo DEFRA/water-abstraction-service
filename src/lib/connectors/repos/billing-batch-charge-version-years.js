@@ -91,8 +91,11 @@ const findTwoPartTariffByBatchId = async billingBatchId => {
  * @param {String} billingBatchId
  * @param {String} licenceId
  */
-const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
-  bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId });
+const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId, twoPartTarrifOnly = false) => {
+  return twoPartTarrifOnly
+    ? bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId })
+    : bookshelf.knex.raw(queries.delete2PTByBatchIdAndLicenceId, { billingBatchId, licenceId });
+};
 
 /**
  * Creates a new record in water.billing_batch_charge_version_years
