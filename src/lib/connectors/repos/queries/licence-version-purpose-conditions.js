@@ -30,7 +30,7 @@ exports.upsertByExternalId = `
   INSERT INTO water.licence_version_purpose_conditions 
   (external_id, licence_version_purpose_id, licence_version_purpose_condition_type_id, notes, source)
   VALUES (:externalId, :licenceVersionPurposeId, :licenceVersionPurposeConditionTypeId, :notes, :source)
-  ON CONFLICT (external_id, source) DO UPDATE SET 
+  ON CONFLICT (external_id) DO UPDATE SET 
   notes=:notes,
   licence_version_purpose_id=:licenceVersionPurposeId, 
   licence_version_purpose_condition_type_id=:licenceVersionPurposeConditionTypeId, 
