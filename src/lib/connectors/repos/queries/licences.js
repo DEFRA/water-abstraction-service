@@ -38,7 +38,7 @@ const updateIncludeInSupplementaryBillingStatusForBatch = `
       water.billing_invoice_licences il 
         join water.billing_invoices i
           on il.billing_invoice_id = i.billing_invoice_id 
-    where i.billing_batch_id = :batchIfd
+    where i.billing_batch_id = :batchId
     ); 
 `;
 
