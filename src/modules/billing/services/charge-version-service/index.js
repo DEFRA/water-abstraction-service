@@ -49,10 +49,18 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
 
   const twoPartTariffSeasons = await twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion(chargeVersion, existingTPTBatches);
 
-  if (twoPartTariffSeasons[RETURN_SEASONS.summer]) {
+  // find historic 2PT batch types for financial year
+  const historicTransactionTypes = existingTPTBatches.reduce((acc, batchRow) => {
+    if (batchRow.type === BATCH_TYPE.twoPartTariff) {
+      acc.push(batchRow.isSummer ? 'summer' : 'winter');
+    }
+    return acc;
+  }, []);
+
+  if (twoPartTariffSeasons[RETURN_SEASONS.summer] && historicTransactionTypes.includes('summer')) {
     types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: true });
   }
-  if (twoPartTariffSeasons[RETURN_SEASONS.winterAllYear]) {
+  if (twoPartTariffSeasons[RETURN_SEASONS.winterAllYear] && historicTransactionTypes.includes('winter')) {
     types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: false });
   }
 
