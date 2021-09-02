@@ -50,7 +50,7 @@ experiment('modules/billing/services/charge-version-service', () => {
   beforeEach(async () => {
     sandbox.stub(repos.chargeVersions, 'findValidInRegionAndFinancialYear');
     sandbox.stub(chargeVersionYearService, 'createBatchChargeVersionYear');
-    sandbox.stub(batchService, 'getSentTptBatchesForFinancialYearAndRegion');
+    sandbox.stub(batchService, 'getSentTptBatchesForFinancialYearAndRegion').resolves([{ type: 'two_part_tariff', isSummer: true }, { type: 'two_part_tariff', isSummer: false }]);
 
     sandbox.stub(twoPartTariffSeasonsService, 'getTwoPartTariffSeasonsForChargeVersion').resolves({
       [RETURN_SEASONS.summer]: true,
@@ -204,6 +204,7 @@ experiment('modules/billing/services/charge-version-service', () => {
           repos.chargeVersions.findValidInRegionAndFinancialYear.withArgs(batch.region.id, 2022).resolves([
             chargeVersionRows[1]
           ]);
+
           await chargeVersionService.createForBatch(batch);
         });
 
