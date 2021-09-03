@@ -1,4 +1,4 @@
-const { ChargeVersion, bookshelf } = require('../../../src/lib/connectors/bookshelf');
+const { ChargeVersion, bookshelf } = require('../../../lib/connectors/bookshelf');
 const queries = require('./queries/charge-versions');
 
 const update = changes =>

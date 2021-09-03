@@ -1,5 +1,5 @@
 
-const { bookshelf } = require('../../../src/lib/connectors/bookshelf');
+const { bookshelf } = require('../../../lib/connectors/bookshelf');
 const queries = require('./queries/licence-agremeents');
 
 const tearDown = async () => {

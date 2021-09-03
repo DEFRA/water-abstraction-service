@@ -1,5 +1,5 @@
-const { bookshelf } = require('../../../../lib/connectors/bookshelf');
-const queries = require('../queries/billing');
+const { bookshelf } = require('../../../lib/connectors/bookshelf');
+const queries = require('./queries/billing');
 
 const tearDown = async () => {
   await bookshelf.knex.raw(queries.deleteBillingTransactions);
