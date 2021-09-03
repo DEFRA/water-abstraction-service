@@ -1,20 +1,12 @@
 const { bookshelf } = require('../../../lib/connectors/bookshelf');
 const queries = require('./queries/return-requirements');
 
-const tearDownReturnPurposes = async () => {
-  return bookshelf.knex.raw(queries.deleteReturnRequirementPurposes);
-};
-const tearDownReturnRequirements = async () => {
-  return bookshelf.knex.raw(queries.deleteReturnRequirements);
-};
-const tearDownReturnVersions = async () => {
-  return bookshelf.knex.raw(queries.deleteReturnVersions);
-};
+const tearDownData = query => async () => bookshelf.knex.raw(query);
 
 const tearDown = async () => {
-  await tearDownReturnPurposes();
-  await tearDownReturnRequirements();
-  await tearDownReturnVersions();
+  await tearDownData(queries.deleteReturnRequirementPurposes);
+  await tearDownData(queries.deleteReturnRequirements);
+  await tearDownData(queries.deleteReturnVersions);
 };
 
 exports.tearDown = tearDown;

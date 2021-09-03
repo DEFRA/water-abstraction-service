@@ -4,9 +4,7 @@ const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../../config');
 const urlJoin = require('url-join');
 
-const createCrmUrl = (...parts) => {
-  return urlJoin(config.services.crm_v2, ...parts);
-};
+const createCrmUrl = (...parts) => urlJoin(config.services.crm_v2, ...parts);
 
 /**
  * Creates a company in the CRM
@@ -29,9 +27,9 @@ const createCompanyAddress = (companyId, addressId, startDate, endDate, roleName
     body: {
       addressId,
       roleName,
-      isDefault: true,
       startDate,
       endDate,
+      isDefault: true,
       isTest: true
     }
   };
@@ -153,9 +151,7 @@ const getRole = roleName => {
  * Deletes all test data in CRM
  * @return {Promise}
  */
-const tearDown = () => {
-  return serviceRequest.delete(createCrmUrl('test-data'));
-};
+const tearDown = () => serviceRequest.delete(createCrmUrl('test-data'));
 
 exports.createAddress = createAddress;
 exports.createCompany = createCompany;
