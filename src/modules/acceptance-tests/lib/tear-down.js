@@ -35,7 +35,6 @@ const tearDownTable = tableName => bookshelf.knex(tableName)
  */
 const tearDown = async (...batchesToDelete) => {
   await billing.tearDown();
-
   await gaugingStations.tearDown();
   await tearDownTable('water.gauging_stations');
   await tearDownTable('water.charge_elements');
