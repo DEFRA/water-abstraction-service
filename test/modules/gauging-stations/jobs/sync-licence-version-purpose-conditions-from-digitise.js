@@ -148,7 +148,7 @@ experiment('.handler', () => {
 
     test('add the licence version purpose condition to the licence', async () => {
       const args = LVPCService.upsertByExternalId.lastCall.args;
-      expect(args[0]).to.equal('digitise:123456:test/ref/01');
+      expect(args[0]).to.equal('digitise:123456:lvpc-id:/wr22/2.5');
       expect(args[1]).to.equal('lvp-id');
       expect(args[2].licenceVersionPurposeConditionTypeId).to.equal('test-lvpc-type-id');
       expect(args[4]).to.equal('digitise');
