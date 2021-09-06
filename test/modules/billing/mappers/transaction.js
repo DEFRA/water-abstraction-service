@@ -452,7 +452,7 @@ experiment('modules/billing/mappers/transaction', () => {
             licenceNumber: '01/123/ABC',
             region: 'A',
             areaCode: 'ARCA',
-            subjectToMinimumCharge: false
+            subjectToMinimumCharge: true
           });
         });
 
