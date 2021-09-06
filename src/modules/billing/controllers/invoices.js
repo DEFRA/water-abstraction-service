@@ -24,5 +24,19 @@ const resetIsFlaggedForRebilling = async request => {
   }
 };
 
+const resetIsFlaggedForRebillingByInvoiceId = async request => {
+  try {
+    const { originalInvoiceId, rebillInvoiceId } = request.params;
+    // If the originalInvoiceId and rebillInvoiceId (rebill or reversal) is not null then
+    // remove rebill/reissue flag in the water service for the original invoice id
+    if (originalInvoiceId !== null && rebillInvoiceId !== null) {
+      return await invoiceService.resetIsFlaggedForRebillingByInvoiceId(originalInvoiceId);
+    }
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
 exports.resetIsFlaggedForRebilling = resetIsFlaggedForRebilling;
+exports.resetIsFlaggedForRebillingByInvoiceId = resetIsFlaggedForRebillingByInvoiceId;
 exports.patchInvoice = patchInvoice;

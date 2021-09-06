@@ -26,12 +26,14 @@ exports.patchInvoice = {
 
 exports.resetIsFlaggedForRebilling = {
   method: 'PATCH',
-  path: '/water/1.0/billing/invoices/rebillingflag/{batchId}',
-  handler: controller.resetIsFlaggedForRebilling,
+  path: '/water/1.0/billing/invoices/rebillingflag/{batchId}/org/{originalInvoiceId}/rebill/{rebillInvoiceId}',
+  handler: controller.resetIsFlaggedForRebillingByInvoiceId,
   config: {
     validate: {
       params: Joi.object().keys({
-        batchId: Joi.string().required()
+        batchId: Joi.string(),
+        originalInvoiceId: Joi.string().required(),
+        rebillInvoiceId: Joi.string().required()
       })
     },
     auth: {
