@@ -109,10 +109,19 @@ const getBatchInvoiceDetail = async request => {
  */
 const deleteBatchInvoice = async (request, h) => {
   const { batch } = request.pre;
-  const { invoiceId } = request.params;
+  const { invoiceId, originalInvoiceId, rebillInvoiceId } = request.params;
   try {
-    // Delete the invoice
-    await batchService.deleteBatchInvoice(batch, invoiceId);
+    // If the originalInvoiceId and rebillInvoiceId (rebill or reversal) is not null then
+    // delete the invoice using the invoiceId (this could be the reversal or the rebill)
+    // delete the invoice using the rebillInvoiceId (this could be the reversal or the rebill)
+    if (originalInvoiceId !== null && rebillInvoiceId !== null) {
+      await batchService.deleteBatchInvoice(batch, invoiceId);
+      // await batchService.deleteBatchInvoice(batch, rebillInvoiceId);
+    } else {
+      // else (Do same as old version)
+      // Delete the invoice
+      await batchService.deleteBatchInvoice(batch, invoiceId);
+    }
 
     // Refresh batch net total / counts
     await request.queueManager.add(refreshTotalsJobName, batch.id);

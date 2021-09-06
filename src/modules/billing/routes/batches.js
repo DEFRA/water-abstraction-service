@@ -125,13 +125,15 @@ const getBatchInvoiceDetail = {
 
 const deleteBatchInvoice = {
   method: 'DELETE',
-  path: `${BASE_PATH}/{batchId}/invoices/{invoiceId}`,
+  path: `${BASE_PATH}/{batchId}/invoices/{invoiceId}/org/{originalInvoiceId}/rebill/{rebillInvoiceId}`,
   handler: controller.deleteBatchInvoice,
   config: {
     validate: {
       params: Joi.object().keys({
         batchId: Joi.string().uuid().required(),
-        invoiceId: Joi.string().uuid().required()
+        invoiceId: Joi.string().uuid().required(),
+        originalInvoiceId: Joi.string().uuid(),
+        rebillInvoiceId: Joi.string().uuid()
       })
     },
     auth: {
