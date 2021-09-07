@@ -267,6 +267,8 @@ const rebillInvoice = async (batch, invoice) => {
  */
 const resetIsFlaggedForRebilling = batchId => repos.billingInvoices.resetIsFlaggedForRebilling(batchId);
 
+const resetIsFlaggedForRebillingByInvoiceId = originalInvoiceId => repos.billingInvoices.resetIsFlaggedForRebillingByInvoiceId(originalInvoiceId);
+
 const invoiceIsSent = invoice =>
   invoice.invoiceNumber !== null;
 
@@ -301,6 +303,7 @@ exports.updateInvoiceModel = updateInvoiceModel;
 exports.getInvoicesFlaggedForRebilling = getInvoicesFlaggedForRebilling;
 exports.rebillInvoice = rebillInvoice;
 exports.resetIsFlaggedForRebilling = resetIsFlaggedForRebilling;
+exports.resetIsFlaggedForRebillingByInvoiceId = resetIsFlaggedForRebillingByInvoiceId;
 exports.createInvoice = createInvoice;
 exports.getOrCreateInvoice = getOrCreateInvoice;
 exports.setIsFlaggedForRebilling = setIsFlaggedForRebilling;
