@@ -258,7 +258,7 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     batchNumber: batch.id,
     ...mapChargeElementToChargeModuleTransaction(transaction.chargeElement),
     ...mapLicenceToChargeElementTransaction(invoiceLicence.licence),
-    subjectToMinimumCharge: true
+    subjectToMinimumCharge: !transaction.isTwoPartTariffSupplementary
   };
 };
 

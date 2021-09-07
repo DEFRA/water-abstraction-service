@@ -471,6 +471,16 @@ experiment('modules/billing/mappers/transaction', () => {
             expect(result.section126Factor).to.equal(0.75);
           });
         });
+        experiment('when transaction is 2PT', () => {
+          beforeEach(async () => {
+            transaction.isTwoPartTariffSupplementary = true;
+            result = transactionMapper.modelToChargeModule(batch, invoice, invoiceLicence, transaction);
+          });
+
+          test('the data is mapped correctly', async () => {
+            expect(result.subjectToMinimumCharge).to.be.false();
+          });
+        });
       });
     });
 
