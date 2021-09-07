@@ -452,7 +452,7 @@ experiment('modules/billing/mappers/transaction', () => {
             licenceNumber: '01/123/ABC',
             region: 'A',
             areaCode: 'ARCA',
-            subjectToMinimumCharge: false
+            subjectToMinimumCharge: true
           });
         });
 
@@ -469,6 +469,16 @@ experiment('modules/billing/mappers/transaction', () => {
 
           test('the data is mapped correctly', async () => {
             expect(result.section126Factor).to.equal(0.75);
+          });
+        });
+        experiment('when transaction is 2PT', () => {
+          beforeEach(async () => {
+            transaction.isTwoPartTariffSupplementary = true;
+            result = transactionMapper.modelToChargeModule(batch, invoice, invoiceLicence, transaction);
+          });
+
+          test('the data is mapped correctly', async () => {
+            expect(result.subjectToMinimumCharge).to.be.false();
           });
         });
       });
