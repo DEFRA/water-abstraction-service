@@ -111,15 +111,10 @@ const deleteBatchInvoice = async (request, h) => {
   const { batch } = request.pre;
   const { invoiceId, originalInvoiceId, rebillInvoiceId } = request.params;
   try {
-    // If the originalInvoiceId and rebillInvoiceId (rebill or reversal) is not null then
-    // delete the invoice using the invoiceId (this could be the reversal or the rebill)
-    // delete the invoice using the rebillInvoiceId (this could be the reversal or the rebill)
-    if (originalInvoiceId !== null && rebillInvoiceId !== null && typeof originalInvoiceId !== 'undefined' && typeof rebillInvoiceId !== 'undefined') {
+    if (originalInvoiceId && rebillInvoiceId) {
       await invoiceService.resetIsFlaggedForRebillingByInvoiceId(originalInvoiceId);
-      await batchService.deleteBatchInvoice(batch, invoiceId);
-      // await batchService.deleteBatchInvoice(batch, rebillInvoiceId);
+      await batchService.deleteBatchInvoice(batch, invoiceId); /* delete both related bills */
     } else {
-      // else (Do same as old version)
       // Delete the invoice
       await batchService.deleteBatchInvoice(batch, invoiceId);
     }
