@@ -102,7 +102,7 @@ experiment('modules/billing/controllers/invoices', () => {
     });
   });
   experiment('.resetIsFlaggedForRebilling by InvoiceId', () => {
-    let originalInvoiceId = uuid();
+    const originalInvoiceId = uuid();
     const request = {
       params: { originalInvoiceId }
     };
@@ -135,5 +135,5 @@ experiment('modules/billing/controllers/invoices', () => {
         expect(result.output.statusCode).to.equal(404);
       });
     });
-  });  
+  });
 });
