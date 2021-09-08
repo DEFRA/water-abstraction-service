@@ -25,6 +25,7 @@ experiment('modules/billing/controllers/invoices', () => {
   beforeEach(() => {
     sandbox.stub(invoiceService, 'setIsFlaggedForRebilling');
     sandbox.stub(invoiceService, 'resetIsFlaggedForRebilling');
+    sandbox.stub(invoiceService, 'resetIsFlaggedForRebillingByInvoiceId');
   });
 
   afterEach(() => sandbox.restore());
@@ -100,4 +101,39 @@ experiment('modules/billing/controllers/invoices', () => {
       });
     });
   });
+  experiment('.resetIsFlaggedForRebilling by InvoiceId', () => {
+    let originalInvoiceId = uuid();
+    const request = {
+      params: { originalInvoiceId }
+    };
+    let result;
+    experiment('happy reset', () => {
+      beforeEach(async () => {
+        invoiceService.resetIsFlaggedForRebillingByInvoiceId.resolves(new Invoice(invoiceId));
+        result = await controller.resetIsFlaggedForRebillingByInvoiceId(request);
+      });
+
+      test('calls the service method', () => {
+        expect(invoiceService.resetIsFlaggedForRebillingByInvoiceId.calledWith(
+          originalInvoiceId
+        )).to.be.true();
+      });
+
+      test('resolves with an invoice', () => {
+        expect(result).to.be.an.an.instanceOf(Invoice);
+      });
+    });
+
+    experiment('when there is a service error', () => {
+      beforeEach(async () => {
+        invoiceService.resetIsFlaggedForRebillingByInvoiceId.rejects(new NotFoundError());
+        result = await controller.resetIsFlaggedForRebillingByInvoiceId(request);
+      });
+
+      test('returns Boom error with the expected message', () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(404);
+      });
+    });
+  });  
 });
