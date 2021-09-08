@@ -267,6 +267,21 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     });
   });
 
+  experiment('.resetIsFlaggedForRebillingByInvoiceId', () => {
+    const originalInvoiceId = uuid();
+    const invoiceId = originalInvoiceId;
+
+    beforeEach(async () => {
+      await billingInvoices.resetIsFlaggedForRebillingByInvoiceId(originalInvoiceId);
+    });
+
+    test('calls raw.multiRow with the correct query', async () => {
+      expect(raw.multiRow.calledWith(
+        queries.resetIsFlaggedForRebillingByInvoiceId, { invoiceId }
+      ));
+    });
+  });
+
   experiment('.deleteInvoicesByOriginalInvoiceId', () => {
     const originalInvoiceId = uuid();
 
