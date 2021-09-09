@@ -209,7 +209,7 @@ const getLicenceVersionPurposeConditionsByLicenceId = async (licenceId, code) =>
   return conditions.getLicenceVersionPurposeConditionsByLicenceId(licenceId, code);
 };
 
-const markLicenceForSupplementaryBilling = (licenceId) =>
+const markLicenceForSupplementaryBilling = licenceId =>
   repos.licences.updateIncludeLicenceInSupplementaryBilling(
     licenceId,
     INCLUDE_IN_SUPPLEMENTARY_BILLING.no,
