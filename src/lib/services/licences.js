@@ -209,6 +209,13 @@ const getLicenceVersionPurposeConditionsByLicenceId = async (licenceId, code) =>
   return conditions.getLicenceVersionPurposeConditionsByLicenceId(licenceId, code);
 };
 
+const markLicenceForSupplementaryBilling = (licenceId) =>
+  repos.licences.updateIncludeLicenceInSupplementaryBilling(
+    licenceId,
+    INCLUDE_IN_SUPPLEMENTARY_BILLING.no,
+    INCLUDE_IN_SUPPLEMENTARY_BILLING.yes
+  );
+
 exports.getLicenceById = getLicenceById;
 exports.getLicencesByLicenceRefs = getLicencesByLicenceRefs;
 exports.getLicenceVersionById = getLicenceVersionById;
@@ -224,3 +231,4 @@ exports.getLicencesByInvoiceAccountId = getLicencesByInvoiceAccountId;
 exports.getReturnsByLicenceId = getReturnsByLicenceId;
 exports.getScheduledNotificationsByLicenceId = getScheduledNotificationsByLicenceId;
 exports.getLicenceVersionPurposeConditionsByLicenceId = getLicenceVersionPurposeConditionsByLicenceId;
+exports.markLicenceForSupplementaryBilling = markLicenceForSupplementaryBilling;
