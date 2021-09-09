@@ -71,8 +71,6 @@
 - ref: $documentDaily
   model: Document
   fields:
-    versionNumber: 1
-    status: current
     startDate: '2018-01-01'
     endDate: null
     regime: water
@@ -94,8 +92,6 @@
 - ref: $documentWeekly
   model: Document
   fields:
-    versionNumber: 1
-    status: current
     startDate: '2020-01-01'
     endDate: null
     regime: water
@@ -117,8 +113,6 @@
 - ref: $documentMonthly
   model: Document
   fields:
-    versionNumber: 1
-    status: current
     startDate: '2018-01-01'
     endDate: null
     regime: water
@@ -140,8 +134,6 @@
 - ref: $documentMonthly2
   model: Document
   fields:
-    versionNumber: 1
-    status: current
     startDate: '2018-01-01'
     endDate: null
     regime: water
