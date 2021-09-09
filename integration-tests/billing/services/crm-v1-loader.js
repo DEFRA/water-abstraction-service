@@ -6,6 +6,7 @@ const AsyncAdapter = require('./fixture-loader/adapters/AsyncAdapter');
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../config');
 const urlJoin = require('url-join');
+const { omit } = require('lodash');
 
 const createCrmV1Url = (...parts) => urlJoin(config.services.crm, ...parts);
 
@@ -19,11 +20,8 @@ const create = () => {
   asyncAdapter
     .add('DocumentHeader', body => serviceRequest.post(createCrmV1Url('documentHeader'), {
       body: {
-        metadata: JSON.stringify({
-          dataType: 'acceptance-test-setup',
-          IsCurrent: true
-        }),
-        ...body
+        metadata: body.metadata ? JSON.stringify(body.metadata) : null,
+        ...omit(body, ['metadata'])
       }
     }))
     .add('Entity', async body => {

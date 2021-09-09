@@ -23,7 +23,9 @@ const findByLicenceRef = async (licenceRef, agreementTypes = []) => {
   licenceAgreements = await licenceAgreements
     .orderBy('start_date', 'asc')
     .fetchAll({
-      withRelated: ['financialAgreementType']
+      withRelated: [
+        'financialAgreementType'
+      ]
     });
 
   return licenceAgreements.toJSON();

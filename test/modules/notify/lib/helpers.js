@@ -52,7 +52,7 @@ lab.experiment('Test validateEnqueueOptions', () => {
   lab.test('Should accept a valid configuration without ID and generate GUID ID', async () => {
     const { error, value } = validateEnqueueOptions(options);
 
-    Code.expect(error).to.equal(null);
+    Code.expect(error).to.equal(undefined);
     Code.expect(value.id).to.be.a.string();
     Code.expect(value.id).to.have.length(36);
   });
@@ -65,7 +65,7 @@ lab.experiment('Test validateEnqueueOptions', () => {
 
     const { error, value } = validateEnqueueOptions(opts);
 
-    Code.expect(error).to.equal(null);
+    Code.expect(error).to.equal(undefined);
     Code.expect(value.id).to.be.a.string();
     Code.expect(value.id).to.equal('custom');
   });
@@ -96,7 +96,6 @@ lab.experiment('Test validateEnqueueOptions', () => {
     };
 
     const { error } = validateEnqueueOptions(opts);
-
     Code.expect(error.name).to.equal('ValidationError');
   });
 
@@ -118,7 +117,6 @@ lab.experiment('Test validateEnqueueOptions', () => {
     };
 
     const { value } = validateEnqueueOptions(opts);
-
     Code.expect(value.personalisation.name).to.equal('John');
   });
 
@@ -130,7 +128,7 @@ lab.experiment('Test validateEnqueueOptions', () => {
 
     const { error } = validateEnqueueOptions(opts);
 
-    Code.expect(error).to.equal(null);
+    Code.expect(error).to.equal(undefined);
   });
 
   lab.test('Should accept an empty array of licence numbers', async () => {
@@ -141,7 +139,7 @@ lab.experiment('Test validateEnqueueOptions', () => {
 
     const { error } = validateEnqueueOptions(opts);
 
-    Code.expect(error).to.equal(null);
+    Code.expect(error).to.equal(undefined);
   });
 
   lab.test('Should accept a GUID individual entity IDs', async () => {
@@ -152,7 +150,7 @@ lab.experiment('Test validateEnqueueOptions', () => {
 
     const { error } = validateEnqueueOptions(opts);
 
-    Code.expect(error).to.equal(null);
+    Code.expect(error).to.equal(undefined);
   });
 
   lab.test('Should accept a null individual entity ID', async () => {
@@ -163,7 +161,7 @@ lab.experiment('Test validateEnqueueOptions', () => {
 
     const { error } = validateEnqueueOptions(opts);
 
-    Code.expect(error).to.equal(null);
+    Code.expect(error).to.equal(undefined);
   });
 
   lab.test('Should reject non-GUID individual entity ID', async () => {
@@ -185,7 +183,7 @@ lab.experiment('Test validateEnqueueOptions', () => {
 
     const { error } = validateEnqueueOptions(opts);
 
-    Code.expect(error).to.equal(null);
+    Code.expect(error).to.equal(undefined);
   });
 
   lab.test('Should accept a null company entity ID', async () => {
@@ -196,7 +194,7 @@ lab.experiment('Test validateEnqueueOptions', () => {
 
     const { error } = validateEnqueueOptions(opts);
 
-    Code.expect(error).to.equal(null);
+    Code.expect(error).to.equal(undefined);
   });
 
   lab.test('Should reject non-GUID company entity ID', async () => {
@@ -218,7 +216,7 @@ lab.experiment('Test validateEnqueueOptions', () => {
 
     const { error } = validateEnqueueOptions(opts);
 
-    Code.expect(error).to.equal(null);
+    Code.expect(error).to.equal(undefined);
   });
 
   lab.test('Should reject non-GUID event ID', async () => {
@@ -242,7 +240,7 @@ lab.experiment('Test validateEnqueueOptions', () => {
 
     const { error, value } = validateEnqueueOptions(opts);
 
-    Code.expect(error).to.equal(null);
+    Code.expect(error).to.equal(undefined);
     Code.expect(value.metadata.param).to.equal('value');
   });
 
@@ -251,10 +249,9 @@ lab.experiment('Test validateEnqueueOptions', () => {
       ...options,
       metadata: '{"param": "value"}'
     };
-
     const { error, value } = validateEnqueueOptions(opts);
 
-    Code.expect(error).to.equal(null);
+    Code.expect(error).to.equal(undefined);
     Code.expect(value.metadata.param).to.equal('value');
   });
 

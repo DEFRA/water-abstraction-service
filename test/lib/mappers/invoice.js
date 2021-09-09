@@ -9,7 +9,6 @@ const { expect } = require('@hapi/code');
 
 const uuid = require('uuid/v4');
 
-const Batch = require('../../../src/lib/models/batch');
 const Company = require('../../../src/lib/models/company');
 const Contact = require('../../../src/lib/models/contact-v2');
 const Invoice = require('../../../src/lib/models/invoice');
@@ -30,7 +29,22 @@ const invoiceRow = {
   creditNoteValue: -77,
   legacyId: '12345:678',
   metadata: { foo: 'bar' },
-  isFlaggedForRebilling: true
+  isFlaggedForRebilling: true,
+  linkedBillingInvoices: [{
+    billingInvoiceId: '5a1577d7-8dc9-4d67-aadc-37d7ea85abca',
+    rebillingState: 'rebilled'
+  },
+  {
+    billingInvoiceId: '4139a53a-a1f0-4dc9-bf1a-b97e41c5e866',
+    rebillingState: 'reversal'
+  }],
+  originalBillingInvoice: {
+    billingInvoiceId: '4139a53a-a1f0-4dc9-bf1a-b97e41c5e899',
+    rebillingState: 'rebilled'
+  },
+  originalBillingInvoiceId: '4139a53a-a1f0-4dc9-bf1a-b97e41c5e899',
+  billingBatchId: '4139a53a-a1f0-4dc9-bf1a-b97e41c5e899',
+  rebillingState: 'rebilled'
 };
 
 experiment('lib/mappers/invoice', () => {
@@ -82,13 +96,37 @@ experiment('lib/mappers/invoice', () => {
     test('maps the is flagged for rebilling', () => {
       expect(result.isFlaggedForRebilling).to.equal(invoiceRow.isFlaggedForRebilling);
     });
+
+    test('maps the linked billing invoices for re-billing, excluding the current invoice', () => {
+      const { linkedInvoices } = result;
+      expect(linkedInvoices).to.be.an.array().length(2);
+      expect(linkedInvoices[0].id).to.equal(invoiceRow.linkedBillingInvoices[1].billingInvoiceId);
+      expect(linkedInvoices[1].id).to.equal(invoiceRow.originalBillingInvoiceId);
+    });
+
+    test('maps the batch id', () => {
+      expect(result.billingBatchId).to.equal(invoiceRow.billingBatchId);
+    });
+
+    test('maps the rebillingStateLabels correctly', () => {
+      expect(result.rebillingStateLabel).to.equal('rebilled');
+      expect(result.linkedInvoices[0].rebillingStateLabel).to.equal('reversal');
+      expect(result.linkedInvoices[1].rebillingStateLabel).to.equal('original');
+    });
+
+    test('maps the rebillingStateLabels correctly when the original invoice is the billingInvoice row', () => {
+      invoiceRow.billingInvoiceId = invoiceRow.originalBillingInvoiceId;
+      const invoiceModel = invoiceMapper.dbToModel(invoiceRow);
+      expect(invoiceModel.rebillingStateLabel).to.equal('original');
+      expect(invoiceModel.linkedInvoices[0].rebillingStateLabel).to.equal('rebilled');
+      expect(invoiceModel.linkedInvoices[1].rebillingStateLabel).to.equal('reversal');
+    });
   });
 
   experiment('.modelToDB', () => {
-    let result, batch, invoice;
+    let result, invoice;
 
     beforeEach(async () => {
-      batch = new Batch(uuid());
       invoice = new Invoice();
       invoice.invoiceAccount = new InvoiceAccount(uuid());
       invoice.invoiceAccount.accountNumber = 'A12345678A';
@@ -108,14 +146,17 @@ experiment('lib/mappers/invoice', () => {
           postcode: 'TT1 1TT',
           country: 'UK'
         });
-        result = invoiceMapper.modelToDb(batch, invoice);
+        invoice.invoiceAccount = new InvoiceAccount().fromHash({
+          accountNumber: 'A00000000A'
+        });
+        result = invoiceMapper.modelToDb(invoice);
       });
 
       test('maps to expected shape for the DB row', async () => {
         expect(result.invoiceAccountId).to.equal(invoice.invoiceAccount.id);
         expect(result.invoiceAccountNumber).to.equal(invoice.invoiceAccount.accountNumber);
         expect(result.address).to.equal(invoice.address.toJSON());
-        expect(result.billingBatchId).to.equal(batch.id);
+        // expect(result.billingBatchId).to.equal(batch.id);
         expect(result.financialYearEnding).to.equal(invoice.financialYear.yearEnding);
         expect(result.invoiceNumber).to.be.null();
         expect(result.netAmount).to.be.null();
@@ -125,7 +166,7 @@ experiment('lib/mappers/invoice', () => {
 
     experiment('when the address is not populated', () => {
       beforeEach(async () => {
-        result = invoiceMapper.modelToDb(batch, invoice);
+        result = invoiceMapper.modelToDb(invoice);
       });
 
       test('the address property is an empty object', async () => {
@@ -136,7 +177,7 @@ experiment('lib/mappers/invoice', () => {
     experiment('when the invoice number is populated', () => {
       test('it is mapped', () => {
         invoice.invoiceNumber = 'AAI1000000';
-        const { invoiceNumber } = invoiceMapper.modelToDb(batch, invoice);
+        const { invoiceNumber } = invoiceMapper.modelToDb(invoice);
         expect(invoiceNumber).to.equal('AAI1000000');
       });
     });
@@ -146,7 +187,7 @@ experiment('lib/mappers/invoice', () => {
         invoice.netTotal = 123;
         invoice.invoiceValue = 200;
         invoice.creditNoteValue = -77;
-        result = invoiceMapper.modelToDb(batch, invoice);
+        result = invoiceMapper.modelToDb(invoice);
       });
       test('the totals are mapped', async () => {
         expect(invoice.netTotal).to.equal(123);

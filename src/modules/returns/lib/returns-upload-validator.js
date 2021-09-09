@@ -18,7 +18,6 @@
   }
 ]
  */
-const Joi = require('@hapi/joi');
 const { chunk, flatMap, find, uniq, cond, negate, get, isEqual, pick } = require('lodash');
 
 const returnsConnector = require('../../../lib/connectors/returns');
@@ -188,7 +187,7 @@ const validateReturnDue = (ret, context) => {
  * @return {Boolean}         true if schema passes
  */
 const validateReturnSchema = (ret, context) => {
-  const { error } = Joi.validate(ret, schema.returnSchema);
+  const { error } = schema.returnSchema.validate(ret);
   return !error;
 };
 

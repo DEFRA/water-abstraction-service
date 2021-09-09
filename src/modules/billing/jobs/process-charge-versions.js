@@ -9,6 +9,7 @@ const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 const { jobName: processChargeVersionYearJobName } = require('./process-charge-version-year');
+const { jobName: refreshTotalsJobName } = require('./refresh-totals');
 const batchStatus = require('./lib/batch-status');
 const chargeVersionYearService = require('../services/charge-version-year');
 
@@ -47,6 +48,12 @@ const onComplete = async (job, queueManager) => {
   try {
     const batchId = get(job, 'data.batchId');
     const { billingBatchChargeVersionYearIds } = job.returnvalue;
+
+    // If there's nothing to process, skip to cm refresh
+    if (billingBatchChargeVersionYearIds.length === 0) {
+      await batchService.requestCMBatchGeneration(batchId);
+      await queueManager.add(refreshTotalsJobName, batchId);
+    }
 
     // Publish a job to process each charge version year
     for (const billingBatchChargeVersionYearId of billingBatchChargeVersionYearIds) {

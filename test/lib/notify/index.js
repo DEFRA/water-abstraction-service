@@ -120,4 +120,21 @@ experiment('src/lib/notify/index', () => {
       expect(data).to.equal(pdf);
     });
   });
+
+  experiment('sendEmail', () => {
+    beforeEach(async () => {
+      const notifyClient = {
+        sendEmail: sandbox.spy()
+      };
+      notifyConnector.getClient.returns(notifyClient);
+      await notify.sendEmail('testId', 'test@email.com', { content: 'concocted message string' });
+    });
+    test('gets the notification using the id', async () => {
+      const notifyClient = notifyConnector.getClient.lastCall.returnValue;
+      const [id, recipient, personalisation] = notifyClient.sendEmail.lastCall.args;
+      expect(id).to.equal('testId');
+      expect(recipient).to.equal('test@email.com');
+      expect(personalisation).to.equal({ personalisation: { content: 'concocted message string' } });
+    });
+  });
 });

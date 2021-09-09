@@ -278,7 +278,7 @@ experiment('lib/connectors/repos/billing-batches', () => {
 
   experiment('.findSentTptBatchesForFinancialYearAndRegion', () => {
     beforeEach(async () => {
-      await billingBatches.findSentTptBatchesForFinancialYearAndRegion(2020, '00000000-0000-0000-0000-000000000000');
+      await billingBatches.findSentTptBatchesForFinancialYearAndRegion(2020, '00000000-0000-0000-0000-000000000000', BATCH_TYPE.twoPartTariff);
     });
 
     test('calls helpers .findMany() with the correct params', async () => {

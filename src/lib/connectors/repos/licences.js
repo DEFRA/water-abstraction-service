@@ -3,6 +3,7 @@
 const raw = require('./lib/raw');
 const { Licence, bookshelf } = require('../bookshelf');
 const queries = require('./queries/licences');
+const helpers = require('./lib/helpers');
 
 const deleteTest = () => Licence
   .forge()
@@ -12,11 +13,9 @@ const deleteTest = () => Licence
   });
 
 /**
- * Gets a list of licence agreements of the given types for the specified
- * licece number
- * @param {String} licenceRef - licence number
- * @param {Array} agreementTypes
+ * Gets a licence record given its ID
  * @return {Promise<Array>}
+ * @param licenceId
  */
 const findOne = async licenceId => {
   const model = await Licence
@@ -30,16 +29,9 @@ const findOne = async licenceId => {
   return model ? model.toJSON() : null;
 };
 
-const findOneByLicenceRef = async licenceRef => {
-  const model = await Licence
-    .forge()
-    .where({ licence_ref: licenceRef })
-    .fetchAll({
-      withRelated: ['region']
-    });
-
-  return model.toJSON();
-};
+const findOneByLicenceRef = licenceNumber => helpers.findOne(
+  Licence, 'licence_ref', licenceNumber, ['region']
+);
 
 /**
  * Finds many licences by licence ref array

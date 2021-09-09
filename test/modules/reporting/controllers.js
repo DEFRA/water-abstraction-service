@@ -25,8 +25,13 @@ experiment('modules/reporting/controllers', () => {
 
   experiment('.getReport', () => {
     request = {
+      defra: {
+        internalCallingUser: {
+          id: 1010
+        }
+      },
       params: {
-        reportIdentifier: 'testreport.csv'
+        reportIdentifier: 'testreport'
       }
     };
     before(async () => {
@@ -34,7 +39,7 @@ experiment('modules/reporting/controllers', () => {
     });
 
     test('calls the reports connector', async () => {
-      expect(reportsConnector.getReport.calledWith(request)).to.be.true();
+      expect(reportsConnector.getReport.calledWith(1010, 'testreport')).to.be.true();
     });
   });
 });

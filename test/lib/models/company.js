@@ -197,7 +197,7 @@ experiment('lib/models/company model', () => {
           company.type = type;
 
           const { error, value } = company.isValid();
-          expect(error).to.be.null();
+          expect(error).to.be.undefined();
           expect(value.type).to.equal(type);
         });
       });
@@ -209,7 +209,7 @@ experiment('lib/models/company model', () => {
           company.organisationType = type;
 
           const { error, value } = company.isValid();
-          expect(error).to.be.null();
+          expect(error).to.be.undefined();
           expect(value.organisationType).to.equal(type);
         });
       });
@@ -218,7 +218,7 @@ experiment('lib/models/company model', () => {
     experiment('name', () => {
       test('is valid when present', async () => {
         const { error, value } = company.isValid();
-        expect(error).to.be.null();
+        expect(error).to.be.undefined();
         expect(value.name).to.equal(company.name);
       });
     });
@@ -228,20 +228,20 @@ experiment('lib/models/company model', () => {
         delete company.companyNumber;
 
         const { error } = company.isValid();
-        expect(error).to.be.null();
+        expect(error).to.be.undefined();
       });
 
       test('must have a length of 8', async () => {
         company.companyNumber = 'ABC123';
 
         const { error } = company.isValid();
-        expect(error).to.not.be.null();
+        expect(error).to.not.be.undefined();
       });
 
       test('is valid when present', async () => {
         company.companyNumber = 'SL123456';
         const { error, value } = company.isValid();
-        expect(error).to.be.null();
+        expect(error).to.be.undefined();
         expect(value.companyNumber).to.equal(company.companyNumber);
       });
     });

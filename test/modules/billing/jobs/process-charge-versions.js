@@ -14,6 +14,7 @@ const processChargeVersionsJob = require('../../../../src/modules/billing/jobs/p
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
+const { logger } = require('../../../../src/logger');
 
 const Batch = require('../../../../src/lib/models/batch');
 
@@ -35,12 +36,15 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
 
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
     sandbox.stub(batchService, 'setErrorStatus');
+    sandbox.stub(batchService, 'requestCMBatchGeneration');
 
     sandbox.stub(chargeVersionYearService, 'getForBatch').resolves(billingBatchChargeVersionYears);
 
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
     sandbox.stub(batchJob, 'logOnCompleteError');
+
+    sandbox.stub(logger, 'info');
 
     queueManager = {
       add: sandbox.stub()
@@ -170,6 +174,26 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
         )).to.be.true();
         expect(queueManager.add.calledWith(
           'billing.process-charge-version-year', batchId, job.returnvalue.billingBatchChargeVersionYearIds[1]
+        )).to.be.true();
+      });
+    });
+
+    experiment('when there are 0 charge version years to process', () => {
+      beforeEach(async () => {
+        job.returnvalue.billingBatchChargeVersionYearIds = [];
+        processChargeVersionsJob.onComplete(job, queueManager);
+      });
+
+      test('charge module batch summary generation is requested', async () => {
+        expect(batchService.requestCMBatchGeneration.calledWith(
+          batchId
+        )).to.be.true();
+      });
+
+      test('a job is published to refresh the totals', async () => {
+        expect(queueManager.add.callCount).to.equal(1);
+        expect(queueManager.add.calledWith(
+          'billing.refresh-totals', batchId
         )).to.be.true();
       });
     });

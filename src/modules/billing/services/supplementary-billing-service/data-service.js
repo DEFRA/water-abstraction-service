@@ -57,6 +57,9 @@ const getReversedTransaction = (invoiceLicence, sourceTransaction) => {
   };
 };
 
+// this fixes 3044 for when credits were not being created
+const isNotRebillingTransaction = transaction => !(['reversal', 'rebilled'].includes(transaction.rebillingState));
+
 /**
  * Gets a list of transactions in the current batch plus historical transactions
  * for the licences in the supplementary batch
@@ -69,7 +72,8 @@ const getTransactions = async batchId => {
     billingTransactionsRepo.findByBatchId(batchId),
     billingTransactionsRepo.findHistoryByBatchId(batchId)
   ]);
-  return [...batchTransactions, ...historicalTransactions];
+  const transactions = [...batchTransactions, ...historicalTransactions];
+  return transactions.filter(isNotRebillingTransaction);
 };
 
 /**

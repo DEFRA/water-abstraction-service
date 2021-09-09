@@ -44,24 +44,6 @@ experiment('modules/billing/services/jobService', () => {
     });
   });
 
-  experiment('.setEmptyBatch', () => {
-    beforeEach(async () => {
-      await jobService.setEmptyBatch('test-event-id', 'test-batch-id');
-    });
-
-    test('updates the event status', async () => {
-      const [eventId, status] = eventService.updateStatus.lastCall.args;
-      expect(eventId).to.equal('test-event-id');
-      expect(status).to.equal(jobStatus.complete);
-    });
-
-    test('updates the batch status', async () => {
-      const [batchId, status] = batchService.setStatus.lastCall.args;
-      expect(batchId).to.equal('test-batch-id');
-      expect(status).to.equal(BATCH_STATUS.empty);
-    });
-  });
-
   experiment('.setFailedJob', () => {
     beforeEach(async () => {
       await jobService.setFailedJob('test-event-id', 'test-batch-id');

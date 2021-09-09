@@ -24,10 +24,15 @@ module.exports = {
   },
 
   billing: {
-    supplementaryYears: isTest ? 1 : 6,
+    supplementaryYears: isTest ? 1 : 5,
     // There are 4 processes on the environments but only 1 locally
     createChargeJobConcurrency: isLocal ? 16 : 1,
-    naldSwitchOverDate: process.env.BILLING_GO_LIVE_DATE || '2021-04-01'
+    // Some billing logic is handled differently depending on whether the
+    // transaction is pre/post NALD switchover date
+    naldSwitchOverDate: process.env.BILLING_GO_LIVE_DATE || '2021-06-10',
+    // The grace period (in days) following the return due date during which time
+    // the submitted return will be considered for billing
+    returnsGracePeriod: process.env.RETURNS_GRACE_PERIOD || 21
   },
 
   blipp: {
@@ -40,7 +45,7 @@ module.exports = {
   },
 
   logger: {
-    level: testMode ? 'info' : 'error',
+    level: 'debug', // testMode ? 'info' : 'error',
     airbrakeKey: process.env.ERRBIT_KEY,
     airbrakeHost: process.env.ERRBIT_SERVER,
     airbrakeLevel: 'error'
@@ -102,6 +107,7 @@ module.exports = {
       email_change_verification_code_email: '1fd2e8f2-8cb9-4ed1-8fa6-691918c15430',
       email_change_email_in_use_email: 'adb02416-e9d3-4e05-a9cc-b24e25675672',
       new_internal_user_email: '45b79d3a-39f2-44cf-b8f9-012c952dbd92',
+      nald_entity_changes_detected: 'b5d29621-e30d-4dc8-a6eb-11ab075d7a0c',
 
       // currently not in use
       returns_invitation_primary_user_email: 'b18195f7-7b83-4251-a6eb-22124f1dff87',
@@ -159,6 +165,9 @@ module.exports = {
   },
   import: {
     returns: { importYears: process.env.IMPORT_RETURNS_YEARS || 3 },
+    gaugingStationsSyncFrequencyInMS: 21600000,
+    digitiseToLVPCSyncFrequencyInMS: 43200000,
+    digitiseToLicenceGaugingStationsFrequencyInMS: 43200000,
     zipPassword: process.env.NALD_ZIP_PASSWORD
   },
   services: {
@@ -168,7 +177,7 @@ module.exports = {
     permits: process.env.PERMIT_URI || 'http://127.0.0.1:8004/API/1.0/',
     returns: process.env.RETURNS_URI || 'http://127.0.0.1:8006/returns/1.0',
     import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0',
-    reporting: process.env.REPORTING_URI || 'http://127.0.0.1:8010/reporting/1.0'
+    reporting: process.env.REPORTING_URI || 'http://127.0.0.1:8011/reporting/1.0'
   },
 
   isAcceptanceTestTarget,
@@ -195,12 +204,15 @@ module.exports = {
   },
 
   redis: {
-    host: process.env.REDIS_HOST || '127.0.0.1',
-    port: process.env.REDIS_PORT || 6379,
-    password: process.env.REDIS_PASSWORD || '',
-    ...(isTlsConnection) && { tls: {} },
-    db: isPermitsTestDatabase ? 4 : 2,
-    lazyConnect: isRedisLazy
+    maxListenerCount: 64,
+    connection: {
+      host: process.env.REDIS_HOST || '127.0.0.1',
+      port: process.env.REDIS_PORT || 6379,
+      password: process.env.REDIS_PASSWORD || '',
+      ...(isTlsConnection) && { tls: {} },
+      db: isPermitsTestDatabase ? 4 : 2,
+      lazyConnect: isRedisLazy
+    }
   },
 
   featureToggles: {

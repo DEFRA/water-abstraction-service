@@ -9,7 +9,9 @@ const {
   assertNullableInteger, assertNullableId,
   assertNullablePositiveOrZeroInteger,
   assertNullableNegativeOrZeroInteger,
-  assertIsNullableBoolean
+  assertIsNullableBoolean,
+  assertNullableEnum,
+  assertId
 } = require('./validators');
 
 const Address = require('./address');
@@ -20,11 +22,26 @@ const Contact = require('./contact-v2');
 const FinancialYear = require('./financial-year');
 const Totals = require('./totals');
 
+const rebillingState = {
+  rebill: 'rebill',
+  reversal: 'reversal',
+  rebilled: 'rebilled',
+  unrebillable: 'unrebillable'
+};
+const rebillingStateLabel = {
+  rebill: 'rebill',
+  reversal: 'reversal',
+  rebilled: 'rebilled',
+  unrebillable: 'original',
+  original: 'original'
+};
+
 class Invoice extends Totals {
   constructor (id) {
     super(id);
     this._invoiceLicences = [];
     this.isDeMinimis = false;
+    this._linkedInvoices = [];
   }
 
   /**
@@ -287,6 +304,18 @@ class Invoice extends Totals {
     this._externalId = externalId;
   }
 
+  get billingBatchId () {
+    return this._billingBatchId;
+  }
+
+  /**
+   * Sets the batch ID.
+   */
+  set billingBatchId (billingBatchId) {
+    assertId(billingBatchId);
+    this._billingBatchId = billingBatchId;
+  }
+
   /**
    * Sets the isFlaggedForRebilling flag
    * @param {Boolean} isFlaggedForRebilling
@@ -317,6 +346,18 @@ class Invoice extends Totals {
     return null;
   }
 
+  /**
+   * sets the rebilling state label only used by the UI
+   */
+  set rebillingStateLabel (value) {
+    assertNullableEnum(value, Object.keys(rebillingStateLabel));
+    this._rebillingStateLabel = value;
+  }
+
+  get rebillingStateLabel () {
+    return this._rebillingStateLabel;
+  }
+
   toJSON () {
     const { hasTransactionErrors, displayLabel } = this;
     return {
@@ -325,6 +366,49 @@ class Invoice extends Totals {
       ...super.toJSON()
     };
   }
+
+  /**
+   * Records whether this invoice is:
+   * - reversal - reverses a previous sent bill for rebilling
+   * - rebill - a fresh copy of the previously sent bill for rebilling
+   *
+   * @param {String} value  - reversal|rebill
+   */
+  set rebillingState (value) {
+    assertNullableEnum(value, Object.values(rebillingState));
+    this._rebillingState = value;
+  }
+
+  get rebillingState () {
+    return this._rebillingState;
+  }
+
+  /**
+   * The ID of the original bill for rebilling
+   * @param {String|Null} id - guid
+   */
+  set originalInvoiceId (id) {
+    assertNullableId(id);
+    this._originalInvoiceId = id;
+  }
+
+  get originalInvoiceId () {
+    return this._originalInvoiceId;
+  }
+
+  /**
+   * The ID of the original bill for rebilling
+   * @param {String|Null} id - guid
+   */
+  set linkedInvoices (invoices) {
+    assertIsArrayOfType(invoices, Invoice);
+    this._linkedInvoices = invoices;
+  }
+
+  get linkedInvoices () {
+    return this._linkedInvoices;
+  }
 }
 
 module.exports = Invoice;
+module.exports.rebillingState = rebillingState;

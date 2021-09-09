@@ -29,7 +29,8 @@ const mockedAddress = {
   town: 'Portstewart',
   county: 'Snatchington',
   postcode: 'BT55 7PP',
-  country: 'uk'
+  country: 'uk',
+  startDate: new Date()
 };
 
 const giveMeALongString = length => [...Array(length)].map(() => Math.random().toString(36)[2]).join('');
@@ -106,7 +107,7 @@ experiment('lib/mappers/charge-module', () => {
     sandbox.restore();
   });
 
-  experiment('.mapInvoiceAccountToChargeModuleCustomer', () => {
+  experiment('.mapInvoiceAccountToChargeModuleCustomer with a valid lastInvoiceAccountAddress', () => {
     let result;
     beforeEach(async () => {
       result = await mapper.mapInvoiceAccountToChargeModuleCustomer(mockedInvoiceAccount);
@@ -117,6 +118,18 @@ experiment('lib/mappers/charge-module', () => {
     });
     test('returns the correct customer reference', () => {
       expect(result.customerReference).to.equal(invoiceAccountNumber);
+    });
+  });
+
+  experiment('.mapInvoiceAccountToChargeModuleCustomer without a valid lastInvoiceAccountAddress', () => {
+    let result;
+    beforeEach(async () => {
+      mockedInvoiceAccount.lastInvoiceAccountAddress = undefined;
+      result = await mapper.mapInvoiceAccountToChargeModuleCustomer(mockedInvoiceAccount);
+    });
+
+    test('returns an error', () => {
+      expect(result).to.be.an.error();
     });
   });
 

@@ -13,7 +13,7 @@ const kpiClient = apiClientFactory.create(urlJoin(config.services.idm, 'kpi'));
 
 const validateApplication = application => Joi.assert(
   application,
-  Joi.string().required().valid(Object.values(config.idm.application))
+  Joi.string().required().valid(...Object.values(config.idm.application))
 );
 
 /**

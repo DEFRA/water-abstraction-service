@@ -19,10 +19,12 @@ const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 const mappers = require('../../../src/lib/mappers');
 const repos = require('../../../src/lib/connectors/repos');
 const invoiceAccountsConnector = require('../../../src/lib/connectors/crm-v2/invoice-accounts');
+const chargeModuleBillRunApi = require('../../../src/lib/connectors/charge-module/bill-runs');
+const { logger } = require('../../../src/logger');
 
 const invoiceService = require('../../../src/lib/services/invoice-service');
 
-const { NotFoundError } = require('../../../src/lib/errors');
+const { NotFoundError, ConflictingDataError } = require('../../../src/lib/errors');
 
 const IDS = {
   batch: uuid(),
@@ -228,12 +230,21 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(repos.billingInvoices, 'update').resolves();
     sandbox.stub(repos.billingInvoices, 'findOneBy').resolves();
     sandbox.stub(repos.billingInvoices, 'findAllForInvoiceAccount').resolves();
+    sandbox.stub(repos.billingInvoices, 'findByIsFlaggedForRebillingAndRegion').resolves();
+    sandbox.stub(repos.billingInvoices, 'resetIsFlaggedForRebilling').resolves();
+    sandbox.stub(repos.billingInvoices, 'deleteInvoicesByOriginalInvoiceId').resolves();
+    sandbox.stub(repos.billingInvoices, 'create');
 
     sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountsByIds').resolves(crmData);
 
     sandbox.stub(repos.billingInvoiceLicences, 'findOne');
 
     sandbox.stub(mappers.invoice, 'modelToDb');
+
+    sandbox.stub(chargeModuleBillRunApi, 'rebillInvoice');
+
+    sandbox.stub(logger, 'info');
+    sandbox.stub(logger, 'error');
   });
 
   afterEach(async () => {
@@ -546,7 +557,8 @@ experiment('modules/billing/services/invoiceService', () => {
   });
 
   experiment('.saveInvoiceToDB', () => {
-    const batch = new Batch();
+    const batchId = uuid();
+    const batch = new Batch(batchId);
     const invoice = new Invoice();
 
     beforeEach(async () => {
@@ -555,11 +567,14 @@ experiment('modules/billing/services/invoiceService', () => {
     });
 
     test('calls the relevant mapper with the batch and invoice', async () => {
-      expect(mappers.invoice.modelToDb.calledWith(batch, invoice)).to.be.true();
+      expect(mappers.invoice.modelToDb.calledWith(invoice)).to.be.true();
     });
 
     test('calls .upsert() on the repo with the result of the mapping', async () => {
-      expect(repos.billingInvoices.upsert.calledWith({ foo: 'bar' })).to.be.true();
+      expect(repos.billingInvoices.upsert.calledWith({
+        foo: 'bar',
+        billingBatchId: batchId
+      })).to.be.true();
     });
   });
 
@@ -580,7 +595,8 @@ experiment('modules/billing/services/invoiceService', () => {
         expect(repos.billingInvoices.findOneBy.calledWith({
           billingBatchId: IDS.batch,
           invoiceAccountId,
-          financialYearEnding
+          financialYearEnding,
+          rebillingState: null
         })).to.be.true();
       });
 
@@ -600,8 +616,10 @@ experiment('modules/billing/services/invoiceService', () => {
 
     experiment('when the invoice does not exist', () => {
       beforeEach(async () => {
+        repos.billingInvoices.create.resolves(
+          createBatchData().billingInvoices[0]
+        );
         repos.billingInvoices.findOneBy.resolves(null);
-        repos.billingInvoices.upsert.resolves(createBatchData().billingInvoices[0]);
         result = await invoiceService.getOrCreateInvoice(IDS.batch, invoiceAccountId, financialYearEnding);
       });
 
@@ -609,7 +627,8 @@ experiment('modules/billing/services/invoiceService', () => {
         expect(repos.billingInvoices.findOneBy.calledWith({
           billingBatchId: IDS.batch,
           invoiceAccountId,
-          financialYearEnding
+          financialYearEnding,
+          rebillingState: null
         })).to.be.true();
       });
 
@@ -620,7 +639,7 @@ experiment('modules/billing/services/invoiceService', () => {
       });
 
       test('the row is created', async () => {
-        expect(repos.billingInvoices.upsert.called).to.be.true();
+        expect(repos.billingInvoices.create.called).to.be.true();
       });
 
       test('resolves with an Invoice model', async () => {
@@ -697,6 +716,185 @@ experiment('modules/billing/services/invoiceService', () => {
 
     test('returns the result of the mapping', () => {
       expect(result).to.equal({ bar: 'baz' });
+    });
+  });
+
+  experiment('.getInvoicesFlaggedForRebilling', () => {
+    const regionId = uuid();
+    let result;
+
+    beforeEach(async () => {
+      repos.billingInvoices.findByIsFlaggedForRebillingAndRegion.resolves(createBatchData().billingInvoices);
+      result = await invoiceService.getInvoicesFlaggedForRebilling(regionId);
+    });
+
+    test('calls .findByIsFlaggedForRebillingAndRegion() repo method with the region ID', async () => {
+      expect(repos.billingInvoices.findByIsFlaggedForRebillingAndRegion.calledWith(regionId)).to.be.true();
+    });
+
+    test('resolves with array of Invoice service models', async () => {
+      expect(result).to.be.an.array().length(3);
+      result.forEach(
+        item => expect(item).to.be.an.instanceOf(Invoice)
+      );
+    });
+  });
+
+  experiment('.rebillInvoice', () => {
+    let batch, invoice, result;
+
+    beforeEach(async () => {
+      batch = createBatch();
+      invoice = new Invoice().fromHash({
+        id: uuid(),
+        externalId: uuid()
+      });
+      repos.billingInvoices.update.resolves({});
+    });
+
+    experiment('when the CM responds with no errors', () => {
+      beforeEach(async () => {
+        result = await invoiceService.rebillInvoice(batch, invoice);
+      });
+
+      test('the request is made to the charge module rebilling API connector', async () => {
+        expect(chargeModuleBillRunApi.rebillInvoice.calledWith(
+          batch.externalId,
+          invoice.externalId
+        )).to.be.true();
+      });
+
+      test('no message is logged', async () => {
+        expect(logger.info.called).to.be.false();
+        expect(logger.error.called).to.be.false();
+      });
+
+      test('the invoice is updated so that the originalBillingInvoiceId = the invoice ID', async () => {
+        expect(repos.billingInvoices.update.calledWith(
+          invoice.id, {
+            originalBillingInvoiceId: invoice.id,
+            rebillingState: null
+          }
+        )).to.be.true();
+      });
+
+      test('resolves with the updated Invoice model', async () => {
+        expect(result).to.be.an.instanceOf(Invoice);
+      });
+    });
+
+    experiment('when the CM responds with a 409 error', () => {
+      beforeEach(async () => {
+        const err = new Error('Oh no');
+        err.statusCode = 409;
+        chargeModuleBillRunApi.rebillInvoice.rejects(err);
+        result = await invoiceService.rebillInvoice(batch, invoice);
+      });
+
+      test('the request is made to the charge module rebilling API connector', async () => {
+        expect(chargeModuleBillRunApi.rebillInvoice.calledWith(
+          batch.externalId,
+          invoice.externalId
+        )).to.be.true();
+      });
+
+      test('an info message is logged', async () => {
+        expect(logger.info.called).to.be.true();
+        expect(logger.error.called).to.be.false();
+      });
+
+      test('the invoice is updated so that the originalBillingInvoiceId = the invoice ID', async () => {
+        expect(repos.billingInvoices.update.calledWith(
+          invoice.id, {
+            originalBillingInvoiceId: invoice.id,
+            rebillingState: null
+          }
+        )).to.be.true();
+      });
+
+      test('resolves with the updated Invoice model', async () => {
+        expect(result).to.be.an.instanceOf(Invoice);
+      });
+    });
+
+    experiment('when the CM responds with a non-409 error', () => {
+      beforeEach(async () => {
+        const err = new Error('Oh no');
+        err.statusCode = 400;
+        chargeModuleBillRunApi.rebillInvoice.rejects(err);
+      });
+
+      test('the error is logged and rethrown', async () => {
+        const func = () => invoiceService.rebillInvoice(batch, invoice);
+        await expect(func()).to.reject();
+        expect(logger.error.called).to.be.true();
+      });
+    });
+  });
+
+  experiment('.setIsFlaggedForRebilling', () => {
+    const invoiceId = uuid();
+
+    experiment('when the invoice is not found', () => {
+      beforeEach(() => {
+        repos.billingInvoices.findOne.resolves(null);
+      });
+
+      test('throws a NotFoundError', async () => {
+        const func = () => invoiceService.setIsFlaggedForRebilling(invoiceId, true);
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.instanceOf(NotFoundError);
+      });
+    });
+
+    experiment('when the invoice found is not sent', () => {
+      beforeEach(() => {
+        repos.billingInvoices.findOne.resolves({
+          billingInvoiceId: invoiceId,
+          invoiceNumber: null
+        });
+      });
+
+      test('throws a ConflictingDataError', async () => {
+        const func = () => invoiceService.setIsFlaggedForRebilling(invoiceId, true);
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.instanceOf(ConflictingDataError);
+      });
+    });
+
+    experiment('when the invoice is already re-billed', () => {
+      beforeEach(() => {
+        repos.billingInvoices.findOne.resolves({
+          billingInvoiceId: invoiceId,
+          invoiceNumber: 'A123'
+        });
+        repos.billingInvoices.findOneBy.resolves({
+          id: 'old-invoice-id'
+        });
+      });
+
+      test('throws a ConflictingDataError', async () => {
+        const func = () => invoiceService.setIsFlaggedForRebilling(invoiceId, true);
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.instanceOf(ConflictingDataError);
+      });
+    });
+
+    experiment('when the invoice can be re-billed', () => {
+      beforeEach(async () => {
+        repos.billingInvoices.findOne.resolves({
+          billingInvoiceId: invoiceId,
+          invoiceNumber: 'A123'
+        });
+        repos.billingInvoices.findOneBy.resolves(null);
+        invoiceService.setIsFlaggedForRebilling(invoiceId, true);
+      });
+
+      test('sets the flag', () => {
+        expect(repos.billingInvoices.update.calledWith(
+          invoiceId, { isFlaggedForRebilling: true }
+        )).to.be.true();
+      });
     });
   });
 });

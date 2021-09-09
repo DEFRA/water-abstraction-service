@@ -167,11 +167,13 @@ class ChargeElementContainer {
   }
 
   /**
-   * Checks if two-part tariff purpose on charge element
+   * Checks if two-part tariff purpose on charge element, and that the element
+   * hasn't been disabled for TPT billing
    * @return {Boolean}
    */
   get isTwoPartTariffPurpose () {
-    return this._chargeElement.purposeUse.isTwoPartTariff;
+    return this._chargeElement.purposeUse.isTwoPartTariff &&
+      this._chargeElement.isSection127AgreementEnabled;
   }
 
   /**
@@ -206,8 +208,8 @@ class ChargeElementContainer {
       score -= 1000;
     }
 
-    // Give unsupported source precedence
-    if (this.chargeElement.source === ChargeElement.sources.unsupported) {
+    // Give supported source precedence
+    if (this.chargeElement.source === ChargeElement.sources.supported) {
       score -= 1000;
     }
 
@@ -225,7 +227,7 @@ class ChargeElementContainer {
   setTwoPartTariffStatus (returnSeason, twoPartTariffStatus) {
     validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
     const { volume } = this.chargeElement;
-    this._billingVolumes[returnSeason].setTwoPartTariffStatus(twoPartTariffStatus, volume);
+    this._billingVolumes[returnSeason].setTwoPartTariffStatus(twoPartTariffStatus, volume, this.isSummer);
   }
 
   /**

@@ -19,6 +19,11 @@ const validSources = {
 };
 
 class ChargeElement extends Model {
+  constructor (...args) {
+    super(...args);
+    this.isSection127AgreementEnabled = true;
+  }
+
   /**
    * Source
    * @return {String}
@@ -192,6 +197,22 @@ class ChargeElement extends Model {
   set isFactorsOverridden (isFactorsOverridden) {
     validators.assertIsBoolean(isFactorsOverridden);
     this._isFactorsOverridden = isFactorsOverridden;
+  }
+
+  /**
+   * Default value is true, which means a licence-level S127 agreement applies to this
+   * element.  This flag can be set to false, which enables the S127 agreement to be
+   * removed from this element.
+   *
+   * @returns {Boolean}
+   */
+  get isSection127AgreementEnabled () {
+    return this._isSection127AgreementEnabled;
+  }
+
+  set isSection127AgreementEnabled (isSection127AgreementEnabled) {
+    validators.assertIsBoolean(isSection127AgreementEnabled);
+    this._isSection127AgreementEnabled = isSection127AgreementEnabled;
   }
 
   toJSON () {

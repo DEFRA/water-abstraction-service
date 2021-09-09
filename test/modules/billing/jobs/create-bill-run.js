@@ -25,7 +25,8 @@ const batchId = uuid();
 const data = {
   eventId: 'test-event-id',
   batch: {
-    id: batchId
+    id: batchId,
+    type: Batch.BATCH_TYPE.annual
   }
 };
 
@@ -95,8 +96,8 @@ experiment('modules/billing/jobs/create-bill-run', () => {
         )).to.be.true();
       });
 
-      test('resolves with batch ID', async () => {
-        expect(result.batchId).to.equal(batchId);
+      test('resolves with batch type', async () => {
+        expect(result.type).to.equal(data.batch.type);
       });
     });
 
@@ -130,30 +131,77 @@ experiment('modules/billing/jobs/create-bill-run', () => {
   });
 
   experiment('.onComplete', () => {
-    const job = {
-      data: {
-        batchId
-      }
-    };
-
-    experiment('when publishing the next job succeeds', () => {
-      test('the next job is published', async () => {
-        await createBillRunJob.onComplete(job, queueManager);
-        expect(queueManager.add.calledWith(
-          'billing.populate-batch-charge-versions',
+    experiment('for an annual batch', () => {
+      const job = {
+        data: {
           batchId
-        )).to.be.true();
+        },
+        returnvalue: {
+          type: Batch.BATCH_TYPE.annual
+        }
+      };
+
+      experiment('when publishing the next job succeeds', () => {
+        test('the next job is published', async () => {
+          await createBillRunJob.onComplete(job, queueManager);
+          expect(queueManager.add.calledWith(
+            'billing.populate-batch-charge-versions',
+            batchId
+          )).to.be.true();
+        });
+      });
+
+      experiment('when publishing the next job fails', () => {
+        beforeEach(async () => {
+          queueManager.add.rejects();
+        });
+
+        test('a message is logged', async () => {
+          await createBillRunJob.onComplete(job, queueManager);
+          expect(batchJob.logOnCompleteError.calledWith(job)).to.be.true();
+        });
       });
     });
 
-    experiment('when publishing the next job fails', () => {
-      beforeEach(async () => {
-        queueManager.add.rejects();
-      });
+    experiment('for a two-part tariff batch', () => {
+      const job = {
+        data: {
+          batchId
+        },
+        returnvalue: {
+          type: Batch.BATCH_TYPE.twoPartTariff
+        }
+      };
 
-      test('a message is logged', async () => {
-        await createBillRunJob.onComplete(job, queueManager);
-        expect(batchJob.logOnCompleteError.calledWith(job)).to.be.true();
+      experiment('when publishing the next job succeeds', () => {
+        test('the next job is published', async () => {
+          await createBillRunJob.onComplete(job, queueManager);
+          expect(queueManager.add.calledWith(
+            'billing.populate-batch-charge-versions',
+            batchId
+          )).to.be.true();
+        });
+      });
+    });
+
+    experiment('for a supplementary batch', () => {
+      const job = {
+        data: {
+          batchId
+        },
+        returnvalue: {
+          type: Batch.BATCH_TYPE.supplementary
+        }
+      };
+
+      experiment('when publishing the next job succeeds', () => {
+        test('the rebilling job is published', async () => {
+          await createBillRunJob.onComplete(job, queueManager);
+          expect(queueManager.add.calledWith(
+            'billing.rebilling',
+            batchId
+          )).to.be.true();
+        });
       });
     });
   });

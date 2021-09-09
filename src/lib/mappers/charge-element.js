@@ -9,6 +9,7 @@ const purposePrimaryMapper = require('./purpose-primary');
 const purposeSecondaryMapper = require('./purpose-secondary');
 const purposeUseMapper = require('./purpose-use');
 const abstractionPeriodMapper = require('./abstraction-period');
+const dateRangeMapper = require('./date-range');
 const helpers = require('./lib/helpers');
 
 const timeLimitedDateMapper = (startDate, endDate) =>
@@ -23,7 +24,8 @@ const dbToModelMapper = createMapper()
     'authorisedAnnualQuantity',
     'billableAnnualQuantity',
     'description',
-    'chargeVersionId'
+    'chargeVersionId',
+    'isSection127AgreementEnabled'
   )
   .map().to('abstractionPeriod', abstractionPeriodMapper.dbToModel)
   .map('factorsOverridden').to('isFactorsOverridden')
@@ -49,12 +51,14 @@ const pojoToModelMapper = createMapper()
     'source',
     'season',
     'loss',
-    'description'
+    'description',
+    'isSection127AgreementEnabled'
   )
   .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel)
   .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.pojoToModel)
   .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.pojoToModel)
-  .map('purposeUse').to('purposeUse', purposeUseMapper.pojoToModel);
+  .map('purposeUse').to('purposeUse', purposeUseMapper.pojoToModel)
+  .map('timeLimitedPeriod').to('timeLimitedPeriod', dateRangeMapper.pojoToModel);
 
 /**
  * Converts a plain object representation of a ChargeElement to a ChargeElement model
@@ -79,7 +83,8 @@ const modelToDbMapper = createMapper()
     'loss',
     'description',
     'authorisedAnnualQuantity',
-    'billableAnnualQuantity'
+    'billableAnnualQuantity',
+    'isSection127AgreementEnabled'
   )
   .map('abstractionPeriod.startDay').to('abstractionPeriodStartDay')
   .map('abstractionPeriod.startMonth').to('abstractionPeriodStartMonth')

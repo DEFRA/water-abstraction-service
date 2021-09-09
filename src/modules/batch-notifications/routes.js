@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const { version } = require('../../../config');
 const controller = require('./controller');
@@ -15,13 +15,13 @@ module.exports = {
     config: {
       description: 'Prepares a batch message for sending by getting recipients',
       validate: {
-        params: {
-          messageType: Joi.string().valid(messageTypes)
-        },
-        payload: {
+        params: Joi.object().keys({
+          messageType: Joi.string().valid(...messageTypes)
+        }),
+        payload: Joi.object().keys({
           issuer: Joi.string().email().required(),
           data: Joi.object().default({})
-        }
+        })
       }
     }
   },
@@ -33,12 +33,12 @@ module.exports = {
     config: {
       description: 'Sends a batch message',
       validate: {
-        params: {
+        params: Joi.object().keys({
           eventId: Joi.string().guid().required()
-        },
-        payload: {
+        }),
+        payload: Joi.object().keys({
           issuer: Joi.string().email().required()
-        }
+        })
       }
     }
   }

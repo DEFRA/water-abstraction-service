@@ -6,6 +6,7 @@ const {
   test
 } = exports.lab = require('@hapi/lab').script();
 
+const moment = require('moment');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
@@ -170,6 +171,52 @@ experiment('connectors/permit', () => {
 
       const [url] = serviceRequest.delete.lastCall.args;
       expect(url).to.equal(`${config.services.permits}acceptance-tests`);
+    });
+  });
+
+  experiment('getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise', () => {
+    let result;
+    beforeEach(async () => {
+      sandbox.stub(permit.licences, 'findAll').resolves([{ licence_ref: 'some-ref' }]);
+      result = await permit.licences.getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise();
+    });
+
+    test('should find licence with correct filter', async () => {
+      const [filter] = permit.licences.findAll.lastCall.args;
+      expect(filter.$or).to.be.array();
+      expect(filter.$or[0].date_licence_version_purpose_conditions_last_copied).to.be.object();
+      expect(moment(filter.$or[0].date_licence_version_purpose_conditions_last_copied.$gte).isValid()).to.be.true();
+      expect(filter.$or[1].date_licence_version_purpose_conditions_last_copied).to.equal(null);
+    });
+
+    test('calls findAll', async () => {
+      expect(permit.licences.findAll.called).to.be.true();
+    });
+    test('should return an array', async () => {
+      expect(result).to.be.array();
+    });
+  });
+
+  experiment('getWaterLicencesThatHaveGaugingStationLinkagesThatNeedToBeCopiedFromDigitise', () => {
+    let result;
+    beforeEach(async () => {
+      sandbox.stub(permit.licences, 'findAll').resolves([{ licence_ref: 'some-ref' }]);
+      result = await permit.licences.getWaterLicencesThatHaveGaugingStationLinkagesThatNeedToBeCopiedFromDigitise();
+    });
+
+    test('should find licence with correct filter', async () => {
+      const [filter] = permit.licences.findAll.lastCall.args;
+      expect(filter.$or).to.be.array();
+      expect(filter.$or[0].date_gauging_station_links_last_copied).to.be.object();
+      expect(moment(filter.$or[0].date_gauging_station_links_last_copied.$gte).isValid()).to.be.true();
+      expect(filter.$or[1].date_gauging_station_links_last_copied).to.equal(null);
+    });
+
+    test('calls findAll', async () => {
+      expect(permit.licences.findAll.called).to.be.true();
+    });
+    test('should return an array', async () => {
+      expect(result).to.be.array();
     });
   });
 });

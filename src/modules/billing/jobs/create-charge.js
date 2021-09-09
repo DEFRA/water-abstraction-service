@@ -5,7 +5,7 @@ const { get, inRange } = require('lodash');
 const JOB_NAME = 'billing.create-charge';
 
 const batchService = require('../services/batch-service');
-const { BATCH_ERROR_CODE, BATCH_STATUS } = require('../../../lib/models/batch');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 const transactionsService = require('../services/transactions-service');
@@ -47,22 +47,15 @@ const isClientError = err => inRange(getStatus(err), 400, 500);
 
 const updateBatchState = async batch => {
   const statuses = await batchService.getTransactionStatusCounts(batch.id);
-  const flags = {
-    isReady: get(statuses, Transaction.statuses.candidate, 0) === 0,
-    isEmptyBatch: get(statuses, Transaction.statuses.chargeCreated, 0) === 0
-  };
 
-  if (flags.isReady) {
+  const isReady = get(statuses, Transaction.statuses.candidate, 0) === 0;
+
+  if (isReady) {
     // Clean up batch
     await batchService.cleanup(batch.id);
-
-    // Set batch status to empty for empty batch
-    if (flags.isEmptyBatch) {
-      await batchService.setStatus(batch.id, BATCH_STATUS.empty);
-    }
   }
 
-  return flags;
+  return isReady;
 };
 
 const getTransactionStatus = batch => get(batch, 'invoices[0].invoiceLicences[0].transactions[0].status');
@@ -110,14 +103,10 @@ const onComplete = async (job, queueManager) => {
 
   try {
     const { batchId } = job.data;
-    const { isReady, isEmptyBatch } = job.returnvalue;
+    const isReady = job.returnvalue;
 
-    if (isReady && !isEmptyBatch) {
-      /* the generate() function calls `PATCH /wrls/v2/{bill run}/generate` which tells the charge module
-      * to generate the bill run summary
-      */
-      const billRun = await batchService.getBatchById(batchId);
-      await chargeModuleBillRunConnector.generate(billRun.externalId);
+    if (isReady) {
+      await batchService.requestCMBatchGeneration(batchId);
       await queueManager.add(refreshTotalsJobName, batchId);
     }
   } catch (err) {

@@ -29,6 +29,7 @@ experiment('modules/billing/jobs/update-customers', () => {
   const tempJobId = uuid();
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
+    sandbox.stub(logger, 'error');
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId').resolves(invoiceAccountObject);
     sandbox.stub(chargeModuleMappers, 'mapInvoiceAccountToChargeModuleCustomer').resolves();
     sandbox.stub(chargeModuleCustomersConnector, 'updateCustomer').resolves();
@@ -82,6 +83,16 @@ experiment('modules/billing/jobs/update-customers', () => {
 
     test('an info message is logged', async () => {
       expect(logger.info.calledWith(`onComplete: ${job.id}`)).to.be.true();
+    });
+  });
+
+  experiment('.onFailed', () => {
+    beforeEach(async () => {
+      await updateCustomerJob.onFailed(job, new Error('Some error'));
+    });
+
+    test('an error message is logged', async () => {
+      expect(logger.error.calledWith(`onFailed: Job ${job.name} ${job.id} failed`)).to.be.true();
     });
   });
 });

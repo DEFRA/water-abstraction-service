@@ -1,6 +1,6 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const controller = require('../controllers/agreements');
 const preHandlers = require('../lib/pre-handlers');
@@ -21,9 +21,9 @@ module.exports = {
         scope: [ROLES.manageAgreements]
       },
       validate: {
-        params: {
+        params: Joi.object().keys({
           agreementId: Joi.string().uuid().required()
-        }
+        })
       }
     }
   },
@@ -37,13 +37,13 @@ module.exports = {
         scope: [ROLES.manageAgreements]
       },
       validate: {
-        params: {
+        params: Joi.object().keys({
           agreementId: Joi.string().uuid().required()
-        },
+        }),
         headers: validateHeaders, // Ensure only DEFRA internal users can patch agreements
-        payload: {
+        payload: Joi.object().keys({
           endDate: Joi.date().required()
-        }
+        })
       }
     }
   },
@@ -53,16 +53,13 @@ module.exports = {
     path: '/water/1.0/licences/{licenceId}/agreements',
     handler: controller.getLicenceAgreements,
     config: {
-      auth: {
-        scope: [ROLES.manageAgreements]
-      },
       pre: [
         { method: preHandlers.getLicence, assign: 'licence' }
       ],
       validate: {
-        params: {
+        params: Joi.object().keys({
           licenceId: Joi.string().uuid().required()
-        }
+        })
       }
     }
   },
@@ -77,9 +74,9 @@ module.exports = {
       },
       description: 'Deletes the agreement with the specified id',
       validate: {
-        params: {
+        params: Joi.object().keys({
           agreementId: Joi.string().uuid().required()
-        },
+        }),
         headers: validateHeaders
       }
     }
@@ -97,15 +94,15 @@ module.exports = {
         { method: preHandlers.getLicence, assign: 'licence' }
       ],
       validate: {
-        params: {
+        params: Joi.object().keys({
           licenceId: Joi.string().uuid().required()
-        },
+        }),
         headers: validateHeaders,
-        payload: {
+        payload: Joi.object().keys({
           code: Joi.string().required(),
           startDate: Joi.string().isoDate().required(),
           dateSigned: Joi.string().isoDate().allow(null).default(null)
-        }
+        })
       }
     }
   }

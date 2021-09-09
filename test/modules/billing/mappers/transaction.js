@@ -452,7 +452,7 @@ experiment('modules/billing/mappers/transaction', () => {
             licenceNumber: '01/123/ABC',
             region: 'A',
             areaCode: 'ARCA',
-            subjectToMinimumCharge: false
+            subjectToMinimumCharge: true
           });
         });
 
@@ -469,6 +469,16 @@ experiment('modules/billing/mappers/transaction', () => {
 
           test('the data is mapped correctly', async () => {
             expect(result.section126Factor).to.equal(0.75);
+          });
+        });
+        experiment('when transaction is 2PT', () => {
+          beforeEach(async () => {
+            transaction.isTwoPartTariffSupplementary = true;
+            result = transactionMapper.modelToChargeModule(batch, invoice, invoiceLicence, transaction);
+          });
+
+          test('the data is mapped correctly', async () => {
+            expect(result.subjectToMinimumCharge).to.be.false();
           });
         });
       });
@@ -557,6 +567,30 @@ experiment('modules/billing/mappers/transaction', () => {
       expect(result.isMinimumCharge).to.equal(cmData.minimumChargeAdjustment);
       expect(result.isDeMinimis).to.equal(cmData.deminimis);
       expect(result.isNewLicence).to.equal(cmData.subjectToMinimumCharge);
+    });
+  });
+
+  experiment('.inverseCreditNoteSign', () => {
+    experiment('when the transaction is a credit note', () => {
+      test('it returns a negative figure', () => {
+        expect(
+          transactionMapper.inverseCreditNoteSign({
+            credit: true,
+            chargeValue: 500
+          }).chargeValue
+        ).to.equal(-500);
+      });
+    });
+
+    experiment('when the transaction is not a credit note', () => {
+      test('it returns the original figure', () => {
+        expect(
+          transactionMapper.inverseCreditNoteSign({
+            credit: false,
+            chargeValue: 877
+          }).chargeValue
+        ).to.equal(877);
+      });
     });
   });
 });

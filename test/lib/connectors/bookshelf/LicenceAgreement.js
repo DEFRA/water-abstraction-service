@@ -18,6 +18,7 @@ experiment('lib/connectors/bookshelf/LicenceAgreement', () => {
     instance = LicenceAgreement.forge();
     sandbox.stub(instance, 'belongsTo');
     sandbox.stub(instance, 'hasOne');
+    sandbox.stub(instance, 'hasMany');
   });
 
   afterEach(async () => {

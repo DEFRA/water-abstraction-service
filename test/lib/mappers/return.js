@@ -87,5 +87,15 @@ experiment('modules/billing/mappers/return', () => {
         expect(model.abstractionPeriod).to.be.null();
       });
     });
+
+    experiment('when the second param is omitted', () => {
+      beforeEach(async () => {
+        model = returnMapper.returnsServiceToModel(createReturn({ periodStartDay: 'null' }));
+      });
+
+      test('the .returnRequirement property is undefined', async () => {
+        expect(model.returnRequirement).to.be.undefined();
+      });
+    });
   });
 });

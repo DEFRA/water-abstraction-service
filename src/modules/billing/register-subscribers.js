@@ -1,6 +1,7 @@
 'use strict';
 
 const createBillRun = require('./jobs/create-bill-run');
+const rebilling = require('./jobs/rebilling');
 const createCharge = require('./jobs/create-charge');
 const populateBatchChargeVersions = require('./jobs/populate-batch-charge-versions');
 const prepareTransactions = require('./jobs/prepare-transactions');
@@ -9,6 +10,9 @@ const processChargeVersions = require('./jobs/process-charge-versions');
 const refreshTotals = require('./jobs/refresh-totals');
 const twoPartTariffMatching = require('./jobs/two-part-tariff-matching');
 const updateCustomer = require('./jobs/update-customer');
+const checkForUpdatedInvoiceAccounts = require('./jobs/check-for-updated-invoice-accounts');
+const approveBatch = require('./jobs/approve-batch');
+const deleteErroredBatch = require('./jobs/delete-errored-batch');
 
 module.exports = {
   name: 'billing-jobs',
@@ -16,6 +20,7 @@ module.exports = {
   register: async server => {
     server.queueManager
       .register(createBillRun)
+      .register(rebilling)
       .register(createCharge)
       .register(populateBatchChargeVersions)
       .register(prepareTransactions)
@@ -23,6 +28,9 @@ module.exports = {
       .register(processChargeVersions)
       .register(refreshTotals)
       .register(twoPartTariffMatching)
-      .register(updateCustomer);
+      .register(updateCustomer)
+      .register(checkForUpdatedInvoiceAccounts)
+      .register(approveBatch)
+      .register(deleteErroredBatch);
   }
 };

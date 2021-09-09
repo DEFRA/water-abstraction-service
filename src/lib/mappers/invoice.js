@@ -12,6 +12,18 @@ const batchMapper = require('../../modules/billing/mappers/batch');
 
 const { createMapper } = require('../object-mapper');
 const { createModel } = require('./lib/helpers');
+const { isEmpty } = require('lodash');
+
+const mapLinkedInvoices = (billingInvoiceId, linkedBillingInvoices = [], originalBillingInvoice = {}) => {
+  const invoices = linkedBillingInvoices
+    .filter(linkedBillingInvoice => ![billingInvoiceId, originalBillingInvoice.billingInvoiceId].includes(linkedBillingInvoice.billingInvoiceId))
+    .map(dbToModel);
+
+  if (!(isEmpty(originalBillingInvoice)) && billingInvoiceId !== originalBillingInvoice.billingInvoiceId) {
+    invoices.push(dbToModel(originalBillingInvoice));
+  }
+  return invoices;
+};
 
 const dbToModelMapper = createMapper()
   .copy(
@@ -24,7 +36,9 @@ const dbToModelMapper = createMapper()
     'externalId',
     'legacyId',
     'metadata',
-    'isFlaggedForRebilling'
+    'isFlaggedForRebilling',
+    'rebillingState',
+    'billingBatchId'
   )
   .map('netAmount').to('netTotal')
   .map('billingInvoiceId').to('id')
@@ -32,15 +46,42 @@ const dbToModelMapper = createMapper()
   .map('invoiceAccountNumber').to('invoiceAccount.accountNumber')
   .map('billingInvoiceLicences').to('invoiceLicences', billingInvoiceLicences => billingInvoiceLicences.map(invoiceLicence.dbToModel))
   .map('billingBatch').to('batch', batchMapper.dbToModel)
-  .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding));
+  .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding))
+  .map('originalBillingInvoiceId').to('originalInvoiceId')
+  .map('rebillingState').to('rebillingStateLabel')
+  .map(['billingInvoiceId', 'linkedBillingInvoices', 'originalBillingInvoice']).to('linkedInvoices', mapLinkedInvoices);
 
 /**
  * Converts DB representation to a Invoice service model
  * @param {Object} row
  * @return {Invoice}
  */
-const dbToModel = row =>
-  createModel(Invoice, row, dbToModelMapper);
+const dbToModel = row => {
+  const invoice = createModel(Invoice, row, dbToModelMapper);
+  return getRebillingStateLabels(invoice);
+};
+
+/**
+ * Corrects the rebilling state label when a rebilled invoice has been rebilled again
+ * @param {Invoice} invoice the invoice service model
+ * @returns Invoice service model with corrected rebilling state labels for the UI
+ */
+const getRebillingStateLabels = invoice => {
+  if (invoice.rebillingState === 'rebilled' && invoice.originalInvoiceId === invoice.id) {
+    invoice.rebillingStateLabel = 'original';
+    return invoice;
+  }
+  if (invoice.linkedInvoices.length > 0) {
+    if (invoice.linkedInvoices[0].rebillingStateLabel === 'rebilled' && invoice.linkedInvoices[0].originalInvoiceId === invoice.id) {
+      invoice.linkedInvoices[0].rebillingStateLabel = 'original';
+      return invoice;
+    } else {
+      invoice.linkedInvoices[1].rebillingStateLabel = 'original';
+      return invoice;
+    }
+  }
+  return invoice;
+};
 
 const mapAddress = invoice =>
   invoice.address ? omit(invoice.address.toJSON(), 'id') : {};
@@ -51,12 +92,11 @@ const mapAddress = invoice =>
  * @param {Invoice} invoice
  * @return {Object}
  */
-const modelToDb = (batch, invoice) => ({
+const modelToDb = invoice => ({
   externalId: invoice.externalId || null,
   invoiceAccountId: invoice.invoiceAccount.id,
   invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
   address: mapAddress(invoice),
-  billingBatchId: batch.id,
   financialYearEnding: invoice.financialYear.endYear,
   invoiceNumber: invoice.invoiceNumber || null,
   isCredit: isNull(invoice.netTotal) ? null : invoice.netTotal < 0,
@@ -64,7 +104,9 @@ const modelToDb = (batch, invoice) => ({
   netAmount: invoice.netTotal,
   invoiceValue: invoice.invoiceValue,
   creditNoteValue: invoice.creditNoteValue,
-  isFlaggedForRebilling: invoice.isFlaggedForRebilling
+  isFlaggedForRebilling: invoice.isFlaggedForRebilling,
+  rebillingState: invoice.rebillingState,
+  originalBillingInvoiceId: invoice.originalInvoiceId
 });
 
 const crmToModel = row => {
@@ -87,6 +129,42 @@ const crmToModel = row => {
   return invoice;
 };
 
+/**
+  * Gets transaction reference from cmTransactions
+  * NB. it is not guaranteed to be present in all transactions
+  * @param {Array<Object>} cmTransactions
+  */
+const getInvoiceNumber = cmTransactions => {
+  const transactionsWithRef = cmTransactions.filter(trans => trans.transactionReference !== null);
+  return transactionsWithRef[0] ? transactionsWithRef[0].transactionReference : null;
+};
+
+const cmRebilledTypes = new Map()
+  .set('C', 'reversal')
+  .set('R', 'rebill')
+  .set('O', null);
+
+const cmToPojoMapper = createMapper()
+  .map('id').to('externalId')
+  .copy('netTotal')
+  .map('deminimisInvoice').to('isDeMinimis')
+  .map('debitLineValue').to('invoiceValue')
+  .map('creditLineValue').to('creditNoteValue', value => -value)
+  .map('rebilledType').to('rebillingState', value => cmRebilledTypes.get(value));
+
+/**
+ * Maps Charge Module invoice data to POJO model with WRLS naming
+ *
+ * @param {Object} cmInvoiceSummary
+ * @param {Array} cmTransactions
+ * @returns {Object}
+ */
+const cmToPojo = (cmInvoiceSummary, cmTransactions = []) => ({
+  ...cmToPojoMapper.execute(cmInvoiceSummary),
+  invoiceNumber: getInvoiceNumber(cmTransactions)
+});
+
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
 exports.crmToModel = crmToModel;
+exports.cmToPojo = cmToPojo;

@@ -10,6 +10,10 @@ const licenceVersionMapper = require('../mappers/licence-version');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../models/constants');
 
 const service = require('./service');
+const returns = require('./returns');
+const scheduledNotifications = require('./scheduled-notifications');
+const conditions = require('./licence-version-purpose-conditions');
+
 const crmDocsConnector = require('../connectors/crm-v2/documents');
 const crmCompaniesConnector = require('../connectors/crm-v2/companies');
 
@@ -27,12 +31,9 @@ const getLicenceById = async licenceId =>
  * legacy regions
  *
  * @param {String} licenceRef
- * @param {Number} regionCode
  */
-const getLicenceByLicenceRef = async (licenceRef, regionCode) => {
-  const licences = await repos.licences.findOneByLicenceRef(licenceRef);
-  const licence = licences.find(licence => licence.region.naldRegionId === +regionCode);
-
+const getLicenceByLicenceRef = async licenceRef => {
+  const licence = await repos.licences.findOneByLicenceRef(licenceRef);
   return licence ? licenceMapper.dbToModel(licence) : null;
 };
 
@@ -165,6 +166,49 @@ const getLicencesByInvoiceAccountId = async invoiceAccountId => {
   };
 };
 
+/**
+ * Gets licence returns, sorted by due date descending
+ * Note: includes voids
+ *
+ * @param {String} licenceId
+ * @param {Number} page
+ * @param {Number} perPage
+ * @return {Promise<Object>} contains { data, pagination}
+ */
+const getReturnsByLicenceId = async (licenceId, page, perPage) => {
+  const licence = await getLicenceById(licenceId);
+  if (!licence) {
+    return null;
+  }
+  return returns.getReturnsForLicence(licence.licenceNumber, page, perPage);
+};
+
+/**
+ * Gets licence scheduled notifications
+ *
+ * @param {String} licenceId
+ * @param {Number} page
+ * @param {Number} perPage
+ * @return {Promise<Object>} contains { data, pagination}
+ */
+const getScheduledNotificationsByLicenceId = async (licenceId, page, perPage) => {
+  const licence = await getLicenceById(licenceId);
+  if (!licence) {
+    return null;
+  }
+  return scheduledNotifications.getScheduledNotificationsByLicenceNumber(licence.licenceNumber, page, perPage);
+};
+
+const getLicenceVersionPurposeConditionsByLicenceId = async (licenceId, code) => {
+  const licence = await getLicenceById(licenceId);
+
+  if (!licence) {
+    return null;
+  }
+
+  return conditions.getLicenceVersionPurposeConditionsByLicenceId(licenceId, code);
+};
+
 exports.getLicenceById = getLicenceById;
 exports.getLicencesByLicenceRefs = getLicencesByLicenceRefs;
 exports.getLicenceVersionById = getLicenceVersionById;
@@ -177,3 +221,6 @@ exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInS
 exports.flagForSupplementaryBilling = flagForSupplementaryBilling;
 exports.getLicenceInvoices = getLicenceInvoices;
 exports.getLicencesByInvoiceAccountId = getLicencesByInvoiceAccountId;
+exports.getReturnsByLicenceId = getReturnsByLicenceId;
+exports.getScheduledNotificationsByLicenceId = getScheduledNotificationsByLicenceId;
+exports.getLicenceVersionPurposeConditionsByLicenceId = getLicenceVersionPurposeConditionsByLicenceId;

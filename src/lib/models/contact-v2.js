@@ -2,7 +2,7 @@
 
 const { assertNullableString, assertNullableEnum, assertEnum } = require('./validators');
 const Model = require('./model');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { omit } = require('lodash');
 
 const CONTACT_TYPES = { person: 'person', department: 'department' };
@@ -20,13 +20,13 @@ const contactPersonSchema = Joi.object({
   lastName: Joi.string().required(),
   suffix: Joi.string().allow(null).optional(),
   department: Joi.string().allow(null).replace(/\./g, '').optional(),
-  dataSource: Joi.string().valid(Object.values(DATA_SOURCE_TYPES)).required(),
+  dataSource: Joi.string().valid(...Object.values(DATA_SOURCE_TYPES)).required(),
   isTest: Joi.boolean().optional().default(false)
 });
 
 const contactDepartmentSchema = Joi.object({
   department: Joi.string().required(),
-  dataSource: Joi.string().valid(Object.values(DATA_SOURCE_TYPES)).required(),
+  dataSource: Joi.string().valid(...Object.values(DATA_SOURCE_TYPES)).required(),
   isTest: Joi.boolean().optional().default(false)
 });
 
@@ -137,7 +137,7 @@ class Contact extends Model {
 
   isValid () {
     const schema = this._type === CONTACT_TYPES.person ? contactPersonSchema : contactDepartmentSchema;
-    return Joi.validate(omit(this.toJSON(), ['type', 'fullName']), schema, { abortEarly: false });
+    return schema.validate(omit(this.toJSON(), ['type', 'fullName']), { abortEarly: false });
   }
 }
 

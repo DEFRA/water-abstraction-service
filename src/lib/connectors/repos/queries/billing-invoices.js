@@ -9,7 +9,7 @@ values (
     NOW(), NOW(), :billingBatchId, :financialYearEnding,
     :netAmount, :invoiceNumber, :creditNoteValue, :invoiceValue, :isDeMinimis, :isCredit, :externalId
 )
-on conflict (invoice_account_id, billing_batch_id, financial_year_ending) where legacy_id is null do update 
+on conflict (invoice_account_id, billing_batch_id, financial_year_ending) where legacy_id is null and rebilling_state is null do update 
   set date_updated = NOW(), 
     net_amount=EXCLUDED.net_amount, 
     credit_note_value=EXCLUDED.credit_note_value,
@@ -28,3 +28,22 @@ exports.deleteEmptyByBatchId = `delete from water.billing_invoices i
   where b.billing_batch_id=:batchId
   group by i.billing_invoice_id
   having count(l.billing_invoice_licence_id)=0);`;
+
+exports.findByIsFlaggedForRebillingAndRegion = `
+select i.* from water.billing_invoices i
+join water.billing_batches b on i.billing_batch_id=b.billing_batch_id
+where i.is_flagged_for_rebilling=true
+and b.region_id=:regionId;
+`;
+
+exports.resetIsFlaggedForRebilling = `
+update water.billing_invoices t1
+set is_flagged_for_rebilling=false
+from water.billing_invoices t2
+where 
+  t2.billing_batch_id=:batchId 
+  and t1.billing_batch_id<>t2.billing_batch_id 
+  and t1.billing_invoice_id=t2.original_billing_invoice_id
+  and t2.original_billing_invoice_id is not null
+returning *;
+`;

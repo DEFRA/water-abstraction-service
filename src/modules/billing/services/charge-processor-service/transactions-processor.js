@@ -19,17 +19,17 @@ const agreements = require('./lib/agreements');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
-const isTwoPartTariffApplied = (agreement, purpose) =>
-  agreement.isTwoPartTariff() && purpose.isTwoPartTariff;
+const isTwoPartTariffApplied = (agreement, chargeElement) =>
+  agreement.isTwoPartTariff() && chargeElement.purposeUse.isTwoPartTariff && chargeElement.isSection127AgreementEnabled;
 /**
  * Predicate to check whether an agreement should be applied to the transaction
  * @param {Agreement} agreement
  * @param {PurposeUse} purpose
  * @return {Boolean}
  */
-const agreementAppliesToTransaction = (agreement, purpose) => {
+const agreementAppliesToTransaction = (agreement, chargeElement) => {
   const isCanalApplied = agreement.isCanalAndRiversTrust();
-  return isCanalApplied || isTwoPartTariffApplied(agreement, purpose);
+  return isCanalApplied || isTwoPartTariffApplied(agreement, chargeElement);
 };
 
 const getBillableDays = (absPeriod, startDate, endDate, isTwoPartTariffSupplementary) =>
@@ -55,7 +55,7 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
   transaction.fromHash({
     chargeElement,
     chargePeriod,
-    agreements: agreements.filter(agreement => agreementAppliesToTransaction(agreement, chargeElement.purposeUse)),
+    agreements: agreements.filter(agreement => agreementAppliesToTransaction(agreement, chargeElement)),
     status: Transaction.statuses.candidate,
     authorisedDays: getBillableDays(absPeriod, financialYear.start.format(DATE_FORMAT), financialYear.end.format(DATE_FORMAT), flags.isTwoPartTariffSupplementary),
     billableDays: getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate, flags.isTwoPartTariffSupplementary),
@@ -114,19 +114,12 @@ const getElementChargePeriod = (period, chargeElement) => {
     return new DateRange(period.startDate, period.endDate);
   }
 
-  const rangeA = moment.range(period.startDate, period.endDate);
-  const rangeB = moment.range(timeLimitedPeriod.startDate, timeLimitedPeriod.endDate);
+  const intersection = helpers.charging.getIntersection([
+    [period.startDate, period.endDate],
+    [timeLimitedPeriod.startDate, timeLimitedPeriod.endDate]
+  ]);
 
-  const intersection = rangeA.intersect(rangeB);
-
-  if (!intersection) {
-    return null;
-  }
-
-  const startDate = intersection.start.format(DATE_FORMAT);
-  const endDate = intersection.end.format(DATE_FORMAT);
-
-  return new DateRange(startDate, endDate);
+  return intersection ? new DateRange(...intersection) : null;
 };
 
 /**
@@ -138,9 +131,9 @@ const getBillingVolumesForChargeElement = (chargeElement, billingVolumes) => bil
   billingVolume => billingVolume.chargeElementId === chargeElement.id
 );
 
-const hasTwoPartTariffAgreement = (agreements, purposeUse) => {
+const hasTwoPartTariffAgreement = (agreements, chargeElement) => {
   const agreementsAreTwoPartTariff = agreements.map(agreement =>
-    isTwoPartTariffApplied(agreement, purposeUse));
+    isTwoPartTariffApplied(agreement, chargeElement));
   return agreementsAreTwoPartTariff.includes(true);
 };
 
@@ -158,7 +151,7 @@ const createTwoPartTariffTransactions = (elementChargePeriod, chargeElement, agr
   const transactions = [];
   const elementBillingVolumes = getBillingVolumesForChargeElement(chargeElement, billingVolumes);
   elementBillingVolumes.forEach(billingVolume => {
-    if (hasTwoPartTariffAgreement(agreements, chargeElement.purposeUse)) {
+    if (hasTwoPartTariffAgreement(agreements, chargeElement)) {
       transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isTwoPartTariffSupplementary: true }, billingVolume));
     }
   });

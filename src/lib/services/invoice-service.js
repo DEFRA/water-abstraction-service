@@ -3,17 +3,20 @@
 const { find, partialRight, pickBy } = require('lodash');
 const pWaterfall = require('p-waterfall');
 
+const { logger } = require('../../logger');
+
 // Connectors
 const invoiceAccountsConnector = require('../connectors/crm-v2/invoice-accounts');
 const repos = require('../connectors/repos');
+const chargeModuleBillRunApi = require('../../lib/connectors/charge-module/bill-runs');
 
 const mappers = require('../../modules/billing/mappers');
 const FinancialYear = require('../models/financial-year');
 
 // Errors
-const { NotFoundError } = require('../errors');
+const { NotFoundError, ConflictingDataError } = require('../errors');
 
-const getInvoiceById = async invoiceId => {
+const getInvoiceDataById = async invoiceId => {
   const data = await repos.billingInvoices.findOne(invoiceId);
   if (!data) {
     throw new NotFoundError(`Invoice ${invoiceId} not found`);
@@ -21,6 +24,25 @@ const getInvoiceById = async invoiceId => {
   return data;
 };
 
+const getInvoiceById = async invoiceId => {
+  const data = await getInvoiceDataById(invoiceId);
+  return mappers.invoice.dbToModel(data);
+};
+
+const getBatchCustomerInvoice = async (batchId, invoiceAccountId, financialYearEnding) => {
+  const billingInvoice = await repos.billingInvoices.findOneBy({
+    billingBatchId: batchId,
+    rebillingState: null,
+    invoiceAccountId,
+    financialYearEnding
+  });
+  return billingInvoice && mappers.invoice.dbToModel(billingInvoice);
+};
+
+const getOrCreateInvoice = async (batchId, invoiceAccountId, financialYearEnding) => {
+  const invoice = await getBatchCustomerInvoice(batchId, invoiceAccountId, financialYearEnding);
+  return invoice || createInvoice(batchId, invoiceAccountId, financialYearEnding);
+};
 /**
  * Saves an Invoice model to water.billing_invoices
  * @param {Batch} batch
@@ -28,7 +50,10 @@ const getInvoiceById = async invoiceId => {
  * @return {Promise<Object>} row data inserted (camel case)
  */
 const saveInvoiceToDB = async (batch, invoice) => {
-  const data = mappers.invoice.modelToDb(batch, invoice);
+  const data = {
+    ...mappers.invoice.modelToDb(invoice),
+    billingBatchId: batch.id
+  };
   return repos.billingInvoices.upsert(data);
 };
 
@@ -72,7 +97,7 @@ const getBatchInvoices = async context => {
 const getInvoice = async context => {
   const { batch, invoiceId } = context;
 
-  const data = await getInvoiceById(invoiceId);
+  const data = await getInvoiceDataById(invoiceId);
 
   if (data.billingBatchId !== batch.id) {
     throw new NotFoundError(`Invoice ${invoiceId} not found in batch ${batch.id}`);
@@ -167,30 +192,22 @@ const getInvoicesTransactionsForBatch = partialRight(getInvoicesForBatch, {
 });
 
 /**
- * Gets or creates an invoice in the batch
- * If the invoice needs creating, the customer details are fetched from the CRM v2 API
- *
- * @param {String} batchId
- * @param {String} invoiceAccountId
- * @param {Number} financialYearEnding
- * @return {Promise<Object>} the new/existing invoice service model
+ * Creates an Invoice model in the specified batch
  */
-const getOrCreateInvoice = async (batchId, invoiceAccountId, financialYearEnding) => {
-  const existingRow = await repos.billingInvoices.findOneBy({
-    billingBatchId: batchId,
-    invoiceAccountId,
-    financialYearEnding
-  });
-  if (existingRow) {
-    return mappers.invoice.dbToModel(existingRow);
-  }
+const createInvoice = async (batchId, invoiceAccountId, financialYearEnding, data = {}) => {
   // Look up invoice account in CRM and map to service model
   const [crmData] = await invoiceAccountsConnector.getInvoiceAccountsByIds([invoiceAccountId]);
   const modelFromCrm = mappers.invoice.crmToModel(crmData);
-  modelFromCrm.financialYear = new FinancialYear(financialYearEnding);
-
-  // Write to DB and map back to service model
-  const newRow = await saveInvoiceToDB({ id: batchId }, modelFromCrm);
+  const model = modelFromCrm.fromHash({
+    ...data,
+    financialYear: new FinancialYear(financialYearEnding)
+  });
+  // Persist
+  const newRow = await repos.billingInvoices.create({
+    billingBatchId: batchId,
+    ...mappers.invoice.modelToDb(model)
+  });
+  // Map back to service model
   return mappers.invoice.dbToModel(newRow);
 };
 
@@ -199,16 +216,91 @@ const getInvoicesForInvoiceAccount = async (invoiceAccountId, page, perPage) => 
   return { data: data.map(mappers.invoice.dbToModel), pagination };
 };
 
-const updateInvoice = async (invoiceAccountId, changes) => {
-  const invoice = await repos.billingInvoices.update(invoiceAccountId, changes);
+const updateInvoice = async (billingInvoiceId, changes) => {
+  const invoice = await repos.billingInvoices.update(billingInvoiceId, changes);
   return mappers.invoice.dbToModel(invoice);
+};
+
+const updateInvoiceModel = invoice => {
+  const changes = mappers.invoice.modelToDb(invoice);
+  return updateInvoice(invoice.id, changes);
+};
+
+const getInvoicesFlaggedForRebilling = async regionId => {
+  const data = await repos.billingInvoices.findByIsFlaggedForRebillingAndRegion(regionId);
+  return data.map(mappers.invoice.dbToModel);
+};
+
+/**
+ * Rebills the requested invoice
+ *
+ * @param {Batch} batch
+ * @param {Invoice} Invoice
+ * @return {Promise}
+ */
+const rebillInvoice = async (batch, invoice) => {
+  try {
+    await chargeModuleBillRunApi.rebillInvoice(batch.externalId, invoice.externalId);
+  } catch (err) {
+    if (err.statusCode === 409) {
+      logger.info(`Invoice ${invoice.id} already marked for rebilling in batch ${batch.id}`);
+    } else {
+      logger.error(`Failed to mark invoice ${invoice.id} for rebilling in charge module`);
+      throw err;
+    }
+  }
+  // Set the "originalBillingInvoiceId" to this invoice ID.  This allows an invoice
+  // to be linked with the reversal and recharge invoices which will be created by the CM
+  const updatedRow = await repos.billingInvoices.update(invoice.id, {
+    originalBillingInvoiceId: invoice.id,
+    rebillingState: null
+  });
+  return mappers.invoice.dbToModel(updatedRow);
+};
+
+/**
+ * Resets invoices originally flagged for rebilling which have now been re-billed
+ * in the current batch
+ *
+ * @param {String} batchId - current batch ID
+ * @returns {Promise}
+ */
+const resetIsFlaggedForRebilling = batchId => repos.billingInvoices.resetIsFlaggedForRebilling(batchId);
+
+const invoiceIsSent = invoice =>
+  invoice.invoiceNumber !== null;
+
+const setIsFlaggedForRebilling = async (invoiceId, isFlaggedForRebilling) => {
+  const [invoice, rebillingInvoice] = await Promise.all([
+    getInvoiceById(invoiceId),
+    repos.billingInvoices.findOneBy({ originalBillingInvoiceId: invoiceId })
+  ]);
+
+  if (!invoiceIsSent(invoice)) {
+    throw new ConflictingDataError('Cannot update invoice that is not sent');
+  }
+
+  if (rebillingInvoice) {
+    throw new ConflictingDataError('Cannot re-bill an invoice that is already re-billed');
+  }
+
+  return updateInvoice(invoiceId, {
+    isFlaggedForRebilling
+  });
 };
 
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;
-exports.getOrCreateInvoice = getOrCreateInvoice;
 exports.getInvoicesForInvoiceAccount = getInvoicesForInvoiceAccount;
 exports.getInvoiceById = getInvoiceById;
+exports.getBatchCustomerInvoice = getBatchCustomerInvoice;
 exports.updateInvoice = updateInvoice;
+exports.updateInvoiceModel = updateInvoiceModel;
+exports.getInvoicesFlaggedForRebilling = getInvoicesFlaggedForRebilling;
+exports.rebillInvoice = rebillInvoice;
+exports.resetIsFlaggedForRebilling = resetIsFlaggedForRebilling;
+exports.createInvoice = createInvoice;
+exports.getOrCreateInvoice = getOrCreateInvoice;
+exports.setIsFlaggedForRebilling = setIsFlaggedForRebilling;

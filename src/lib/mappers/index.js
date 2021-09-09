@@ -6,6 +6,7 @@ exports.company = require('./company');
 exports.companyAddress = require('./company-address');
 exports.companyContact = require('./company-contact');
 exports.contact = require('./contact');
+exports.gaugingStation = require('./gauging-station');
 exports.invoice = require('./invoice');
 exports.invoiceAccount = require('./invoice-account');
 exports.invoiceAccountAddress = require('./invoice-account-address');

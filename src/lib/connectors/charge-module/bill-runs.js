@@ -71,6 +71,15 @@ const getInvoiceTransactions = (billRunId, invoiceId) =>
 const generate = CMBillRunId =>
   got.patch(`v2/wrls/bill-runs/${CMBillRunId}/generate`);
 
+const rebillInvoice = async (billRunId, invoiceId) =>
+  got.patch(`v2/wrls/bill-runs/${billRunId}/invoices/${invoiceId}/rebill`);
+
+const getStatus = async billRunId =>
+  got.get(`v2/wrls/bill-runs/${billRunId}/status`);
+
+const deleteLicence = async (billRunId, licenceId) =>
+  got.delete(`v2/wrls/bill-runs/${billRunId}/licences/${licenceId}`);
+
 exports.addTransaction = addTransaction;
 exports.approve = approve;
 exports.create = create;
@@ -81,3 +90,6 @@ exports.send = send;
 exports.getInvoiceTransactions = getInvoiceTransactions;
 exports.deleteInvoiceFromBillRun = deleteInvoiceFromBillRun;
 exports.generate = generate;
+exports.rebillInvoice = rebillInvoice;
+exports.deleteLicence = deleteLicence;
+exports.getStatus = getStatus;

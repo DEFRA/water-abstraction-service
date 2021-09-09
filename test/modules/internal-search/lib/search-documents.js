@@ -6,17 +6,29 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect, fail } = require('@hapi/code');
+const sandbox = require('sinon').createSandbox();
 
 const documents = require('../../../../src/lib/connectors/crm/documents');
 const { mapRow, searchDocuments } = require('../../../../src/modules/internal-search/lib/search-documents');
+const licencesService = require('../../../../src/lib/services/licences');
+const Licence = require('../../../../src/lib/models/licence');
 
 experiment('modules/internal-search/lib/search-documents', () => {
-  let row;
+  let row, licence;
+  const licenceNumber = '01/123/456';
 
   beforeEach(async () => {
+    licence = new Licence().fromHash({
+      licenceNumber
+    });
+
+    sandbox.stub(licencesService, 'getLicencesByLicenceRefs').resolves([
+      licence
+    ]);
+
     row = {
       document_id: 'abc',
-      system_external_id: '01/123/456',
+      system_external_id: licenceNumber,
       metadata: {
         Name: 'Doe',
         Initials: 'J',
@@ -29,16 +41,24 @@ experiment('modules/internal-search/lib/search-documents', () => {
     };
   });
 
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
   experiment('mapRow', () => {
     test('It should map a row of data from the CRM documents API', async () => {
-      const mapped = mapRow(row);
+      const licencesMap = new Map()
+        .set(licenceNumber, licence);
+
+      const mapped = mapRow(row, licencesMap);
       expect(mapped).to.equal({
         documentId: row.document_id,
         licenceNumber: row.system_external_id,
         licenceHolder: 'Mr J Doe',
         documentName: row.document_name,
         expires: '2019-02-05',
-        isCurrent: true
+        isCurrent: true,
+        licence
       });
     });
 

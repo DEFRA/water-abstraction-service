@@ -1,11 +1,13 @@
 'use strict';
 
+const { uniq } = require('lodash');
 const waterHelpers = require('@envage/water-abstraction-helpers');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 const documents = require('../../../lib/connectors/crm/documents');
 const { getPagination } = require('./pagination');
 const { returnsToIso } = waterHelpers.nald.dates;
 const { getFullName } = require('../../../lib/licence-transformer/nald-helpers');
+const licencesService = require('../../../lib/services/licences');
 
 const validateRowMetadata = row => {
   if (!row.metadata) {
@@ -33,7 +35,7 @@ const getLicenceHolderNameFromDocumentHeader = (documentHeader) => {
   return getFullName(salutation, initials, firstName, lastName);
 };
 
-const mapRow = (row) => {
+const mapRow = (row, licencesMap) => {
   validateRowMetadata(row);
 
   return {
@@ -42,8 +44,27 @@ const mapRow = (row) => {
     licenceHolder: getLicenceHolderNameFromDocumentHeader(row),
     documentName: row.document_name,
     expires: returnsToIso(row.metadata.Expires),
-    isCurrent: row.metadata.IsCurrent
+    isCurrent: row.metadata.IsCurrent,
+    licence: licencesMap.get(row.system_external_id)
   };
+};
+
+const getLicenceNumber = doc => doc.system_external_id;
+
+/**
+ * Gets a map of Licence objects by licence number
+ * @param {Object} response - from CRM lookup
+ * @returns {Map} map of Licence instances by licence number
+ */
+const getLicencesMap = async response => {
+  const licenceNumbers = uniq(
+    response.data.map(getLicenceNumber)
+  );
+  const licences = await licencesService.getLicencesByLicenceRefs(licenceNumbers);
+  // Return as map
+  return licences.reduce((map, licence) =>
+    map.set(licence.licenceNumber, licence)
+  , new Map());
 };
 
 /**
@@ -74,10 +95,12 @@ const searchDocuments = async (query, page = 1) => {
   const response = await documents.findMany(filter, sort, getPagination(page), columns);
   throwIfError(response.error);
 
+  const licencesMap = await getLicencesMap(response);
+
   const { pagination } = response;
   return {
     pagination,
-    data: response.data.map(mapRow)
+    data: response.data.map(row => mapRow(row, licencesMap))
   };
 };
 

@@ -47,7 +47,6 @@ class NALDTransformer extends BaseTransformer {
       contacts: this.contactsFormatter(currentVersion, data.data.roles),
       purposes: this.purposesFormatter(data.data.current_version.purposes),
       uniquePurposeNames: this.uniquePurposeNamesFormatter(data.data.current_version.purposes),
-      gaugingSations: this.gaugingStationFormatter(conditions),
       hofTypes: this.getHofTypes(conditions),
       sourcesOfSupply: this.getSourcesOfSupply(data.data.current_version.purposes),
       returnFormats: this.formatsFormatter(data.data.current_version.formats)
@@ -349,32 +348,6 @@ class NALDTransformer extends BaseTransformer {
     const arrSubCode = isArray(subCode) ? subCode : [subCode];
     return conditions.filter(row => {
       return arrCode.includes(row.code) && arrSubCode.includes(row.subCode);
-    });
-  }
-
-  /**
-   * Get a unique list of gauging stations from the conditions array.
-   * Return an array of objects, so that each object can hopefully support
-   * e.g. whiskiID in future to link to flood data
-   * @param {Array} conditions - data from conditions formatter above
-   * @return {Array} unique list of guaging stations for this licence
-   */
-  gaugingStationFormatter (conditions) {
-    const filtered = this.filterConditions(conditions, 'CES', ['FLOW', 'LEV']);
-
-    const names = filtered.reduce((acc, condition) => {
-      for (const point of condition.points) {
-        for (const pointCondition of point.conditions) {
-          acc.push(pointCondition.parameter1);
-        }
-      }
-      return acc;
-    }, []);
-
-    return uniqBy(names).map(name => {
-      return {
-        name: name
-      };
     });
   }
 

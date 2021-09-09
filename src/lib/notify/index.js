@@ -113,6 +113,12 @@ const sendPdf = async (notificationId, notifyId) => {
     .sendPrecompiledLetter(notifyId, pdf);
 };
 
+const sendEmail = async (notifyTemplateId, recipient, personalisation) => {
+  return notifyConnector.getClient(notifyConnector.messageTypes.email)
+    .sendEmail(notifyTemplateId, recipient, { personalisation });
+};
+
+exports.sendEmail = sendEmail;
 exports.getNotifyKey = getNotifyKey;
 exports.getStatus = getStatus;
 exports.preview = preview;
