@@ -9,7 +9,6 @@ const Hapi = require('@hapi/hapi');
 const HapiAuthJwt2 = require('hapi-auth-jwt2');
 const Vision = require('@hapi/vision');
 const Nunjucks = require('nunjucks');
-
 const moment = require('moment');
 moment.locale('en-gb');
 
@@ -50,6 +49,7 @@ const plugins = [
   require('./src/modules/returns/register-subscribers'),
   require('./src/modules/address-search/plugin'),
   require('./src/modules/billing/register-subscribers'),
+  require('./src/modules/gauging-stations/register-subscribers'),
   require('./src/modules/charge-versions/plugin').plugin
 ];
 

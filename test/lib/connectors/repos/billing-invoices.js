@@ -116,7 +116,8 @@ experiment('lib/connectors/repos/billing-invoices', () => {
         'billingInvoiceLicences.billingTransactions.billingVolume',
         'billingInvoiceLicences.billingTransactions.chargeElement',
         'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse',
-        'linkedBillingInvoices'
+        'linkedBillingInvoices',
+        'originalBillingInvoice'
       ]);
     });
 
@@ -262,6 +263,20 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     test('calls raw.multiRow with the correct query', async () => {
       expect(raw.multiRow.calledWith(
         queries.resetIsFlaggedForRebilling, { batchId }
+      ));
+    });
+  });
+
+  experiment('.deleteInvoicesByOriginalInvoiceId', () => {
+    const originalInvoiceId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoices.deleteInvoicesByOriginalInvoiceId(originalInvoiceId);
+    });
+
+    test('calls raw.multiRow with the correct query', async () => {
+      expect(raw.multiRow.calledWith(
+        queries.deleteByOriginalInvoiceId, { originalInvoiceId }
       ));
     });
   });

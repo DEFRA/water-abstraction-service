@@ -24,9 +24,7 @@ const findByLicenceRef = async (licenceRef, agreementTypes = []) => {
     .orderBy('start_date', 'asc')
     .fetchAll({
       withRelated: [
-        'financialAgreementType',
-        'licenceAgreementPurposeUses',
-        'licenceAgreementPurposeUses.purposeUse'
+        'financialAgreementType'
       ]
     });
 

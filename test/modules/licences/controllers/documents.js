@@ -305,8 +305,8 @@ experiment('modules/licences/controllers/documents', () => {
       permitClient.licences.findMany.resolves(licences());
     });
 
-    test('returns 404 for unknown document id', async () => {
-      documentsClient.findMany.rejects({ statusCode: 404 });
+    test('returns 404 when document not found', async () => {
+      documentsClient.findMany.resolves({ data: [] });
       const response = await controller.getLicenceSummaryByDocumentId(testRequest);
       expect(response.output.statusCode).to.equal(404);
     });
@@ -338,10 +338,9 @@ experiment('modules/licences/controllers/documents', () => {
     test('adds the licence model to the waterService property', async () => {
       const response = await controller.getLicenceSummaryByDocumentId(testRequest);
 
-      const [licenceNumber, regionCode] = licencesService.getLicenceByLicenceRef.lastCall.args;
+      const [licenceNumber] = licencesService.getLicenceByLicenceRef.lastCall.args;
 
       expect(licenceNumber).to.equal('12/34/56/78');
-      expect(regionCode).to.equal('1');
 
       expect(response.data.waterLicence.id).to.equal('test-licence-id');
     });

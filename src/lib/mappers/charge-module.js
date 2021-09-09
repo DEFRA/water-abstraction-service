@@ -14,7 +14,9 @@ const { combineAddressLines, getAddressObjectFromArray } = require('./lib/helper
  */
 const mapInvoiceAccountToChargeModuleCustomer = invoiceAccount => {
   const { lastInvoiceAccountAddress, company } = invoiceAccount;
-
+  if (!lastInvoiceAccountAddress) {
+    return new Error('Could not retrieve lastInvoiceAccountAddress');
+  }
   const { address, agentCompany } = lastInvoiceAccountAddress;
   const customerName = extractCustomerName(company, agentCompany);
   const fao = extractFAO(lastInvoiceAccountAddress);
@@ -68,10 +70,20 @@ const extractAddress = (address, fao = null) => {
   for (const [key, value] of Object.entries(parsedAddress)) {
     response[key] = truncate(value, { length: 240 });
   }
+
+  let line6 = '';
+  if (address.county && address.country) {
+    line6 = `${address.county}, ${address.country}`;
+  } else {
+    if (address.county) {
+      line6 = address.county;
+    } else {
+      line6 = address.country;
+    }
+  }
+
   response.addressLine5 = truncate(address.town, { length: 60 });
-  response.addressLine6 = truncate(
-    address.county ? `${address.county}, ${address.country}` : address.country
-    , { length: 60 });
+  response.addressLine6 = truncate(line6, { length: 60 });
   response.postcode = truncate(address.postcode, { length: 60 });
 
   return response;

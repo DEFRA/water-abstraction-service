@@ -12,7 +12,6 @@ const extractConditions = require('../lib/extractConditions');
 const extractPoints = require('../lib/extractPoints');
 const { licence: { regimeId, typeId } } = require('../../../../config');
 const LicenceTransformer = require('../../../lib/licence-transformer');
-const { mapGaugingStation, getGaugingStations } = require('../lib/gauging-stations');
 const queries = require('../lib/queries');
 const { createContacts } = require('../../../lib/models/factory/contact-list');
 const eventHelper = require('../lib/event-helper');
@@ -138,7 +137,7 @@ const getLicenceByDocumentId = async (request, h) => {
     const permitLicence = await getLicence(documentId, includeExpired, companyId);
 
     if (permitLicence) {
-      const waterLicence = await licencesService.getLicenceByLicenceRef(permitLicence.licence_ref, permitLicence.licence_data_value.FGAC_REGION_CODE);
+      const waterLicence = await licencesService.getLicenceByLicenceRef(permitLicence.licence_ref);
       const licence = {
         ...permitLicence,
         id: waterLicence.id
@@ -214,7 +213,7 @@ const mapSummary = async (documentHeader, licence) => {
   await transformer.load(licence.licence_data_value);
   return {
     ...transformer.export(),
-    documentName: documentHeader.document_name
+    documentName: get(documentHeader, 'document_name')
   };
 };
 
@@ -239,6 +238,10 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
 
   try {
     const documentHeader = await getDocumentHeader(documentId, includeExpired);
+    if (!documentHeader) {
+      return Boom.notFound(`Document ${documentId} not found`);
+    }
+
     const licence = await getLicence(documentHeader, undefined, companyId);
 
     if (licence) {
@@ -247,9 +250,8 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
       // add the service layer model to the data object to allow the shift
       // towards using the licence model for viewing licences over the use
       // of the document entity from the CRM.
-      data.waterLicence = await licencesService.getLicenceByLicenceRef(data.licenceNumber, data.regionCode);
+      data.waterLicence = await licencesService.getLicenceByLicenceRef(data.licenceNumber);
 
-      data.gaugingStations = (await getGaugingStations(licence)).map(mapGaugingStation);
       data.contacts = mapContacts(licence);
       return { error: null, data };
     }

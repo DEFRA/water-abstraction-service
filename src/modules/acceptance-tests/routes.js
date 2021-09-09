@@ -1,19 +1,10 @@
 'use strict';
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 
 const controller = require('./controller');
 const { isAcceptanceTestTarget } = require('../../../config');
 
 if (isAcceptanceTestTarget) {
-  exports.postSetup = {
-    method: 'POST',
-    path: '/water/1.0/acceptance-tests/set-up',
-    handler: controller.postSetup,
-    config: {
-      description: 'Creates the required data to allow acceptance tests to run'
-    }
-  };
-
   exports.postSetupFromYaml = {
     method: 'POST',
     path: '/water/1.0/acceptance-tests/set-up-from-yaml/{key}',
@@ -21,9 +12,9 @@ if (isAcceptanceTestTarget) {
     config: {
       description: 'Creates test data from specified Yaml files',
       validate: {
-        params: {
+        params: Joi.object().keys({
           key: Joi.string().required()
-        }
+        })
       }
     }
   };

@@ -40,4 +40,9 @@ experiment('buildResponse', () => {
     expect(response.test).to.equal(undefined);
     expect(response.pagination).to.equal(undefined);
   });
+
+  test('when data is not an array and key is billingAccount it should add results to the response', async () => {
+    buildResponse(response, 'billingAccount', data[0]);
+    expect(response.billingAccount).to.equal(data[0]);
+  });
 });

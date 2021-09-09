@@ -70,21 +70,4 @@ experiment('lib/connectors/bookshelf/LicenceAgreement', () => {
       expect(foreignKeyTarget).to.equal('financial_agreement_type_id');
     });
   });
-
-  experiment('the .licenceAgreementPurposeUses() relation', () => {
-    beforeEach(async () => {
-      instance.licenceAgreementPurposeUses();
-    });
-
-    test('is a function', async () => {
-      expect(instance.licenceAgreementPurposeUses).to.be.a.function();
-    });
-
-    test('calls .hasMany with correct params', async () => {
-      const [model, foreignKey, foreignKeyTarget] = instance.hasMany.lastCall.args;
-      expect(model).to.equal('LicenceAgreementPurposeUse');
-      expect(foreignKey).to.equal('licence_agreement_id');
-      expect(foreignKeyTarget).to.equal('licence_agreement_id');
-    });
-  });
 });

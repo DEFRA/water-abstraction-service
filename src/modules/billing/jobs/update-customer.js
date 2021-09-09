@@ -24,10 +24,15 @@ const messageInitialiser = (jobName, invoiceAccountId) => ([
 const createMessage = partial(messageInitialiser, JOB_NAME);
 
 const handler = async job => {
-  const invoiceAccountId = get(job, 'data.invoiceAccountId');
-  const invoiceAccountData = await invoiceAccountsService.getByInvoiceAccountId(invoiceAccountId);
-  const invoiceAccountMappedData = await chargeModuleMappers.mapInvoiceAccountToChargeModuleCustomer(invoiceAccountData);
-  await chargeModuleCustomersConnector.updateCustomer(invoiceAccountMappedData);
+  try {
+    const invoiceAccountId = get(job, 'data.invoiceAccountId');
+    const invoiceAccountData = await invoiceAccountsService.getByInvoiceAccountId(invoiceAccountId);
+    const invoiceAccountMappedData = await chargeModuleMappers.mapInvoiceAccountToChargeModuleCustomer(invoiceAccountData);
+    return chargeModuleCustomersConnector.updateCustomer(invoiceAccountMappedData);
+  } catch (e) {
+    logger.error(new Error('Could not update CM with customer details.', e));
+    return new Error('Could not update CM with customer details.');
+  }
 };
 
 const onComplete = job => {
@@ -35,7 +40,7 @@ const onComplete = job => {
 };
 
 const onFailedHandler = (job, err) => {
-  logger.error(`Job ${job.name} ${job.id} failed`, err);
+  logger.error(`onFailed: Job ${job.name} ${job.id} failed`, err);
 };
 
 exports.jobName = JOB_NAME;

@@ -75,8 +75,7 @@ const create = async data => {
 const findValidInRegionAndFinancialYear = (regionId, financialYearEnding) => {
   const params = {
     regionId,
-    startDate: `${financialYearEnding - 1}-04-01`,
-    endDate: `${financialYearEnding}-03-31`
+    financialYearEnding
   };
   return raw.multiRow(queries.findValidInRegionAndFinancialYear, params);
 };

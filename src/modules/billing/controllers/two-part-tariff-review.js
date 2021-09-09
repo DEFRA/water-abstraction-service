@@ -8,9 +8,9 @@ const mapErrorResponse = require('../../../lib/map-error-response');
 const { jobStatus } = require('../lib/event');
 const { createBatchEvent, EVENT_TYPES } = require('../lib/batch-event');
 const { envelope } = require('../../../lib/response');
-
+const bluebird = require('bluebird');
 const { jobName: processChargeVersionsJobName } = require('../jobs/process-charge-versions');
-
+const invoiceAccountService = require('../../../lib/services/invoice-accounts-service');
 /**
  * Gets a list of licences in the batch for two-part tariff review
  * GET /water/1.0/billing/batches/{batchId}/two-part-tariff-licences
@@ -36,10 +36,16 @@ const getBatchLicences = async (request, h) => {
  * @param {String} request.params.batchId
  * @param {String} request.params.licenceId
  */
-const getBatchLicenceVolumes = (request) => {
+const getBatchLicenceVolumes = async (request) => {
   const { batch } = request.pre;
 
-  return billingVolumesService.getLicenceBillingVolumes(batch, request.params.licenceId);
+  const billingVolumes = await billingVolumesService.getLicenceBillingVolumes(batch, request.params.licenceId);
+  return bluebird.mapSeries(billingVolumes, async billingVolume => {
+    const chargeDetails = await billingVolumesService.getBillingVolumeChargePeriod(billingVolume);
+    billingVolume.chargePeriod = chargeDetails.chargePeriod;
+    billingVolume.invoiceAccount = await invoiceAccountService.getByInvoiceAccountId(chargeDetails.invoiceAccountId);
+    return billingVolume;
+  });
 };
 
 /**
@@ -66,8 +72,15 @@ const deleteBatchLicence = async (request, h) => {
  */
 const getBillingVolume = async request => {
   try {
-    const data = await billingVolumesService.getBillingVolumeById(request.params.billingVolumeId);
-    return data;
+    const { billingVolumeId } = request.params;
+
+    const billingVolume = await billingVolumesService.getBillingVolumeById(billingVolumeId);
+
+    // Get charge period
+    billingVolume.chargePeriod = await billingVolumesService.getBillingVolumeChargePeriod(billingVolume);
+
+    // Include the charge period in the payload response
+    return billingVolume;
   } catch (err) {
     return mapErrorResponse(err);
   }

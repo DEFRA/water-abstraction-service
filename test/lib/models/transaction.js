@@ -42,7 +42,8 @@ const getTestDataForHashing = () => {
   chargeElement.description = 'Test description';
 
   const purpose = new PurposeUse();
-  purpose.name = 'Test Purpose';
+  purpose.name = 'Spray Irrigation - Direct';
+  purpose.code = 'Test Code';
   chargeElement.purposeUse = purpose;
 
   const transaction = new Transaction();
@@ -300,6 +301,23 @@ experiment('lib/models/transaction', () => {
     });
   });
 
+  experiment('.chargeElementPurposeUseCode', () => {
+    test('returns the correct charge element purpose code', async () => {
+      const testData = getTestDataForHashing();
+      expect(testData.transaction.chargeElementPurposeUseCode).to.equal(testData.transaction.chargeElement.purposeUse.code);
+    });
+
+    test('throws an error if trying to set to the value', async () => {
+      const transaction = new Transaction();
+
+      const func = () => {
+        transaction.chargeElementPurposeUseCode = 'test code';
+      };
+
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.chargeElement', () => {
     const chargeElement = new ChargeElement();
 
@@ -540,7 +558,7 @@ experiment('lib/models/transaction', () => {
         transaction.isCompensationCharge = false;
         transaction.isTwoPartTariffSupplementary = false;
         const description = transaction.createDescription();
-        expect(description).to.equal('First Part Test Purpose Charge at Test Description');
+        expect(description).to.equal('First Part Spray Irrigation Charge Test Description');
         expect(transaction.description).to.equal(description);
       });
 
@@ -550,7 +568,7 @@ experiment('lib/models/transaction', () => {
         transaction.chargeElement.description = null;
 
         const description = transaction.createDescription();
-        expect(description).to.equal('First Part Test Purpose Charge');
+        expect(description).to.equal('First Part Spray Irrigation Charge');
       });
 
       test('the compensation charge text is preset', async () => {
@@ -564,7 +582,7 @@ experiment('lib/models/transaction', () => {
         transaction.isCompensationCharge = false;
         transaction.isTwoPartTariffSupplementary = true;
         const description = transaction.createDescription();
-        expect(description).to.equal('Second Part Test Purpose Charge at Test Description');
+        expect(description).to.equal('Second Part Spray Irrigation Charge Test Description');
       });
     });
   });

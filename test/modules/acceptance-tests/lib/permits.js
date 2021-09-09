@@ -23,22 +23,6 @@ experiment('modules/acceptance-tests/lib/permits', () => {
     sandbox.restore();
   });
 
-  experiment('.createCurrentLicence', () => {
-    beforeEach(async () => {
-      await permits.createCurrentLicence('test-lic-ref');
-    });
-
-    test('uses the licence ref to create the permit', async () => {
-      const [permit] = permitsConnector.licences.create.lastCall.args;
-      expect(permit.licence_ref).to.equal('test-lic-ref');
-    });
-
-    test('includes a known source to allow the data to be deleted', async () => {
-      const [permit] = permitsConnector.licences.create.lastCall.args;
-      expect(JSON.parse(permit.metadata).source).to.equal('acceptance-test-setup');
-    });
-  });
-
   experiment('.delete', () => {
     test('calls the expected function on the connector', async () => {
       await permits.delete();

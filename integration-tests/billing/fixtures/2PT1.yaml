@@ -4,7 +4,7 @@
     chargeRegionId: A
     naldRegionId: 1
     name: Test Region
-    displayName: Test Region 
+    displayName: Test Region
     isTest: true
 
 - ref: $licence
@@ -24,13 +24,14 @@
 
 - ref: $twoPartTariffAgreement
   model: FinancialAgreementType
-  fields: 
+  fields:
     financialAgreementCode: S127
     description: Section 127 (Two Part Tariff)
     disabled: false
-    isTest: true
   constraints:
     uniq_financial_agreement_code:
+      - financialAgreementCode
+    code_is_unique:
       - financialAgreementCode
 
 - model: LicenceAgreement
@@ -61,7 +62,7 @@
 - ref: $purposePrimary
   model: PurposePrimary
   fields:
-    legacyId : A
+    legacyId: A
     description: Agriculture
     isTest: true
   constraints:
@@ -71,7 +72,7 @@
 - ref: $purposeSecondary
   model: PurposeSecondary
   fields:
-    legacyId : AGR
+    legacyId: AGR
     description: General Agriculture
     isTest: true
   constraints:
@@ -81,7 +82,7 @@
 - ref: $purposeUse
   model: PurposeUse
   fields:
-    legacyId : 400
+    legacyId: 400
     description: Spray Irrigation - Direct
     lossFactor: high
     isTwoPartTariff: true
@@ -104,11 +105,10 @@
     seasonDerived: summer
     source: unsupported
     loss: high
-    purposePrimaryId : $purposePrimary.purposePrimaryId
-    purposeSecondaryId : $purposeSecondary.purposeSecondaryId
-    purposeUseId : $purposeUse.purposeUseId
+    purposePrimaryId: $purposePrimary.purposePrimaryId
+    purposeSecondaryId: $purposeSecondary.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
     description: CE2
-    factorsOverridden: false
     isTest: true
 
 - ref: $returnVersion
@@ -116,7 +116,7 @@
   fields:
     versionNumber: 101
     startDate: '2008-04-01'
-    endDate:  null
+    endDate: null
     status: current
     externalId: 1:12345678
     licenceId: $licence.licenceId
@@ -138,7 +138,7 @@
     externalId: 1:12345678
 
 - model: ReturnRequirementPurpose
-  fields: 
+  fields:
     returnRequirementId: $returnRequirement.returnRequirementId
     purposePrimaryId: $purposePrimary.purposePrimaryId
     purposeSecondaryId: $purposeSecondary.purposeSecondaryId

@@ -1,6 +1,6 @@
 'use strict';
 
-const { isNull } = require('lodash');
+const { isNull, identity } = require('lodash');
 const { titleCase } = require('title-case');
 
 const Model = require('./model');
@@ -11,6 +11,14 @@ const BillingVolume = require('./billing-volume');
 
 const validators = require('./validators');
 
+/**
+ * @constant {Object} statuses - transaction statuses
+ *
+ * "candidate": charge created in WRLS but not yet transferred to CM
+ * "charge_created": successfully transferred to CM
+ * "approved": not used
+ * "error": error transferring charge to CM
+ */
 const statuses = {
   candidate: 'candidate',
   chargeCreated: 'charge_created',
@@ -22,13 +30,25 @@ const getDescriptionFromChargeElement = chargeElement => {
   return chargeElement.description || chargeElement.purposeUse.name;
 };
 
-const getTwoPartTariffTransactionDescription = (transaction) => {
+/**
+ * Removes the part of the purpose use description after the hyphen
+ * For example, Spray Irrigation - Direct is mapped to Spray Irrigation
+ *
+ * @param {PurposeUse} purposeUse
+ * @returns {String}
+ */
+const getPurposeUseDescription = purposeUse => {
+  return purposeUse.name.split('-')[0].trim();
+};
+
+const getTwoPartTariffTransactionDescription = transaction => {
   const prefix = transaction.isTwoPartTariffSupplementary ? 'Second' : 'First';
-  const { purposeUse: { name: purpose }, description } = transaction.chargeElement;
+  const purposeUseDescription = getPurposeUseDescription(transaction.chargeElement.purposeUse);
+  const { description } = transaction.chargeElement;
 
-  const txDescription = `${prefix} part ${purpose} charge`;
-
-  return description ? `${txDescription} at ${description}` : txDescription;
+  return [prefix, 'Part', purposeUseDescription, 'Charge', description]
+    .filter(identity)
+    .join(' ');
 };
 
 class Transaction extends Model {
@@ -148,6 +168,15 @@ class Transaction extends Model {
   set description (description) {
     validators.assertString(description);
     this._description = description;
+  }
+
+  /**
+   * Gets the purpose use code for the transaction
+   * that is used for creating the transaction hash
+   * @return {String}
+   */
+  get chargeElementPurposeUseCode () {
+    return this.chargeElement.purposeUse.code;
   }
 
   /**

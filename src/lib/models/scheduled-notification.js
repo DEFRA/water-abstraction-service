@@ -1,6 +1,7 @@
 'use strict';
 
 const Model = require('./model');
+const Event = require('./event');
 
 const validators = require('./validators');
 
@@ -138,13 +139,31 @@ class ScheduledNotification extends Model {
   }
 
   /**
+   * Event
+   * @param {Event}
+   */
+  set event (event) {
+    validators.assertIsNullableInstanceOf(event, Event);
+    this._event = event;
+  }
+
+  get event () {
+    return this._event;
+  }
+
+  get isPdf () {
+    return (this.messageRef || '').startsWith('pdf.');
+  }
+
+  /**
    * Convert model to JSON
    * @return {Object}
    */
   toJSON () {
     return {
       ...super.toJSON(),
-      displayStatus: this.displayStatus
+      displayStatus: this.displayStatus,
+      isPdf: this.isPdf
     };
   }
 }

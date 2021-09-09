@@ -38,6 +38,9 @@ const transactionsService = require('../../../../src/modules/billing/services/tr
 const { createBatch } = require('../test-data/test-billing-data');
 const config = require('../../../../config');
 
+const messageQueue = require('../../../../src/lib/message-queue-v2');
+const deleteErroredBatchJob = require('../../../../src/modules/billing/jobs/delete-errored-batch');
+
 const REGION_ID = '3e91fd44-dead-4748-a312-83806245c3da';
 const BATCH_ID = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
 
@@ -58,7 +61,8 @@ const batch = {
   toFinancialYearEnding: 2019,
   status: 'processing',
   dateCreated: (new Date()).toISOString(),
-  region
+  region,
+  externalId: uuid()
 };
 
 const data = {
@@ -68,6 +72,7 @@ const data = {
 
 experiment('modules/billing/services/batch-service', () => {
   let result;
+  let queueManagerStub;
 
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
@@ -83,9 +88,12 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingBatches, 'findByRegionId').resolves([]);
     sandbox.stub(newRepos.billingBatches, 'find').resolves();
     sandbox.stub(newRepos.billingBatches, 'deleteAllBillingData').resolves();
+    sandbox.stub(newRepos.billingBatches, 'findSentTptBatchesForFinancialYearAndRegion').resolves([batch]);
 
     sandbox.stub(newRepos.billingInvoices, 'deleteEmptyByBatchId').resolves();
     sandbox.stub(newRepos.billingInvoices, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingInvoices, 'deleteInvoicesByOriginalInvoiceId').resolves();
+    sandbox.stub(newRepos.billingInvoices, 'update').resolves();
 
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteEmptyByBatchId').resolves();
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchId').resolves();
@@ -107,6 +115,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     sandbox.stub(invoiceService, 'saveInvoiceToDB');
     sandbox.stub(invoiceService, 'resetIsFlaggedForRebilling');
+    sandbox.stub(invoiceService, 'updateInvoice').resolves();
 
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId');
 
@@ -120,6 +129,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(chargeModuleBillRunConnector, 'approve').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'send').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'deleteInvoiceFromBillRun').resolves();
+    sandbox.stub(chargeModuleBillRunConnector, 'generate').resolves();
 
     sandbox.stub(eventService, 'create').resolves();
 
@@ -131,6 +141,11 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingInvoices, 'delete');
 
     sandbox.stub(billingVolumesService, 'approveVolumesForBatch');
+
+    queueManagerStub = {
+      add: sandbox.stub()
+    };
+    sandbox.stub(messageQueue, 'getQueueManager').returns(queueManagerStub);
   });
 
   afterEach(async () => {
@@ -516,28 +531,68 @@ experiment('modules/billing/services/batch-service', () => {
   });
 
   experiment('.setErrorStatus', () => {
-    beforeEach(async () => {
-      await batchService.setErrorStatus('batch-id', 10);
+    const batchId = 'batch-id';
+
+    experiment('when the error is not "failed to create batch"', () => {
+      beforeEach(async () => {
+        await batchService.setErrorStatus(batchId, Batch.BATCH_ERROR_CODE.failedToCreateCharge);
+      });
+
+      test('calls billingVolumes.markVolumesAsErrored() with correct params', async () => {
+        const [id, data] = newRepos.billingVolumes.markVolumesAsErrored.lastCall.args;
+        expect(id).to.equal(batchId);
+        expect(data).to.equal({ require: false });
+      });
+
+      test('calls billingBatches.update() with correct params', async () => {
+        const [id, data] = newRepos.billingBatches.update.lastCall.args;
+        expect(id).to.equal(batchId);
+        expect(data).to.equal({ status: 'error', errorCode: Batch.BATCH_ERROR_CODE.failedToCreateCharge });
+      });
+
+      test('calls licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch() with the batch ID', async () => {
+        expect(
+          licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.calledWith(
+            batchId
+          )
+        ).to.be.true();
+      });
+
+      test('publishes a job to delete the charge module batch', () => {
+        expect(queueManagerStub.add.calledWith(
+          deleteErroredBatchJob.jobName, batchId
+        )).to.be.true();
+      });
     });
 
-    test('calls billingVolumes.markVolumesAsErrored() with correct params', async () => {
-      const [id, data] = newRepos.billingVolumes.markVolumesAsErrored.lastCall.args;
-      expect(id).to.equal('batch-id');
-      expect(data).to.equal({ require: false });
-    });
+    experiment('when the error is "failed to create bill run"', () => {
+      beforeEach(async () => {
+        await batchService.setErrorStatus(batchId, Batch.BATCH_ERROR_CODE.failedToCreateBillRun);
+      });
 
-    test('calls billingBatches.update() with correct params', async () => {
-      const [id, data] = newRepos.billingBatches.update.lastCall.args;
-      expect(id).to.equal('batch-id');
-      expect(data).to.equal({ status: 'error', errorCode: 10 });
-    });
+      test('calls billingVolumes.markVolumesAsErrored() with correct params', async () => {
+        const [id, data] = newRepos.billingVolumes.markVolumesAsErrored.lastCall.args;
+        expect(id).to.equal(batchId);
+        expect(data).to.equal({ require: false });
+      });
 
-    test('calls licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch() with the batch ID', async () => {
-      expect(
-        licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.calledWith(
-          'batch-id'
-        )
-      ).to.be.true();
+      test('calls billingBatches.update() with correct params', async () => {
+        const [id, data] = newRepos.billingBatches.update.lastCall.args;
+        expect(id).to.equal(batchId);
+        expect(data).to.equal({ status: 'error', errorCode: Batch.BATCH_ERROR_CODE.failedToCreateBillRun });
+      });
+
+      test('calls licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch() with the batch ID', async () => {
+        expect(
+          licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.calledWith(
+            batchId
+          )
+        ).to.be.true();
+      });
+
+      test('does not publish a job to delete the charge module batch', () => {
+        expect(queueManagerStub.add.called).to.be.false();
+      });
     });
   });
 
@@ -566,7 +621,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     beforeEach(async () => {
       transactionsService.saveTransactionToDB.resolves({ billingTransactionId });
-      invoiceLicencesService.saveInvoiceLicenceToDB.resolves({ billingInvoiceLicenceId });
+      invoiceLicencesService.saveInvoiceLicenceToDB.resolves({ id: billingInvoiceLicenceId });
       invoiceService.saveInvoiceToDB.resolves({ billingInvoiceId });
 
       models = createModels();
@@ -723,16 +778,16 @@ experiment('modules/billing/services/batch-service', () => {
     const invoiceCount = 2;
     const creditNoteCount = 3;
     const netTotal = 1234;
-    const creditNoteValue = 500;
+    const creditNoteValue = -500;
     const invoiceValue = 750000;
     const status = 'generated';
 
     const cmResponse = {
       billRun: {
         invoiceCount,
-        creditLineCount: creditNoteCount,
+        creditNoteCount,
         invoiceValue,
-        creditLineValue: creditNoteValue,
+        creditNoteValue,
         netTotal,
         status
       }
@@ -910,7 +965,7 @@ experiment('modules/billing/services/batch-service', () => {
         newRepos.billingBatches.create.resolves({
           billingBatchId: uuid()
         });
-        sandbox.stub(config.billing, 'supplementaryYears').value(6);
+        sandbox.stub(config.billing, 'supplementaryYears').value(5);
       });
 
       experiment('and the batch type is annual', () => {
@@ -1103,15 +1158,16 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       experiment('when the invoice is found and there are no errors', () => {
-        let billingInvoiceId, billingInvoiceExternalId, invoiceAccountId, licenceId;
+        let billingInvoiceId, billingInvoiceExternalId, invoiceAccountId, licenceId, billingInvoice, originalBillingInvoiceId;
 
         beforeEach(async () => {
           billingInvoiceId = uuid();
           billingInvoiceExternalId = uuid();
           invoiceAccountId = uuid();
           licenceId = uuid();
+          originalBillingInvoiceId = uuid();
 
-          newRepos.billingInvoices.findOne.resolves({
+          billingInvoice = {
             billingInvoiceId,
             invoiceAccountId,
             invoiceAccountNumber: 'A12345678A',
@@ -1144,8 +1200,12 @@ experiment('modules/billing/services/batch-service', () => {
                   revokedDate: null
                 }
               }
-            ]
-          });
+            ],
+            linkedBillingInvoices: [],
+            rebillingState: null,
+            originalBillingInvoiceId: null
+          };
+          newRepos.billingInvoices.findOne.resolves(billingInvoice);
           newRepos.billingTransactions.countByBatchId.resolves(0);
           await batchService.deleteBatchInvoice(batch, billingInvoiceId);
         });
@@ -1186,16 +1246,34 @@ experiment('modules/billing/services/batch-service', () => {
           expect(to).to.equal('reprocess');
           expect(licenceId).to.equal(licenceId);
         });
+
+        experiment('when the invoice is a rebilling invoice', () => {
+          beforeEach(async () => {
+            billingInvoice.rebillingState = 'rebill';
+            billingInvoice.originalBillingInvoiceId = originalBillingInvoiceId;
+            newRepos.billingInvoices.findOne.resolves(billingInvoice);
+            await batchService.deleteBatchInvoice(batch, billingInvoiceId);
+          });
+
+          test('the original invoice rebilling state is updated', () => {
+            expect(invoiceService.updateInvoice.calledWith(originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null }))
+              .to.be.true();
+          });
+        });
       });
 
       experiment('when the invoice is found and there is an error errors', () => {
         beforeEach(async () => {
           newRepos.billingInvoices.findOne.resolves({
+            billingInvoiceId: uuid(),
             invoiceAccountNumber: 'A12345678A',
             financialYearEnding: 2020,
             billingBatch: {
               externalId: batch.externalId
-            }
+            },
+            linkedBillingInvoices: [],
+            originalBillingInvoiceId: null,
+            rebillingState: null
           });
           newRepos.billingTransactions.findByBatchId.resolves([]);
           chargeModuleBillRunConnector.deleteInvoiceFromBillRun.rejects(new Error('oh no!'));
@@ -1301,6 +1379,48 @@ experiment('modules/billing/services/batch-service', () => {
       test('the billing / charge version data is deleted from water service tables', async () => {
         expect(newRepos.billingBatches.deleteAllBillingData.called).to.be.true();
       });
+    });
+  });
+
+  experiment('.requestCMBatchGeneration', () => {
+    const batchId = uuid();
+
+    experiment('when there are >0 transactions', () => {
+      beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(1);
+        await batchService.requestCMBatchGeneration(batchId);
+      });
+
+      test('fetches the batch with the correct ID', () => {
+        expect(newRepos.billingBatches.findOne.calledWith(batchId)).to.be.true();
+      });
+
+      test('requests CM batch generation using batch external ID', () => {
+        expect(chargeModuleBillRunConnector.generate.calledWith(
+          data.batch.externalId
+        )).to.be.true();
+      });
+    });
+
+    experiment('when there are 0 transactions', () => {
+      beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(0);
+        await batchService.requestCMBatchGeneration(batchId);
+      });
+
+      test('fetches the batch with the correct ID', () => {
+        expect(newRepos.billingBatches.findOne.calledWith(batchId)).to.be.true();
+      });
+
+      test('does not request CM batch generation', () => {
+        expect(chargeModuleBillRunConnector.generate.called).to.be.false();
+      });
+    });
+  });
+  experiment('getSentTptBatchesForFinancialYearAndRegion', () => {
+    test('returns 2 batches', async () => {
+      const result = await batchService.getSentTptBatchesForFinancialYearAndRegion(2020, 'test-region');
+      expect(result.length).to.equal(2);
     });
   });
 });

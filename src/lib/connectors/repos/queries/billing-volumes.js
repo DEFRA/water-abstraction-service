@@ -19,7 +19,7 @@ exports.deleteByBatchAndInvoiceId = `
     `;
 
 exports.findByBatchIdAndLicenceId = `
-select v.* 
+select v.*, cv.invoice_account_id
   from water.billing_volumes v
   join water.charge_elements ce on v.charge_element_id=ce.charge_element_id
   join water.charge_versions cv on ce.charge_version_id=cv.charge_version_id
@@ -45,3 +45,14 @@ join water.billing_volumes bv on
   and bv.financial_year=:financialYearEnding 
   and bv.is_summer=:isSummer 
 where ce.charge_version_id=:chargeVersionId`;
+
+exports.findByChargeVersionAndFinancialYear = `
+select bv.*, bb.source 
+from water.billing_volumes bv
+join water.charge_elements ce on bv.charge_element_id=ce.charge_element_id
+join water.billing_batches bb on bv.billing_batch_id=bb.billing_batch_id
+and ce.charge_version_id=:chargeVersionId
+and bv.financial_year=:financialYearEnding
+and bv.is_approved=true 
+and bv.errored_on is null
+`;

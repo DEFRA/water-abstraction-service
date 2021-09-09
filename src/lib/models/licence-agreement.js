@@ -2,7 +2,6 @@
 
 const DateRange = require('./date-range');
 const Agreement = require('./agreement');
-const LicenceAgreementPurposeUse = require('./licence-agreement-purpose-use');
 
 const validators = require('./validators');
 
@@ -52,20 +51,6 @@ class LicenceAgreement extends Model {
 
   set dateSigned (dateSigned) {
     this._dateSigned = this.getDateTimeFromValue(dateSigned);
-  }
-
-  /**
-   * Licence agreement purpose use
-   * @return {LicenceAgreementPurposeUse}
-   */
-  get licenceAgreementPurposeUses () {
-    return this._licenceAgreementPurposeUses;
-  }
-
-  set licenceAgreementPurposeUses (licenceAgreementPurposeUses) {
-    console.log(licenceAgreementPurposeUses);
-    validators.assertIsArrayOfType(licenceAgreementPurposeUses, LicenceAgreementPurposeUse);
-    this._licenceAgreementPurposeUses = licenceAgreementPurposeUses;
   }
 }
 

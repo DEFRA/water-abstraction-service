@@ -51,6 +51,7 @@ const onComplete = async (job, queueManager) => {
 
     // If there's nothing to process, skip to cm refresh
     if (billingBatchChargeVersionYearIds.length === 0) {
+      await batchService.requestCMBatchGeneration(batchId);
       await queueManager.add(refreshTotalsJobName, batchId);
     }
 

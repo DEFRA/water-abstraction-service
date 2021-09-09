@@ -1,8 +1,11 @@
 'use strict';
 
-const { isNull } = require('lodash');
+const { isNull, isEmpty } = require('lodash');
 
 const Event = require('../models/event');
+
+const mapStatus = status =>
+  isEmpty(status) ? null : status;
 
 /**
  * Creates Event object model from data received from the repo layer
@@ -13,9 +16,12 @@ const dbToModel = data => {
   if (isNull(data)) {
     return null;
   }
-  const { eventId, ...rest } = data;
+  const { eventId, status, ...rest } = data;
   const event = new Event(eventId);
-  return event.fromHash(rest);
+  return event.fromHash({
+    status: mapStatus(status),
+    ...rest
+  });
 };
 
 /**

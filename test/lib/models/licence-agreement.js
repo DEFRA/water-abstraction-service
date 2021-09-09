@@ -5,7 +5,6 @@ const { expect } = require('@hapi/code');
 const moment = require('moment');
 
 const LicenceAgreement = require('../../../src/lib/models/licence-agreement');
-const LicenceAgreementPurposeUse = require('../../../src/lib/models/licence-agreement-purpose-use');
 const DateRange = require('../../../src/lib/models/date-range');
 const Agreement = require('../../../src/lib/models/agreement');
 class TestModel {};
@@ -96,22 +95,6 @@ experiment('lib/models/licence-agreement', () => {
     test('allows null', async () => {
       licenceAgreement.dateSigned = null;
       expect(licenceAgreement.dateSigned).to.be.null();
-    });
-  });
-
-  experiment('.licenceAgreementPurposeUses', () => {
-    test('can be set to an array of LicenceAgreementPurposeUses', async () => {
-      const licenceAgreementPurposeUses = [new LicenceAgreementPurposeUse()];
-      licenceAgreement.licenceAgreementPurposeUses = licenceAgreementPurposeUses;
-      expect(licenceAgreement.licenceAgreementPurposeUses).to.equal(licenceAgreementPurposeUses);
-    });
-
-    test('throws an error if set to a different model type', async () => {
-      const func = () => {
-        const notLicenceAgreementPurposeUses = [new TestModel()];
-        licenceAgreement.licenceAgreementPurposeUses = notLicenceAgreementPurposeUses;
-      };
-      expect(func).to.throw();
     });
   });
 });

@@ -5,12 +5,16 @@ const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
+const chargeVersionService = require('../../../../src/lib/services/charge-versions');
 
+const Batch = require('../../../../src/lib/models/batch');
 const BillingVolume = require('../../../../src/lib/models/billing-volume');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
-const Batch = require('../../../../src/lib/models/batch');
-
+const ChargeElement = require('../../../../src/lib/models/charge-element');
+const ChargeVersion = require('../../../../src/lib/models/charge-version');
+const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const billingVolumesRepo = require('../../../../src/lib/connectors/repos/billing-volumes');
+const chargePeriod = require('../../../../src/modules/billing/lib/charge-period');
 const { NotFoundError } = require('../../../../src/lib/errors');
 const { BillingVolumeStatusError } = require('../../../../src/modules/billing/lib/errors');
 const { createUser, createBatch, createFinancialYear } = require('../test-data/test-billing-data');
@@ -36,6 +40,10 @@ experiment('modules/billing/services/billing-volumes-service', () => {
     sandbox.stub(billingVolumesRepo, 'findByIds').resolves([]);
     sandbox.stub(billingVolumesRepo, 'findByBatchIdAndLicenceId').resolves();
     sandbox.stub(billingVolumesRepo, 'findByChargeVersionFinancialYearAndSeason').resolves([]);
+
+    sandbox.stub(chargeVersionService, 'getByChargeVersionId');
+
+    sandbox.stub(chargePeriod, 'getChargePeriod');
   });
 
   afterEach(async () => sandbox.restore());
@@ -309,6 +317,38 @@ experiment('modules/billing/services/billing-volumes-service', () => {
       expect(billingVolumesRepo.findByIds.calledWith([
         'test-id-1', 'test-id-2'
       ])).to.be.true();
+    });
+  });
+
+  experiment('.getBillingVolumeChargePeriod', () => {
+    const chargeVersionId = uuid();
+    const invoiceAccountId = uuid();
+    const financialYear = new FinancialYear(2021);
+    const billingVolume = new BillingVolume().fromHash({
+      financialYear
+    });
+    billingVolume.chargeElement = new ChargeElement().fromHash({
+      chargeVersionId
+    });
+    const chargeVersion = new ChargeVersion(chargeVersionId);
+    const invoiceAccount = new InvoiceAccount(invoiceAccountId);
+
+    beforeEach(async () => {
+      chargeVersion.invoiceAccount = invoiceAccount;
+      chargeVersionService.getByChargeVersionId.resolves(chargeVersion);
+      await billingVolumesService.getBillingVolumeChargePeriod(billingVolume);
+    });
+
+    test('gets the charge version linked to this billing volume', async () => {
+      expect(chargeVersionService.getByChargeVersionId.calledWith(
+        chargeVersionId
+      )).to.be.true();
+    });
+
+    test('gets the charge period', async () => {
+      expect(chargePeriod.getChargePeriod.calledWith(
+        financialYear, chargeVersion
+      )).to.be.true();
     });
   });
 });

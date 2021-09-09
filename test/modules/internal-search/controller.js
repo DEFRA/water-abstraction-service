@@ -29,13 +29,23 @@ experiment('Internal search controller', () => {
     const data = getData();
     sinon.stub(search, 'searchUsers').resolves({ data, pagination: getPagination(3) });
     sinon.stub(search, 'searchReturns').resolves(data);
+    sinon.stub(search, 'searchBillingAccounts').resolves(data[0]);
+    sinon.stub(search, 'searchGaugingStations').resolves(data);
     sinon.stub(search, 'searchDocuments').resolves({ data, pagination: getPagination(5) });
   });
 
   afterEach(async () => {
     search.searchUsers.restore();
     search.searchReturns.restore();
+    search.searchBillingAccounts.restore();
+    search.searchGaugingStations.restore();
     search.searchDocuments.restore();
+  });
+
+  test('The response will contain a billing account object if the search term matches the expected syntax of a billing account', async () => {
+    const request = getRequest('Y12312301A');
+    const result = await controller.getInternalSearch(request);
+    expect(Object.keys(result)).to.only.include(['billingAccount']);
   });
 
   test('The response should only contain user data for a user search', async () => {
@@ -51,17 +61,24 @@ experiment('Internal search controller', () => {
     expect(Object.keys(result)).to.only.include(['returns']);
   });
 
-  test('The response should contain return and documents data for a numeric search', async () => {
+  test('The response should contain return, gauging stations and documents data for a numeric search', async () => {
     const request = getRequest('12345678');
     const result = await controller.getInternalSearch(request);
-    expect(Object.keys(result)).to.only.include(['returns', 'documents', 'pagination']);
+    expect(Object.keys(result)).to.only.include(['returns', 'documents', 'pagination', 'gaugingStations']);
     expect(result.pagination.page).to.equal(5);
   });
 
-  test('The response should only contain documents data for a licence number search', async () => {
+  test('The response should contain gauging_stations', async () => {
+    const request = getRequest('12345678');
+    const result = await controller.getInternalSearch(request);
+    expect(Object.keys(result)).to.only.include(['returns', 'documents', 'pagination', 'gaugingStations']);
+    expect(result.pagination.page).to.equal(5);
+  });
+
+  test('The response should only contain gauging stations & documents data for a licence number search', async () => {
     const request = getRequest('01/123');
     const result = await controller.getInternalSearch(request);
-    expect(Object.keys(result)).to.only.include(['documents', 'pagination']);
+    expect(Object.keys(result)).to.only.include(['documents', 'pagination', 'gaugingStations']);
     expect(result.pagination.page).to.equal(5);
   });
 });

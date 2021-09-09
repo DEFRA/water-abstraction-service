@@ -9,6 +9,7 @@ const emailNotifications = require('../../lib/notifications/emails');
 const event = require('../../lib/event');
 const { getRolesForPermissionKey } = require('../../lib/roles');
 const { logger } = require('../../logger');
+const licencesService = require('../../lib/services/licences');
 
 const getCallingUser = async callingUserId => {
   const user = await idmConnector.usersClient.findOneById(callingUserId);
@@ -35,14 +36,15 @@ const mapUserStatus = user => {
   };
 };
 
-const getCompanyLicences = (company, documentHeaders) => {
+const getCompanyLicences = (company, documentHeaders, licencesMap) => {
   const companyEntityId = company.entityId;
   return documentHeaders
     .filter(doc => doc.company_entity_id === companyEntityId)
     .map(doc => ({
       documentId: doc.document_id,
       licenceRef: doc.system_external_id,
-      licenceHolder: get(doc, 'metadata.contacts[0].name', '')
+      licenceHolder: get(doc, 'metadata.contacts[0].name', ''),
+      licence: licencesMap.get(doc.system_external_id)
     }));
 };
 
@@ -57,19 +59,34 @@ const getCompanyOutstandingVerifications = (company, verifications) => {
     }));
 };
 
-const mapCompanies = (companies, verifications, documentHeaders) => {
+const mapCompanies = (companies, verifications, documentHeaders, licencesMap) => {
   return companies.map(company => {
     return {
       name: company.name,
       entityId: company.entityId,
       userRoles: company.userRoles,
       outstandingVerifications: getCompanyOutstandingVerifications(company, verifications),
-      registeredLicences: getCompanyLicences(company, documentHeaders)
+      registeredLicences: getCompanyLicences(company, documentHeaders, licencesMap)
     };
   });
 };
 
 const isInternalUser = user => user.application === config.idm.application.internalUser;
+
+/**
+ * Gets a map of Licence service models given an array
+ * of CRM v1 documents
+ *
+ * @param {Array} documents
+ * @return {Promise<Map>}
+ */
+const getLicencesMap = async documents => {
+  const licenceNumbers = documents.map(doc => doc.system_external_id);
+  const licences = await licencesService.getLicencesByLicenceRefs(licenceNumbers);
+  return licences.reduce((map, licence) =>
+    map.set(licence.licenceNumber, licence)
+  , new Map());
+};
 
 const getUserCompanyStatus = async user => {
   const entityId = user.external_id;
@@ -80,10 +97,15 @@ const getUserCompanyStatus = async user => {
 
   await crmEntitiesConnector.getEntityCompanies(entityId);
 
+  const documents = await crmDocumentsConnector.findAll({ entity_id: entityId });
+
+  const licencesMap = await getLicencesMap(documents);
+
   return Promise.all([
     crmEntitiesConnector.getEntityCompanies(entityId),
     crmEntitiesConnector.getEntityVerifications(entityId),
-    crmDocumentsConnector.findAll({ entity_id: entityId })
+    documents,
+    licencesMap
   ]);
 };
 
@@ -188,21 +210,22 @@ const getStatus = async (request, h) => {
     return Boom.notFound('User not found');
   }
 
-  return getUserCompanyStatus(userResponse.data).then(results => {
-    const [companies, verifications, documentHeaders = []] = results;
+  const results = await getUserCompanyStatus(userResponse.data);
 
-    return {
-      data: {
-        user: mapUserStatus(userResponse.data),
-        companies: mapCompanies(
-          get(companies, 'data.companies', []),
-          get(verifications, 'data', []),
-          documentHeaders
-        )
-      },
-      error: null
-    };
-  });
+  const [companies, verifications, documentHeaders = [], licencesMap] = results;
+
+  return {
+    data: {
+      user: mapUserStatus(userResponse.data),
+      companies: mapCompanies(
+        get(companies, 'data.companies', []),
+        get(verifications, 'data', []),
+        documentHeaders,
+        licencesMap
+      )
+    },
+    error: null
+  };
 };
 
 const postUserInternal = async (request, h) => {

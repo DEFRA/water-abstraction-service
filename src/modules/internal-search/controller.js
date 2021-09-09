@@ -7,26 +7,34 @@ const { logger } = require('../../logger');
 
 const buildInternalSearchResponse = async (request) => {
   const { query, page } = request.query;
-  const { isUser, isNumeric, isReturnId } = parseQuery(query);
+  const { isUser, isNumeric, isReturnId, isBillingAccountReference } = parseQuery(query);
 
   const response = {};
 
   if (isReturnId) {
     const data = await search.searchReturns(query);
     buildResponse(response, 'returns', data);
+  } else if (isBillingAccountReference) {
+    // Search for billing accounts
+    const data = await search.searchBillingAccounts(query.toUpperCase());
+    buildResponse(response, 'billingAccount', data);
   } else if (isUser) {
-  // User search
+    // User search
     const data = await search.searchUsers(query, page);
     buildResponse(response, 'users', data);
   } else {
-  // Search returns
+    // Search returns
     if (isNumeric) {
       const data = await search.searchReturns(query);
       buildResponse(response, 'returns', data);
     }
+    // Search gauging stations
+    const gaugingStationData = await search.searchGaugingStations(query);
+    buildResponse(response, 'gaugingStations', gaugingStationData);
+
     // Search CRM documents
-    const data = await search.searchDocuments(query, page);
-    buildResponse(response, 'documents', data);
+    const crmDocumentData = await search.searchDocuments(query, page);
+    buildResponse(response, 'documents', crmDocumentData);
   }
 
   return response;
@@ -41,8 +49,7 @@ const buildInternalSearchResponse = async (request) => {
 const getInternalSearch = async (request) => {
   let response;
   try {
-    // Single return
-    response = buildInternalSearchResponse(request, response);
+    response = await buildInternalSearchResponse(request, response);
   } catch (err) {
     logger.error('Internal search error', err);
   }

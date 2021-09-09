@@ -34,7 +34,8 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
     chargeElement.fromHash({
       id: uuid(),
       authorisedAnnualQuantity: 16.5,
-      billableAnnualQuantity: 14.2
+      billableAnnualQuantity: 14.2,
+      isSection127AgreementEnabled: true
     });
     chargeElement.abstractionPeriod = new AbstractionPeriod();
     chargeElement.abstractionPeriod.fromHash({
@@ -127,6 +128,11 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
   experiment('.isTwoPartTariffPurpose', () => {
     test('returns true if the charge element purpose use is a two-part tariff purpose', async () => {
       expect(chargeElementContainer.isTwoPartTariffPurpose).to.be.true();
+    });
+
+    test('returns false if the charge element has section 127 agreement disabled', async () => {
+      chargeElementContainer.chargeElement.isSection127AgreementEnabled = false;
+      expect(chargeElementContainer.isTwoPartTariffPurpose).to.be.false();
     });
 
     test('returns false if the charge element purpose use is not a two-part tariff purpose', async () => {
@@ -272,42 +278,42 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
 
   experiment('.score', () => {
     experiment('when the return season is summer,', () => {
-      test('and the source is supported, the season is not summer, the score is the number of abstraction days', async () => {
-        chargeElementContainer.chargeElement.source = ChargeElement.sources.supported;
+      test('and the source is unsupported, the season is not summer, the score is the number of abstraction days', async () => {
+        chargeElementContainer.chargeElement.source = ChargeElement.sources.unsupported;
         chargeElementContainer.chargeElement.abstractionPeriod = AbstractionPeriod.getWinter();
 
         expect(chargeElementContainer.getScore(RETURN_SEASONS.summer)).to.equal(153);
       });
 
-      test('and the source is unsupported, the season is not summer, the score is the number of abstraction days - 1000', async () => {
-        chargeElementContainer.chargeElement.source = ChargeElement.sources.unsupported;
+      test('and the source is supported, the season is not summer, the score is the number of abstraction days - 1000', async () => {
+        chargeElementContainer.chargeElement.source = ChargeElement.sources.supported;
         chargeElementContainer.chargeElement.abstractionPeriod = AbstractionPeriod.getWinter();
         expect(chargeElementContainer.getScore(RETURN_SEASONS.summer)).to.equal(-847);
       });
 
-      test('and the source is unsupported, the season is summer, the score is the number of abstraction days - 2000', async () => {
-        chargeElementContainer.chargeElement.source = ChargeElement.sources.unsupported;
+      test('and the source is supported, the season is summer, the score is the number of abstraction days - 2000', async () => {
+        chargeElementContainer.chargeElement.source = ChargeElement.sources.supported;
         chargeElementContainer.chargeElement.abstractionPeriod = AbstractionPeriod.getSummer();
         expect(chargeElementContainer.getScore(RETURN_SEASONS.summer)).to.equal(-1847);
       });
     });
 
     experiment('when the return season is winter/all year,', () => {
-      test('and the source is supported, the season is not summer, the score is the number of abstraction days', async () => {
-        chargeElementContainer.chargeElement.source = ChargeElement.sources.supported;
+      test('and the source is unsupported, the season is not summer, the score is the number of abstraction days', async () => {
+        chargeElementContainer.chargeElement.source = ChargeElement.sources.unsupported;
         chargeElementContainer.chargeElement.abstractionPeriod = AbstractionPeriod.getWinter();
 
         expect(chargeElementContainer.getScore(RETURN_SEASONS.winterAllYear)).to.equal(153);
       });
 
-      test('and the source is unsupported, the season is not summer, the score is the number of abstraction days - 1000', async () => {
-        chargeElementContainer.chargeElement.source = ChargeElement.sources.unsupported;
+      test('and the source is supported, the season is not summer, the score is the number of abstraction days - 1000', async () => {
+        chargeElementContainer.chargeElement.source = ChargeElement.sources.supported;
         chargeElementContainer.chargeElement.abstractionPeriod = AbstractionPeriod.getWinter();
         expect(chargeElementContainer.getScore(RETURN_SEASONS.winterAllYear)).to.equal(-847);
       });
 
-      test('and the source is unsupported, the season is summer, the score is the number of abstraction days - 1000', async () => {
-        chargeElementContainer.chargeElement.source = ChargeElement.sources.unsupported;
+      test('and the source is supported, the season is summer, the score is the number of abstraction days - 1000', async () => {
+        chargeElementContainer.chargeElement.source = ChargeElement.sources.supported;
         chargeElementContainer.chargeElement.abstractionPeriod = AbstractionPeriod.getSummer();
         expect(chargeElementContainer.getScore(RETURN_SEASONS.winterAllYear)).to.equal(-847);
       });

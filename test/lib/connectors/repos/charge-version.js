@@ -128,8 +128,7 @@ experiment('lib/connectors/repos/charge-versions', () => {
       expect(query).to.equal(queries.findValidInRegionAndFinancialYear);
       expect(params).to.equal({
         regionId,
-        startDate: '2019-04-01',
-        endDate: '2020-03-31'
+        financialYearEnding
       });
     });
   });

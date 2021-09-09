@@ -118,6 +118,44 @@ class Licence extends Model {
   }
 
   /**
+   * Checks if licence is future dated
+   * @return {Boolean}
+   */
+  get isFutureDated () {
+    return moment(this.startDate).isAfter(moment(), 'day');
+  }
+
+  /**
+   * Gets validity
+   * @return {String}
+   */
+  get endDateReason () {
+    const dates = [
+      { key: 'expiredDate', date: this.expiredDate },
+      { key: 'lapsedDate', date: this.lapsedDate },
+      { key: 'revokedDate', date: this.revokedDate }
+    ];
+
+    const sortedDates = orderBy(
+      dates.filter(row => !!row.date),
+      row => moment(row.date).unix()
+    );
+
+    return sortedDates[0] ? sortedDates[0].key : null;
+  }
+
+  get isActive () {
+    if (this.isFutureDated) {
+      return false;
+    }
+    if (!this.endDate) {
+      return true;
+    }
+    const now = moment();
+    return !moment(this.endDate).isBefore(now, 'day');
+  }
+
+  /**
    * Licence agreements
    * @return {Array<LicenceAgreement>}
    */
@@ -133,7 +171,10 @@ class Licence extends Model {
   toJSON () {
     return {
       ...super.toJSON(),
-      endDate: this.endDate
+      isFutureDated: this.isFutureDated,
+      endDate: this.endDate,
+      endDateReason: this.endDateReason,
+      isActive: this.isActive
     };
   }
 }

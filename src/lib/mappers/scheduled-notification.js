@@ -1,10 +1,13 @@
 'use strict';
 
+const { createMapper } = require('../object-mapper');
 const ScheduledNotification = require('../models/scheduled-notification');
+const eventMapper = require('./event');
+const helpers = require('./lib/helpers');
 
-const dbToModel = dbRow => {
-  const notification = new ScheduledNotification(dbRow.id);
-  return notification.pickFrom(dbRow, [
+const dbToModelMapper = createMapper()
+  .copy(
+    'id',
     'recipient',
     'messageType',
     'messageRef',
@@ -14,8 +17,10 @@ const dbToModel = dbRow => {
     'status',
     'notifyId',
     'notifyStatus'
-  ]);
-};
+  )
+  .map('event').to('event', eventMapper.dbToModel);
+
+const dbToModel = data => helpers.createModel(ScheduledNotification, data, dbToModelMapper);
 
 const modelToDb = scheduledNotification => {
   return scheduledNotification.pick([

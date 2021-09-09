@@ -1,6 +1,6 @@
 'use strict';
 
-const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer } } = require('../../../lib/roles');
+const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer, viewChargeVersions } } = require('../../../lib/roles');
 
 const controller = require('../controllers/charge-version-workflow');
 const Joi = require('joi');
@@ -20,11 +20,11 @@ module.exports = {
       description: 'Lists all charge version workflows in progress',
       tags: ['api'],
       auth: {
-        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
+        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer, viewChargeVersions]
       },
       validate: {
         headers,
-        query: Joi.object({
+        query: Joi.object().keys({
           licenceId: Joi.string().guid().optional()
         })
       }
@@ -39,11 +39,11 @@ module.exports = {
       description: 'Gets a single charge version workflow record',
       tags: ['api'],
       auth: {
-        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
+        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer, viewChargeVersions]
       },
       validate: {
         headers,
-        params: Joi.object({
+        params: Joi.object().keys({
           chargeVersionWorkflowId: Joi.string().guid().required()
         })
       }
@@ -62,7 +62,7 @@ module.exports = {
       },
       validate: {
         headers,
-        payload: Joi.object({
+        payload: Joi.object().keys({
           licenceId: Joi.string().guid().required(),
           chargeVersion: Joi.object().required()
         })
@@ -86,7 +86,7 @@ module.exports = {
       },
       validate: {
         headers,
-        payload: Joi.object({
+        payload: Joi.object().keys({
           status: Joi.string(),
           chargeVersion: Joi.object(),
           approverComments: Joi.string().allow(null),
@@ -114,7 +114,7 @@ module.exports = {
       },
       validate: {
         headers,
-        params: Joi.object({
+        params: Joi.object().keys({
           chargeVersionWorkflowId: Joi.string().guid().required()
         })
       },

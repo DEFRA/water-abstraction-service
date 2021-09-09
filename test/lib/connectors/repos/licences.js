@@ -14,6 +14,7 @@ const licenceQueries = require('../../../../src/lib/connectors/repos/queries/lic
 const licencesRepo = require('../../../../src/lib/connectors/repos/licences');
 const { Licence, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
+const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
 
 experiment('lib/connectors/repos/licences.js', () => {
   let model, stub;
@@ -37,6 +38,7 @@ experiment('lib/connectors/repos/licences.js', () => {
     sandbox.stub(Licence, 'forge').returns(stub);
     sandbox.stub(bookshelf.knex, 'raw');
     sandbox.stub(raw, 'multiRow');
+    sandbox.stub(helpers, 'findOne');
   });
 
   afterEach(async () => {
@@ -83,27 +85,14 @@ experiment('lib/connectors/repos/licences.js', () => {
   });
 
   experiment('.findOneByLicenceRef', () => {
-    let result;
-
     beforeEach(async () => {
-      result = await licencesRepo.findOneByLicenceRef('test-ref');
+      await licencesRepo.findOneByLicenceRef('test-ref');
     });
 
-    test('calls where with correct id', async () => {
-      const [params] = stub.where.lastCall.args;
-      expect(params).to.equal({ licence_ref: 'test-ref' });
-    });
-
-    test('calls fetchAll() with related models', async () => {
-      const [params] = stub.fetchAll.lastCall.args;
-      expect(params.withRelated).to.equal(['region']);
-    });
-
-    test('returns the result of the toJSON() call', async () => {
-      expect(result).to.equal([
-        { foo: 'bar' },
-        { foo: 'baz' }
-      ]);
+    test('calls findOne helper', async () => {
+      expect(helpers.findOne.calledWith(
+        Licence, 'licence_ref', 'test-ref', ['region']
+      )).to.be.true();
     });
   });
 

@@ -38,7 +38,8 @@ const findOne = async id => {
         'billingInvoiceLicences.billingTransactions.billingVolume',
         'billingInvoiceLicences.billingTransactions.chargeElement',
         'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse',
-        'linkedBillingInvoices'
+        'linkedBillingInvoices',
+        'originalBillingInvoice'
       ]
     });
 
@@ -117,6 +118,17 @@ const findByIsFlaggedForRebillingAndRegion = regionId =>
 const resetIsFlaggedForRebilling = batchId =>
   raw.multiRow(queries.resetIsFlaggedForRebilling, { batchId });
 
+/**
+ * Deletes rebilled invoices by originalInvoiceId
+ * @param {String} originalBillingInvoiceId
+ */
+const deleteInvoicesByOriginalInvoiceId = originalBillingInvoiceId =>
+  bookshelf.knex.raw(queries.deleteByOriginalInvoiceId, { originalBillingInvoiceId });
+
+const create = data =>
+  helpers.create(BillingInvoice, data);
+
+exports.deleteInvoicesByOriginalInvoiceId = deleteInvoicesByOriginalInvoiceId;
 exports.upsert = upsert;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;
@@ -127,3 +139,4 @@ exports.update = update;
 exports.findAllForInvoiceAccount = findAllForInvoiceAccount;
 exports.findByIsFlaggedForRebillingAndRegion = findByIsFlaggedForRebillingAndRegion;
 exports.resetIsFlaggedForRebilling = resetIsFlaggedForRebilling;
+exports.create = create;

@@ -214,7 +214,8 @@ experiment('lib/mappers/charge-element', () => {
         purposeSecondary: new Purpose(uuid()),
         purposeUse: new PurposeUse(uuid()),
         timeLimitedPeriod: new DateRange('2019-01-01', '2020-12-31'),
-        isFactorsOverridden: false
+        isFactorsOverridden: false,
+        isSection127AgreementEnabled: true
       });
     });
 
@@ -244,7 +245,8 @@ experiment('lib/mappers/charge-element', () => {
             timeLimitedEndDate: '2020-12-31',
             seasonDerived: 'all year',
             chargeVersionId: chargeVersion.id,
-            factorsOverridden: model.isFactorsOverridden
+            factorsOverridden: model.isFactorsOverridden,
+            isSection127AgreementEnabled: true
           }
         );
       });
@@ -287,7 +289,8 @@ experiment('lib/mappers/charge-element', () => {
             timeLimitedEndDate: null,
             seasonDerived: 'all year',
             chargeVersionId: chargeVersion.id,
-            factorsOverridden: model.isFactorsOverridden
+            factorsOverridden: model.isFactorsOverridden,
+            isSection127AgreementEnabled: true
           }
         );
       });
