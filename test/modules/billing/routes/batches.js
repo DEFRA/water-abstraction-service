@@ -294,18 +294,14 @@ experiment('modules/billing/routes', () => {
     let server;
     let validBatchId;
     let validInvoiceId;
-    let validOriginalInvoiceId;
-    let validRebillInvoiceId;
     beforeEach(async () => {
       server = await getServer(routes.deleteBatchInvoice);
       validBatchId = uuid();
       validInvoiceId = uuid();
-      validOriginalInvoiceId = uuid();
-      validRebillInvoiceId = uuid();
 
       request = {
         method: 'DELETE',
-        url: `/water/1.0/billing/batches/${validBatchId}/invoices/${validInvoiceId}/org/${validOriginalInvoiceId}/rebill/${validRebillInvoiceId}`,
+        url: `/water/1.0/billing/batches/${validBatchId}/invoices/${validInvoiceId}`,
         auth
       };
     });

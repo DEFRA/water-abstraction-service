@@ -348,15 +348,13 @@ const deleteInvoicesWithRelatedData = async (batch, invoice) => {
   await newRepos.billingInvoices.delete(invoice.billingInvoiceId);
 };
 
-const isNotOriginalInvoice = row => row.billingInvoiceId !== row.originalBillingInvoiceId;
-
 /**
  * Deletes an individual invoice from the batch.  Also deletes CM transactions
  * @param {Batch} batch
  * @param {String} invoiceId
  * @return {Promise}
  */
-const deleteBatchInvoice = async (batch, invoiceId) => {
+const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = null, rebillInvoiceId = null) => {
   // Check batch is in suitable state to delete invoices
   if (!batch.canDeleteInvoices()) {
     throw new BatchStatusError(`Cannot delete invoice from batch when status is ${batch.status}`);
@@ -364,26 +362,39 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
 
   // Load invoice
   const invoice = await newRepos.billingInvoices.findOne(invoiceId);
+
   if (!invoice) {
     throw new NotFoundError(`Invoice ${invoiceId} not found`);
   }
   // Set batch status back to 'processing'
   await setStatus(batch.id, Batch.BATCH_STATUS.processing);
-
   try {
-    let invoicesToDelete = [invoice];
-
     if (invoice.rebillingState !== null) {
-      await invoiceService.updateInvoice(invoice.originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
-      invoicesToDelete = invoice.linkedBillingInvoices.filter(isNotOriginalInvoice);
+      // if the below is true then the orignal invoice has not been rebilled twice
+      // if (invoiceId === originalBillingInvoiceId) {
+      const originalInvoice = await newRepos.billingInvoices.findOne(invoice.originalBillingInvoiceId);
+      if (originalInvoice.billingInvoiceId === originalInvoice.originalBillingInvoiceId) {
+        await invoiceService.updateInvoice(invoice.originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
+      } else {
+        // set rebillingstate for a rebill of a rebill
+        await invoiceService.updateInvoice(invoice.originalBillingInvoiceId, { isFlaggedForRebilling: false, rebillingState: 'rebilled' });
+      }
+
+      // delete the rebilling invoices
+      const invoicesToDeleteUnfiltered = [invoice, ...invoice.linkedBillingInvoices];
+      const invoicesToDelete = invoicesToDeleteUnfiltered.filter(inv => inv.billingInvoiceId !== originalBillingInvoiceId && inv.billingInvoiceId !== inv.originalBillingInvoiceId);
+
+      // Unique billingInvoiceId
+      const invoicesToDeleteUnique = [];
+      invoicesToDelete.map(x => invoicesToDeleteUnique.filter(a => a.billingInvoiceId === x.billingInvoiceId).length > 0 ? null : invoicesToDeleteUnique.push(x));
+      await bluebird.mapSeries(invoicesToDeleteUnique, invoiceRow => deleteInvoicesWithRelatedData(batch, invoiceRow));
+    } else {
+      // delete the normal invoiuce
+      await deleteInvoicesWithRelatedData(batch, invoice);
+      // update the include in supplementary billing status
+      const invoiceModel = mappers.invoice.dbToModel(invoice);
+      await updateInvoiceLicencesForSupplementaryReprocessing(invoiceModel);
     }
-
-    await bluebird.mapSeries(invoicesToDelete, invoiceRow => deleteInvoicesWithRelatedData(batch, invoiceRow));
-
-    // update the include in supplementary billing status
-    const invoiceModel = mappers.invoice.dbToModel(invoice);
-    await updateInvoiceLicencesForSupplementaryReprocessing(invoiceModel);
-
     return batch;
   } catch (err) {
     await setErrorStatus(batch.id, Batch.BATCH_ERROR_CODE.failedToDeleteInvoice);

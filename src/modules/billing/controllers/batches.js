@@ -109,11 +109,18 @@ const getBatchInvoiceDetail = async request => {
  */
 const deleteBatchInvoice = async (request, h) => {
   const { batch } = request.pre;
-  const { invoiceId, originalInvoiceId, rebillInvoiceId } = request.params;
+  const { invoiceId } = request.params;
+
+  let originalInvoiceId = null;
+  let rebillInvoiceId = null;
+
+  if (request.query) {
+    originalInvoiceId = request.query.originalInvoiceId;
+    rebillInvoiceId = request.query.rebillInvoiceId;
+  }
   try {
     if (originalInvoiceId && rebillInvoiceId) {
-      await invoiceService.resetIsFlaggedForRebillingByInvoiceId(originalInvoiceId);
-      await batchService.deleteBatchInvoice(batch, invoiceId); /* delete both related bills */
+      await batchService.deleteBatchInvoice(batch, invoiceId, originalInvoiceId, rebillInvoiceId); /* delete both related bills */
     } else {
       // Delete the invoice
       await batchService.deleteBatchInvoice(batch, invoiceId);

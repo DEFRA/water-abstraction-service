@@ -24,15 +24,5 @@ const resetIsFlaggedForRebilling = async request => {
   }
 };
 
-const resetIsFlaggedForRebillingByInvoiceId = async request => {
-  try {
-    const { originalInvoiceId } = request.params;
-    return await invoiceService.resetIsFlaggedForRebillingByInvoiceId(originalInvoiceId);
-  } catch (err) {
-    return mapErrorResponse(err);
-  }
-};
-
 exports.resetIsFlaggedForRebilling = resetIsFlaggedForRebilling;
-exports.resetIsFlaggedForRebillingByInvoiceId = resetIsFlaggedForRebillingByInvoiceId;
 exports.patchInvoice = patchInvoice;

@@ -1254,11 +1254,10 @@ experiment('modules/billing/services/batch-service', () => {
             newRepos.billingInvoices.findOne.resolves(billingInvoice);
             await batchService.deleteBatchInvoice(batch, billingInvoiceId);
           });
-
-          test('the original invoice rebilling state is updated', () => {
-            expect(invoiceService.updateInvoice.calledWith(originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null }))
-              .to.be.true();
-          });
+          // test('the original invoice rebilling state is updated', () => {
+          //   expect(invoiceService.updateInvoice.calledWith(originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null }))
+          //     .to.be.true();
+          // });
         });
       });
 
