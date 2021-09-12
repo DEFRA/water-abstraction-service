@@ -366,28 +366,33 @@ const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = n
   if (!invoice) {
     throw new NotFoundError(`Invoice ${invoiceId} not found`);
   }
+  let multipleRebills = true;
+  let originalInvoice = null;
+  if (originalBillingInvoiceId && rebillInvoiceId) {
+    // in case of cancelling reissue: find original invoice info
+    originalInvoice = await newRepos.billingInvoices.findOne(invoice.originalBillingInvoiceId);
+    originalBillingInvoiceId = originalInvoice.originalBillingInvoiceId;
+    if (originalInvoice.billingInvoiceId === originalBillingInvoiceId) {
+      multipleRebills = false;
+    }
+  } else {
+    // Not a cancel of reissue?
+    originalBillingInvoiceId = invoice.originalBillingInvoiceId;
+    // if the below is true then the original invoice has not been rebilled twice
+    if (invoiceId === originalBillingInvoiceId) {
+      multipleRebills = false;
+    }
+  }
+
   // Set batch status back to 'processing'
   await setStatus(batch.id, Batch.BATCH_STATUS.processing);
   try {
     if (invoice.rebillingState !== null) {
-      let multipleRebills = true;
-      if (originalBillingInvoiceId && rebillInvoiceId) {
-        // in case of cancelling reissue: find original invoice info
-        const originalInvoice = await newRepos.billingInvoices.findOne(invoice.originalBillingInvoiceId);
-        if (originalInvoice.billingInvoiceId === originalInvoice.originalBillingInvoiceId) {
-          multipleRebills = false;
-        }
-      } else {
-        // if the below is true then the original invoice has not been rebilled twice
-        if (invoiceId === invoice.originalBillingInvoiceId) {
-          multipleRebills = false;
-        }
-      }
       if (multipleRebills) {
         // set rebillingstate for a rebill of a rebill
-        await invoiceService.updateInvoice(invoice.originalBillingInvoiceId, { isFlaggedForRebilling: false, rebillingState: 'rebilled' });
+        await invoiceService.updateInvoice(originalBillingInvoiceId, { isFlaggedForRebilling: false, rebillingState: 'rebilled' });
       } else {
-        await invoiceService.updateInvoice(invoice.originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
+        await invoiceService.updateInvoice(originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
       }
 
       // delete the rebilling invoices
