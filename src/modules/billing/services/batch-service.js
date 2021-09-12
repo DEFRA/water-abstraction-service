@@ -368,21 +368,22 @@ const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = n
   }
   let multipleRebills = true;
   let originalInvoice = null;
+  let billingInvoiceId = null;
 
   // Cancelling reissue: find original invoice info
   if (rebillInvoiceId) {
     originalInvoice = await newRepos.billingInvoices.findOne(originalBillingInvoiceId);
     originalBillingInvoiceId = originalInvoice.originalBillingInvoiceId;
-    if (originalInvoice.billingInvoiceId === originalBillingInvoiceId) {
-      multipleRebills = false;
-    }
+    billingInvoiceId = originalInvoice.billingInvoiceId;
   } else {
     // Not a cancel of reissue?
     originalBillingInvoiceId = invoice.originalBillingInvoiceId;
-    // if the below is true then the original invoice has not been rebilled twice
-    if (invoiceId === originalBillingInvoiceId) {
-      multipleRebills = false;
-    }
+    billingInvoiceId = invoiceId;
+  }
+
+  // if the below is true then the original invoice has not been rebilled twice
+  if (billingInvoiceId === originalBillingInvoiceId) {
+    multipleRebills = false;
   }
 
   // set rebillingstate for a rebill of a rebill depending on flag
