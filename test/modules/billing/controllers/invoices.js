@@ -25,7 +25,6 @@ experiment('modules/billing/controllers/invoices', () => {
   beforeEach(() => {
     sandbox.stub(invoiceService, 'setIsFlaggedForRebilling');
     sandbox.stub(invoiceService, 'resetIsFlaggedForRebilling');
-    sandbox.stub(invoiceService, 'resetIsFlaggedForRebillingByInvoiceId');
   });
 
   afterEach(() => sandbox.restore());

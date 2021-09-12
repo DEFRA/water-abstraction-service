@@ -118,9 +118,6 @@ const findByIsFlaggedForRebillingAndRegion = regionId =>
 const resetIsFlaggedForRebilling = batchId =>
   raw.multiRow(queries.resetIsFlaggedForRebilling, { batchId });
 
-const resetIsFlaggedForRebillingByInvoiceId = invoiceId =>
-  raw.multiRow(queries.resetIsFlaggedForRebillingByInvoiceId, { invoiceId });
-
 /**
  * Deletes rebilled invoices by originalInvoiceId
  * @param {String} originalBillingInvoiceId
@@ -142,5 +139,4 @@ exports.update = update;
 exports.findAllForInvoiceAccount = findAllForInvoiceAccount;
 exports.findByIsFlaggedForRebillingAndRegion = findByIsFlaggedForRebillingAndRegion;
 exports.resetIsFlaggedForRebilling = resetIsFlaggedForRebilling;
-exports.resetIsFlaggedForRebillingByInvoiceId = resetIsFlaggedForRebillingByInvoiceId;
 exports.create = create;

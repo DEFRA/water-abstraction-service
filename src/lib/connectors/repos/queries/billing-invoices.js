@@ -47,9 +47,3 @@ where
   and t2.original_billing_invoice_id is not null
 returning *;
 `;
-
-exports.resetIsFlaggedForRebillingByInvoiceId = `
-update water.billing_invoices set is_flagged_for_rebilling=false where 
-billing_invoice_id=:invoiceId 
-returning *;
-`;
