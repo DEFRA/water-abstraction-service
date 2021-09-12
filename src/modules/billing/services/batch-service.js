@@ -368,9 +368,10 @@ const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = n
   }
   let multipleRebills = true;
   let originalInvoice = null;
-  if (originalBillingInvoiceId && rebillInvoiceId) {
-    // in case of cancelling reissue: find original invoice info
-    originalInvoice = await newRepos.billingInvoices.findOne(invoice.originalBillingInvoiceId);
+
+  // Cancelling reissue: find original invoice info
+  if (rebillInvoiceId) {
+    originalInvoice = await newRepos.billingInvoices.findOne(originalBillingInvoiceId);
     originalBillingInvoiceId = originalInvoice.originalBillingInvoiceId;
     if (originalInvoice.billingInvoiceId === originalBillingInvoiceId) {
       multipleRebills = false;
@@ -384,16 +385,20 @@ const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = n
     }
   }
 
+  // set rebillingstate for a rebill of a rebill depending on flag
+  const changes = multipleRebills === true
+    ? { isFlaggedForRebilling: false, rebillingState: 'rebilled' }
+    : {
+      isFlaggedForRebilling: false,
+      originalBillingInvoiceId: null,
+      rebillingState: null
+    };
+
   // Set batch status back to 'processing'
   await setStatus(batch.id, Batch.BATCH_STATUS.processing);
   try {
     if (invoice.rebillingState !== null) {
-      if (multipleRebills) {
-        // set rebillingstate for a rebill of a rebill
-        await invoiceService.updateInvoice(originalBillingInvoiceId, { isFlaggedForRebilling: false, rebillingState: 'rebilled' });
-      } else {
-        await invoiceService.updateInvoice(originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null });
-      }
+      await invoiceService.updateInvoice(originalBillingInvoiceId, changes);
 
       // delete the rebilling invoices
       const invoicesToDeleteUnfiltered = [invoice, ...invoice.linkedBillingInvoices];
