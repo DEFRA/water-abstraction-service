@@ -661,7 +661,8 @@ experiment('modules/billing/controller', () => {
         },
         queueManager: {
           add: sandbox.stub()
-        }
+        },
+        query: {}
       };
     });
 

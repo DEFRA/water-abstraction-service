@@ -359,10 +359,8 @@ const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = n
   if (!batch.canDeleteInvoices()) {
     throw new BatchStatusError(`Cannot delete invoice from batch when status is ${batch.status}`);
   }
-
   // Load invoice
   const invoice = await newRepos.billingInvoices.findOne(invoiceId);
-
   if (!invoice) {
     throw new NotFoundError(`Invoice ${invoiceId} not found`);
   }

@@ -66,38 +66,4 @@ experiment('modules/billing/controllers/invoices', () => {
       });
     });
   });
-  experiment('.resetIsFlaggedForRebilling by batchId', () => {
-    const request = {
-      params: { batchId }
-    };
-    let result;
-    experiment('happy reset', () => {
-      beforeEach(async () => {
-        invoiceService.resetIsFlaggedForRebilling.resolves(new Invoice(invoiceId));
-        result = await controller.resetIsFlaggedForRebilling(request);
-      });
-
-      test('calls the service method', () => {
-        expect(invoiceService.resetIsFlaggedForRebilling.calledWith(
-          batchId
-        )).to.be.true();
-      });
-
-      test('resolves with an invoice', () => {
-        expect(result).to.be.an.an.instanceOf(Invoice);
-      });
-    });
-
-    experiment('when there is a service error', () => {
-      beforeEach(async () => {
-        invoiceService.resetIsFlaggedForRebilling.rejects(new NotFoundError());
-        result = await controller.resetIsFlaggedForRebilling(request);
-      });
-
-      test('returns Boom error with the expected message', () => {
-        expect(result.isBoom).to.be.true();
-        expect(result.output.statusCode).to.equal(404);
-      });
-    });
-  });
 });
