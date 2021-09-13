@@ -20,7 +20,6 @@ const { NotFoundError } = require('../../../../src/lib/errors');
 
 experiment('modules/billing/controllers/invoices', () => {
   const invoiceId = uuid();
-  const batchId = uuid();
 
   beforeEach(() => {
     sandbox.stub(invoiceService, 'setIsFlaggedForRebilling');
