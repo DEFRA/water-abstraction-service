@@ -14,15 +14,4 @@ const patchInvoice = async request => {
   }
 };
 
-const resetIsFlaggedForRebilling = async request => {
-  try {
-    const { batchId } = request.params;
-
-    return await invoiceService.resetIsFlaggedForRebilling(batchId);
-  } catch (err) {
-    return mapErrorResponse(err);
-  }
-};
-
-exports.resetIsFlaggedForRebilling = resetIsFlaggedForRebilling;
 exports.patchInvoice = patchInvoice;

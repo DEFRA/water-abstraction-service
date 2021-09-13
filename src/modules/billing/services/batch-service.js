@@ -366,51 +366,34 @@ const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = n
   if (!invoice) {
     throw new NotFoundError(`Invoice ${invoiceId} not found`);
   }
-  let multipleRebills = true;
-  let originalInvoice = null;
-  let billingInvoiceId = null;
-
-  // Cancelling reissue: find original invoice info
-  if (rebillInvoiceId) {
-    originalInvoice = await newRepos.billingInvoices.findOne(originalBillingInvoiceId);
-    originalBillingInvoiceId = originalInvoice.originalBillingInvoiceId;
-    billingInvoiceId = originalInvoice.billingInvoiceId;
-  } else {
-    // Not a cancel of reissue?
-    originalBillingInvoiceId = invoice.originalBillingInvoiceId;
-    billingInvoiceId = invoiceId;
-  }
-
-  // if the below is true then the original invoice has not been rebilled twice
-  if (billingInvoiceId === originalBillingInvoiceId) {
-    multipleRebills = false;
-  }
-
-  // set rebillingstate for a rebill of a rebill depending on flag
-  const changes = multipleRebills === true
-    ? { isFlaggedForRebilling: false, rebillingState: 'rebilled' }
-    : {
-      isFlaggedForRebilling: false,
-      originalBillingInvoiceId: null,
-      rebillingState: null
-    };
 
   // Set batch status back to 'processing'
   await setStatus(batch.id, Batch.BATCH_STATUS.processing);
   try {
-    if (invoice.rebillingState !== null) {
+    if (rebillInvoiceId && originalBillingInvoiceId) {
+      // find the original Invoice and rebilling invoice (reversal of resissue)
+      const originalInvoice = invoice.originalBillingInvoice;
+      const rebillingInvoice = await newRepos.billingInvoices.findOne(rebillInvoiceId);
+
+      if (!rebillingInvoice) {
+        throw new NotFoundError(`Rebilling Invoice ${rebillInvoiceId} not found`);
+      } else if (!originalInvoice) {
+        throw new NotFoundError(`Rebilling Invoice ${originalBillingInvoiceId} not found`);
+      }
+
+      const changes = originalInvoice.originalBillingInvoiceId === originalBillingInvoiceId
+        ? {
+          isFlaggedForRebilling: false,
+          originalBillingInvoiceId: null,
+          rebillingState: null
+        }
+        : { isFlaggedForRebilling: false, rebillingState: 'rebill' };
+      // reset the original invoice rebilling status and set isFlaggedForRebilling to false.
       await invoiceService.updateInvoice(originalBillingInvoiceId, changes);
-
-      // delete the rebilling invoices
-      const invoicesToDeleteUnfiltered = [invoice, ...invoice.linkedBillingInvoices];
-      const invoicesToDelete = invoicesToDeleteUnfiltered.filter(inv => inv.billingInvoiceId !== originalBillingInvoiceId && inv.billingInvoiceId !== inv.originalBillingInvoiceId);
-
-      // Unique billingInvoiceId
-      const invoicesToDeleteUnique = [];
-      invoicesToDelete.forEach(x => invoicesToDeleteUnique.filter(a => a.billingInvoiceId === x.billingInvoiceId).length > 0 ? null : invoicesToDeleteUnique.push(x));
-      await bluebird.mapSeries(invoicesToDeleteUnique, invoiceRow => deleteInvoicesWithRelatedData(batch, invoiceRow));
+      // delete the rebill and reversal invoices
+      await bluebird.mapSeries([rebillingInvoice, invoice], invoiceRow => deleteInvoicesWithRelatedData(batch, invoiceRow));
     } else {
-      // delete the normal invoiuce
+      // delete the normal invoice
       await deleteInvoicesWithRelatedData(batch, invoice);
       // update the include in supplementary billing status
       const invoiceModel = mappers.invoice.dbToModel(invoice);
