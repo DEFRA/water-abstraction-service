@@ -23,7 +23,6 @@ experiment('modules/billing/controllers/invoices', () => {
 
   beforeEach(() => {
     sandbox.stub(invoiceService, 'setIsFlaggedForRebilling');
-    sandbox.stub(invoiceService, 'resetIsFlaggedForRebilling');
   });
 
   afterEach(() => sandbox.restore());

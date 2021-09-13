@@ -1287,6 +1287,26 @@ experiment('modules/billing/services/batch-service', () => {
                 rebillingState: 'rebill'
               });
             });
+
+            test('deletes associated charge version years from batch', async () => {
+              expect(newRepos.billingBatchChargeVersionYears.deleteByInvoiceId.callCount).to.equal(3);
+            });
+
+            test('deletes associated billing volumes from batch', async () => {
+              expect(newRepos.billingVolumes.deleteByBatchAndInvoiceId.callCount).to.equal(3);
+            });
+
+            test('deletes associated transactions from batch', async () => {
+              expect(newRepos.billingTransactions.deleteByInvoiceId.callCount).to.equal(3);
+            });
+
+            test('deletes associated invoice licences from batch', async () => {
+              expect(newRepos.billingInvoiceLicences.deleteByInvoiceId.callCount).to.equal(3);
+            });
+
+            test('deletes invoice from batch', async () => {
+              expect(newRepos.billingInvoices.delete.callCount).to.equal(3);
+            });
           });
         });
       });
