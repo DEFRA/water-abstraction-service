@@ -1157,8 +1157,16 @@ experiment('modules/billing/services/batch-service', () => {
         expect(err instanceof NotFoundError).to.be.true();
       });
 
+      test('throws a NotFoundError if the original invoice is not found', async () => {
+        const originalBillingInvoiceId = uuid();
+        const rebillInvoiceId = uuid();
+        const func = () => batchService.deleteBatchInvoice(batch, invoiceId, originalBillingInvoiceId, rebillInvoiceId);
+        const err = await expect(func()).to.reject();
+        expect(err instanceof NotFoundError).to.be.true();
+      });
+
       experiment('when the invoice is found and there are no errors', () => {
-        let billingInvoiceId, billingInvoiceExternalId, invoiceAccountId, licenceId, billingInvoice, originalBillingInvoiceId;
+        let billingInvoiceId, billingInvoiceExternalId, invoiceAccountId, licenceId, billingInvoice, originalBillingInvoiceId, rebillInvoiceId;
 
         beforeEach(async () => {
           billingInvoiceId = uuid();
@@ -1166,6 +1174,7 @@ experiment('modules/billing/services/batch-service', () => {
           invoiceAccountId = uuid();
           licenceId = uuid();
           originalBillingInvoiceId = uuid();
+          rebillInvoiceId = uuid();
 
           billingInvoice = {
             billingInvoiceId,
@@ -1248,16 +1257,37 @@ experiment('modules/billing/services/batch-service', () => {
         });
 
         experiment('when the invoice is a rebilling invoice', () => {
-          beforeEach(async () => {
-            billingInvoice.rebillingState = 'rebill';
-            billingInvoice.originalBillingInvoiceId = originalBillingInvoiceId;
-            newRepos.billingInvoices.findOne.resolves(billingInvoice);
-            await batchService.deleteBatchInvoice(batch, billingInvoiceId);
+          experiment('when the originalInvoiceId = originalInvoice.id then', () => {
+            beforeEach(async () => {
+              billingInvoice.originalBillingInvoice = { originalBillingInvoiceId: originalBillingInvoiceId };
+              newRepos.billingInvoices.findOne.resolves(billingInvoice);
+              await batchService.deleteBatchInvoice(batch, billingInvoiceId, originalBillingInvoiceId, rebillInvoiceId);
+            });
+            test('the rebilling state of the original invoice is updated correctly', () => {
+              const args = invoiceService.updateInvoice.lastCall.args;
+              expect(args[0]).to.equal(originalBillingInvoiceId);
+              expect(args[1]).to.equal({
+                isFlaggedForRebilling: false,
+                originalBillingInvoiceId: null,
+                rebillingState: null
+              });
+            });
           });
-          // test('the original invoice rebilling state is updated', () => {
-          //   expect(invoiceService.updateInvoice.calledWith(originalBillingInvoiceId, { isFlaggedForRebilling: false, originalBillingInvoiceId: null, rebillingState: null }))
-          //     .to.be.true();
-          // });
+          experiment('when the originalInvoiceId != originalInvoice.id then', () => {
+            beforeEach(async () => {
+              billingInvoice.originalBillingInvoice = { originalBillingInvoiceId: uuid() };
+              newRepos.billingInvoices.findOne.resolves(billingInvoice);
+              await batchService.deleteBatchInvoice(batch, billingInvoiceId, originalBillingInvoiceId, rebillInvoiceId);
+            });
+            test('the rebilling state of the original invoice is updated correctly', () => {
+              const args = invoiceService.updateInvoice.lastCall.args;
+              expect(args[0]).to.equal(originalBillingInvoiceId);
+              expect(args[1]).to.equal({
+                isFlaggedForRebilling: false,
+                rebillingState: 'rebill'
+              });
+            });
+          });
         });
       });
 

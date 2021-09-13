@@ -306,7 +306,13 @@ experiment('modules/billing/routes', () => {
       };
     });
 
-    test('returns the 200 for a valid payload', async () => {
+    test('returns the 200 for a valid payload without rebilling invoice id', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns the 200 for a valid payload with rebilling invoice id', async () => {
+      request.url = request.url + `?originalInvoiceId=${uuid()}&rebillInvoiceId=${uuid()}`;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(200);
     });
@@ -319,6 +325,18 @@ experiment('modules/billing/routes', () => {
 
     test('returns a 400 if the invoice id is not a uuid', async () => {
       request.url = request.url.replace(validInvoiceId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the original invoice id is not a uuid', async () => {
+      request.url = request.url + '?originalInvoiceId=123';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the original invoice id is not a uuid', async () => {
+      request.url = request.url + '?rebillInvoiceId=123';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
