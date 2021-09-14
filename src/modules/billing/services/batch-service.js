@@ -376,7 +376,7 @@ const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = n
       if (!rebillingInvoice) {
         throw new NotFoundError(`Rebilling Invoice ${rebillInvoiceId} not found`);
       } else if (!originalInvoice) {
-        throw new NotFoundError(`Rebilling Invoice ${originalBillingInvoiceId} not found`);
+        throw new NotFoundError(`Original Invoice ${originalBillingInvoiceId} not found`);
       }
 
       const changes = originalInvoice.originalBillingInvoiceId === originalBillingInvoiceId

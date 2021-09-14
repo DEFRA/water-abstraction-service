@@ -1158,23 +1158,65 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('throws a NotFoundError if the original invoice is not found', async () => {
-        const originalBillingInvoiceId = uuid();
+        const originalBillingInvoiceId = 'dfedb43e-379a-427e-97b9-41f5185fdbb6';
         const rebillInvoiceId = uuid();
+        newRepos.billingInvoices.findOne.resolves({ billingInvoiceId: uuid(), originalBillingInvoice: null });
         const func = () => batchService.deleteBatchInvoice(batch, invoiceId, originalBillingInvoiceId, rebillInvoiceId);
         const err = await expect(func()).to.reject();
+        expect(err.message).to.equal('Original Invoice dfedb43e-379a-427e-97b9-41f5185fdbb6 not found');
+        expect(err instanceof NotFoundError).to.be.true();
+      });
+
+      test('throws a NotFoundError if the rebill invoice is not found', async () => {
+        const originalBillingInvoiceId = uuid();
+        const rebillInvoiceId = 'dfedb43e-379a-427e-97b9-41f5185fdec6';
+        newRepos.billingInvoices.findOne.onCall(0).resolves({ billingInvoiceId: uuid(), originalBillingInvoice: { billingInvoiceId: uuid() } });
+        const func = () => batchService.deleteBatchInvoice(batch, invoiceId, originalBillingInvoiceId, rebillInvoiceId);
+        const err = await expect(func()).to.reject();
+        expect(err.message).to.equal('Rebilling Invoice dfedb43e-379a-427e-97b9-41f5185fdec6 not found');
         expect(err instanceof NotFoundError).to.be.true();
       });
 
       experiment('when the invoice is found and there are no errors', () => {
-        let billingInvoiceId, billingInvoiceExternalId, invoiceAccountId, licenceId, billingInvoice, originalBillingInvoiceId, rebillInvoiceId;
+        let billingInvoiceId, billingInvoiceExternalId, invoiceAccountId, licenceId, billingInvoice, originalBillingInvoiceId, rebillInvoice, rebillInvoiceId, originalInvoice;
 
         beforeEach(async () => {
-          billingInvoiceId = uuid();
+          billingInvoiceId = '601b6f34-5d91-4bd7-b2f9-65a7ba3bc6aa';
           billingInvoiceExternalId = uuid();
           invoiceAccountId = uuid();
           licenceId = uuid();
-          originalBillingInvoiceId = uuid();
-          rebillInvoiceId = uuid();
+          originalBillingInvoiceId = '601b6f34-5d91-4bd7-b2f9-65a7ba3bc6bb';
+          rebillInvoiceId = '601b6f34-5d91-4bd7-b2f9-65a7ba3bc6cc';
+
+          originalInvoice = {
+            billingInvoiceId: originalBillingInvoiceId,
+            invoiceAccountId,
+            invoiceAccountNumber: 'A12345678A',
+            externalId: billingInvoiceExternalId,
+            financialYearEnding: 2020,
+            billingBatch: {
+              externalId: batch.externalId
+            },
+            linkedBillingInvoices: [],
+            rebillingState: 'rebilled',
+            originalBillingInvoiceId: originalBillingInvoiceId,
+            originalBillingInvoice: null
+          };
+
+          rebillInvoice = {
+            billingInvoiceId: rebillInvoiceId,
+            invoiceAccountId,
+            invoiceAccountNumber: 'A12345678A',
+            externalId: billingInvoiceExternalId,
+            financialYearEnding: 2020,
+            billingBatch: {
+              externalId: batch.externalId
+            },
+            linkedBillingInvoices: [],
+            rebillingState: 'reversal',
+            originalBillingInvoiceId: originalBillingInvoiceId,
+            originalBillingInvoice: null
+          };
 
           billingInvoice = {
             billingInvoiceId,
@@ -1210,12 +1252,13 @@ experiment('modules/billing/services/batch-service', () => {
                 }
               }
             ],
-            linkedBillingInvoices: [],
-            rebillingState: null,
-            originalBillingInvoiceId: null
+            linkedBillingInvoices: [originalInvoice, rebillInvoice],
+            rebillingState: 'rebill',
+            originalBillingInvoiceId: originalBillingInvoiceId,
+            originalBillingInvoice: originalInvoice
           };
+
           newRepos.billingInvoices.findOne.resolves(billingInvoice);
-          newRepos.billingTransactions.countByBatchId.resolves(0);
           await batchService.deleteBatchInvoice(batch, billingInvoiceId);
         });
 
@@ -1259,10 +1302,9 @@ experiment('modules/billing/services/batch-service', () => {
         experiment('when the invoice is a rebilling invoice', () => {
           experiment('when the originalInvoiceId = originalInvoice.id then', () => {
             beforeEach(async () => {
-              billingInvoice.originalBillingInvoice = { originalBillingInvoiceId: originalBillingInvoiceId };
-              newRepos.billingInvoices.findOne.resolves(billingInvoice);
               await batchService.deleteBatchInvoice(batch, billingInvoiceId, originalBillingInvoiceId, rebillInvoiceId);
             });
+
             test('the rebilling state of the original invoice is updated correctly', () => {
               const args = invoiceService.updateInvoice.lastCall.args;
               expect(args[0]).to.equal(originalBillingInvoiceId);
@@ -1275,11 +1317,16 @@ experiment('modules/billing/services/batch-service', () => {
           });
           experiment('when the originalInvoiceId != originalInvoice.id then', () => {
             beforeEach(async () => {
-              billingInvoice.originalBillingInvoice = { originalBillingInvoiceId: uuid() };
-              newRepos.billingInvoices.findOne.resolves(billingInvoice);
               await batchService.deleteBatchInvoice(batch, billingInvoiceId, originalBillingInvoiceId, rebillInvoiceId);
             });
-            test('the rebilling state of the original invoice is updated correctly', () => {
+            test('the rebilling state of the original invoice is updated correctly', async () => {
+              const id = uuid();
+              billingInvoice.originalBillingInvoice.originalBillingInvoiceId = id;
+              billingInvoice.linkedBillingInvoices[0].originalBillingInvoiceId = id;
+              newRepos.billingInvoices.findOne.onCall(0).resolves(billingInvoice);
+              newRepos.billingInvoices.findOne.onCall(1).resolves(billingInvoice);
+              newRepos.billingInvoices.findOne.onCall(2).resolves(rebillInvoice);
+              await batchService.deleteBatchInvoice(batch, billingInvoiceId, originalBillingInvoiceId, rebillInvoiceId);
               const args = invoiceService.updateInvoice.lastCall.args;
               expect(args[0]).to.equal(originalBillingInvoiceId);
               expect(args[1]).to.equal({
