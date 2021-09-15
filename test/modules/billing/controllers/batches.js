@@ -661,6 +661,10 @@ experiment('modules/billing/controller', () => {
         },
         queueManager: {
           add: sandbox.stub()
+        },
+        query: {
+          originalInvoiceId: uuid(),
+          rebillInvoiceId: uuid()
         }
       };
     });
@@ -672,7 +676,7 @@ experiment('modules/billing/controller', () => {
 
       test('calls the service method with the correct batch and invoice ID', async () => {
         expect(batchService.deleteBatchInvoice.calledWith(
-          request.pre.batch, request.params.invoiceId
+          request.pre.batch, request.params.invoiceId, request.query.originalInvoiceId, request.query.rebillInvoiceId
         )).to.be.true();
       });
 
