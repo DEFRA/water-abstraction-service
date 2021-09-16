@@ -347,4 +347,20 @@ experiment('src/lib/services/licences', () => {
       )).to.be.true();
     });
   });
+
+  experiment('.markLicenceForSupplementaryBilling', () => {
+    const licenceId = uuid();
+    beforeEach(async () => {
+      repos.licences.updateIncludeLicenceInSupplementaryBilling.resolves();
+      await licencesService.markLicenceForSupplementaryBilling(licenceId);
+    });
+
+    test('callsrepos.licences.markLicenceForSupplementaryBilling with the supplied licence Id', () => {
+      expect(repos.licences.updateIncludeLicenceInSupplementaryBilling.calledWith(
+        licenceId,
+        'no',
+        'yes'
+      ));
+    });
+  });
 });

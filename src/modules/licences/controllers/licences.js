@@ -72,6 +72,14 @@ const getLicenceVersionPurposeConditionsByLicenceId = async request => {
   return result || Boom.notFound(`Licence ${licenceId} not found`);
 };
 
+const postMarkLicenceForSupplementaryBilling = async request => {
+  const { licenceId } = request.params;
+
+  const result = await licencesService.markLicenceForSupplementaryBilling(licenceId);
+
+  return result || Boom.notFound(`Licence ${licenceId} not found`);
+};
+
 exports.getLicence = getLicence;
 exports.getLicenceVersions = getLicenceVersions;
 exports.getLicenceAccountsByRefAndDate = getLicenceAccountsByRefAndDate;
@@ -81,3 +89,4 @@ exports.getLicenceReturns = getLicenceReturns;
 exports.getLicenceNotifications = getLicenceNotifications;
 exports.getLicenceByLicenceNumber = getLicenceByLicenceNumber;
 exports.getLicenceVersionPurposeConditionsByLicenceId = getLicenceVersionPurposeConditionsByLicenceId;
+exports.postMarkLicenceForSupplementaryBilling = postMarkLicenceForSupplementaryBilling;

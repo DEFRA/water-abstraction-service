@@ -32,8 +32,6 @@
 - ref: $document
   model: Document
   fields:
-    versionNumber: 1
-    status: current
     startDate: '2008-04-01'
     endDate: null
     regime: water
