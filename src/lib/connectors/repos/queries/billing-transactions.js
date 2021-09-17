@@ -21,6 +21,8 @@ join (
     and i.is_de_minimis=false
 ) t on t.licence_id=l.licence_id and t.financial_year_ending>= b.from_financial_year_ending and t.financial_year_ending<=b.to_financial_year_ending
 where b.billing_batch_id=:batchId
+and (t.is_two_part_tariff_supplementary is false or t.charge_element_id  in (select charge_element_id from water.billing_volumes bv where bv.billing_batch_id = :batchId)
+)
 and l.licence_id not in (
   select cvw.licence_id 
   from water.charge_version_workflows cvw
