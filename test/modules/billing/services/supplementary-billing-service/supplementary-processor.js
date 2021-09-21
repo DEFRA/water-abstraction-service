@@ -69,7 +69,7 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
     });
 
     experiment('when there are several historical transactions, some of which sum to net zero', () => {
-      const ids = [uuid(), uuid(), uuid()];
+      const ids = [uuid(), uuid(), uuid(), uuid(), uuid()];
 
       beforeEach(async () => {
         const transactions = [
@@ -84,6 +84,18 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
           createTransaction('historical-batch', ids[2], {
             dateCreated: '2020-04-03 12:00:00',
             isCredit: false
+          }),
+          createTransaction(batchId, ids[3], {
+            dateCreated: '2020-04-03 12:00:00',
+            volume: null,
+            isCredit: false,
+            isTwoPartTariffSupplementary: true
+          }),
+          createTransaction('historical-batch', ids[4], {
+            dateCreated: '2020-04-03 12:00:00',
+            isCredit: false,
+            volume: 0,
+            isTwoPartTariffSupplementary: true
           })
         ];
         result = supplementaryBillingProcessor.processBatch(batchId, transactions);
@@ -93,6 +105,9 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
         expect(findTransactionById(result, ids[0]).action).to.be.null();
         expect(findTransactionById(result, ids[1]).action).to.be.null();
         expect(findTransactionById(result, ids[2]).action).to.equal(actions.reverseTransaction);
+        // these two transactions should cancel each other out
+        expect(findTransactionById(result, ids[3]).action).to.equal(actions.deleteTransaction);
+        expect(findTransactionById(result, ids[4]).action).to.be.null();
       });
     });
   });
