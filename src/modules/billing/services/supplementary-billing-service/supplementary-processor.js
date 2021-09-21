@@ -61,7 +61,7 @@ const getGroupingKey = transaction => {
   // Create a list of keys which will form the grouping key
   const keys = [...commonTransactionKeys];
   transaction.isTwoPartTariffSupplementary
-    ? keys.push('isSummer')
+    ? keys.push('abstractionPeriod')
     : keys.push('authorisedDays', 'volume');
 
   // The 'new licence' flag only affects WRLS transactions so it does not
@@ -102,7 +102,8 @@ const xor = (a, b) => a ? !b : b;
 const mapTransactionGroup = (batchId, transactions) => transactions.reduce((acc, transaction) => {
   const isCurrentBatch = transaction.billingBatchId === batchId;
   const propertyKey = transaction.isTwoPartTariffSupplementary ? 'volume' : 'billableDays';
-  let value = new Decimal(transaction[propertyKey]);
+  const propertyValue = transaction[propertyKey] || 0;
+  let value = new Decimal(propertyValue);
   if (xor(transaction.isCredit, !isCurrentBatch)) {
     value = value.negated();
   }
