@@ -22,6 +22,19 @@ const VALID_USER_ID = Joi.number().integer().required();
 const VALID_NEW_USER_EMAIL = Joi.string().email().lowercase().trim().regex(getEmailRegex());
 
 module.exports = {
+  postCognito: {
+    method: 'POST',
+    path: '/water/1.0/cognito',
+    handler: controller.postCognitoCreate,
+    options: {
+      validate: {
+        payload: Joi.object().keys({
+          email: Joi.string().required(),
+          temporaryPassword: Joi.string().required()
+        })
+      }
+    }
+  },
   getStatus: {
     method: 'GET',
     path: '/water/1.0/user/{id}/status',

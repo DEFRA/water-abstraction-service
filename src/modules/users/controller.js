@@ -10,6 +10,9 @@ const event = require('../../lib/event');
 const { getRolesForPermissionKey } = require('../../lib/roles');
 const { logger } = require('../../logger');
 const licencesService = require('../../lib/services/licences');
+const { CognitoIdentityClient } = require('@aws-sdk/client-cognito-identity');
+const { fromCognitoIdentityPool } = require('@aws-sdk/credential-provider-cognito-identity');
+const { CognitoIdentityProviderClient, AdminCreateUserCommand } = require('@aws-sdk/client-cognito-identity-provider');
 
 const getCallingUser = async callingUserId => {
   const user = await idmConnector.usersClient.findOneById(callingUserId);
@@ -228,6 +231,56 @@ const getStatus = async (request, h) => {
   };
 };
 
+const postCognitoCreate = async (request, h) => {
+  // ENVIRONMENT VARIABLES:
+  // process.env.JWT_COGNITO_HOST=*
+  // process.env.JWT_COGNITO_USERPOOLID=
+  // process.env.JWT_COGNITO_CLIENTID=
+  // process.env.JWT_COGNITO_REGION=
+  // process.env.JWT_COGNITO_IDENTITYPOOLID=*
+  // process.env.JWT_COGNITO_IDTOKEN=
+  // process.env.JWT_COGNITO_ACCESSTOKEN=
+  const { email, temporaryPassword } = request.payload;
+  const REGION = process.env.JWT_COGNITO_REGION;
+  const config = {
+    region: REGION,
+    credentials: fromCognitoIdentityPool({
+      client: new CognitoIdentityClient({ region: REGION }),
+      identityPoolId: process.env.JWT_COGNITO_IDENTITYPOOLID,
+      AccessKeyId: process.env.JWT_COGNITO_ACCESSTOKEN
+    })
+  };
+  const input = {
+    Username: email,
+    TemporaryPassword: temporaryPassword,
+    UserPoolId: process.env.JWT_COGNITO_USERPOOLID,
+    UserStatus: 'CONFIRMED',
+    DesiredDeliveryMediums: ['EMAIL'],
+    ForceAliasCreation: false,
+    UserAttributes: [
+      {
+        Name: 'email_verified',
+        Value: 'true'
+      },
+      {
+        Name: 'email',
+        Value: email
+      }
+    ]
+  };
+  const client = new CognitoIdentityProviderClient(config);
+  const command = new AdminCreateUserCommand(input);
+  const response = await client.send(command);
+
+  return {
+    data: {
+      result: 'success',
+      response: response
+    },
+    error: null
+  };
+};
+
 const postUserInternal = async (request, h) => {
   const { callingUserId, newUserEmail, permissionsKey } = request.payload;
 
@@ -317,6 +370,7 @@ const deleteUserInternal = async (request, h) => {
 };
 
 exports.getStatus = getStatus;
+exports.postCognitoCreate = postCognitoCreate;
 exports.postUserInternal = postUserInternal;
 exports.patchUserInternal = patchUserInternal;
 exports.deleteUserInternal = deleteUserInternal;
