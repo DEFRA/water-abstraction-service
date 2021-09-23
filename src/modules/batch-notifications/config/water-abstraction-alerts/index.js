@@ -16,11 +16,12 @@ const schema = Joi.object().keys({
         alertType: Joi.string(),
         thresholdValue: Joi.string(),
         thresholdUnit: Joi.string(),
-        licenceVersionPurposeConditionId: Joi.string().uuid(),
+        licenceVersionPurposeConditionId: Joi.any(),
         licenceRef: Joi.string(),
         label: Joi.string()
       })
-    ))
+    )
+  )
 });
 
 module.exports = [{

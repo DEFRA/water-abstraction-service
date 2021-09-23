@@ -43,6 +43,8 @@ const updateScheduledNotificationWithNotifyCallback = (messageId, status) => rep
  */
 const getByEventId = async eventId => {
   const data = await repo.findByEventId(eventId);
+  console.log('below');
+  console.log(data);
   return data.map(mapper.dbToModel);
 };
 
