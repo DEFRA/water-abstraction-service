@@ -46,6 +46,9 @@
     "sinon": "^7.5.0"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity": "^3.33.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.33.0",
+    "@aws-sdk/credential-provider-cognito-identity": "^3.33.0",
     "@envage/hapi-pg-rest-api": "^7.0.0",
     "@envage/water-abstraction-helpers": "^4.5.2",
     "@hapi/boom": "^7.4.11",
