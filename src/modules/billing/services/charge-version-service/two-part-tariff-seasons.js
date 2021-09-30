@@ -129,9 +129,8 @@ const getTwoPartTariffSeasonsForChargeVersion = async (chargeVersionRow, existin
   if (isNALDEraTwoPartTariffDate(chargeVersionRow.startDate)) {
     seasons.push(await getNALDTwoPartTariffSeasons(chargeVersionRow));
   }
-  if (isWRLSEraTwoPartTariffDate(chargeVersionRow.startDate)) {
-    seasons.push(await getWRLSTwoPartTariffSeasons(chargeVersionRow, existingTPTBatches));
-  }
+  // always add WRLS seasons because there might be a new charge version with a historic start date
+  seasons.push(await getWRLSTwoPartTariffSeasons(chargeVersionRow, existingTPTBatches));
 
   return {
     [RETURN_SEASONS.summer]: seasons.some(isSummerFlagSet),
