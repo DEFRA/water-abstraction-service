@@ -24,9 +24,6 @@ const createTwoPartTariffBatches = (isSummer = false, isWinterAllYear = false) =
 const isNALDEraTwoPartTariffDate = date =>
   helpers.getFinancialYear(date) <= 2021;
 
-const isWRLSEraTwoPartTariffDate = date =>
-  helpers.getFinancialYear(date) >= 2021;
-
 const isApprovedNaldBillingVolume = billingVolume =>
   billingVolume.source === BATCH_SOURCE.nald && billingVolume.isApproved;
 
