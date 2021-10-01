@@ -61,7 +61,7 @@ const getGroupingKey = transaction => {
   // Create a list of keys which will form the grouping key
   const keys = [...commonTransactionKeys];
   transaction.isTwoPartTariffSupplementary
-    ? keys.push('abstractionPeriod')
+    ? keys.push('isSummer')
     : keys.push('authorisedDays', 'volume');
 
   // The 'new licence' flag only affects WRLS transactions so it does not
