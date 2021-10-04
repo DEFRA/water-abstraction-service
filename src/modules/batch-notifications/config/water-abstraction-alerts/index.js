@@ -3,6 +3,7 @@ const { getRecipients } = require('./lib/get-recipients');
 const eventHelpers = require('../../lib/event-helpers');
 
 const schema = Joi.object().keys({
+  sendingAlertType: Joi.string().allow('reduce', 'resume', 'warning', 'stop'),
   linkages: Joi.array().items(
     Joi.array().items(
       Joi.object().keys({

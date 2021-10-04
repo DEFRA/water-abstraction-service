@@ -3,6 +3,9 @@ const { logger } = require('../../../../../logger');
 
 const ScheduledNotification = require('../../../../../lib/models/scheduled-notification');
 const crmV2Connector = require('../../../../../lib/connectors/crm-v2');
+const gaugingStationConnector = require('../../../../../lib/connectors/repos/gauging-stations');
+const licenceGaugingStationConnector = require('../../../../../lib/connectors/repos/licence-gauging-stations');
+const lvpcConnector = require('../../../../../lib/connectors/repos/licence-version-purpose-conditions');
 const scheduledNotificationService = require('../../../../../lib/services/scheduled-notifications');
 const eventHelpers = require('../../../lib/event-helpers');
 
@@ -13,8 +16,9 @@ const notifyMapper = require('../../../../../lib/mappers/notify');
 
 const getRecipients = async (eventData) => {
   const event = eventData.ev;
+  const issuer = event.issuer;
 
-  const { linkages: linkagesGroupedByLicence } = event.metadata.options;
+  const { linkages: linkagesGroupedByLicence, sendingAlertType } = event.metadata.options;
 
   let recipientCount = 0;
   const licenceNumbers = [];
@@ -25,18 +29,35 @@ const getRecipients = async (eventData) => {
         const document = await crmV2Connector.documents.getDocumentByRefAndDate(linkage.licenceRef, new Date());
         // For now, we will only ever send letters because we haven't yet built the Email management part of WAA.
         // This should be changed as part of implementing WATER-3192
+        // noinspection JSMismatchedCollectionQueryUpdate
         const emailContactsArray = [];
 
         const licenceHolderAddress = document.addressId && await crmV2Connector.addresses.getAddress(document.addressId);
         const licenceHolderCompany = document.companyId && await crmV2Connector.companies.getCompany(document.companyId);
         const licenceContact = document.contactId && await crmV2Connector.contacts.getContact(document.contactId);
 
+        const gaugingStation = await gaugingStationConnector.findOneByLinkageId(linkage.licenceGaugingStationId);
+
+        const source = gaugingStation.riverName;
+
+        const licenceGaugingStationRecord = await licenceGaugingStationConnector.findOneById(linkage.licenceGaugingStationId);
+        const condition = await lvpcConnector.findOneById(licenceGaugingStationRecord.licenceVersionPurposeConditionId);
+
+        const conditionText = condition.notes;
+
         const format = emailContactsArray.length > 0 ? 'email' : 'letter';
-        const messageRefPrefix = format === 'letter' ? 'pdf' : format;
 
         const notification = new ScheduledNotification();
         notification.personalisation = {
           ...linkage,
+          flow_or_level: linkage.restrictionType,
+          monitoring_station_name: linkage.label,
+          issuer_email_address: issuer,
+          threshold_value: linkage.thresholdValue,
+          licence_ref: linkage.licenceRef,
+          threshold_unit: linkage.thresholdUnit,
+          source: source && source.length > 0 ? `* Source of supply: ${source}` : '',
+          condition_text: conditionText && conditionText.length > 0 ? `Effect of restriction: ${conditionText}` : '',
           ...notifyMapper.mapModelsToNotifyAddress({
             company: companyMapper.pojoToModel(licenceHolderCompany),
             address: addressMapper.pojoToModel(licenceHolderAddress),
@@ -44,12 +65,35 @@ const getRecipients = async (eventData) => {
           })
         };
 
-        notification.messageRef = `${messageRefPrefix}.water_abstraction_alert`;
+        // Set the template type
+        if (sendingAlertType === 'stop') {
+          notification.messageRef = 'water_abstraction_alert_stop';
+        } else if (sendingAlertType === 'reduce') {
+          if (linkage.alertType === 'stop_or_reduce') {
+            notification.messageRef = 'water_abstraction_alert_reduce_or_stop';
+          } else {
+            notification.messageRef = 'water_abstraction_alert_reduce';
+          }
+        } else if (sendingAlertType === 'warning') {
+          if (linkage.alertType === 'reduce') {
+            notification.messageRef = 'water_abstraction_alert_reduce_warning';
+          } else if (linkage.alertType === 'stop_or_reduce') {
+            notification.messageRef = 'water_abstraction_alert_reduce_or_stop_warning';
+          } else if (linkage.alertType === 'stop') {
+            notification.messageRef = 'water_abstraction_alert_stop_warning';
+          }
+        } else if (sendingAlertType === 'resume') {
+          notification.messageRef = 'water_abstraction_alert_resume';
+        }
+
         notification.messageType = format;
         notification.eventId = event.id;
         notification.licences = [linkage.licenceRef];
 
         await scheduledNotificationService.createScheduledNotification(notification);
+
+        // Update linkage record
+        await licenceGaugingStationConnector.updateStatus(linkage.licenceGaugingStationId, sendingAlertType);
 
         recipientCount++;
         licenceNumbers.push(linkage.licenceRef);
