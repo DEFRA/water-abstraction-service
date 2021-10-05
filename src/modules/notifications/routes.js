@@ -55,6 +55,21 @@ module.exports = {
     }
   },
 
+  getNotificationMessage: {
+    method: 'GET',
+    path: '/water/1.0/notifications/{id}/message',
+    handler: controller.getNotificationMessage,
+    options: {
+      tags: ['api'],
+      description: 'Gets the message for a specific notification',
+      validate: {
+        params: Joi.object().keys({
+          id: Joi.string().guid().required().example(exampleGuid)
+        })
+      }
+    }
+  },
+
   getNotificationMessages: {
     method: 'GET',
     path: '/water/1.0/notifications/{eventId}/messages',

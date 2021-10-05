@@ -53,6 +53,7 @@ const getRecipients = async (eventData) => {
           flow_or_level: linkage.restrictionType,
           monitoring_station_name: linkage.label,
           issuer_email_address: issuer,
+          alert_type: linkage.alertType,
           threshold_value: linkage.thresholdValue,
           licence_ref: linkage.licenceRef,
           threshold_unit: linkage.thresholdUnit,

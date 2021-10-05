@@ -22,6 +22,8 @@ const scheduledNotificationsService = require('../../../src/lib/services/schedul
 
 const eventId = uuid();
 
+const id = uuid();
+
 const createNotificationEvent = () => new NotificationEvent(eventId).fromHash({
   issuer: 'somebody@example.com',
   type: Event.eventTypes.notification,
@@ -126,6 +128,30 @@ experiment('modules/notifications/controller', () => {
 
     test('resolves with { data: [] } shape', async () => {
       expect(response).to.equal({ data: [] });
+    });
+  });
+
+  experiment('.getNotificationMessage', () => {
+    let request, response;
+
+    beforeEach(async () => {
+      request = {
+        params: {
+          id
+        }
+      };
+      scheduledNotificationsService.getScheduledNotificationById.resolves({ something: 'something' });
+      response = await controller.getNotificationMessage(request);
+    });
+
+    test('calls the service method', async () => {
+      expect(scheduledNotificationsService.getScheduledNotificationById.calledWith(
+        id
+      )).to.be.true();
+    });
+
+    test('resolves with { data: {expectedObject} } shape', async () => {
+      expect(response).to.equal({ data: { something: 'something' } });
     });
   });
 });
