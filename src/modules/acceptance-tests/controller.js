@@ -7,22 +7,26 @@ const tearDownService = require('./lib/tear-down');
 const setLoader = require('../../../integration-tests/billing/services/loader');
 
 const postSetupFromYaml = async (request, h) => {
-  const { key } = request.params;
-  const set = require('../../../integration-tests/billing/fixtures/sets.json');
+  try {
+    const { key } = request.params;
+    const set = require('../../../integration-tests/billing/fixtures/sets.json');
 
-  if (!set[key]) {
-    return Boom.notFound(`Key ${key} did not match any available Yaml sets.`);
+    if (!set[key]) {
+      return Boom.notFound(`Key ${key} did not match any available Yaml sets.`);
+    }
+
+    // Create a set loader
+    const loader = setLoader.createSetLoader();
+    // Load YAML files in series
+    await bluebird.mapSeries(set[key],
+      ({ service, file }) => loader.load(service, file)
+    );
+
+    return h.response().code(204);
+  } catch (e) {
+    console.log(e);
+    throw e;
   }
-
-  // Create a set loader
-  const loader = setLoader.createSetLoader();
-
-  // Load YAML files in series
-  await bluebird.mapSeries(set[key],
-    ({ service, file }) => loader.load(service, file)
-  );
-
-  return h.response().code(204);
 };
 
 const postTearDown = async () => {

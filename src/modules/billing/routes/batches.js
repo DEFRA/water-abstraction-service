@@ -132,6 +132,10 @@ const deleteBatchInvoice = {
       params: Joi.object().keys({
         batchId: Joi.string().uuid().required(),
         invoiceId: Joi.string().uuid().required()
+      }),
+      query: Joi.object().keys({
+        originalInvoiceId: Joi.string().uuid().optional(),
+        rebillInvoiceId: Joi.string().uuid().optional()
       })
     },
     auth: {

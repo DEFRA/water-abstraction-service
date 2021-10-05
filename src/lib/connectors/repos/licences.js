@@ -110,7 +110,6 @@ exports.findOneByLicenceRef = findOneByLicenceRef;
 exports.findOne = findOne;
 exports.findByLicenceRef = findByLicenceRef;
 exports.findByInvoiceAccountId = findByInvoiceAccountId;
-
 exports.update = update;
 exports.updateIncludeLicenceInSupplementaryBilling = updateIncludeLicenceInSupplementaryBilling;
 exports.updateIncludeInSupplementaryBillingStatusForBatch = updateIncludeInSupplementaryBillingStatusForBatch;

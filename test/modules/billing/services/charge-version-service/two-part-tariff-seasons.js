@@ -90,6 +90,7 @@ experiment('modules/billing/services/charge-version-service/two-part-tariff-seas
             isSummer: true,
             isApproved: true
           }]);
+          returnRequirementVersionService.getByLicenceId.resolves([]);
           result = await twoPartTariffSeasons.getTwoPartTariffSeasonsForChargeVersion(chargeVersionRow);
         });
 
@@ -100,7 +101,7 @@ experiment('modules/billing/services/charge-version-service/two-part-tariff-seas
         });
 
         test('return requirememts are not fetched', async () => {
-          expect(returnRequirementVersionService.getByLicenceId.called).to.be.false();
+          expect(returnRequirementVersionService.getByLicenceId.called).to.be.true();
         });
 
         test('resolved with only the summer season flag set', async () => {
@@ -118,6 +119,7 @@ experiment('modules/billing/services/charge-version-service/two-part-tariff-seas
             isSummer: false,
             isApproved: true
           }]);
+          returnRequirementVersionService.getByLicenceId.resolves([]);
           result = await twoPartTariffSeasons.getTwoPartTariffSeasonsForChargeVersion(chargeVersionRow);
         });
 
@@ -128,7 +130,7 @@ experiment('modules/billing/services/charge-version-service/two-part-tariff-seas
         });
 
         test('return requirememts are not fetched', async () => {
-          expect(returnRequirementVersionService.getByLicenceId.called).to.be.false();
+          expect(returnRequirementVersionService.getByLicenceId.called).to.be.true();
         });
 
         test('resolved with only the winter/all year season flag set', async () => {

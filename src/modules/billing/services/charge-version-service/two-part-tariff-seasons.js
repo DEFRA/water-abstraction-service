@@ -24,9 +24,6 @@ const createTwoPartTariffBatches = (isSummer = false, isWinterAllYear = false) =
 const isNALDEraTwoPartTariffDate = date =>
   helpers.getFinancialYear(date) <= 2021;
 
-const isWRLSEraTwoPartTariffDate = date =>
-  helpers.getFinancialYear(date) >= 2021;
-
 const isApprovedNaldBillingVolume = billingVolume =>
   billingVolume.source === BATCH_SOURCE.nald && billingVolume.isApproved;
 
@@ -129,9 +126,8 @@ const getTwoPartTariffSeasonsForChargeVersion = async (chargeVersionRow, existin
   if (isNALDEraTwoPartTariffDate(chargeVersionRow.startDate)) {
     seasons.push(await getNALDTwoPartTariffSeasons(chargeVersionRow));
   }
-  if (isWRLSEraTwoPartTariffDate(chargeVersionRow.startDate)) {
-    seasons.push(await getWRLSTwoPartTariffSeasons(chargeVersionRow, existingTPTBatches));
-  }
+  // always add WRLS seasons because there might be a new charge version with a historic start date
+  seasons.push(await getWRLSTwoPartTariffSeasons(chargeVersionRow, existingTPTBatches));
 
   return {
     [RETURN_SEASONS.summer]: seasons.some(isSummerFlagSet),
