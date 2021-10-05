@@ -41,6 +41,7 @@ experiment('modules/notifications/controller', () => {
   beforeEach(async () => {
     sandbox.stub(eventsService, 'getNotificationEvents');
     sandbox.stub(scheduledNotificationsService, 'getByEventId');
+    sandbox.stub(scheduledNotificationsService, 'getScheduledNotificationById');
   });
 
   afterEach(async () => {
