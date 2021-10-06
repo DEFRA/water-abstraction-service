@@ -26,10 +26,10 @@ const schema = Joi.object().keys({
 });
 
 module.exports = [{
+  schema,
+  getRecipients,
   prefix: 'WAA-',
   name: 'Water abstraction alert',
   messageType: 'waterAbstractionAlerts',
-  schema,
-  getRecipients,
   createEvent: eventHelpers.createEvent
 }];

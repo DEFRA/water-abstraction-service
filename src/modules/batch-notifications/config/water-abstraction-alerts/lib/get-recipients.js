@@ -14,7 +14,7 @@ const contactMapper = require('../../../../../lib/mappers/contact');
 const companyMapper = require('../../../../../lib/mappers/company');
 const notifyMapper = require('../../../../../lib/mappers/notify');
 
-const getRecipients = async (eventData) => {
+const getRecipients = async eventData => {
   const event = eventData.ev;
   const issuer = event.issuer;
 
