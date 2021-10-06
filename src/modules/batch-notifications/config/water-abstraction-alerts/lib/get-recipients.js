@@ -48,6 +48,7 @@ const getRecipients = async (eventData) => {
         const format = emailContactsArray.length > 0 ? 'email' : 'letter';
 
         const notification = new ScheduledNotification();
+
         notification.personalisation = {
           ...linkage,
           flow_or_level: linkage.restrictionType,
@@ -90,7 +91,6 @@ const getRecipients = async (eventData) => {
         notification.messageType = format;
         notification.eventId = event.id;
         notification.licences = [linkage.licenceRef];
-
         await scheduledNotificationService.createScheduledNotification(notification);
 
         // Update linkage record
