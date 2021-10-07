@@ -1,0 +1,11 @@
+- ref: $annualBatch
+  model: BillingBatch
+  fields:
+    regionId: $region.regionId
+    batchType: annual
+    fromFinancialYearEnding: 2021
+    toFinancialYearEnding: 2021 
+    status: sent
+    isSummer: false
+    source: wrls
+    metadata: { source: "acceptance-test-setup" }

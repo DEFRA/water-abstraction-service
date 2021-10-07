@@ -159,6 +159,40 @@
       "file": "AB1.yaml"
     }
   ],
+  "annual-billing-2": [
+    {
+      "service": "idm",
+      "file": "internal-users.yaml"
+    },
+    {
+      "service": "permits",
+      "file": "test-permits.yaml"
+    },
+    {
+      "service": "crmV1",
+      "file": "crm-v1.yaml"
+    },
+    {
+      "service": "crmV2",
+      "file": "crm-v2.yaml"
+    },
+    {
+      "service": "water",
+      "file": "test-licences.yaml"
+    },
+    {
+      "service": "water",
+      "file": "test-charge-versions.yaml"
+    },
+    {
+      "service": "water",
+      "file": "test-billing-data-2.yaml"
+    },
+    {
+      "service": "water",
+      "file": "AB1.yaml"
+    }
+  ],
   "two-part-tariff-billing-data": [
     {
       "service": "idm",
