@@ -57,6 +57,7 @@ const getRecipients = async eventData => {
           alert_type: linkage.alertType,
           threshold_value: linkage.thresholdValue,
           licence_ref: linkage.licenceRef,
+          sending_alert_type: sendingAlertType,
           threshold_unit: linkage.thresholdUnit,
           source: source && source.length > 0 ? `* Source of supply: ${source}` : '',
           condition_text: conditionText && conditionText.length > 0 ? `Effect of restriction: ${conditionText}` : '',
@@ -92,9 +93,6 @@ const getRecipients = async eventData => {
         notification.eventId = event.id;
         notification.licences = [linkage.licenceRef];
         await scheduledNotificationService.createScheduledNotification(notification);
-
-        // Update linkage record
-        await licenceGaugingStationConnector.updateStatus(linkage.licenceGaugingStationId, sendingAlertType);
 
         recipientCount++;
         licenceNumbers.push(linkage.licenceRef);
