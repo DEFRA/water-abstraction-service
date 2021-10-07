@@ -31,7 +31,6 @@ const getRecipients = async eventData => {
         // This should be changed as part of implementing WATER-3192
         // noinspection JSMismatchedCollectionQueryUpdate
         const emailContactsArray = [];
-
         const licenceHolderAddress = document.addressId && await crmV2Connector.addresses.getAddress(document.addressId);
         const licenceHolderCompany = document.companyId && await crmV2Connector.companies.getCompany(document.companyId);
         const licenceContact = document.contactId && await crmV2Connector.contacts.getContact(document.contactId);
@@ -43,7 +42,7 @@ const getRecipients = async eventData => {
         const licenceGaugingStationRecord = await licenceGaugingStationConnector.findOneById(linkage.licenceGaugingStationId);
         const condition = await lvpcConnector.findOneById(licenceGaugingStationRecord.licenceVersionPurposeConditionId);
 
-        const conditionText = condition.notes;
+        const conditionText = condition && condition.notes;
 
         const format = emailContactsArray.length > 0 ? 'email' : 'letter';
 
