@@ -7,6 +7,9 @@ const raw = require('./lib/raw');
 const findOne = id =>
   helpers.findOne(GaugingStation, 'gaugingStationId', id);
 
+const findOneByLinkageId = id =>
+  raw.singleRow(queries.findGaugingStationByLinkageId, { licenceGaugingStationId: id });
+
 const findLicenceConditionsByStationId = gaugingStationId =>
   raw.multiRow(queries.findGaugingStationWithLinkedLicences, { gaugingStationId });
 
@@ -64,3 +67,4 @@ exports.create = create;
 exports.update = update;
 exports.deleteOne = deleteOne;
 exports.findGaugingStationByLicenceId = findGaugingStationByLicenceId;
+exports.findOneByLinkageId = findOneByLinkageId;
