@@ -122,5 +122,20 @@ module.exports = {
         })
       }
     }
+  },
+
+  getCompanyLicences: {
+    path: '/water/1.0/companies/{companyId}/licences',
+    method: 'GET',
+    handler: controller.getCompanyLicences,
+    config: {
+      description: 'Gets all licences that are currently hooked up to a company',
+      tags: ['api'],
+      validate: {
+        params: Joi.object().keys({
+          companyId: Joi.string().guid().required().example(EXAMPLE_GUID)
+        })
+      }
+    }
   }
 };
