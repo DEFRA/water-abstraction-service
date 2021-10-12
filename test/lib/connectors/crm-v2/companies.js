@@ -261,4 +261,17 @@ experiment('lib/connectors/crm-v2/companies', () => {
       expect(response).to.equal(testResponse);
     });
   });
+
+  experiment('.getCompanyLicences', () => {
+    beforeEach(async () => {
+      serviceRequest.get.resolves([]);
+
+      await companyConnector.getCompanyLicences('test-company-id');
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url] = serviceRequest.get.lastCall.args;
+      expect(url).to.equal('http://test.defra/companies/test-company-id/licences');
+    });
+  });
 });
