@@ -229,9 +229,12 @@ class Address extends Model {
     // Some NALD addresses have a null country - treat as UK
     if (this.source === ADDRESS_SOURCE.nald && this.country === null) {
       return true;
-    }
+    } else if (this.country === null) {
+      return false;
+    } else {
     // Otherwise use list of UK countries
-    return UK_COUNTRIES.includes(this.country.trim().toLowerCase());
+      return UK_COUNTRIES.includes(this.country.trim().toLowerCase());
+    }
   }
 }
 
