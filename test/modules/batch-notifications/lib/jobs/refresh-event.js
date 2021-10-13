@@ -10,18 +10,19 @@ const {
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const messageQueue = require('../../../../../src/lib/message-queue');
 const refreshEvent = require('../../../../../src/modules/batch-notifications/lib/jobs/refresh-event');
 const eventHelpers = require('../../../../../src/modules/batch-notifications/lib/event-helpers');
+const queries = require('../../../../../src/modules/batch-notifications/lib/queries');
 const { logger } = require('../../../../../src/logger');
 
 experiment('refreshEvent job', () => {
   const eventId = 'event_1';
+  const jobId = 'test-job-id';
+  const jobParams = 'test-job-params';
 
   beforeEach(async () => {
-    sandbox.stub(messageQueue, 'publish').resolves();
-    sandbox.stub(eventHelpers, 'refreshEventStatus').resolves();
-    sandbox.stub(logger, 'error');
+    sandbox.stub(logger, 'error').resolves();
+    sandbox.stub(logger, 'info').resolves();
   });
 
   afterEach(async () => {
@@ -32,21 +33,28 @@ experiment('refreshEvent job', () => {
     expect(refreshEvent.jobName).to.equal('notifications.refreshEvent');
   });
 
-  experiment('publish', () => {
+  experiment('.createMessage', () => {
+    let msg;
+
     beforeEach(async () => {
-      await refreshEvent.publish(eventId);
+      msg = refreshEvent.createMessage();
     });
-    test('publishes a job with the correct job name', async () => {
-      const [jobName] = messageQueue.publish.lastCall.args;
-      expect(jobName).to.equal(refreshEvent.jobName);
+
+    test('creates a msg with the expected name', async () => {
+      expect(msg[0]).to.equal('notifications.refreshEvent');
     });
-    test('includes the event ID in the job data', async () => {
-      const [, data] = messageQueue.publish.lastCall.args;
-      expect(data).to.equal({ eventId });
+
+    test('the msg has no associated job params', async () => {
+      expect(msg[1]).to.equal({});
     });
-    test('uses the event ID as a singleton key in the job options', async () => {
-      const [, , options] = messageQueue.publish.lastCall.args;
-      expect(options).to.equal({ singletonKey: eventId });
+
+    test('the msg has a config object calling for repeats', async () => {
+      expect(msg[2]).to.equal({
+        jobId: 'notifications.refreshEvent',
+        repeat: {
+          every: 60000
+        }
+      });
     });
   });
 
@@ -54,30 +62,50 @@ experiment('refreshEvent job', () => {
     experiment('when there is an error', () => {
       const err = new Error('Oh no!');
 
-      beforeEach(async () => {
-        const jobData = { data: { eventId } };
-        eventHelpers.refreshEventStatus.rejects(err);
-        await refreshEvent.handler(jobData);
+      test('logs the error getting the sending events', async () => {
+        sandbox.stub(queries, 'getSendingEvents').rejects(err);
+        await refreshEvent.handler({ id: jobId, data: jobParams });
+        const [msg, error] = logger.error.lastCall.args;
+        expect(msg).to.equal(`Error handling: ${jobId}`);
+        expect(error).to.equal(err);
       });
 
-      test('logs the error', async () => {
-        const [msg, error, params] = logger.error.lastCall.args;
-        expect(msg).to.be.a.string();
+      test('logs the error refreshing the event', async () => {
+        sandbox.stub(queries, 'getSendingEvents').resolves([{ event_id: eventId }]);
+        sandbox.stub(eventHelpers, 'refreshEventStatus').rejects(err);
+        await refreshEvent.handler({ id: jobId });
+        const [msg, error] = logger.error.lastCall.args;
+        expect(msg).to.equal(`Error handling: ${jobId}`);
         expect(error).to.equal(err);
-        expect(params).to.equal({ eventId });
+      });
+    });
+
+    experiment('when there are no errors', () => {
+      test('calls refreshEventStatus with the eventId from the job data', async () => {
+        sandbox.stub(queries, 'getSendingEvents').resolves([{ event_id: eventId }]);
+        sandbox.stub(eventHelpers, 'refreshEventStatus').resolves();
+        await refreshEvent.handler({ id: jobId });
+        const { args } = eventHelpers.refreshEventStatus.lastCall;
+        expect(args).to.equal([eventId]);
       });
     });
   });
 
-  experiment('when there are no errors', () => {
-    beforeEach(async () => {
-      const jobData = { data: { eventId } };
-      await refreshEvent.handler(jobData);
+  experiment('.onFailed', () => {
+    test('an error message is logged', async () => {
+      const err = new Error('Oh no!');
+      await refreshEvent.onFailed({}, err);
+      const [msg, error] = logger.error.lastCall.args;
+      expect(msg).to.equal('notifications.refreshEvent: Job has failed');
+      expect(error).to.equal(err);
     });
+  });
 
-    test('calls refreshEventStatus with the eventId from the job data', async () => {
-      const { args } = eventHelpers.refreshEventStatus.lastCall;
-      expect(args).to.equal([eventId]);
+  experiment('.onComplete', () => {
+    test('a completion message is logged', async () => {
+      await refreshEvent.onComplete();
+      const [msg] = logger.info.lastCall.args;
+      expect(msg).to.equal('notifications.refreshEvent: Job has completed');
     });
   });
 });
