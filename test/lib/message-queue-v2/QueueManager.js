@@ -38,7 +38,8 @@ experiment('lib/message-queue-v2/QueueManager', () => {
       onFailed: () => {},
       createMessage: (...args) => args
     };
-    sandbox.stub(logger, 'error');
+    sandbox.stub(logger, 'info').returns();
+    sandbox.stub(logger, 'error').returns();
   });
 
   afterEach(async () => {

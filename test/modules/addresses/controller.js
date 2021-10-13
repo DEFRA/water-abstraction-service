@@ -10,6 +10,7 @@ const addressMapper = require('../../../src/lib/mappers/address');
 const Address = require('../../../src/lib/models/address');
 
 const controller = require('../../../src/modules/addresses/controller');
+const { logger } = require('../../../src/logger');
 
 const addressId = uuid();
 
@@ -52,6 +53,8 @@ experiment('./src/modules/change-reasons/controller.js', () => {
     sandbox.stub(addressService, 'createAddress');
     sandbox.stub(addressMapper, 'uiToModel').returns(addressModel);
     sandbox.stub(addressMapper, 'crmToModel').returns(addressModel);
+    sandbox.stub(logger, 'info');
+    sandbox.stub(logger, 'error');
   });
 
   afterEach(async () => {

@@ -62,6 +62,9 @@ class QueueManager {
       ...(jobContainer.workerOptions || {}),
       connection
     };
+
+    logger.info(`Registering job: ${jobContainer.jobName}`);
+
     const worker = new bull.Worker(jobContainer.jobName, jobContainer.handler, workerOpts);
 
     // Create scheduler - this is only set up if the hasScheduler flag is set.

@@ -59,7 +59,7 @@ experiment('batch notifications controller', () => {
     sandbox.stub(messageHelpers, 'updateMessageStatuses').resolves();
 
     sandbox.stub(sendBatch, 'send').resolves({});
-    sandbox.stub(logger, 'error');
+    sandbox.stub(logger, 'error').returns();
   });
 
   afterEach(async () => sandbox.restore());

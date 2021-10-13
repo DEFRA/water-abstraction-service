@@ -1,9 +1,7 @@
 const Boom = require('@hapi/boom');
-const moment = require('moment');
-const messageQueue = require('../../lib/message-queue');
 const scheduledNotificationsService = require('../../lib/services/scheduled-notifications');
 const { logger } = require('../../logger');
-const { enqueue } = require('./index.js')(messageQueue);
+const { enqueue } = require('./index.js');
 const notifyService = require('../../lib/notify');
 /**
  * Gets the notify template ID for a notify message ref,
@@ -21,18 +19,17 @@ const notifyService = require('../../lib/notify');
  */
 async function send (request, reply) {
   const { message_ref: messageRef } = request.params;
-  const { id, recipient, personalisation, sendafter } = request.payload;
+  const { id, recipient, personalisation } = request.payload;
 
   const config = {
     id,
     messageRef,
     recipient,
-    personalisation,
-    sendAfter: sendafter ? moment(sendafter).format() : undefined
+    personalisation
   };
 
   try {
-    await enqueue(config);
+    await enqueue(request.queueManager, config);
     return config;
   } catch (err) {
     if (err.isBoom && (err.output.statusCode !== 500)) {

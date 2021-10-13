@@ -1,11 +1,16 @@
-const jobs = require('./lib/jobs');
+const startUpload = require('./lib/jobs/start-upload');
+const mapToJson = require('./lib/jobs/map-to-json');
+const validateReturns = require('./lib/jobs/validate-returns');
+const persistReturns = require('./lib/jobs/persist-returns');
 
 module.exports = {
-  name: 'returnsRegisterSubscribers',
+  name: 'returnsRegisterSubscribersBullMQ',
+  dependencies: ['hapiBull'],
   register: async server => {
-    await server.createSubscription(jobs.startUpload);
-    await server.createSubscription(jobs.mapToJson);
-    await server.createSubscription(jobs.validateReturns);
-    await server.createSubscription(jobs.persistReturns);
+    server.queueManager
+      .register(startUpload)
+      .register(mapToJson)
+      .register(validateReturns)
+      .register(persistReturns);
   }
 };
