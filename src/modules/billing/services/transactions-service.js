@@ -91,6 +91,22 @@ const getBatchTransactions = batch => flatMap(batch.invoices.map(getInvoiceTrans
 
 const getTransactionId = transaction => transaction.id;
 
+const getBatchTransactionHistory = async batchId => {
+  const historicTransactions = await newRepos.billingTransactions.findHistoryByBatchId(batchId);
+  // get licences that need to have the 2nd part recalculated for supplementary
+  const twoPartTariffChargeVersionYears = await newRepos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(batchId);
+  // filter the transaction so that it does not include any 2PT transactions where there is no 2PT charge version year
+  const filteredTransactions = historicTransactions.filter(trx => {
+    if ((trx.description.slice(1, 6).toLowerCase()) === 'second') {
+      return !!twoPartTariffChargeVersionYears.includes((cvy, trx) => {
+        return !!trx.licenceId === cvy.licenceId && trx.financialYearEnding === cvy.financialYearEnding;
+      });
+    }
+    return true;
+  });
+  return filteredTransactions;
+};
+
 /**
  * Persists the state of the transaction isDeMinimis flag to
  * water.billing_transactions
@@ -122,3 +138,4 @@ exports.updateWithChargeModuleResponse = updateTransactionWithChargeModuleRespon
 exports.setErrorStatus = setErrorStatus;
 exports.persistDeMinimis = persistDeMinimis;
 exports.deleteById = deleteById;
+exports.getBatchTransactionHistory = getBatchTransactionHistory;
