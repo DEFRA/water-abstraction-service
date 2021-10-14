@@ -10,6 +10,8 @@ const crmToModel = entity => {
   companyContact.pickFrom(entity, [
     'companyId',
     'roleId',
+    'emailAddress',
+    'emailpurpose',
     'isDefault',
     'dateCreated',
     'dateUpdated'

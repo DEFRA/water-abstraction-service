@@ -1,12 +1,16 @@
 'use strict';
 
-const { assertNullableString, assertNullableEnum, assertEnum } = require('./validators');
+const { assertNullableString, assertNullableEnum, assertEnum, assertEmailAddress } = require('./validators');
 const Model = require('./model');
 const Joi = require('joi');
 const { omit } = require('lodash');
 
 const CONTACT_TYPES = { person: 'person', department: 'department' };
 const DATA_SOURCE_TYPES = { nald: 'nald', wrls: 'wrls' };
+const EMAIL_PURPOSE_TYPES = {
+  waa: 'waa',
+  default: 'default'
+};
 
 const getInitials = (firstName, middleInitials) => middleInitials
   ? `${firstName.slice(0, 1)} ${middleInitials}`
@@ -21,7 +25,9 @@ const contactPersonSchema = Joi.object({
   suffix: Joi.string().allow(null).optional(),
   department: Joi.string().allow(null).replace(/\./g, '').optional(),
   dataSource: Joi.string().valid(...Object.values(DATA_SOURCE_TYPES)).required(),
-  isTest: Joi.boolean().optional().default(false)
+  isTest: Joi.boolean().optional().default(false),
+  emailAddress: Joi.string().allow(null).optional(),
+  emailPurpose: Joi.string().allow(null).valid(...Object.values(EMAIL_PURPOSE_TYPES)).optional()
 });
 
 const contactDepartmentSchema = Joi.object({
@@ -38,6 +44,24 @@ class Contact extends Model {
 
   get initials () {
     return this._initials;
+  }
+
+  get emailAddress () {
+    return this._emailAddress;
+  }
+
+  set emailAddress (emailAddress) {
+    assertEmailAddress(emailAddress);
+    this._emailAddress = emailAddress;
+  }
+
+  get emailPurpose () {
+    return this._emailPurpose;
+  }
+
+  set emailPurpose (emailPurpose) {
+    assertNullableEnum(emailPurpose, Object.values(EMAIL_PURPOSE_TYPES));
+    this._emailPurpose = emailPurpose;
   }
 
   set middleInitials (middleInitials) {
