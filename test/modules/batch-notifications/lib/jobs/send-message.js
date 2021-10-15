@@ -51,6 +51,8 @@ experiment('refreshEvent job', () => {
 
     scheduledNotification = new ScheduledNotification(messageId);
 
+    scheduledNotification.messageRef = 'whatever';
+
     sandbox.stub(scheduledNotificationService, 'getScheduledNotificationById').resolves(
       scheduledNotification
     );
@@ -83,7 +85,7 @@ experiment('refreshEvent job', () => {
     });
   });
 
-  experiment('handle', () => {
+  experiment('.handleSendMessage', () => {
     experiment('when there is an error', () => {
       const err = new Error('Oh no!');
 

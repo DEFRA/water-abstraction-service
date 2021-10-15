@@ -108,6 +108,9 @@ const getCompanyInvoiceAccounts = async (companyId, regionId) => {
   return data.map(invoiceAccountMapper.crmToModel);
 };
 
+const getCompanyLicences = async companyId =>
+  companiesConnector.getCompanyLicences(companyId);
+
 exports.getCompany = getCompany;
 exports.getCompanyAddresses = getCompanyAddresses;
 exports.createCompany = createCompany;
@@ -119,3 +122,4 @@ exports.deleteCompanyAddress = deleteCompanyAddress;
 exports.deleteCompanyContact = deleteCompanyContact;
 exports.searchCompaniesByName = searchCompaniesByName;
 exports.getCompanyInvoiceAccounts = getCompanyInvoiceAccounts;
+exports.getCompanyLicences = getCompanyLicences;
