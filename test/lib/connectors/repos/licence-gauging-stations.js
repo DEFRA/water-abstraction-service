@@ -73,4 +73,21 @@ experiment('lib/connectors/repos/licence-gauging-stations', () => {
       expect(changes.date_deleted).to.be.date();
     });
   });
+
+  experiment('.updateStatus', () => {
+    const tempGuid = uuid();
+    beforeEach(async () => {
+      await licenceGaugingStations.updateStatus(tempGuid, 'some-status');
+    });
+
+    test('calls helpers .update() with the correct params', async () => {
+      const [bookShelfModel, identifierName, identifierValue, changes] = helpers.update.lastCall.args;
+      expect(bookShelfModel).to.equal(LicenceGaugingStations);
+      expect(identifierName).to.equal('licenceGaugingStationId');
+      expect(identifierValue).to.equal(tempGuid);
+      expect(changes).to.be.object();
+      expect(changes.status).to.equal('some-status');
+      expect(changes.dateStatusUpdated).to.be.date();
+    });
+  });
 });

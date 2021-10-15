@@ -86,6 +86,8 @@ const getCompanyContacts = companyId => {
 
 const getInvoiceAccountsByCompanyId = async companyId => serviceRequest.get(getUri(`${companyId}/invoice-accounts`));
 
+const getCompanyLicences = async companyId => serviceRequest.get(getUri(`${companyId}/licences`));
+
 exports.createCompany = createCompany;
 exports.getCompany = getCompany;
 exports.deleteCompany = deleteCompany;
@@ -97,3 +99,4 @@ exports.deleteCompanyContact = deleteCompanyContact;
 exports.getCompanyContacts = getCompanyContacts;
 exports.getInvoiceAccountsByCompanyId = getInvoiceAccountsByCompanyId;
 exports.searchCompaniesByName = searchCompaniesByName;
+exports.getCompanyLicences = getCompanyLicences;

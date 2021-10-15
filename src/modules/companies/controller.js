@@ -138,6 +138,16 @@ const getCompanyInvoiceAccounts = async request => {
   }
 };
 
+const getCompanyLicences = async request => {
+  const { companyId } = request.params;
+  try {
+    const licences = await companiesService.getCompanyLicences(companyId);
+    return envelope(licences);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
 exports.getReturns = getReturns;
 exports.getCompany = getCompany;
 exports.searchCompaniesByName = searchCompaniesByName;
@@ -145,3 +155,4 @@ exports.getCompanyAddresses = getCompanyAddresses;
 exports.createCompanyInvoiceAccount = createCompanyInvoiceAccount;
 exports.getCompanyContacts = getCompanyContacts;
 exports.getCompanyInvoiceAccounts = getCompanyInvoiceAccounts;
+exports.getCompanyLicences = getCompanyLicences;

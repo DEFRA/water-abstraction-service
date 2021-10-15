@@ -22,7 +22,11 @@ const create = data =>
 const deleteOne = licenceGaugingStationId =>
   helpers.update(LicenceGaugingStations, 'licenceGaugingStationId', licenceGaugingStationId, { date_deleted: new Date() });
 
+const updateStatus = (licenceGaugingStationId, status) =>
+  helpers.update(LicenceGaugingStations, 'licenceGaugingStationId', licenceGaugingStationId, { status, dateStatusUpdated: new Date() });
+
 exports.findOneById = findOneById;
 exports.findLicenceGaugingStationsByFilter = findLicenceGaugingStationsByFilter;
 exports.create = create;
 exports.deleteOne = deleteOne;
+exports.updateStatus = updateStatus;
