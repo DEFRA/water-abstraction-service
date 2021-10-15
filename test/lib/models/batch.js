@@ -617,4 +617,20 @@ experiment('lib/models/batch', () => {
       }).to.throw();
     });
   });
+
+  experiment('.transactionFileReference', () => {
+    test('can be set to any string', async () => {
+      const batch = new Batch();
+      batch.transactionFileReference = 'croutons';
+
+      expect(batch.transactionFileReference).to.equal('croutons');
+    });
+
+    test('can be set to null', async () => {
+      const batch = new Batch();
+      batch.transactionFileReference = null;
+
+      expect(batch.transactionFileReference).to.equal(null);
+    });
+  });
 });
