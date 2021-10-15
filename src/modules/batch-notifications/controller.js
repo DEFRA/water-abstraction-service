@@ -10,6 +10,9 @@ const getRecipients = require('./lib/jobs/get-recipients');
 const eventsService = require('../../lib/services/events');
 const sendBatch = require('./lib/send-batch');
 const mapErrorResponse = require('../../lib/map-error-response');
+const scheduledNotificationsService = require('../../lib/services/scheduled-notifications');
+
+const getByEventId = async (request, h) => scheduledNotificationsService.getByEventId(request.query.eventId);
 
 /**
  * Prepares batch notification ready for sending
@@ -74,5 +77,6 @@ const postSend = async request => {
 
 module.exports = {
   postPrepare,
-  postSend
+  postSend,
+  getByEventId
 };

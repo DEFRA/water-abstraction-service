@@ -96,10 +96,19 @@ const getNotificationMessages = async request => {
   };
 };
 
+const getNotificationMessage = async request => {
+  const { id } = request.params;
+  const message = await scheduledNotificationsService.getScheduledNotificationById(id);
+  return {
+    data: message
+  };
+};
+
 module.exports = {
   postPreview,
   postSend,
   getNotifications,
   getNotification,
-  getNotificationMessages
+  getNotificationMessages,
+  getNotificationMessage
 };

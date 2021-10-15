@@ -84,6 +84,7 @@ const eaAddressFacadeToModel = data => {
 };
 
 const pojoToModelMapper = createMapper()
+  .map('dataSource').to('source')
   .copy(
     'id',
     'addressLine1',

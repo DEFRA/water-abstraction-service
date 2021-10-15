@@ -72,6 +72,7 @@ experiment('modules/companies/controller', () => {
     sandbox.stub(companiesService, 'getCompany').resolves({ companyId: 'test-company-id' });
     sandbox.stub(companiesService, 'getCompanyAddresses').resolves([{ companyAddressId: 'test-company-address-id' }]);
     sandbox.stub(companiesService, 'getCompanyInvoiceAccounts');
+    sandbox.stub(companiesService, 'getCompanyLicences');
 
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId');
     sandbox.stub(invoiceAccountsService, 'createInvoiceAccount');
@@ -465,6 +466,51 @@ experiment('modules/companies/controller', () => {
 
       test('the error is mapped/rethrown', async () => {
         const func = () => controller.getCompanyInvoiceAccounts(request);
+
+        const err = await expect(func()).to.reject();
+        expect(err).to.equal(ERROR);
+      });
+    });
+  });
+
+  experiment('.getCompanyLicences', () => {
+    const COMPANY_ID = uuid();
+    const licences = [{
+      id: uuid()
+    }];
+    const request = {
+      params: {
+        companyId: COMPANY_ID
+      }
+    };
+    let response;
+
+    experiment('when there is no error', () => {
+      beforeEach(async () => {
+        companiesService.getCompanyLicences.resolves(licences);
+        response = await controller.getCompanyLicences(request);
+      });
+
+      test('the licences are fetched by company', async () => {
+        expect(companiesService.getCompanyLicences.calledWith(
+          COMPANY_ID
+        )).to.be.true();
+      });
+
+      test('the response is wrapped in a { data : [] } envelope', async () => {
+        expect(response).to.equal({ data: licences, error: null });
+      });
+    });
+
+    experiment('when there is an error', () => {
+      const ERROR = new Error('oops');
+
+      beforeEach(async () => {
+        companiesService.getCompanyLicences.rejects(ERROR);
+      });
+
+      test('the error is mapped/rethrown', async () => {
+        const func = () => controller.getCompanyLicences(request);
 
         const err = await expect(func()).to.reject();
         expect(err).to.equal(ERROR);

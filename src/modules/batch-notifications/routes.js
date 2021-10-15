@@ -8,6 +8,19 @@ const config = require('./config');
 const messageTypes = config.map(row => row.messageType);
 
 module.exports = {
+  getByEventId: {
+    method: 'GET',
+    path: `/water/${version}/batch-notifications`,
+    handler: controller.getByEventId,
+    config: {
+      validate: {
+        query: Joi.object().keys({
+          eventId: Joi.string().guid()
+        })
+      }
+    }
+  },
+
   postPrepare: {
     method: 'POST',
     path: `/water/${version}/batch-notifications/prepare/{messageType}`,
