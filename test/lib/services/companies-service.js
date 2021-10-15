@@ -33,6 +33,7 @@ experiment('modules/billing/services/companies-service', () => {
     sandbox.stub(companiesConnector, 'createCompanyContact');
     sandbox.stub(companiesConnector, 'getCompanyAddresses');
     sandbox.stub(companiesConnector, 'createCompanyAddress');
+    sandbox.stub(companiesConnector, 'getCompanyLicences');
 
     sandbox.stub(mappers.company, 'crmToModel');
     sandbox.stub(mappers.company, 'modelToCrm');
@@ -429,6 +430,31 @@ experiment('modules/billing/services/companies-service', () => {
           INVOICE_ACCOUNTS[2]
         )).to.be.true();
       });
+    });
+  });
+
+  experiment('.getCompanyLicences', () => {
+    let companyId, companyData, response;
+    beforeEach(async () => {
+      companyId = uuid();
+      companyData = {
+        id: uuid(),
+        licenceNumber: 'xx/xx/xxx'
+      };
+
+      companiesConnector.getCompanyLicences.resolves([companyData]);
+
+      response = await companiesService.getCompanyLicences(companyId);
+    });
+
+    test('calls the companies connector with the GUID', () => {
+      expect(companiesConnector.getCompanyLicences.calledWith(
+        companyId
+      )).to.be.true();
+    });
+
+    test('returns an array of results', () => {
+      expect(Array.isArray(response)).to.equal(true);
     });
   });
 });
