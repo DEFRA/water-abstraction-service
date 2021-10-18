@@ -186,4 +186,20 @@ experiment('lib/connectors/crm-v2/invoice-accounts', () => {
       expect(response).to.equal({ invoiceAccountId: 'test-id-1' });
     });
   });
+
+  experiment('updateInvoiceAccountsWithCustomerFileReference', () => {
+    const fileRef = 'SomeFile';
+    const exportedAt = '2010-10-10';
+    const exportedCustomers = ['cus1', 'cus2'];
+
+    beforeEach(async () => {
+      serviceRequest.post.resolves();
+      await invoiceAccountConnector.updateInvoiceAccountsWithCustomerFileReference(fileRef, exportedAt, exportedCustomers);
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url, qs] = serviceRequest.post.lastCall.args;
+      expect(url).to.equal('http://test.defra/invoice-accounts/customer-file-references');
+    });
+  });
 });
