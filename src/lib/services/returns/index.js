@@ -32,7 +32,7 @@ const getFinancialYear = returnCycle => {
  * @return {Promise<Array>}
  */
 const fetchReturns = async (licenceNumber, financialYear) => {
-  const cycles = returnsDateHelpers.createReturnCycles()
+  const cycles = returnsDateHelpers.createReturnCycles((financialYear.yearEnding - 2) + '-01-01')
     .filter(cycle => getFinancialYear(cycle) === financialYear.endYear);
 
   // Make API call to get returns for each cycle
