@@ -93,13 +93,16 @@ const getTransactionId = transaction => transaction.id;
 
 const getBatchTransactionHistory = async batchId => {
   const historicTransactions = await newRepos.billingTransactions.findHistoryByBatchId(batchId);
+
   // get licences that need to have the 2nd part recalculated for supplementary
   const twoPartTariffChargeVersionYears = await newRepos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(batchId);
+
   // filter the transaction so that it does not include any 2PT transactions where there is no 2PT charge version year
   const filteredTransactions = historicTransactions.filter(trx =>
-    (trx.description.slice(1, 6).toLowerCase()) === 'second')
-    ? !!twoPartTariffChargeVersionYears.includes((cvy, trx) =>
-      !!trx.licenceId === cvy.licenceId && trx.financialYearEnding === cvy.financialYearEnding) : true;
+    ((trx.description.slice(1, 6).toLowerCase()) === 'second')
+      ? !!twoPartTariffChargeVersionYears.includes(cvy => !!trx.licenceId === cvy.licenceId && trx.financialYearEnding === cvy.financialYearEnding)
+      : true);
+
   return filteredTransactions;
 };
 
