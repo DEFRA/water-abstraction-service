@@ -435,7 +435,7 @@ const getBatchTransactionCount = batchId =>
  */
 const updateWithCMSummary = async (batchId, cmResponse) => {
   // Extract counts/totals from CM bill run response
-  const { invoiceCount, creditNoteCount, invoiceValue, creditNoteValue, netTotal, status: cmStatus } = cmResponse.billRun;
+  const { invoiceCount, creditNoteCount, invoiceValue, creditNoteValue, netTotal, status: cmStatus, transactionFileReference } = cmResponse.billRun;
   // Calculate next batch status
   const cmCompletedStatuses = ['pending', 'billed', 'billing_not_required'];
   const status = cmCompletedStatuses.includes(cmStatus) ? Batch.BATCH_STATUS.sent : Batch.BATCH_STATUS.ready;
@@ -452,6 +452,7 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
       creditNoteCount,
       invoiceValue,
       netTotal,
+      transactionFileReference,
       creditNoteValue: -Math.abs(creditNoteValue)
     };
 
