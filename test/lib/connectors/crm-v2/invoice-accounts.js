@@ -198,7 +198,7 @@ experiment('lib/connectors/crm-v2/invoice-accounts', () => {
     });
 
     test('makes a request to the expected URL', async () => {
-      const [url, qs] = serviceRequest.post.lastCall.args;
+      const [url] = serviceRequest.post.lastCall.args;
       expect(url).to.equal('http://test.defra/invoice-accounts/customer-file-references');
     });
   });
