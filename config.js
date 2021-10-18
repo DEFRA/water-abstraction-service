@@ -199,7 +199,7 @@ module.exports = {
       username: process.env.COGNITO_USERNAME,
       password: process.env.COGNITO_PASSWORD
     },
-    customerFileRefreshFrequencyInMS: 60000 // 3600000
+    customerFileRefreshFrequencyInMS: 3600000
   },
 
   proxy: process.env.PROXY,
