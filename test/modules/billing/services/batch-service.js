@@ -779,6 +779,7 @@ experiment('modules/billing/services/batch-service', () => {
     const creditNoteCount = 3;
     const netTotal = 1234;
     const creditNoteValue = -500;
+    const transactionFileReference = 'someFile';
     const invoiceValue = 750000;
     const status = 'generated';
 
@@ -788,6 +789,7 @@ experiment('modules/billing/services/batch-service', () => {
         creditNoteCount,
         invoiceValue,
         creditNoteValue,
+        transactionFileReference: undefined,
         netTotal,
         status
       }
@@ -796,7 +798,12 @@ experiment('modules/billing/services/batch-service', () => {
     experiment('when the CM batch is not approved for billing', () => {
       beforeEach(async () => {
         newRepos.billingTransactions.countByBatchId.resolves(5);
-        await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
+        await batchService.updateWithCMSummary(BATCH_ID, {
+          billRun: {
+            ...cmResponse.billRun,
+            transactionFileReference
+          }
+        });
       });
 
       test('the batch is updated correctly with "ready" status', async () => {
@@ -806,6 +813,7 @@ experiment('modules/billing/services/batch-service', () => {
           creditNoteCount,
           invoiceValue,
           creditNoteValue,
+          transactionFileReference,
           netTotal
         })).to.be.true();
       });
@@ -824,6 +832,7 @@ experiment('modules/billing/services/batch-service', () => {
           invoiceCount,
           creditNoteCount,
           invoiceValue,
+          transactionFileReference: undefined,
           creditNoteValue,
           netTotal
         })).to.be.true();
@@ -1170,7 +1179,10 @@ experiment('modules/billing/services/batch-service', () => {
       test('throws a NotFoundError if the rebill invoice is not found', async () => {
         const originalBillingInvoiceId = uuid();
         const rebillInvoiceId = 'dfedb43e-379a-427e-97b9-41f5185fdec6';
-        newRepos.billingInvoices.findOne.onCall(0).resolves({ billingInvoiceId: uuid(), originalBillingInvoice: { billingInvoiceId: uuid() } });
+        newRepos.billingInvoices.findOne.onCall(0).resolves({
+          billingInvoiceId: uuid(),
+          originalBillingInvoice: { billingInvoiceId: uuid() }
+        });
         const func = () => batchService.deleteBatchInvoice(batch, invoiceId, originalBillingInvoiceId, rebillInvoiceId);
         const err = await expect(func()).to.reject();
         expect(err.message).to.equal('Rebilling Invoice dfedb43e-379a-427e-97b9-41f5185fdec6 not found');
@@ -1178,7 +1190,8 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       experiment('when the invoice is found and there are no errors', () => {
-        let billingInvoiceId, billingInvoiceExternalId, invoiceAccountId, licenceId, billingInvoice, originalBillingInvoiceId, rebillInvoice, rebillInvoiceId, originalInvoice;
+        let billingInvoiceId, billingInvoiceExternalId, invoiceAccountId, licenceId, billingInvoice,
+          originalBillingInvoiceId, rebillInvoice, rebillInvoiceId, originalInvoice;
 
         beforeEach(async () => {
           billingInvoiceId = '601b6f34-5d91-4bd7-b2f9-65a7ba3bc6aa';
