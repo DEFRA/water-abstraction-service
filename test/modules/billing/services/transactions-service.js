@@ -15,7 +15,7 @@ const billingVolumesService = require('../../../../src/modules/billing/services/
 const repos = require('../../../../src/lib/connectors/repos');
 const { logger } = require('../../../../src/logger');
 
-const { createTransaction, createInvoiceLicence, createTransactionDBRow, createBatch, createInvoice, createChargeVersionYear } = require('../test-data/test-billing-data');
+const { createTransaction, createInvoiceLicence, createTransactionDBRow, createBatch, createInvoice } = require('../test-data/test-billing-data');
 
 const chargeElementDBData = {
   chargeElementId: 'ae7197b3-a00b-4a49-be36-af63df6f8583',
