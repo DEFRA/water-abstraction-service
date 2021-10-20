@@ -126,6 +126,16 @@ const getCompanyContacts = async (request) => {
   }
 };
 
+const getCompanyContactPurpose = async (request) => {
+  const { companyId, contactId } = request.params;
+
+  try {
+    const companyContacts = await companyContactsService.getCompanyContactPurpose(companyId, contactId);
+    return envelope(companyContacts);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
 const getCompanyInvoiceAccounts = async request => {
   const { companyId } = request.params;
   const { regionId } = request.query;
@@ -148,6 +158,7 @@ const getCompanyLicences = async request => {
   }
 };
 
+exports.getCompanyContactPurpose = getCompanyContactPurpose;
 exports.getReturns = getReturns;
 exports.getCompany = getCompany;
 exports.searchCompaniesByName = searchCompaniesByName;

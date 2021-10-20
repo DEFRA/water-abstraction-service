@@ -80,6 +80,16 @@ const getCompanyContacts = companyId => {
 };
 
 /**
+ * Get the CompanyContacts for a given company id from CRM
+ *
+ * @param {String} companyId The uuid of the company
+ * @param {String} companyContactId The uuid of the company
+ */
+const getCompanyContactPurpose = (companyId, companyContactId) => {
+  return serviceRequest.get(getUri(companyId, 'customercontact', companyContactId));
+};
+
+/**
  * Returns the invoice accounts associated with a company by its GUID
  * @param {String} companyId
  */
@@ -88,6 +98,7 @@ const getInvoiceAccountsByCompanyId = async companyId => serviceRequest.get(getU
 
 const getCompanyLicences = async companyId => serviceRequest.get(getUri(`${companyId}/licences`));
 
+exports.getCompanyContactPurpose = getCompanyContactPurpose;
 exports.createCompany = createCompany;
 exports.getCompany = getCompany;
 exports.deleteCompany = deleteCompany;

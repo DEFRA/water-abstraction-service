@@ -106,6 +106,21 @@ module.exports = {
     }
   },
 
+  getCompanyContactPurpose: {
+    path: '/water/1.0/companies/{companyId}/customercontact/{contactId}',
+    method: 'GET',
+    handler: controller.getCompanyContactPurpose,
+    config: {
+      description: 'Gets the CompanyContact entities for the company',
+      validate: {
+        params: Joi.object().keys({
+          companyId: Joi.string().uuid().required(),
+          contactId: Joi.string().uuid().required()
+        })
+      }
+    }
+  },
+
   getCompanyInvoiceAccounts: {
     path: '/water/1.0/companies/{companyId}/invoice-accounts',
     method: 'GET',

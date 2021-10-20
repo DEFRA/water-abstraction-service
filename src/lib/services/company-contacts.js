@@ -8,4 +8,11 @@ const getCompanyContacts = async companyId => {
   return companyContacts.map(companyContactMapper.crmToModel);
 };
 
+const getCompanyContactPurpose = async (companyId, contactId) => {
+  /* Retrieve relevant contact from CRM api */
+  const companyContacts = await companiesRepo.getCompanyContactPurpose(companyId, contactId);
+  return companyContacts.map(companyContactMapper.crmToModel);
+};
+
+exports.getCompanyContactPurpose = getCompanyContactPurpose;
 exports.getCompanyContacts = getCompanyContacts;

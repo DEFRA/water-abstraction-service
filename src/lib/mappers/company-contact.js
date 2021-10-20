@@ -11,7 +11,7 @@ const crmToModel = entity => {
     'companyId',
     'roleId',
     'emailAddress',
-    'emailpurpose',
+    'emailPurpose',
     'isDefault',
     'dateCreated',
     'dateUpdated'
