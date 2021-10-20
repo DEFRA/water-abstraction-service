@@ -6,7 +6,6 @@ const Batch = require('../../../lib/models/batch');
 const FinancialYear = require('../../../lib/models/financial-year');
 
 const validators = require('../../../lib/models/validators');
-const { logger } = require('../../../logger');
 
 const chargeVersionYearService = require('./charge-version-year');
 const billingVolumesService = require('./billing-volumes-service');
@@ -18,15 +17,11 @@ const volumeMatchingService = require('./volume-matching-service');
  * @param {Array<BillingVolume>} billingVolumes
  * @param {String} billingBatchId
  */
-const decorateBillingVolumesWithBatchId = (billingVolumes, billingBatchId) => {
+const decorateBillingVolumesWithBatchId = (billingVolumes, billingBatchId) =>
   billingVolumes.forEach(billingVolume => {
-    if (!billingVolume.billingBatchId) {
-      billingVolume.billingBatchId = billingBatchId;
-    }
+    billingVolume.billingBatchId = billingBatchId;
+    return billingVolume;
   });
-};
-
-const isApprovedBillingVolume = billingVolume => billingVolume.isApproved;
 
 /**
  * Processes the supplied charge version year and season flag and persists
@@ -40,19 +35,7 @@ const isApprovedBillingVolume = billingVolume => billingVolume.isApproved;
 const processChargeVersionYear = async chargeVersionYear => {
   const { chargeVersionId, financialYearEnding, isSummer, billingBatchId } = chargeVersionYear;
 
-  // Check if approved billing volumes already exist for this charge version /
-  // financial year / season combination.  If so skip
-  const existingBillingVolumes = await billingVolumesService.getBillingVolumesByChargeVersion(
-    chargeVersionId,
-    new FinancialYear(financialYearEnding),
-    isSummer
-  );
-
-  if (existingBillingVolumes.length > 0 && existingBillingVolumes.every(isApprovedBillingVolume)) {
-    return logger.info(`Skipping matching for ${chargeVersionId}, ${financialYearEnding}, ${isSummer} - approved billing volumes exist`);
-  }
-
-  const billingVolumes = await volumeMatchingService.matchVolumes(chargeVersionId, new FinancialYear(financialYearEnding), isSummer);
+  const billingVolumes = await volumeMatchingService.matchVolumes(chargeVersionId, new FinancialYear(financialYearEnding), isSummer, billingBatchId);
   decorateBillingVolumesWithBatchId(billingVolumes, billingBatchId);
   return bluebird.mapSeries(billingVolumes, billingVolumesService.persist);
 };
