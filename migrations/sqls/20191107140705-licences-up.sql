@@ -1,5 +1,5 @@
 
-create table water.licences (
+create table IF NOT EXISTS water.licences (
   licence_id uuid primary key default gen_random_uuid(),
   region_id uuid not null
     constraint licences_region_id_fkey
