@@ -85,9 +85,8 @@ const getCompanyContacts = companyId => {
  * @param {String} companyId The uuid of the company
  * @param {String} companyContactId The uuid of the company
  */
-const getCompanyContactPurpose = (companyId, companyContactId) => {
-  return serviceRequest.get(getUri(companyId, 'customercontact', companyContactId));
-};
+const getCompanyContactPurpose = (companyId, companyContactId) =>
+  serviceRequest.get(getUri(companyId, 'customercontact', companyContactId));
 
 /**
  * Returns the invoice accounts associated with a company by its GUID

@@ -126,7 +126,7 @@ const getCompanyContacts = async (request) => {
   }
 };
 
-const getCompanyContactPurpose = async (request) => {
+const getCompanyContactPurpose = async request => {
   const { companyId, contactId } = request.params;
 
   try {
