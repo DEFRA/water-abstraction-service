@@ -57,7 +57,7 @@ const getChargeVersion = async chargeVersionId => {
  * @param {FinancialYear} financialYear
  * @return {Promise<Object>}
  */
-const getData = async (chargeVersionId, financialYear) => {
+const getData = async (chargeVersionId, financialYear, batchId) => {
   validators.assertId(chargeVersionId);
   validators.assertIsInstanceOf(financialYear, FinancialYear);
 
@@ -76,8 +76,14 @@ const getData = async (chargeVersionId, financialYear) => {
     )
   ]);
 
+  const newBillingVolumes = billingVolumes.map(row => {
+    row.billingBatchId = batchId;
+    row.isApproved = false;
+    return row;
+  });
+
   // Get charge element group
-  const chargeElementGroup = createTPTChargeElementGroup(chargeVersion, chargePeriod, financialYear, billingVolumes);
+  const chargeElementGroup = createTPTChargeElementGroup(chargeVersion, chargePeriod, financialYear, newBillingVolumes);
 
   return {
     chargeVersion,
