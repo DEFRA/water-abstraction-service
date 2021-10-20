@@ -75,6 +75,7 @@ const findByBatchId = async billingBatchId => {
  * Finds water.billing_batch_charge_version_years records in batch where
  * a two-part tariff agreement applies
  * @param {String} billingBatchId
+ * @param {boolean} includeRelated
  * @return {Promise<Array>}
  */
 const findTwoPartTariffByBatchId = async (billingBatchId, includeRelated) => {
