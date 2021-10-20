@@ -1,5 +1,5 @@
 create table water.purposes (
-    purpose_id uuid PRIMARY KEY default public.gen_random_uuid(),
+    purpose_id uuid PRIMARY KEY default gen_random_uuid(),
     purpose_primary_id uuid NOT NULL,
     purpose_secondary_id uuid NOT NULL,
     purpose_use_id uuid NOT NULL,

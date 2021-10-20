@@ -8,18 +8,18 @@ alter table water.licence_agreements
 /* modify financial agreement types table */
 alter table water.financial_agreement_types
   drop constraint financial_agreement_types_pkey;
-  
+
 alter table water.financial_agreement_types
   rename column id to financial_agreement_code;
-  
+
 alter table water.financial_agreement_types
-  add column financial_agreement_type_id uuid default public.gen_random_uuid() not null;
-  
+  add column financial_agreement_type_id uuid default gen_random_uuid() not null;
+
 alter table water.financial_agreement_types
   add primary key(financial_agreement_type_id);
 
 /* modify water.licence_agreements table to use guid column */
-alter table water.licence_agreements 
+alter table water.licence_agreements
   rename financial_agreement_type_id to financial_agreement_code;
 
 alter table water.licence_agreements
@@ -30,7 +30,7 @@ update water.licence_agreements a
   from water.financial_agreement_types t
   where t.financial_agreement_code=a.financial_agreement_code;
 
-alter table water.licence_agreements 
+alter table water.licence_agreements
   alter column financial_agreement_type_id set not null;
 
 alter table water.licence_agreements

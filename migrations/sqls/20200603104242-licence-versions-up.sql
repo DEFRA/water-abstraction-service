@@ -5,7 +5,7 @@ create type water.licence_version_status as enum (
 );
 
 create table water.licence_versions (
-  "licence_version_id" uuid default public.gen_random_uuid(),
+  "licence_version_id" uuid default gen_random_uuid(),
   "licence_id" uuid not null,
   "issue" integer not null,
   "increment" integer not null,
@@ -20,7 +20,7 @@ create table water.licence_versions (
 );
 
 create table water.licence_version_purposes (
-  "licence_version_purpose_id" uuid default public.gen_random_uuid(),
+  "licence_version_purpose_id" uuid default gen_random_uuid(),
   "licence_version_id" uuid not null,
   "purpose_primary_id" uuid not null,
   "purpose_secondary_id" uuid not null,

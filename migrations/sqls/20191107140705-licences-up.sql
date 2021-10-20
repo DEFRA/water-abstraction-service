@@ -1,6 +1,6 @@
 
 create table water.licences (
-  licence_id uuid primary key default public.gen_random_uuid(),
+  licence_id uuid primary key default gen_random_uuid(),
   region_id uuid not null
     constraint licences_region_id_fkey
     references water.regions (region_id),

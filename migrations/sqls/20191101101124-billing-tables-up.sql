@@ -63,7 +63,7 @@ alter table if exists water.charge_elements
 ------------------------
 
 create table water.billing_batches (
-  billing_batch_id uuid primary key default public.gen_random_uuid(),
+  billing_batch_id uuid primary key default gen_random_uuid(),
   region_id uuid not null
     constraint billing_batches_region_id_fkey
     references water.regions (region_id),
@@ -75,7 +75,7 @@ create table water.billing_batches (
 );
 
 create table water.billing_batch_charge_versions (
-  billing_batch_charge_version_id uuid primary key default public.gen_random_uuid(),
+  billing_batch_charge_version_id uuid primary key default gen_random_uuid(),
   billing_batch_id uuid not null
     constraint billing_batch_charge_versions_billing_batch_id_fkey
     references water.billing_batches (billing_batch_id),
@@ -87,7 +87,7 @@ create table water.billing_batch_charge_versions (
 );
 
 create table water.billing_invoices (
-  billing_invoice_id uuid primary key default public.gen_random_uuid(),
+  billing_invoice_id uuid primary key default gen_random_uuid(),
   invoice_account_id uuid not null,
   address jsonb not null,
   invoice_account_number text,
@@ -98,7 +98,7 @@ create table water.billing_invoices (
 );
 
 create table water.billing_batch_invoices (
-  billing_batch_invoice_id uuid primary key default public.gen_random_uuid(),
+  billing_batch_invoice_id uuid primary key default gen_random_uuid(),
   billing_batch_id uuid not null
     constraint billing_batch_invoices_billing_batch_id_fkey
     references water.billing_batches (billing_batch_id),
@@ -110,7 +110,7 @@ create table water.billing_batch_invoices (
 );
 
 create table water.billing_invoice_licences (
-  billing_invoice_licence_id uuid primary key default public.gen_random_uuid(),
+  billing_invoice_licence_id uuid primary key default gen_random_uuid(),
   billing_invoice_id uuid not null
     constraint billing_invoice_licences_billing_invoice_id_fkey
     references water.billing_invoices (billing_invoice_id),
@@ -125,7 +125,7 @@ create table water.billing_invoice_licences (
 );
 
 create table water.billing_transactions (
-  billing_transaction_id uuid primary key default public.gen_random_uuid(),
+  billing_transaction_id uuid primary key default gen_random_uuid(),
   billing_invoice_licence_id uuid not null
     constraint billing_transactions_billing_invoice_licence_id_fkey
     references water.billing_invoice_licences (billing_invoice_licence_id),

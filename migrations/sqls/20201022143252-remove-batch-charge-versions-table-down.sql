@@ -1,5 +1,5 @@
 create table water.billing_batch_charge_versions (
-  billing_batch_charge_version_id uuid primary key default public.gen_random_uuid(),
+  billing_batch_charge_version_id uuid primary key default gen_random_uuid(),
   billing_batch_id uuid not null
     constraint billing_batch_charge_versions_billing_batch_id_fkey
     references water.billing_batches (billing_batch_id),
@@ -23,14 +23,14 @@ alter table water.billing_batch_charge_version_years
 delete from water.billing_batch_charge_version_years
 where billing_batch_charge_version_year_id in
     (select billing_batch_charge_version_year_id
-    from 
+    from
         (select billing_batch_charge_version_year_id,
          ROW_NUMBER() over(partition by billing_batch_id, charge_version_id, financial_year_ending) AS row_num
         from water.billing_batch_charge_version_years ) y
         where y.row_num > 1);
 
 /* Populate water.billing_charge_versions from water.billing_charge_version_years */
-insert into water.billing_batch_charge_versions (billing_batch_id, charge_version_id) 
+insert into water.billing_batch_charge_versions (billing_batch_id, charge_version_id)
 select distinct billing_batch_id, charge_version_id
 from water.billing_batch_charge_version_years;
 
