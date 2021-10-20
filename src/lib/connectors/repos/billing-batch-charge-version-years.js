@@ -82,7 +82,6 @@ const findTwoPartTariffByBatchId = async (billingBatchId, includeRelated) => {
     billing_batch_id: billingBatchId,
     transaction_type: TRANSACTION_TYPE.twoPartTariff
   };
-
   const withRelated = includeRelated ? ['chargeVersion'] : [];
 
   return helpers.findMany(BillingBatchChargeVersionYear, conditions, withRelated);

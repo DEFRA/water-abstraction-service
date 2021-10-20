@@ -75,7 +75,6 @@ const getData = async (chargeVersionId, financialYear, batchId) => {
       financialYear
     )
   ]);
-
   const newBillingVolumes = billingVolumes.map(row => {
     row.billingBatchId = batchId;
     row.isApproved = false;
