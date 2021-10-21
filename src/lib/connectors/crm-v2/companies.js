@@ -1,5 +1,6 @@
 'use strict';
 
+const moment = require('moment');
 const urlJoin = require('url-join');
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
@@ -79,6 +80,18 @@ const getCompanyContacts = companyId => {
   return serviceRequest.get(getUri(companyId, 'contacts'));
 };
 
+const patchCompanyContact = (companyId, contactId, body) => {
+  return serviceRequest.patch(getUri(companyId, 'contacts', contactId), { body });
+};
+
+const postCompanyContact = (companyId, body) => serviceRequest.post(getUri(companyId, 'contacts'), {
+  body: {
+    ...body,
+    startDate: moment().format('YYYY-MM-DD'),
+    isDefault: false
+  }
+});
+
 /**
  * Returns the invoice accounts associated with a company by its GUID
  * @param {String} companyId
@@ -97,6 +110,8 @@ exports.deleteCompanyAddress = deleteCompanyAddress;
 exports.createCompanyContact = createCompanyContact;
 exports.deleteCompanyContact = deleteCompanyContact;
 exports.getCompanyContacts = getCompanyContacts;
+exports.patchCompanyContact = patchCompanyContact;
+exports.postCompanyContact = postCompanyContact;
 exports.getInvoiceAccountsByCompanyId = getInvoiceAccountsByCompanyId;
 exports.searchCompaniesByName = searchCompaniesByName;
 exports.getCompanyLicences = getCompanyLicences;

@@ -40,7 +40,12 @@ const createContact = async contact => {
 
 const deleteContact = async contactId => serviceRequest.delete(getUri(contactId));
 
+const patchContact = async (contactId, payload) => serviceRequest.patch(getUri(contactId), {
+  body: payload
+});
+
 exports.createContact = createContact;
 exports.getContact = getContact;
 exports.getContacts = getContacts;
 exports.deleteContact = deleteContact;
+exports.patchContact = patchContact;

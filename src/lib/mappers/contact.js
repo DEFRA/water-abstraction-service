@@ -19,6 +19,7 @@ const crmToModelMapper = createMapper()
     'lastName',
     'suffix',
     'department',
+    'email',
     'dataSource',
     'isTest'
   )

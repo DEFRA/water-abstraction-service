@@ -8,4 +8,10 @@ const getCompanyContacts = async companyId => {
   return companyContacts.map(companyContactMapper.crmToModel);
 };
 
+const patchCompanyContact = companiesRepo.patchCompanyContact;
+
+const postCompanyContact = companiesRepo.postCompanyContact;
+
 exports.getCompanyContacts = getCompanyContacts;
+exports.patchCompanyContact = patchCompanyContact;
+exports.postCompanyContact = postCompanyContact;
