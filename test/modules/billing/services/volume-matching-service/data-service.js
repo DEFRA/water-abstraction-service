@@ -56,7 +56,7 @@ experiment('modules/billing/services/volume-matching-service/data-service', () =
     sandbox.stub(chargeVersionService, 'getByChargeVersionId').resolves(
       createChargeVersion(licence, chargeElements)
     );
-    sandbox.stub(billingVolumesService, 'getVolumesForChargeElements').resolves('');
+    sandbox.stub(billingVolumesService, 'getVolumesForChargeElements').resolves([]);
   });
 
   afterEach(async () => {

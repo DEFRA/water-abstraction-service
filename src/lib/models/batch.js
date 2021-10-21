@@ -334,6 +334,14 @@ class Batch extends Totals {
   get source () {
     return this._source;
   }
+
+  set transactionFileReference (transactionFileReference) {
+    this._transactionFileReference = transactionFileReference;
+  }
+
+  get transactionFileReference () {
+    return this._transactionFileReference;
+  }
 }
 
 module.exports = Batch;

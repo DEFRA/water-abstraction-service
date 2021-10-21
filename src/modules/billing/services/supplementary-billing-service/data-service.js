@@ -9,6 +9,7 @@ const Transaction = require('../../../../lib/models/transaction');
 const billingTransactionsRepo = require('../../../../lib/connectors/repos/billing-transactions');
 const invoiceService = require('../../../../lib/services/invoice-service');
 const invoiceLicencesService = require('../invoice-licences-service');
+const transactionService = require('../transactions-service');
 
 const { actions } = require('./constants');
 
@@ -68,10 +69,8 @@ const isNotRebillingTransaction = transaction => !(['reversal', 'rebilled'].incl
  * @return {Promise<Array>}
  */
 const getTransactions = async batchId => {
-  const [batchTransactions, historicalTransactions] = await Promise.all([
-    billingTransactionsRepo.findByBatchId(batchId),
-    billingTransactionsRepo.findHistoryByBatchId(batchId)
-  ]);
+  const batchTransactions = await billingTransactionsRepo.findByBatchId(batchId);
+  const historicalTransactions = await transactionService.getBatchTransactionHistory(batchId);
   const transactions = [...batchTransactions, ...historicalTransactions];
   return transactions.filter(isNotRebillingTransaction);
 };

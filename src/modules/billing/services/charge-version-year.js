@@ -79,7 +79,7 @@ const getForBatch = batchId => {
  * @return {Promise<Array>}
  */
 const getTwoPartTariffForBatch = batchId => {
-  return repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(batchId);
+  return repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(batchId, false);
 };
 
 /**
