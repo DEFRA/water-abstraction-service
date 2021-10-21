@@ -78,6 +78,7 @@ experiment('modules/companies/controller', () => {
     sandbox.stub(invoiceAccountsService, 'createInvoiceAccount');
 
     sandbox.stub(companiesContactsService, 'getCompanyContacts');
+    sandbox.stub(companiesContactsService, 'getCompanyContactPurpose');
 
     sandbox.stub(logger, 'error');
   });
@@ -420,6 +421,72 @@ experiment('modules/companies/controller', () => {
       test('the array of items is wrapped in the data envelope', async () => {
         expect(response.data.length).to.equal(1);
         expect(response.data[0].companyContactId).to.equal('test-company-contact-id');
+      });
+    });
+  });
+
+  experiment('.getCompanyContactPurpose', () => {
+    let response;
+    let companyId;
+    let contactId;
+
+    experiment('when no data is found', () => {
+      beforeEach(async () => {
+        companyId = uuid();
+        contactId = uuid();
+        companiesContactsService.getCompanyContactPurpose.rejects({
+          statusCode: 404,
+          message: 'Nope'
+        });
+
+        const request = {
+          params: {
+            companyId,
+            contactId
+          }
+        };
+
+        response = await controller.getCompanyContactPurpose(request);
+      });
+
+      test('the company id is passed to the service', async () => {
+        const [id] = companiesContactsService.getCompanyContactPurpose.lastCall.args;
+        expect(id).to.equal(companyId);
+      });
+
+      test('a Boom notFound error is returned', async () => {
+        expect(response.output.payload.statusCode).to.equal(404);
+        expect(response.output.payload.message).to.equal('Nope');
+      });
+    });
+
+    experiment('when the data is found', () => {
+      beforeEach(async () => {
+        companyId = uuid();
+        contactId = uuid();
+        companiesContactsService.getCompanyContactPurpose.resolves([
+          { companyContactId: 'test-company-contact-id', emailPurpose: 'waa' }
+        ]);
+
+        const request = {
+          params: {
+            companyId,
+            contactId
+          }
+        };
+
+        response = await controller.getCompanyContactPurpose(request);
+      });
+
+      test('the company id is passed to the service', async () => {
+        const [id] = companiesContactsService.getCompanyContactPurpose.lastCall.args;
+        expect(id).to.equal(companyId);
+      });
+
+      test('the array of items is wrapped in the data envelope', async () => {
+        expect(response.data.length).to.equal(1);
+        expect(response.data[0].companyContactId).to.equal('test-company-contact-id');
+        expect(response.data[0].emailPurpose).to.equal('waa');
       });
     });
   });
