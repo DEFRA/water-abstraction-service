@@ -3,7 +3,7 @@
 const moment = require('moment');
 const { sortBy, last, get } = require('lodash');
 
-const { assertAccountNumber, assertIsInstanceOf, assertIsArrayOfType, assertDate, assertNullableDate } = require('./validators');
+const { assertAccountNumber, assertIsInstanceOf, assertIsArrayOfType, assertDate } = require('./validators');
 const Model = require('./model');
 const Company = require('./company');
 const InvoiceAccountAddress = require('./invoice-account-address');
@@ -95,7 +95,6 @@ class InvoiceAccount extends Model {
   }
 
   set dateLastTransactionFileReferenceUpdated (inputDate) {
-    assertNullableDate(inputDate);
     this._dateLastTransactionFileReferenceUpdated = inputDate;
   }
 
