@@ -80,9 +80,8 @@ const getCompanyContacts = companyId => {
   return serviceRequest.get(getUri(companyId, 'contacts'));
 };
 
-const patchCompanyContact = (companyId, contactId, body) => {
-  return serviceRequest.patch(getUri(companyId, 'contacts', contactId), { body });
-};
+const patchCompanyContact = (companyId, contactId, body) =>
+  serviceRequest.patch(getUri(companyId, 'contacts', contactId), { body });
 
 const postCompanyContact = (companyId, body) => serviceRequest.post(getUri(companyId, 'contacts'), {
   body: {

@@ -30,6 +30,9 @@ const contact = {
 
 const createRequest = () => ({
   payload: contact,
+  params: {
+    contactId
+  },
   defra: {
     internalCallingUser: {
       email: 'test@example.com'
@@ -47,6 +50,7 @@ experiment('modules/contacts/controller', () => {
       title: contact.salutation
     });
     sandbox.stub(contactsService, 'createContact');
+    sandbox.stub(contactsService, 'patchContact');
     sandbox.stub(contactMapper, 'uiToModel').returns(contactModel);
     sandbox.stub(helpers, 'createContactEvent').resolves();
   });
@@ -96,6 +100,41 @@ experiment('modules/contacts/controller', () => {
       expect(response.suffix).to.equal(contact.suffix);
       expect(response.isTest).to.equal(contact.isTest);
       expect(response.dataSource).to.equal(contact.dataSource);
+    });
+  });
+
+  experiment('.patchContact', () => {
+    let request;
+
+    beforeEach(async () => {
+      contactsService.patchContact.resolves(contactModel);
+
+      request = createRequest();
+      await controller.patchContact(request);
+    });
+
+    test('creates a new contact record', async () => {
+      expect(contactsService.patchContact.calledWith(
+        contactId,
+        request.payload
+      )).to.be.true();
+    });
+  });
+
+  experiment('.getContact', () => {
+    let request;
+
+    beforeEach(async () => {
+      contactsService.getContact.resolves(contactModel);
+
+      request = createRequest();
+      await controller.getContact(request);
+    });
+
+    test('fetches the contact record', async () => {
+      expect(contactsService.getContact.calledWith(
+        contactId
+      )).to.be.true();
     });
   });
 });
