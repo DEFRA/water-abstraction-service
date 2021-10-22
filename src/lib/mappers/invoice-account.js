@@ -1,4 +1,5 @@
 'use strict';
+const moment = require('moment');
 
 const InvoiceAccount = require('../models/invoice-account');
 const DateRange = require('../models/date-range');
@@ -18,8 +19,11 @@ const crmToModel = invoiceAccount => {
   const invoiceAccountModel = new InvoiceAccount(invoiceAccount.invoiceAccountId);
   invoiceAccountModel.fromHash({
     dateRange: new DateRange(invoiceAccount.startDate, invoiceAccount.endDate),
+    dateCreated: moment(invoiceAccount.dateCreated).format('YYYY-MM-DD'),
     accountNumber: invoiceAccount.invoiceAccountNumber,
-    company: companyMapper.crmToModel(invoiceAccount.company)
+    company: companyMapper.crmToModel(invoiceAccount.company),
+    lastTransactionFileReference: invoiceAccount.lastTransactionFileReference,
+    dateLastTransactionFileReferenceUpdated: moment(invoiceAccount.dateLastTransactionFileReferenceUpdated).format('YYYY-MM-DD')
   });
 
   if (invoiceAccount.invoiceAccountAddresses) {
@@ -32,7 +36,10 @@ const crmToModel = invoiceAccount => {
 const pojoToModelMapper = createMapper()
   .copy(
     'id',
-    'accountNumber'
+    'accountNumber',
+    'dateCreated',
+    'lastTransactionFileReference',
+    'dateLastTransactionFileReferenceUpdated'
   )
   .map('company').to('company', companyMapper.pojoToModel)
   .map('dateRange').to('dateRange', dateRangeMapper.pojoToModel)

@@ -3,7 +3,7 @@
 const moment = require('moment');
 const { sortBy, last, get } = require('lodash');
 
-const { assertAccountNumber, assertIsInstanceOf, assertIsArrayOfType } = require('./validators');
+const { assertAccountNumber, assertIsInstanceOf, assertIsArrayOfType, assertDate, assertNullableDate } = require('./validators');
 const Model = require('./model');
 const Company = require('./company');
 const InvoiceAccountAddress = require('./invoice-account-address');
@@ -79,6 +79,32 @@ class InvoiceAccount extends Model {
 
   get dateRange () {
     return this._dateRange;
+  }
+
+  get dateCreated () {
+    return this._dateCreated;
+  }
+
+  set dateCreated (date) {
+    assertDate(date);
+    this._dateCreated = date;
+  }
+
+  get dateLastTransactionFileReferenceUpdated () {
+    return this._dateLastTransactionFileReferenceUpdated;
+  }
+
+  set dateLastTransactionFileReferenceUpdated (inputDate) {
+    assertNullableDate(inputDate);
+    this._dateLastTransactionFileReferenceUpdated = inputDate;
+  }
+
+  get lastTransactionFileReference () {
+    return this._lastTransactionFileReference;
+  }
+
+  set lastTransactionFileReference (ref) {
+    this._lastTransactionFileReference = ref;
   }
 }
 
