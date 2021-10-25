@@ -3,16 +3,27 @@
 const {
   experiment,
   test,
-  before
+  before,
+  after
 } = exports.lab = require('@hapi/lab').script();
 
 const { expect } = require('@hapi/code');
 
 const server = require('../../index.js');
+const { logger } = require('../../src/logger');
+
+const sinon = require('sinon');
+const sandbox = sinon.createSandbox();
 
 experiment('Test sending a email notification', () => {
   before(async () => {
+    sandbox.stub(logger, 'error');
+    sandbox.stub(logger, 'info');
     await server._start();
+  });
+
+  after(async () => {
+    sandbox.restore();
   });
 
   test('The API should throw an error when personalisation is not supplied', async () => {
