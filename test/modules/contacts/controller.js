@@ -51,6 +51,7 @@ experiment('modules/contacts/controller', () => {
     });
     sandbox.stub(contactsService, 'createContact');
     sandbox.stub(contactsService, 'patchContact');
+    sandbox.stub(contactsService, 'getContact');
     sandbox.stub(contactMapper, 'uiToModel').returns(contactModel);
     sandbox.stub(helpers, 'createContactEvent').resolves();
   });

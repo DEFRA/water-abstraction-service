@@ -20,6 +20,7 @@ experiment('lib/connectors/crm-v2/contacts', () => {
     sandbox.stub(config.services, 'crm_v2').value('http://test.defra');
     sandbox.stub(serviceRequest, 'get').resolves();
     sandbox.stub(serviceRequest, 'post');
+    sandbox.stub(serviceRequest, 'patch');
     sandbox.stub(serviceRequest, 'delete');
   });
 
@@ -129,6 +130,19 @@ experiment('lib/connectors/crm-v2/contacts', () => {
 
     test('makes a request to the expected URL', async () => {
       const [url] = serviceRequest.delete.lastCall.args;
+      expect(url).to.equal('http://test.defra/contacts/test-contact-id');
+    });
+  });
+
+  experiment('.patchContact', () => {
+    beforeEach(async () => {
+      serviceRequest.patch.resolves();
+
+      await contactsConnector.patchContact('test-contact-id', { some: 'payload' });
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url] = serviceRequest.patch.lastCall.args;
       expect(url).to.equal('http://test.defra/contacts/test-contact-id');
     });
   });
