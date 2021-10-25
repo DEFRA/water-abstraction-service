@@ -39,6 +39,14 @@ module.exports = {
     showAuth: true
   },
 
+  jobs: {
+    batchNotifications: {
+      requestEvent: 60000, // 1 minute
+      checkStatus: 15000, // 15 seconds
+      sendMessages: 15000 // 15 seconds
+    }
+  },
+
   jwt: {
     key: process.env.JWT_SECRET,
     verifyOptions: { algorithms: ['HS256'] }
