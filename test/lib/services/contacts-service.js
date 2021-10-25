@@ -23,10 +23,32 @@ experiment('modules/billing/services/contacts-service', () => {
       { contactId: uuid(), initials: 'BC', salutation: 'Mrs', firstName: 'Testy', lastName: 'Mc Testface' }
     ];
     sandbox.stub(contactsConnector, 'getContacts').resolves(connectorResponse);
+    sandbox.stub(contactsConnector, 'getContact').resolves(connectorResponse[0]);
   });
 
   afterEach(async () => {
     sandbox.restore();
+  });
+
+  experiment('.getContact', () => {
+    test('passes the contactId to the connector', async () => {
+      const ids = [uuid()];
+      await contactsService.getContact(ids[0]);
+
+      const [passedId] = contactsConnector.getContact.lastCall.args;
+
+      expect(passedId).to.equal(ids[0]);
+    });
+
+    test('returns the data as Contact objects', async () => {
+      const response = await contactsService.getContact(uuid());
+      expect(response).to.be.an.instanceOf(Contact);
+      expect(response.id).to.equal(connectorResponse[0].contactId);
+      expect(response.title).to.equal(connectorResponse[0].salutation);
+      expect(response.initials).to.equal(connectorResponse[0].initials);
+      expect(response.firstName).to.equal(connectorResponse[0].firstName);
+      expect(response.lastName).to.equal(connectorResponse[0].lastName);
+    });
   });
 
   experiment('.getContacts', () => {
@@ -107,6 +129,20 @@ experiment('modules/billing/services/contacts-service', () => {
 
     test('returns the output from the mapper', async () => {
       expect(response).to.equal(contactModel);
+    });
+  });
+
+  experiment('.patchContact', () => {
+    beforeEach(async () => {
+      sandbox.stub(contactsConnector, 'patchContact').resolves();
+
+      await contactsService.patchContact('test-contact-id', { firstName: 'Potato' });
+    });
+
+    test('the id is passed to the connector', () => {
+      const [id, payload] = contactsConnector.patchContact.lastCall.args;
+      expect(id).to.equal('test-contact-id');
+      expect(payload).to.equal({ firstName: 'Potato' });
     });
   });
 
