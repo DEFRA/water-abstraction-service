@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "2.10.1",
+  "version": "2.11.0",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "repository": {
@@ -10,7 +10,7 @@
   "scripts": {
     "test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test LAZY_REDIS=1 lab",
     "test:bail": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test LAZY_REDIS=1 lab --bail",
-    "test:ci": "CHARGE_MODULE_ORIGIN=https://charging.defra.net LAZY_REDIS=1 lab --bail  -t 55 -m 0 --coverage-path ./src/ -r lcov -o coverage/lcov.info -r console -o stdout",
+    "test:ci": "CHARGE_MODULE_ORIGIN=https://charging.defra.net LAZY_REDIS=1 lab --bail  -t 55 -m 0 --coverage-path ./src/ -r html -o coverage/coverage.html -r lcov -o coverage/lcov.info -r console -o stdout",
     "test:integration": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test lab integration-tests/ --silence --bail",
     "codecov": "codecov",
     "migrate": "node scripts/create-schema && db-migrate up --verbose && node scripts/migrate-task-config",
@@ -18,6 +18,7 @@
     "migrate:down": "db-migrate down --verbose",
     "migrate:create": "db-migrate create --sql-file --",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "version": "auto-changelog -p --commit-limit false && git add CHANGELOG.md"
   },
   "engines": {

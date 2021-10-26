@@ -18,13 +18,9 @@ const messageQueue = require('./src/lib/message-queue');
 const routes = require('./src/routes/water.js');
 const notify = require('./src/modules/notify');
 const returnsNotifications = require('./src/modules/returns-notifications');
-const batchNotifications = require('./src/modules/batch-notifications/lib/jobs/init-batch-notifications');
 const db = require('./src/lib/connectors/db');
 const CatboxRedis = require('@hapi/catbox-redis');
 const { validate } = require('./src/lib/validate');
-
-// Notification cron jobs
-require('./src/modules/batch-notifications/cron').scheduleJobs();
 
 // Initialise logger
 const { logger } = require('./src/logger');
@@ -49,6 +45,7 @@ const plugins = [
   require('./src/modules/returns/register-subscribers'),
   require('./src/modules/address-search/plugin'),
   require('./src/modules/billing/register-subscribers'),
+  require('./src/modules/batch-notifications/register-subscribers'),
   require('./src/modules/gauging-stations/register-subscribers'),
   require('./src/modules/charge-versions/plugin').plugin
 ];
@@ -111,7 +108,6 @@ const configureServerAuthStrategy = (server) => {
 const configureMessageQueue = async (server) => {
   notify(messageQueue).registerSubscribers();
   await returnsNotifications(messageQueue).registerSubscribers();
-  await batchNotifications.registerSubscribers(messageQueue);
   server.log('info', 'Message queue started');
 };
 

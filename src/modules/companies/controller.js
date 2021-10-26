@@ -126,6 +126,16 @@ const getCompanyContacts = async (request) => {
   }
 };
 
+const postCompanyContact = async request => {
+  const { companyId } = request.params;
+  return companyContactsService.postCompanyContact(companyId, request.payload);
+};
+
+const patchCompanyContact = async request => {
+  const { companyId, contactId } = request.params;
+  return companyContactsService.patchCompanyContact(companyId, contactId, request.payload);
+};
+
 const getCompanyInvoiceAccounts = async request => {
   const { companyId } = request.params;
   const { regionId } = request.query;
@@ -154,5 +164,7 @@ exports.searchCompaniesByName = searchCompaniesByName;
 exports.getCompanyAddresses = getCompanyAddresses;
 exports.createCompanyInvoiceAccount = createCompanyInvoiceAccount;
 exports.getCompanyContacts = getCompanyContacts;
+exports.postCompanyContact = postCompanyContact;
+exports.patchCompanyContact = patchCompanyContact;
 exports.getCompanyInvoiceAccounts = getCompanyInvoiceAccounts;
 exports.getCompanyLicences = getCompanyLicences;

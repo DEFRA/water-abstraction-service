@@ -13,6 +13,7 @@ const updateCustomer = require('./jobs/update-customer');
 const checkForUpdatedInvoiceAccounts = require('./jobs/check-for-updated-invoice-accounts');
 const approveBatch = require('./jobs/approve-batch');
 const deleteErroredBatch = require('./jobs/delete-errored-batch');
+const customerFileRefresh = require('./jobs/customer-file-refresh');
 
 module.exports = {
   name: 'billing-jobs',
@@ -31,6 +32,9 @@ module.exports = {
       .register(updateCustomer)
       .register(checkForUpdatedInvoiceAccounts)
       .register(approveBatch)
-      .register(deleteErroredBatch);
+      .register(deleteErroredBatch)
+      .register(customerFileRefresh);
+
+    server.queueManager.add(customerFileRefresh.jobName);
   }
 };

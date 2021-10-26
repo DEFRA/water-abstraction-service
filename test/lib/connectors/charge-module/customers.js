@@ -19,6 +19,7 @@ experiment('lib/connectors/charge-module/customers', () => {
 
   beforeEach(async () => {
     sandbox.stub(gotCM, 'post').resolves();
+    sandbox.stub(gotCM, 'get').resolves();
   });
   afterEach(async () => {
     sandbox.restore();
@@ -36,6 +37,16 @@ experiment('lib/connectors/charge-module/customers', () => {
     test('the payload is equal to the resolved object from the mapInvoiceAccountToChargeModuleCustomer function', async () => {
       const [, options] = gotCM.post.lastCall.args;
       expect(options).to.equal({ json: tempInvoiceAccountId });
+    });
+  });
+
+  experiment('.getCustomerFiles', () => {
+    beforeEach(async () => {
+      await customerApiConnector.getCustomerFiles();
+    });
+
+    test('the method is GET', async () => {
+      expect(gotCM.get.called).to.be.true();
     });
   });
 });

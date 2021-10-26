@@ -1,34 +1,33 @@
-const { get } = require('lodash');
+'use strict';
+
 const { logger } = require('../../../../logger');
 const { getNextCheckTime, getNextCheckCount } = require('../status-check-helpers');
 const messageHelpers = require('../message-helpers');
 const notify = require('../../../../lib/notify');
 const scheduledNotifications = require('../../../../controllers/notifications');
-const { createJobPublisher } = require('../batch-notifications');
+const config = require('../../../../../config');
+const queries = require('../queries');
 
-/**
- * The name of this event in the PG Boss
- * @type {String}
- */
 const JOB_NAME = 'notifications.checkStatus';
 
-/**
- * Publishes a status check job on the PG Boss queue
- * @param  {String} messageId - GUID of the scheduled_notification
- * @return {Promise}
- */
-const publishCheckStatus = createJobPublisher(JOB_NAME, 'messageId');
+const createMessage = () => {
+  logger.info(`Create Message ${JOB_NAME}`);
+  return [
+    JOB_NAME,
+    {},
+    {
+      jobId: JOB_NAME,
+      repeat: {
+        every: config.jobs.batchNotifications.checkStatus
+      }
+    }
+  ];
+};
 
-/**
- * PG boss job handler to check the status of a scheduled_notification in
- * Notify and update the status in the local DB table
- * @param  {Object}  job - PG boss job data
- * @return {Promise}
- */
-const handleCheckStatus = async job => {
-  const messageId = get(job, 'data.messageId');
-
+const handleCheckStatus = async messageId => {
   try {
+    logger.info(`Checking status of message: ${messageId}`);
+
     // Load scheduled_notification message data
     const message = await messageHelpers.getMessageById(messageId);
 
@@ -44,13 +43,34 @@ const handleCheckStatus = async job => {
       notify_status: status
     };
 
-    const result = await scheduledNotifications.repository.update({ id: messageId }, data);
-    return result;
+    return scheduledNotifications.repository.update({ id: messageId }, data);
   } catch (err) {
     logger.error('Error checking notify status', err, { messageId });
   }
 };
 
-exports.publish = publishCheckStatus;
-exports.handler = handleCheckStatus;
+const handler = async job => {
+  logger.info(`Handling: ${JOB_NAME}:${job.id}`);
+  try {
+    const batch = await queries.getNotifyStatusChecks();
+    logger.info(`Checking notify statuses - ${batch.length} item(s) found`);
+    await Promise.all((batch.map(({ id }) => handleCheckStatus(id))));
+  } catch (err) {
+    logger.error(`Error handling: ${job.id}`, err, job.data);
+  }
+};
+
+const onFailed = async (job, err) => {
+  logger.error(`${JOB_NAME}: Job has failed`, err);
+};
+
+const onComplete = async () => {
+  logger.info(`${JOB_NAME}: Job has completed`);
+};
+
+exports.handler = handler;
+exports.onFailed = onFailed;
+exports.onComplete = onComplete;
 exports.jobName = JOB_NAME;
+exports.createMessage = createMessage;
+exports.hasScheduler = true;

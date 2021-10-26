@@ -16,7 +16,8 @@ exports.LOSSES = {
 
 exports.CONTACT_ROLES = {
   billing: 'billing',
-  licenceHolder: 'licenceHolder'
+  licenceHolder: 'licenceHolder',
+  additionalContact: 'additionalContact'
 };
 
 exports.TIME_PERIODS = {
@@ -38,6 +39,7 @@ exports.INCLUDE_IN_SUPPLEMENTARY_BILLING = {
 
 exports.ROLE_NAMES = {
   licenceHolder: 'licenceHolder',
+  additionalContact: 'additionalContact',
   billing: 'billing',
   returnsTo: 'returnsTo'
 };

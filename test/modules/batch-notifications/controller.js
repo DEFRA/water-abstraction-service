@@ -13,7 +13,6 @@ const controller = require('../../../src/modules/batch-notifications/controller'
 const eventsService = require('../../../src/lib/services/events');
 const Event = require('../../../src/lib/models/event');
 const messageHelpers = require('../../../src/modules/batch-notifications/lib/message-helpers');
-const getRecipients = require('../../../src/modules/batch-notifications/lib/jobs/get-recipients');
 const { EVENT_STATUS_PROCESSED } = require('../../../src/modules/batch-notifications/lib/event-statuses');
 const sendBatch = require('../../../src/modules/batch-notifications/lib/send-batch');
 const { logger } = require('../../../src/logger');
@@ -57,8 +56,6 @@ experiment('batch notifications controller', () => {
     sandbox.stub(eventsService, 'findOne').resolves(eventModel);
     sandbox.stub(eventsService, 'updateStatus').resolves(eventModel);
 
-    sandbox.stub(getRecipients, 'publish').resolves();
-
     sandbox.stub(messageHelpers, 'updateMessageStatuses').resolves();
 
     sandbox.stub(sendBatch, 'send').resolves({});
@@ -78,6 +75,9 @@ experiment('batch notifications controller', () => {
           data: {
             excludeLicences: ['01/123']
           }
+        },
+        queueManager: {
+          add: sandbox.stub().resolves()
         }
       };
     });
@@ -111,9 +111,10 @@ experiment('batch notifications controller', () => {
 
     test('publishes event to start building recipient list', async () => {
       await controller.postPrepare(request, h);
-      expect(getRecipients.publish.callCount).to.equal(1);
-      const { args } = getRecipients.publish.lastCall;
-      expect(args[0]).to.equal(eventId);
+      expect(request.queueManager.add.callCount).to.equal(1);
+      const { args } = request.queueManager.add.lastCall;
+      expect(args[0]).to.equal('notifications.getRecipients');
+      expect(args[1]).to.equal(eventId);
     });
 
     test('responds with event data', async () => {
