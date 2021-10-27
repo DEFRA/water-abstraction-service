@@ -175,6 +175,18 @@ const findByChargeVersionFinancialYearAndSeason = async (chargeVersionId, financ
 const findByChargeVersionAndFinancialYear = (chargeVersionId, financialYearEnding) =>
   raw.multiRow(queries.findByChargeVersionAndFinancialYear, { chargeVersionId, financialYearEnding });
 
+/**
+ * Finds billing volumes for the specified charge version ID
+ * in the supplied financial year.  Includes the batch source
+ *
+ * @param {String} billingBatchId
+ * @param {String} licenceId
+ */
+const deleteByFinancialYearEnding = (batchId, licenceId, financialYearEnding) =>
+  raw.multiRow(queries.deleteByFinancialYearEnding, {
+    batchId, licenceId, financialYearEnding
+  });
+
 exports.create = create;
 exports.findApprovedByChargeElementIdsAndFinancialYear = findApprovedByChargeElementIdsAndFinancialYear;
 exports.update = update;
@@ -190,3 +202,4 @@ exports.updateByBatchId = updateByBatchId;
 exports.markVolumesAsErrored = markVolumesAsErrored;
 exports.findByChargeVersionFinancialYearAndSeason = findByChargeVersionFinancialYearAndSeason;
 exports.findByChargeVersionAndFinancialYear = findByChargeVersionAndFinancialYear;
+exports.deleteByFinancialYearEnding = deleteByFinancialYearEnding;
