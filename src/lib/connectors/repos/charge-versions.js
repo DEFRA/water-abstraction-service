@@ -88,7 +88,7 @@ const updateTwoPartTariffFlagByLicenceRef = (licenceRef, fromDate) => {
 };
 
 const resetTwoPartTariffRecalculationFlag = batchId =>
-bookshelf.knex.raw(queries.resetTwoPartTariffRecalculationFlag, { batchId });
+  bookshelf.knex.raw(queries.resetTwoPartTariffRecalculationFlag, { batchId });
 
 /**
  * Updates the specified charge version with the supplied changes
@@ -107,3 +107,4 @@ exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear;
 exports.update = update;
 exports.findByLicenceId = findByLicenceId;
 exports.updateTwoPartTariffFlagByLicenceRef = updateTwoPartTariffFlagByLicenceRef;
+exports.resetTwoPartTariffRecalculationFlag = resetTwoPartTariffRecalculationFlag;

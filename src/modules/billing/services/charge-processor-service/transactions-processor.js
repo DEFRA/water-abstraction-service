@@ -32,7 +32,7 @@ const isTwoPartTariffApplied = (agreement, chargeElement) =>
  */
 const agreementAppliesToTransaction = (agreement, chargeElement) => {
   const isCanalApplied = agreement.isCanalAndRiversTrust();
-  return !!isCanalApplied || isTwoPartTariffApplied(agreement, chargeElement);
+  return isCanalApplied || isTwoPartTariffApplied(agreement, chargeElement);
 };
 
 const getBillableDays = (absPeriod, startDate, endDate, isTwoPartTariffSupplementary) =>
