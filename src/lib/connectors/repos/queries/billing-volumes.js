@@ -56,3 +56,13 @@ and bv.financial_year=:financialYearEnding
 and bv.is_approved=true 
 and bv.errored_on is null
 `;
+
+exports.deleteByFinancialYearEnding = `
+ DELETE FROM water.billing_volumes bv
+ USING water.charge_versions cv JOIN
+ water.charge_elements ce ON cv.charge_version_id = ce.charge_version_id 
+ WHERE ce.charge_element_id = bv.charge_element_id 
+ and cv.licence_id =:licenceId 
+ and bv.financial_year =:financialYearEnding
+ and bv.billing_batch_id =:billingBatchId;
+`;

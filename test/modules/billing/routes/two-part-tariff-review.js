@@ -32,6 +32,64 @@ experiment('modules/billing/routes/two-part-tariff-review', () => {
     };
   });
 
+  experiment('deleteBatchLicenceBillingVolumes', () => {
+    let request, server, batchId, licenceId, financialYearEnding;
+
+    beforeEach(async () => {
+      server = await getServer(routes.deleteBatchLicenceBillingVolumes);
+      batchId = uuid();
+      licenceId = uuid();
+      financialYearEnding = 2020;
+
+      request = {
+        method: 'DELETE',
+        url: `/water/1.0/billing/batches/${batchId}/licences/${licenceId}/financial-year-ending/${financialYearEnding}`,
+        headers: {},
+        auth
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 200 if unknown headers are passed', async () => {
+      request.headers['x-custom-header'] = '123';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the batch id is not a uuid', async () => {
+      request.url = request.url.replace(batchId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the licence id is not a uuid', async () => {
+      request.url = request.url.replace(licenceId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the financialyearending is not a number', async () => {
+      request.url = request.url.replace(financialYearEnding, 'crumpets');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 403 if the request has insufficient scope', async () => {
+      request.auth.credentials.scope = [];
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(403);
+    });
+
+    test('returns a 200 when params are acceptable', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+  });
+
   experiment('patchBillingVolume', () => {
     let request, server, billingVolumeId;
 
@@ -61,7 +119,7 @@ experiment('modules/billing/routes/two-part-tariff-review', () => {
       expect(response.statusCode).to.equal(200);
     });
 
-    test('returns a 400 if the batch id is not a uuid', async () => {
+    test('returns a 400 if the billingVolumeId is not a uuid', async () => {
       request.url = request.url.replace(billingVolumeId, '123');
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
