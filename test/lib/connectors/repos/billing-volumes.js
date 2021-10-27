@@ -6,6 +6,7 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
+const uuid = require('uuid/v4');
 
 const billingVolumes = require('../../../../src/lib/connectors/repos/billing-volumes');
 const { BillingVolume, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
@@ -368,6 +369,22 @@ experiment('lib/connectors/repos/billing-volumes', () => {
           chargeVersionId,
           financialYearEnding
         }
+      ));
+    });
+  });
+
+  experiment('.deleteByFinancialYearEnding', () => {
+    const batchId = uuid();
+    const licenceId = uuid();
+    const financialYearEnding = 2022;
+
+    beforeEach(async () => {
+      await billingVolumes.deleteByFinancialYearEnding(batchId, licenceId, financialYearEnding);
+    });
+
+    test('calls raw.multiRow with the query and params', async () => {
+      expect(raw.multiRow.calledWith(
+        queries.deleteByFinancialYearEnding, { batchId, licenceId, financialYearEnding }
       ));
     });
   });
