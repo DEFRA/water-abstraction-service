@@ -7,8 +7,8 @@ const DateRange = require('../../../../../lib/models/date-range');
 
 // filter out agreements if they have been deleted
 const isBillingAgreement = licenceAgreement =>
-  (licenceAgreement.agreement.isTwoPartTariff() && licenceAgreement.agreement.dateDeleted === null) ||
-  (licenceAgreement.agreement.isCanalAndRiversTrust() && licenceAgreement.agreement.dateDeleted === null);
+  (licenceAgreement.agreement.isTwoPartTariff() && licenceAgreement.dateDeleted === null) ||
+  (licenceAgreement.agreement.isCanalAndRiversTrust() && licenceAgreement.dateDeleted === null);
 
 const getPropertyKey = licenceAgreement => {
   const { agreement } = licenceAgreement;

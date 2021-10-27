@@ -10,9 +10,10 @@ const { RETURN_SEASONS } = require('../../../../lib/models/constants');
 const { BATCH_TYPE } = require('../../../../lib/models/batch');
 const { TRANSACTION_TYPE } = require('../../../../lib/models/charge-version-year');
 const FinancialYear = require('../../../../lib/models/financial-year');
-
+const chargeVersionService = require('../../../../lib/services/charge-versions');
 const chargeVersionYearService = require('../charge-version-year');
 const batchService = require('../batch-service');
+const DateRange = require('../../../../lib/models/date-range');
 
 /**
  * Gets the return season string from the isSummer flag
@@ -47,21 +48,31 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
 
   const types = getAnnualTransactionTypes();
 
-  const twoPartTariffSeasons = await twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion(chargeVersion, existingTPTBatches);
+  const dateRangers = new DateRange(chargeVersion.startDate, chargeVersion.endDate);
 
-  // find historic 2PT batch types for financial year
-  const historicTransactionTypes = existingTPTBatches.reduce((acc, batchRow) => {
-    if (batchRow.type === BATCH_TYPE.twoPartTariff) {
-      acc.push(batchRow.isSummer ? 'summer' : 'winter');
+  const fullChargeVersion = await chargeVersionService.getByChargeVersionId(chargeVersion.chargeVersionId);
+  const check = fullChargeVersion.licence.licenceAgreements.some(licAgreement => {
+    return licAgreement.dateDeleted === null &&
+      licAgreement.dateRange.overlaps(dateRangers);
+  });
+
+  if (check) {
+    const twoPartTariffSeasons = await twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion(chargeVersion, existingTPTBatches);
+
+    // find historic 2PT batch types for financial year
+    const historicTransactionTypes = existingTPTBatches.reduce((acc, batchRow) => {
+      if (batchRow.type === BATCH_TYPE.twoPartTariff) {
+        acc.push(batchRow.isSummer ? 'summer' : 'winter');
+      }
+      return acc;
+    }, []);
+
+    if (twoPartTariffSeasons[RETURN_SEASONS.summer] && (historicTransactionTypes.includes('summer'))) {
+      types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: true });
     }
-    return acc;
-  }, []);
-
-  if (twoPartTariffSeasons[RETURN_SEASONS.summer] && (historicTransactionTypes.includes('summer') || chargeVersion.recalculateTwoPartTariff)) {
-    types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: true });
-  }
-  if (twoPartTariffSeasons[RETURN_SEASONS.winterAllYear] && (historicTransactionTypes.includes('winter') || chargeVersion.recalculateTwoPartTariff)) {
-    types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: false });
+    if (twoPartTariffSeasons[RETURN_SEASONS.winterAllYear] && (historicTransactionTypes.includes('winter'))) {
+      types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: false });
+    }
   }
 
   return types;

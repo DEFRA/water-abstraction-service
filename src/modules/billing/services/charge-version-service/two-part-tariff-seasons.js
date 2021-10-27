@@ -8,8 +8,8 @@ const returnRequirementVersionService = require('../../../../lib/services/return
 const { RETURN_SEASONS } = require('../../../../lib/models/constants');
 const { BATCH_SOURCE } = require('../../../../lib/models/batch');
 const DateRange = require('../../../../lib/models/date-range');
-const { CHARGE_SEASON } = require('../../../../lib/models/constants');
-const chargeVersionService = require('../../../../lib/services/charge-versions');
+// const { CHARGE_SEASON } = require('../../../../lib/models/constants');
+// const chargeVersionService = require('../../../../lib/services/charge-versions');
 
 /**
  * Creates an object which describes whether 2-part tariff billing is needed in
@@ -84,11 +84,11 @@ const getWRLSTwoPartTariffSeasons = async (row, existingTPTBatches) => {
   );
 
   // Whether summer or winter/all year returns are due for two-part tariff applicable purposes
-  let isSummer = returnVersionsInChargePeriod.some(
+  const isSummer = returnVersionsInChargePeriod.some(
     returnVersion => returnVersion.hasTwoPartTariffPurposeReturnsInSeason(RETURN_SEASONS.summer)
   );
 
-  let isWinterAllYear = returnVersionsInChargePeriod.some(
+  const isWinterAllYear = returnVersionsInChargePeriod.some(
     returnVersion => returnVersion.hasTwoPartTariffPurposeReturnsInSeason(RETURN_SEASONS.winterAllYear)
   );
 
@@ -96,23 +96,23 @@ const getWRLSTwoPartTariffSeasons = async (row, existingTPTBatches) => {
   // use the charge version to get the seasons because if a new agreement is added the licence
   // might not have any returns versions to match the season. The billing volumes will calculate to zero
   // but the user will have to correct that manually where necessary.
-  if (row.recalculateTwoPartTariff) {
-    const chargeVersion = await chargeVersionService.getByChargeVersionId(row.chargeVersionId);
+  // if (row.recalculateTwoPartTariff) {
+  //   const chargeVersion = await chargeVersionService.getByChargeVersionId(row.chargeVersionId);
 
-    // Filter only return versions that overlap this charge period
-    const chargeElementWithTwoPartTariff = chargeVersion.chargeElements.filter(
-      chargeElement => chargeElement.isSection127AgreementEnabled
-    );
+  //   // Filter only return versions that overlap this charge period
+  //   const chargeElementWithTwoPartTariff = chargeVersion.chargeElements.filter(
+  //     chargeElement => chargeElement.isSection127AgreementEnabled
+  //   );
 
-    // Whether summer or winter/all year returns are due for two-part tariff applicable purposes
-    isSummer = chargeElementWithTwoPartTariff.some(
-      chargeElement => chargeElement.season === CHARGE_SEASON.summer
-    );
+  //   // Whether summer or winter/all year returns are due for two-part tariff applicable purposes
+  //   isSummer = chargeElementWithTwoPartTariff.some(
+  //     chargeElement => chargeElement.season === CHARGE_SEASON.summer
+  //   );
 
-    isWinterAllYear = chargeElementWithTwoPartTariff.some(
-      chargeElement => chargeElement.season !== CHARGE_SEASON.summer
-    );
-  }
+  //   isWinterAllYear = chargeElementWithTwoPartTariff.some(
+  //     chargeElement => chargeElement.season !== CHARGE_SEASON.summer
+  //   );
+  // }
 
   const batches = createTwoPartTariffBatches(isSummer, isWinterAllYear);
 

@@ -21,7 +21,6 @@ const DATE_FORMAT = 'YYYY-MM-DD';
 
 const isTwoPartTariffApplied = (agreement, chargeElement) =>
   agreement.isTwoPartTariff() &&
-  agreement.dateDeleted === null &&
   chargeElement.purposeUse.isTwoPartTariff &&
   chargeElement.isSection127AgreementEnabled;
 /**
