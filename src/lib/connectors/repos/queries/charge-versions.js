@@ -13,10 +13,12 @@ select distinct
   t1.licence_ref,
   t1.licence_id,
   t1.include_in_supplementary_billing,
-  t2.two_part_tariff_dates<>'empty' as is_two_part_tariff
+  t2.two_part_tariff_dates<>'empty' as is_two_part_tariff,
+  t1.recalculate_two_part_tariff
 from (
   select
     cv.charge_version_id,
+    cv.recalculate_two_part_tariff,
     -- Licence date range
     daterange(
       l.start_date,
@@ -60,9 +62,18 @@ left join (
     from water.licence_agreements la
     join water.financial_agreement_types a on la.financial_agreement_type_id=a.financial_agreement_type_id
     where a.financial_agreement_code='S127' 
-      and la.end_date is null or la.end_date>=la.start_date
+      and la.end_date is null or la.end_date>=la.start_date and date_deleted IS NULL
 ) t2 on t1.licence_ref=t2.licence_ref and t1.charge_period_dates * t2.two_part_tariff_dates <> 'empty'
 where t1.charge_period_dates <> 'empty'
 `;
 
+const resetTwoPartTariffRecalculationFlag = `
+update water.charge_versions set recalculate_two_part_tariff = false
+where charge_version_id in 
+(select charge_version_id 
+  from water.billing_batch_charge_version_years
+  where billing_batch_id=:batchId)
+`;
+
+exports.resetTwoPartTariffRecalculationFlag = resetTwoPartTariffRecalculationFlag;
 exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear;

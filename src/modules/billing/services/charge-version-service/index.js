@@ -57,10 +57,10 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
     return acc;
   }, []);
 
-  if (twoPartTariffSeasons[RETURN_SEASONS.summer] && historicTransactionTypes.includes('summer')) {
+  if (twoPartTariffSeasons[RETURN_SEASONS.summer] && (historicTransactionTypes.includes('summer') || chargeVersion.recalculateTwoPartTariff)) {
     types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: true });
   }
-  if (twoPartTariffSeasons[RETURN_SEASONS.winterAllYear] && historicTransactionTypes.includes('winter')) {
+  if (twoPartTariffSeasons[RETURN_SEASONS.winterAllYear] && (historicTransactionTypes.includes('winter') || chargeVersion.recalculateTwoPartTariff)) {
     types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: false });
   }
 

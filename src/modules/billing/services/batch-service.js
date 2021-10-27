@@ -24,7 +24,7 @@ const billingVolumesService = require('./billing-volumes-service');
 const invoiceService = require('../../../lib/services/invoice-service');
 const licencesService = require('../../../lib/services/licences');
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
-
+const chargeVersionService = require('../../../lib/services/charge-versions');
 // Models
 const Event = require('../../../lib/models/event');
 const Batch = require('../../../lib/models/batch');
@@ -179,6 +179,9 @@ const approveBatch = async (batch, internalCallingUser) => {
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
 
     await licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch(batch.id);
+    if (batch.type === BATCH_TYPE.supplementary) {
+      await chargeVersionService.resetTwoPartTariffRecalculationFlag(batch.id);
+    }
     await invoiceService.resetIsFlaggedForRebilling(batch.id);
 
     return batch;

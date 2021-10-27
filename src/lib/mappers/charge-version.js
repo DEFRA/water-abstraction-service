@@ -34,7 +34,8 @@ const dbToModelMapper = createMapper()
     'scheme',
     'versionNumber',
     'status',
-    'source'
+    'source',
+    'recalculateTwoPartTariff'
   )
   .map('regionCode').to('region', createRegion)
   .map(['startDate', 'endDate']).to('dateRange', (startDate, endDate) => new DateRange(startDate, endDate))

@@ -17,6 +17,7 @@ const Event = require('../models/event');
 
 // Services
 const agreementsService = require('./agreements');
+const chargeVersionService = require('./charge-versions');
 const licencesService = require('./licences');
 const service = require('./service');
 const eventService = require('./events');
@@ -68,7 +69,7 @@ const deleteLicenceAgreementById = async (licenceAgreementId, issuer) => {
   }
 
   // Delete
-  await licenceAgreementRepo.deleteOne(licenceAgreementId);
+  await licenceAgreementRepo.softDeleteOne(licenceAgreementId);
 
   // Get licence
   const licence = await licencesService.getLicenceByLicenceRef(licenceAgreement.licenceNumber);
@@ -76,7 +77,8 @@ const deleteLicenceAgreementById = async (licenceAgreementId, issuer) => {
   // Log event and flag licence for supplementary billing
   return Promise.all([
     createEvent(EVENT_TYPES.delete, licenceAgreement, issuer),
-    licencesService.flagForSupplementaryBilling(licence.id)
+    licencesService.flagForSupplementaryBilling(licence.id),
+    chargeVersionService.setTwoPartTariffRecalculationFlag(licenceAgreement.licenceNumber, licenceAgreement.startDate)
   ]);
 };
 
@@ -129,7 +131,8 @@ const createLicenceAgreement = async (licence, data, issuer) => {
     // Log event and flag licence for supplementary billing
     await Promise.all([
       createEvent(EVENT_TYPES.create, licenceAgreement, issuer),
-      licencesService.flagForSupplementaryBilling(licence.id)
+      licencesService.flagForSupplementaryBilling(licence.id),
+      chargeVersionService.setTwoPartTariffRecalculationFlag(licenceAgreement.licenceNumber, licenceAgreement.startDate)
     ]);
 
     // Return the updated model
@@ -160,7 +163,8 @@ const patchLicenceAgreement = async (licenceAgreementId, data, issuer) => {
   // Log event and flag licence for supplementary billing
   return Promise.all([
     createEvent(EVENT_TYPES.update, licenceAgreement, issuer),
-    licencesService.flagForSupplementaryBilling(response.licence.licenceId)
+    licencesService.flagForSupplementaryBilling(response.licence.licenceId),
+    chargeVersionService.setTwoPartTariffRecalculationFlag(licenceAgreement.licenceNumber, licenceAgreement.startDate)
   ]);
 };
 

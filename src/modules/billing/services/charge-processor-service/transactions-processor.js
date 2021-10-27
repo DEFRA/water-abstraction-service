@@ -20,7 +20,10 @@ const agreements = require('./lib/agreements');
 const DATE_FORMAT = 'YYYY-MM-DD';
 
 const isTwoPartTariffApplied = (agreement, chargeElement) =>
-  agreement.isTwoPartTariff() && chargeElement.purposeUse.isTwoPartTariff && chargeElement.isSection127AgreementEnabled;
+  agreement.isTwoPartTariff() &&
+  agreement.dateDeleted === null &&
+  chargeElement.purposeUse.isTwoPartTariff &&
+  chargeElement.isSection127AgreementEnabled;
 /**
  * Predicate to check whether an agreement should be applied to the transaction
  * @param {Agreement} agreement
@@ -29,7 +32,7 @@ const isTwoPartTariffApplied = (agreement, chargeElement) =>
  */
 const agreementAppliesToTransaction = (agreement, chargeElement) => {
   const isCanalApplied = agreement.isCanalAndRiversTrust();
-  return isCanalApplied || isTwoPartTariffApplied(agreement, chargeElement);
+  return !!isCanalApplied || isTwoPartTariffApplied(agreement, chargeElement);
 };
 
 const getBillableDays = (absPeriod, startDate, endDate, isTwoPartTariffSupplementary) =>
