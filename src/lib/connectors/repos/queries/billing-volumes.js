@@ -64,5 +64,5 @@ exports.deleteByFinancialYearEnding = `
  WHERE ce.charge_element_id = bv.charge_element_id 
  and cv.licence_id =:licenceId 
  and bv.financial_year =:financialYearEnding
- and bv.billing_batch_id =:billingBatchId;
+ and bv.billing_batch_id =:batchId;
 `;
