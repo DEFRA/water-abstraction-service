@@ -248,18 +248,6 @@ class ChargeVersion extends Model {
   get approvedBy () {
     return this._approvedBy;
   }
-
-  /**
-   * a flag used to recalculate the 2nd part charges
-   */
-  set recalculateTwoPartTariff (value) {
-    validators.assertIsBoolean(value);
-    this._recalculateTwoPartTariff = value;
-  }
-
-  get recalculateTwoPartTariff () {
-    return this._recalculateTwoPartTariff;
-  }
 }
 
 module.exports = ChargeVersion;

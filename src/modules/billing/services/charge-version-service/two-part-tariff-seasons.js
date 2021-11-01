@@ -92,28 +92,6 @@ const getWRLSTwoPartTariffSeasons = async (row, existingTPTBatches) => {
     returnVersion => returnVersion.hasTwoPartTariffPurposeReturnsInSeason(RETURN_SEASONS.winterAllYear)
   );
 
-  // if the charge version is flagged to recalculate the 2PT charge then
-  // use the charge version to get the seasons because if a new agreement is added the licence
-  // might not have any returns versions to match the season. The billing volumes will calculate to zero
-  // but the user will have to correct that manually where necessary.
-  // if (row.recalculateTwoPartTariff) {
-  //   const chargeVersion = await chargeVersionService.getByChargeVersionId(row.chargeVersionId);
-
-  //   // Filter only return versions that overlap this charge period
-  //   const chargeElementWithTwoPartTariff = chargeVersion.chargeElements.filter(
-  //     chargeElement => chargeElement.isSection127AgreementEnabled
-  //   );
-
-  //   // Whether summer or winter/all year returns are due for two-part tariff applicable purposes
-  //   isSummer = chargeElementWithTwoPartTariff.some(
-  //     chargeElement => chargeElement.season === CHARGE_SEASON.summer
-  //   );
-
-  //   isWinterAllYear = chargeElementWithTwoPartTariff.some(
-  //     chargeElement => chargeElement.season !== CHARGE_SEASON.summer
-  //   );
-  // }
-
   const batches = createTwoPartTariffBatches(isSummer, isWinterAllYear);
 
   return existingTPTBatches
@@ -141,7 +119,7 @@ const isWinterAllYearFlagSet = season => season[RETURN_SEASONS.winterAllYear];
  */
 const getTwoPartTariffSeasonsForChargeVersion = async (chargeVersionRow, existingTPTBatches) => {
   // This CV doesn't have a TPT agreement - so the CV won't be in any TPT seasons
-  if (!chargeVersionRow.isTwoPartTariff && !chargeVersionRow.recalculateTwoPartTariff) {
+  if (!chargeVersionRow.isTwoPartTariff) {
     return createTwoPartTariffBatches();
   }
 

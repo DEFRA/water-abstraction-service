@@ -1,6 +1,6 @@
 'use strict';
 
-const { ChargeVersion, bookshelf } = require('../bookshelf');
+const { ChargeVersion } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/charge-versions');
 const helpers = require('./lib/helpers');

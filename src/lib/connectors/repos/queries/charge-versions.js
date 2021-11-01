@@ -12,13 +12,10 @@ select distinct
   upper(t1.charge_period_dates) as end_date,
   t1.licence_ref,
   t1.licence_id,
-  t1.include_in_supplementary_billing,
-  t2.two_part_tariff_dates<>'empty' as is_two_part_tariff,
-  t1.recalculate_two_part_tariff
+  t1.include_in_supplementary_billing
 from (
   select
     cv.charge_version_id,
-    cv.recalculate_two_part_tariff,
     -- Licence date range
     daterange(
       l.start_date,
@@ -67,13 +64,4 @@ left join (
 where t1.charge_period_dates <> 'empty'
 `;
 
-const resetTwoPartTariffRecalculationFlag = `
-update water.charge_versions set recalculate_two_part_tariff = false
-where charge_version_id in 
-(select charge_version_id 
-  from water.billing_batch_charge_version_years
-  where billing_batch_id=:batchId)
-`;
-
-exports.resetTwoPartTariffRecalculationFlag = resetTwoPartTariffRecalculationFlag;
 exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear;
