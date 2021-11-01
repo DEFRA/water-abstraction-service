@@ -19,7 +19,16 @@ const getChargeVersionWorkflows = async request => {
   if (licenceId) {
     return { data: await chargeVersionsWorkflowService.getManyByLicenceId(licenceId) };
   } else {
-    return chargeVersionsWorkflowService.getAllWithLicenceHolder();
+    const { page, perPage } = request.query;
+    /* Example paging values sent from UI:
+    page = 1;
+    perPage = 12;
+    */
+    if (page) {
+      return chargeVersionsWorkflowService.getAllWithLicenceHolderWithPaging(page, perPage);
+    } else {
+      return chargeVersionsWorkflowService.getAllWithLicenceHolder();
+    }
   }
 };
 

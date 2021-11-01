@@ -25,7 +25,9 @@ module.exports = {
       validate: {
         headers,
         query: Joi.object().keys({
-          licenceId: Joi.string().guid().optional()
+          licenceId: Joi.string().guid().optional(),
+          page: Joi.string().optional(),
+          perPage: Joi.string().optional()
         })
       }
     }

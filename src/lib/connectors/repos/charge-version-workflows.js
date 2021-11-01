@@ -16,6 +16,9 @@ const findOne = id =>
 const findAll = () =>
   helpers.findMany(ChargeVersionWorkflow, { date_deleted: null }, relatedModels);
 
+const findAllWithPaging = (page = 1, perPage = 10) =>
+  helpers.findManyWithPaging(ChargeVersionWorkflow, { date_deleted: null }, relatedModels, page, perPage);
+
 const findManyForLicence = licenceId =>
   helpers.findMany(ChargeVersionWorkflow, { licence_id: licenceId, date_deleted: null }, relatedModels);
 
@@ -33,6 +36,7 @@ const softDeleteOne = id =>
 
 exports.findOne = findOne;
 exports.findAll = findAll;
+exports.findAllWithPaging = findAllWithPaging;
 exports.findManyForLicence = findManyForLicence;
 exports.create = create;
 exports.update = update;
