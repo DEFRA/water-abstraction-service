@@ -1,2 +1,0 @@
-ALTER TABLE water.charge_versions
-DROP COLUMN recalculate_two_part_tariff;

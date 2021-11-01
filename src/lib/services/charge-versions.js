@@ -147,17 +147,6 @@ const updateExistingChargeVersions = existingChargeVersions => {
 };
 
 /**
- * flag charge version to recalculate 2nd part 2PTT charges
- * @param {String} licenceRef
- * @param {Date} fromDate
- */
-const setTwoPartTariffRecalculationFlag = (licenceRef, fromDate) =>
-  chargeVersionRepo.updateTwoPartTariffFlagByLicenceRef(licenceRef, fromDate);
-
-const resetTwoPartTariffRecalculationFlag = batchId =>
-  chargeVersionRepo.resetTwoPartTariffRecalculationFlag(batchId);
-
-/**
  * Persists a new charge version from the model supplied
  * NB: licence is flagged for supplementary billing
  *     when the charge version workflow is deleted
@@ -201,5 +190,3 @@ exports.getByIdWithInvoiceAccount = getByIdWithInvoiceAccount;
 exports.getByLicenceId = getByLicenceId;
 exports.getByLicenceRef = getByLicenceRef;
 exports.create = create;
-exports.setTwoPartTariffRecalculationFlag = setTwoPartTariffRecalculationFlag;
-exports.resetTwoPartTariffRecalculationFlag = resetTwoPartTariffRecalculationFlag;

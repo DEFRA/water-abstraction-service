@@ -1,4 +1,5 @@
 DROP INDEX uniq_licence_ref_start_date_financial_agreement_type_id;
+DELETE FROM water.licence_agreements;
 
 ALTER TABLE water.licence_agreements
 DROP COLUMN date_deleted;

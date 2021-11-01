@@ -77,8 +77,7 @@ const deleteLicenceAgreementById = async (licenceAgreementId, issuer) => {
   // Log event and flag licence for supplementary billing
   return Promise.all([
     createEvent(EVENT_TYPES.delete, licenceAgreement, issuer),
-    licencesService.flagForSupplementaryBilling(licence.id),
-    chargeVersionService.setTwoPartTariffRecalculationFlag(licenceAgreement.licenceNumber, licenceAgreement.startDate)
+    licencesService.flagForSupplementaryBilling(licence.id)
   ]);
 };
 
@@ -131,8 +130,7 @@ const createLicenceAgreement = async (licence, data, issuer) => {
     // Log event and flag licence for supplementary billing
     await Promise.all([
       createEvent(EVENT_TYPES.create, licenceAgreement, issuer),
-      licencesService.flagForSupplementaryBilling(licence.id),
-      chargeVersionService.setTwoPartTariffRecalculationFlag(licenceAgreement.licenceNumber, licenceAgreement.startDate)
+      licencesService.flagForSupplementaryBilling(licence.id)
     ]);
 
     // Return the updated model
