@@ -80,16 +80,6 @@ const findValidInRegionAndFinancialYear = (regionId, financialYearEnding) => {
   return raw.multiRow(queries.findValidInRegionAndFinancialYear, params);
 };
 
-const updateTwoPartTariffFlagByLicenceRef = (licenceRef, fromDate) => {
-  ChargeVersion
-    .forge()
-    .where('licence_ref', '=', licenceRef, 'start_date', '>=', fromDate)
-    .save({ recalculate_two_part_tariff: true }, { patch: true, require: false });
-};
-
-const resetTwoPartTariffRecalculationFlag = batchId =>
-  bookshelf.knex.raw(queries.resetTwoPartTariffRecalculationFlag, { batchId });
-
 /**
  * Updates the specified charge version with the supplied changes
  *
@@ -106,5 +96,3 @@ exports.findByLicenceRef = findByLicenceRef;
 exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear;
 exports.update = update;
 exports.findByLicenceId = findByLicenceId;
-exports.updateTwoPartTariffFlagByLicenceRef = updateTwoPartTariffFlagByLicenceRef;
-exports.resetTwoPartTariffRecalculationFlag = resetTwoPartTariffRecalculationFlag;
