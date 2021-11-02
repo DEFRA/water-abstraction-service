@@ -28,12 +28,11 @@ const createChargeElementGroup = (chargeVersion, chargePeriod) => {
  * @param {DateRange0} chargePeriod
  * @return {Object}
  */
-const createTPTChargeElementGroup = (chargeVersion, chargePeriod, financialYear, billingVolumes) => {
+const createTPTChargeElementGroup = (chargeVersion, chargePeriod, financialYear) => {
   return createChargeElementGroup(chargeVersion, chargePeriod)
     .createForChargePeriod()
     .createForTwoPartTariff()
-    .setFinancialYear(financialYear)
-    .setBillingVolumes(billingVolumes);
+    .setFinancialYear(financialYear);
 };
 
 /**
@@ -68,20 +67,13 @@ const getData = async (chargeVersionId, financialYear, batchId) => {
   const chargePeriod = getChargePeriod(financialYear, chargeVersion);
 
   // Load billing volumes and returns grouped by season
-  const [billingVolumes, returnGroups] = await Promise.all([
-    billingVolumesService.getVolumesForChargeElements(chargeVersion.chargeElements, financialYear),
-    returnGroupService.getReturnGroups(
-      chargeVersion.licence.licenceNumber,
-      financialYear
-    )
-  ]);
-  const newBillingVolumes = billingVolumes.map(row => {
-    row.billingBatchId = batchId;
-    row.isApproved = false;
-    return row;
-  });
+  const returnGroups = await returnGroupService.getReturnGroups(
+    chargeVersion.licence.licenceNumber,
+    financialYear
+  );
+
   // Get charge element group
-  const chargeElementGroup = createTPTChargeElementGroup(chargeVersion, chargePeriod, financialYear, newBillingVolumes);
+  const chargeElementGroup = createTPTChargeElementGroup(chargeVersion, chargePeriod, financialYear);
 
   return {
     chargeVersion,
