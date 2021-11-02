@@ -366,7 +366,6 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       test('calls the repo .deleteOne method', async () => {
         expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
       });
-
     });
   });
 
