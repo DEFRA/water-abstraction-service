@@ -6,7 +6,7 @@ DELETE FROM water.billing_volumes
 WHERE ctid NOT IN (
    SELECT min(ctid)
    FROM   water.billing_volumes
-   GROUP  BY charge_element_id, financial_year, is_summer);
+   GROUP  BY charge_element_id, financial_year, is_summer, errored_on);
 
   /* Create a partial index instead */
 create unique index uniq_charge_element_id_financial_year_season_err 

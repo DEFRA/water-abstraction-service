@@ -21,7 +21,7 @@ const matchVolumes = async (chargeVersionId, financialYear, isSummer, batchId) =
   validators.assertIsInstanceOf(financialYear, FinancialYear);
   validators.assertIsBoolean(isSummer);
 
-  const { chargeElementGroup, returnGroups, chargePeriod } = await dataService.getData(chargeVersionId, financialYear, batchId);
+  const { chargeElementGroup, returnGroups, chargePeriod } = await dataService.getData(chargeVersionId, financialYear);
 
   const seasonKey = isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
 

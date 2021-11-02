@@ -55,7 +55,7 @@ const getChargeVersion = async chargeVersionId => {
  * @param {FinancialYear} financialYear
  * @return {Promise<Object>}
  */
-const getData = async (chargeVersionId, financialYear, batchId) => {
+const getData = async (chargeVersionId, financialYear) => {
   validators.assertId(chargeVersionId);
   validators.assertIsInstanceOf(financialYear, FinancialYear);
 
