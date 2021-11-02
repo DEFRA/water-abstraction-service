@@ -83,7 +83,8 @@ const dbToModelMapper = createMapper()
     'calcEiucSourceFactor',
     'calcSourceFactor',
     'calcEiucFactor',
-    'calcSucFactor'
+    'calcSucFactor',
+    'isCreditedBack'
   )
   .map('calcS126Factor').to('calcS126FactorValue')
   .map('calcS127Factor').to('calcS127FactorValue')
@@ -140,7 +141,8 @@ const modelToDbMapper = createMapper()
     'calcLossFactor',
     'calcSucFactor',
     'calcEiucFactor',
-    'calcEiucSourceFactor'
+    'calcEiucSourceFactor',
+    'isCreditedBack'
   )
   .map('chargeElement.id').to('chargeElementId')
   .map('chargePeriod.startDate').to('startDate')

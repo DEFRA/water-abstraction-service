@@ -96,6 +96,9 @@ const reverseInvoiceLicenceTransactions = async (invoiceLicence, transactions) =
   for (const transaction of transactions) {
     const data = getReversedTransaction(invoiceLicence, transaction);
     await billingTransactionsRepo.create(data);
+    //mark the source transaction as credited to speed up the supplementary billing process
+    //when looking for historic transactions to include in the bill run. 
+    await billingTransactionsRepo.update(transaction.transactionId, { isCreditedBack: true })
   }
 };
 
