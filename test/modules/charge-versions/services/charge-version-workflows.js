@@ -348,12 +348,6 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         expect(chargeVersionWorkflowRepo.softDeleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
       });
 
-      test('the licence is flagged for supplementary billing', async () => {
-        expect(licencesService.flagForSupplementaryBilling.calledWith(
-          chargeVersionWorkflow.licence.id
-        )).to.be.true();
-      });
-
       test('if there is an error, catches and rethrows a NotFoundError', async () => {
         chargeVersionWorkflowRepo.softDeleteOne.throws(new Error('oh no!'));
         const func = () => chargeVersionWorkflowService.delete(chargeVersionWorkflow);
@@ -373,11 +367,6 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
       });
 
-      test('the licence is flagged for supplementary billing', async () => {
-        expect(licencesService.flagForSupplementaryBilling.calledWith(
-          chargeVersionWorkflow.licence.id
-        )).to.be.true();
-      });
     });
   });
 
