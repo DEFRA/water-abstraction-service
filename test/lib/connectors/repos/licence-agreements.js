@@ -167,7 +167,7 @@ experiment('lib/connectors/repos/licence-agreements', () => {
       expect(key).to.equal('licenceAgreementId');
       expect(id).to.equal('test-id');
       expect(Object.keys(changes)).to.equal(['dateDeleted']);
-      expect(moment(changes.dateDeleted).isValid()).to.be.true()
+      expect(moment(changes.dateDeleted).isValid()).to.be.true();
     });
   });
 

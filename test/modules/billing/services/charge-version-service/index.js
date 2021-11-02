@@ -20,7 +20,6 @@ const batchService = require('../../../../../src/modules/billing/services/batch-
 const Batch = require('../../../../../src/lib/models/batch');
 const FinancialYear = require('../../../../../src/lib/models/financial-year');
 const Region = require('../../../../../src/lib/models/region');
-const DateRange = require('../../../../../src/lib/models/date-range');
 const LicenceAgreement = require('../../../../../src/lib/models/licence-agreement');
 const { TRANSACTION_TYPE } = require('../../../../../src/lib/models/charge-version-year');
 const { RETURN_SEASONS } = require('../../../../../src/lib/models/constants');
@@ -30,13 +29,13 @@ const chargeVersionId = uuid();
 const licenceAgreementId = uuid();
 
 const createChargeVersionRow = (options = {}, finYearEnding = 2022) => {
-  const licenceAgreement = new LicenceAgreement(licenceAgreementId); 
+  const licenceAgreement = new LicenceAgreement(licenceAgreementId);
   licenceAgreement.fromHash({
     startDate: '2017-04-01',
     endDate: null,
     dateDeleted: null
   });
-    
+
   return {
     chargeVersionId,
     licenceId,
