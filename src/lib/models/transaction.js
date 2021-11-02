@@ -417,19 +417,20 @@ class Transaction extends Model {
   get isErrorStatus () {
     return this.status === statuses.error;
   }
-    /**
+
+  /**
    * If true the transaction has been
    * reversed/credited in a previous bill run
    * @param {Boolean}
    */
-     set isCreditedBack (value) {
-      validators.assertIsBoolean(value);
-      this._isDeMinimis = value;
-    }
-  
-    get isCreditedBack () {
-      return this._isDeMinimis;
-    }
+  set isCreditedBack (value) {
+    validators.assertIsBoolean(value);
+    this._isDeMinimis = value;
+  }
+
+  get isCreditedBack () {
+    return this._isDeMinimis;
+  }
 }
 
 module.exports = Transaction;
