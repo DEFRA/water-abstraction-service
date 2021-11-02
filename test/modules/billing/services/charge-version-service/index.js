@@ -35,7 +35,6 @@ const createChargeVersionRow = (options = {}, finYearEnding = 2022) => {
     endDate: null,
     dateDeleted: null
   });
-
   return {
     chargeVersionId,
     licenceId,
