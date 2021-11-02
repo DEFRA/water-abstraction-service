@@ -51,10 +51,13 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
   const dateRangers = new DateRange(chargeVersion.startDate, chargeVersion.endDate);
 
   const fullChargeVersion = await chargeVersionService.getByChargeVersionId(chargeVersion.chargeVersionId);
-  const check = fullChargeVersion.licence.licenceAgreements.some(licAgreement => {
-    return licAgreement.dateDeleted === null &&
-      licAgreement.dateRange.overlaps(dateRangers);
-  });
+  let check = false;
+  if (fullChargeVersion) {
+    check = fullChargeVersion.licence.licenceAgreements.some(licAgreement => {
+      return licAgreement.dateDeleted === null &&
+         licAgreement.dateRange.overlaps(dateRangers);
+    });
+  }
 
   if (check) {
     const twoPartTariffSeasons = await twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion(chargeVersion, existingTPTBatches);

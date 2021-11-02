@@ -20,21 +20,36 @@ const batchService = require('../../../../../src/modules/billing/services/batch-
 const Batch = require('../../../../../src/lib/models/batch');
 const FinancialYear = require('../../../../../src/lib/models/financial-year');
 const Region = require('../../../../../src/lib/models/region');
+const DateRange = require('../../../../../src/lib/models/date-range');
+const LicenceAgreement = require('../../../../../src/lib/models/licence-agreement');
 const { TRANSACTION_TYPE } = require('../../../../../src/lib/models/charge-version-year');
 const { RETURN_SEASONS } = require('../../../../../src/lib/models/constants');
 
 const licenceId = 'licence-id';
-const chargeVersionId = 'test-charge-version-id';
+const chargeVersionId = uuid();
+const licenceAgreementId = uuid();
 
-const createChargeVersionRow = (options = {}, finYearEnding = 2022) => ({
-  chargeVersionId,
-  licenceId,
-  includeInSupplementaryBilling: false,
-  isTwoPartTariff: false,
-  startDate: `${finYearEnding - 1}-04-01`,
-  endDate: `${finYearEnding}-03-31`,
-  ...options
-});
+const createChargeVersionRow = (options = {}, finYearEnding = 2022) => {
+  const licenceAgreement = new LicenceAgreement(licenceAgreementId); 
+  licenceAgreement.fromHash({
+    startDate: '2017-04-01',
+    endDate: null,
+    dateDeleted: null
+  });
+    
+  return {
+    chargeVersionId,
+    licenceId,
+    licence: {
+      licenceAgreements: [licenceAgreement]
+    },
+    includeInSupplementaryBilling: false,
+    isTwoPartTariff: false,
+    startDate: `${finYearEnding - 1}-04-01`,
+    endDate: `${finYearEnding}-03-31`,
+    ...options
+  };
+};
 
 const createBatch = (type, isSummer = false) => new Batch().fromHash({
   type,
@@ -50,6 +65,7 @@ experiment('modules/billing/services/charge-version-service', () => {
   beforeEach(async () => {
     sandbox.stub(repos.chargeVersions, 'findValidInRegionAndFinancialYear');
     sandbox.stub(chargeVersionYearService, 'createBatchChargeVersionYear');
+    sandbox.stub(repos.chargeVersions, 'findOne').resolves({});
     sandbox.stub(batchService, 'getSentTptBatchesForFinancialYearAndRegion').resolves([{ type: 'two_part_tariff', isSummer: true }, { type: 'two_part_tariff', isSummer: false }]);
 
     sandbox.stub(twoPartTariffSeasonsService, 'getTwoPartTariffSeasonsForChargeVersion').resolves({
@@ -204,6 +220,7 @@ experiment('modules/billing/services/charge-version-service', () => {
           repos.chargeVersions.findValidInRegionAndFinancialYear.withArgs(batch.region.id, 2022).resolves([
             chargeVersionRows[1]
           ]);
+          repos.chargeVersions.findOne.resolves(createChargeVersionRow());
 
           await chargeVersionService.createForBatch(batch);
         });

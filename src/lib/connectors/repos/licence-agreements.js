@@ -14,7 +14,7 @@ const moment = require('moment');
 const findByLicenceRef = async (licenceRef, agreementTypes = []) => {
   let licenceAgreements = LicenceAgreement
     .forge()
-    .query('where', 'licence_ref', licenceRef);
+    .query('where', 'licence_ref', licenceRef, 'date_deleted', null);
 
   if (agreementTypes.length) {
     licenceAgreements = licenceAgreements
@@ -23,7 +23,6 @@ const findByLicenceRef = async (licenceRef, agreementTypes = []) => {
 
   licenceAgreements = await licenceAgreements
     .orderBy('start_date', 'asc')
-    .where({ date_deleted: null })
     .fetchAll({
       withRelated: [
         'financialAgreementType'

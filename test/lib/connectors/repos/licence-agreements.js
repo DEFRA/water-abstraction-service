@@ -13,6 +13,7 @@ const uuid = require('uuid');
 const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
 const repos = require('../../../../src/lib/connectors/repos');
 const { LicenceAgreement } = require('../../../../src/lib/connectors/bookshelf');
+const moment = require('moment');
 
 experiment('lib/connectors/repos/licence-agreements', () => {
   let model, stub, result;
@@ -155,16 +156,18 @@ experiment('lib/connectors/repos/licence-agreements', () => {
     });
   });
 
-  experiment('.deleteOne', () => {
+  experiment('.softDeleteOne', () => {
     beforeEach(async () => {
-      result = await repos.licenceAgreements.deleteOne('test-id');
+      result = await repos.licenceAgreements.softDeleteOne('test-id');
     });
 
-    test('calls the deleteOne helper function with expected arguments', () => {
-      const [model, key, id] = helpers.deleteOne.lastCall.args;
+    test('calls the softDeleteOne function with expected arguments', () => {
+      const [model, key, id, changes] = helpers.update.lastCall.args;
       expect(model).to.equal(LicenceAgreement);
       expect(key).to.equal('licenceAgreementId');
       expect(id).to.equal('test-id');
+      expect(Object.keys(changes)).to.equal(['dateDeleted']);
+      expect(moment(changes.dateDeleted).isValid()).to.be.true()
     });
   });
 
