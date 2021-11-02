@@ -8,7 +8,6 @@ const { getChargePeriod } = require('../../lib/charge-period');
 // Services
 const chargeVersionService = require('../../../../lib/services/charge-versions');
 const returnGroupService = require('./return-group-service');
-const billingVolumesService = require('../billing-volumes-service');
 
 // Models
 const FinancialYear = require('../../../../lib/models/financial-year');
