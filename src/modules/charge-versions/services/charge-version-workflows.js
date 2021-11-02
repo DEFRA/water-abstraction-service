@@ -6,7 +6,6 @@ const { get } = require('lodash');
 const service = require('../../../lib/services/service');
 const documentsService = require('../../../lib/services/documents-service');
 const chargeVersionService = require('../../../lib/services/charge-versions');
-const licencesService = require('../../../lib/services/licences');
 
 // Repos
 const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-version-workflows');
@@ -166,7 +165,6 @@ const deleteOne = async (chargeVersionWorkflow, isSoftDelete = true) => {
       ? chargeVersionWorkflowsRepo.softDeleteOne
       : chargeVersionWorkflowsRepo.deleteOne;
     await deleteFunc(chargeVersionWorkflow.id);
-    await licencesService.flagForSupplementaryBilling(chargeVersionWorkflow.licence.id);
   } catch (err) {
     throw new NotFoundError(`Charge version workflow ${chargeVersionWorkflow.id} not found`);
   }
