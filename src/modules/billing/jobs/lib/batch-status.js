@@ -16,5 +16,7 @@ const assertBatchIsStatus = (batch, status) => {
 };
 
 const assertBatchIsProcessing = partialRight(assertBatchIsStatus, Batch.BATCH_STATUS.processing);
+const assertBatchIsInReview = partialRight(assertBatchIsStatus, Batch.BATCH_STATUS.review);
 
 exports.assertBatchIsProcessing = assertBatchIsProcessing;
+exports.assertBatchIsInReview = assertBatchIsInReview;

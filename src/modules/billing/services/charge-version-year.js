@@ -105,6 +105,14 @@ const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear, tra
   });
 };
 
+/**
+ * @param {String} batchId
+ * @param {String} licenceId
+ * @param {Number} financialYearEnding
+ * @type {(function(*, *, *): Knex.Raw<TResult>)|*}
+ */
+const deleteChargeVersionYear = repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceIdAndFinancialYearEnding;
+
 exports.getChargeVersionYearById = getChargeVersionYearById;
 exports.setReadyStatus = setReadyStatus;
 exports.setErrorStatus = setErrorStatus;
@@ -113,3 +121,4 @@ exports.processChargeVersionYear = processChargeVersionYear;
 exports.getForBatch = getForBatch;
 exports.getTwoPartTariffForBatch = getTwoPartTariffForBatch;
 exports.createBatchChargeVersionYear = createBatchChargeVersionYear;
+exports.deleteChargeVersionYear = deleteChargeVersionYear;

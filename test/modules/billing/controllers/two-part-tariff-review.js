@@ -19,6 +19,7 @@ const controller = require('../../../../src/modules/billing/controllers/two-part
 const licencesService = require('../../../../src/modules/billing/services/licences-service');
 const invoiceAccountService = require('../../../../src/lib/services/invoice-accounts-service');
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
+const chargeVersionYearsService = require('../../../../src/modules/billing/services/charge-version-year');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const eventService = require('../../../../src/lib/services/events');
 const { NotFoundError } = require('../../../../src/lib/errors.js');
@@ -75,10 +76,13 @@ experiment('modules/billing/controllers/two-part-tariff-review', () => {
     sandbox.stub(billingVolumesService, 'getBillingVolumeById');
     sandbox.stub(billingVolumesService, 'updateBillingVolume');
     sandbox.stub(billingVolumesService, 'getBillingVolumeChargePeriod').resolves(new DateRange('2021-04-01', '2022-03-31'));
+    sandbox.stub(billingVolumesService, 'deleteBillingVolumeByFinancialYearEnding').resolves();
     sandbox.stub(batchService, 'approveTptBatchReview').resolves(batch);
+    sandbox.stub(batchService, 'getBatchById').resolves(batch);
     sandbox.stub(invoiceAccountService, 'getByInvoiceAccountId').resolves({ company: { name: 'test company name' } });
     event = new Event(uuid());
     sandbox.stub(eventService, 'create').resolves(event);
+    sandbox.stub(chargeVersionYearsService, 'deleteChargeVersionYear').resolves();
   });
 
   afterEach(async () => {
@@ -108,12 +112,25 @@ experiment('modules/billing/controllers/two-part-tariff-review', () => {
 
   experiment('.getBatchLicenceVolumes', () => {
     const billingVolumes = [
-      { id: 'test-billing-volume-id-1', billingBatchId: 'test-batch-id', calculatedVolume: new Decimal(10), volume: 10.0000 },
-      { id: 'test-billing-volume-id-2', billingBatchId: 'test-batch-id', calculatedVolume: new Decimal(0), volume: 50.0000 }
+      {
+        id: 'test-billing-volume-id-1',
+        billingBatchId: 'test-batch-id',
+        calculatedVolume: new Decimal(10),
+        volume: 10.0000
+      },
+      {
+        id: 'test-billing-volume-id-2',
+        billingBatchId: 'test-batch-id',
+        calculatedVolume: new Decimal(0),
+        volume: 50.0000
+      }
     ];
     beforeEach(async () => {
       billingVolumesService.getLicenceBillingVolumes.resolves(billingVolumes);
-      billingVolumesService.getBillingVolumeChargePeriod.resolves({ chargePeriod: new DateRange('2021-04-01', '2022-03-31'), invoiceAccountId: 'test-inv-acc-id' });
+      billingVolumesService.getBillingVolumeChargePeriod.resolves({
+        chargePeriod: new DateRange('2021-04-01', '2022-03-31'),
+        invoiceAccountId: 'test-inv-acc-id'
+      });
       await controller.getBatchLicenceVolumes(request, h);
     });
     test('gets the billing volumes for the specified licence ID', async () => {
@@ -200,6 +217,54 @@ experiment('modules/billing/controllers/two-part-tariff-review', () => {
       test('maps the error to a Boom error and returns', async () => {
         expect(result.isBoom).to.be.true();
         expect(result.output.statusCode).to.equal(404);
+      });
+    });
+  });
+
+  experiment('.deleteBatchLicenceBillingVolumes', () => {
+    const licenceId = uuid();
+    const batchId = uuid();
+    const deleteBatchLicenceBillingVolumesRequest = {
+      queueManager: {
+        add: sandbox.stub()
+      },
+      params: {
+        licenceId,
+        batchId,
+        financialYearEnding: 2020
+      },
+      defra: {
+        internalCallingUser: user
+      },
+      auth: {
+        credentials: user
+      }
+    };
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        batch.status = 'review';
+        batchService.getBatchById.resolves(batch);
+        await controller.deleteBatchLicenceBillingVolumes(deleteBatchLicenceBillingVolumesRequest, h);
+      });
+
+      test('gets the batch and asserts that the batch is in review', async () => {
+        expect(batchService.getBatchById.calledWith(deleteBatchLicenceBillingVolumesRequest.params.batchId));
+      });
+
+      test('calls the billing Volumes service method deleteBillingVolumeByFinancialYearEnding', async () => {
+        expect(billingVolumesService.deleteBillingVolumeByFinancialYearEnding.calledWith(
+          deleteBatchLicenceBillingVolumesRequest.params.batchId,
+          deleteBatchLicenceBillingVolumesRequest.params.licenceId,
+          deleteBatchLicenceBillingVolumesRequest.params.financialYearEnding
+        )).to.be.true();
+      });
+
+      test('calls the BBCVY service method deleteChargeVersionYear', async () => {
+        expect(chargeVersionYearsService.deleteChargeVersionYear.calledWith(
+          deleteBatchLicenceBillingVolumesRequest.params.batchId,
+          deleteBatchLicenceBillingVolumesRequest.params.licenceId,
+          deleteBatchLicenceBillingVolumesRequest.params.financialYearEnding
+        )).to.be.true();
       });
     });
   });

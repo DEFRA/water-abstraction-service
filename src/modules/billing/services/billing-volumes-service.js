@@ -160,6 +160,15 @@ const getBillingVolumeChargePeriod = async billingVolume => {
   return { chargePeriod: chargePeriod.getChargePeriod(billingVolume.financialYear, chargeVersion), invoiceAccountId: chargeVersion.invoiceAccount.id };
 };
 
+/**
+ * Deletes billing volumes given a batchId, licenceId, and fin year.
+ * @param batchId
+ * @param licenceId
+ * @param financialYearEnding
+ * @returns {Promise<void>}
+ */
+const deleteBillingVolumeByFinancialYearEnding = billingVolumesRepo.deleteByFinancialYearEnding;
+
 exports.updateBillingVolume = updateBillingVolume;
 exports.getUnapprovedVolumesForBatchCount = getUnapprovedVolumesForBatchCount;
 exports.getVolumesForBatch = getVolumesForBatch;
@@ -170,3 +179,4 @@ exports.getBillingVolumeById = getBillingVolumeById;
 exports.getVolumesForChargeElements = getVolumesForChargeElements;
 exports.getBillingVolumesByChargeVersion = getBillingVolumesByChargeVersion;
 exports.getBillingVolumeChargePeriod = getBillingVolumeChargePeriod;
+exports.deleteBillingVolumeByFinancialYearEnding = deleteBillingVolumeByFinancialYearEnding;
