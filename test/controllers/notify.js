@@ -17,8 +17,8 @@ const sandbox = sinon.createSandbox();
 
 experiment('Test sending a email notification', () => {
   before(async () => {
-    sandbox.stub(logger, 'error');
-    sandbox.stub(logger, 'info');
+    sandbox.stub(logger, 'error').returns();
+    sandbox.stub(logger, 'info').returns();
     await server._start();
   });
 

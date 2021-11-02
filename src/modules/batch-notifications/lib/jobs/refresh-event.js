@@ -23,7 +23,7 @@ const createMessage = () => {
 
 const handleRefreshEvent = async eventId => {
   try {
-    return eventHelpers.refreshEventStatus(eventId);
+    await eventHelpers.refreshEventStatus(eventId);
   } catch (err) {
     logger.error('Error refreshing batch message event', err, { eventId });
   }

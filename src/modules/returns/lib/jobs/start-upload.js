@@ -4,21 +4,28 @@ const returnsUpload = require('../returns-upload');
 const errorEvent = require('./error-event');
 const uploadAdapters = require('../upload-adapters');
 const eventsService = require('../../../../lib/services/events');
+const mapToJson = require('./map-to-json');
 
 /**
- * Creates a message for PG Boss
+ * Creates a message for Bull MQ
  * @param {Event} event
  * @param {String} companyId
- * @returns {Object} PG boss message
+ * @returns {Object}
  */
-const createMessage = (event, companyId) => ({
-  name: JOB_NAME,
-  data: {
-    eventId: event.id,
-    subtype: event.subtype,
-    companyId
-  }
-});
+const createMessage = (event, companyId) => {
+  logger.info(`Create Message ${JOB_NAME}`);
+  return [
+    JOB_NAME,
+    {
+      eventId: event.id,
+      subtype: event.subtype,
+      companyId
+    },
+    {
+      jobId: `${JOB_NAME}.${event.id}`
+    }
+  ];
+};
 
 const getValidationError = (validationErrors, subtype) => {
   if (!validationErrors) return errorEvent.keys[subtype].INVALID;
@@ -46,14 +53,15 @@ const validateS3Object = async (evt, s3Object) => {
 };
 
 /**
- * Handler for the 'return-upload' job in PG Boss.
+ * Handler for the 'return-upload' job in Bull MQ.
  *
  * This will acquire the saved document from AWS S3
  * and validate it against a required schema.
  *
- * @param {Object} job The job data from PG Boss
+ * @param {Object} job The job data from Bull MQ
  */
 const handleReturnsUploadStart = async job => {
+  logger.info(`Handling: ${JOB_NAME}:${job.id}`);
   const { eventId } = job.data;
 
   const event = await eventsService.findOne(eventId);
@@ -74,6 +82,18 @@ const handleReturnsUploadStart = async job => {
   }
 };
 
+const onFailed = async (job, err) => {
+  logger.error(`${JOB_NAME}: Job has failed`, err);
+};
+
+const onComplete = async (job, queueManager) => {
+  // Format and add BullMQ message
+  await queueManager.add(mapToJson.jobName, job.data);
+  logger.info(`${JOB_NAME}: Job has completed`);
+};
+
 exports.createMessage = createMessage;
 exports.handler = handleReturnsUploadStart;
+exports.onFailed = onFailed;
+exports.onComplete = onComplete;
 exports.jobName = JOB_NAME;

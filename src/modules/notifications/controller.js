@@ -56,7 +56,7 @@ async function postSend (request, reply) {
   const taskConfig = await taskConfigLoader(taskConfigId);
   const ref = generateReference(taskConfig.config.prefix);
   const data = await prepareNotification(filter, taskConfig, params, { ref });
-  await sendNotification(taskConfig, sender, data, ref);
+  await sendNotification(request.queueManager, taskConfig, sender, data, ref);
   return { error: null, data };
 }
 
