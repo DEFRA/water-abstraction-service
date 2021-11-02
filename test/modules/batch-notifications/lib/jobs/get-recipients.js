@@ -23,8 +23,8 @@ experiment('getRecipients job', () => {
   beforeEach(async () => {
     sandbox.stub(batchNotifications, 'loadJobData').resolves();
     sandbox.stub(eventsService, 'updateStatus').resolves();
-    sandbox.stub(logger, 'error');
-    sandbox.stub(logger, 'info');
+    sandbox.stub(logger, 'error').returns();
+    sandbox.stub(logger, 'info').returns();
   });
 
   afterEach(async () => {

@@ -5,8 +5,7 @@ const templateRenderer = require('./template-renderer');
 const eventFactory = require('./event-factory');
 const notificationFactory = require('./notification-factory');
 
-const messageQueue = require('../../../lib/message-queue');
-const { enqueue } = require('../../notify')(messageQueue);
+const { enqueue } = require('../../notify');
 const defaultRolePriority = ['document_notifications', 'notifications', 'area_import', 'licence_contact', 'licence_holder'];
 
 const { logger } = require('../../../logger');
@@ -61,12 +60,13 @@ async function prepareNotification (filter, taskConfig, params, context = {}) {
  * - Create batch event GUID and reference number
  * - Compose each message's Notify packet and send
  * - Update the batch event status
+ * @param {Object} queueManager - BullMQ Queue manager
  * @param {Object} taskConfig - task configuration data from water.task_config table
  * @param {String} issuer - email address
  * @param {Array} contactData - data from prepare step above
  * @param {String} ref - unique reference for this message batch
  */
-async function sendNotification (taskConfig, issuer, contactData, ref) {
+async function sendNotification (queueManager, taskConfig, issuer, contactData, ref) {
   // Create event
   const e = eventFactory(issuer, taskConfig, contactData, ref);
   await evt.save(e);
@@ -78,7 +78,7 @@ async function sendNotification (taskConfig, issuer, contactData, ref) {
     const n = await notificationFactory(row, taskConfig, e);
 
     try {
-      enqueue(n);
+      await enqueue(queueManager, n);
     } catch (error) {
       logger.error('Error sending notification', error);
     }
