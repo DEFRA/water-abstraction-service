@@ -1,11 +1,13 @@
 'use strict';
 
 const batchService = require('../services/batch-service');
+const chargeVersionYearsService = require('../services/charge-version-year');
 const licencesService = require('../services/licences-service');
 const billingVolumesService = require('../services/billing-volumes-service');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 const mapErrorResponse = require('../../../lib/map-error-response');
 const { jobStatus } = require('../lib/event');
+const batchStatus = require('../jobs/lib/batch-status');
 const { createBatchEvent, EVENT_TYPES } = require('../lib/batch-event');
 const { envelope } = require('../../../lib/response');
 const bluebird = require('bluebird');
@@ -87,6 +89,29 @@ const getBillingVolume = async request => {
 };
 
 /**
+ * Deletes billing volumes given a batchId, licenceId, and fin year.
+ * DELETE /water/1.0/billing/batches/{batchId}/licences/{licenceId}/financial-year-ending/{financialYearEnding}
+ * @param {String} request.params.batchId
+ * @param {String} request.params.licenceId
+ * @param {Number} request.params.financialYearEnding
+ */
+const deleteBatchLicenceBillingVolumes = async (request, h) => {
+  try {
+    const { batchId, licenceId, financialYearEnding } = request.params;
+    const batch = await batchService.getBatchById(batchId);
+
+    batchStatus.assertBatchIsInReview(batch);
+
+    await billingVolumesService.deleteBillingVolumeByFinancialYearEnding(batchId, licenceId, financialYearEnding);
+    await chargeVersionYearsService.deleteChargeVersionYear(batchId, licenceId, financialYearEnding);
+
+    return h.response().code(204);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
+/**
  * Updates a billing volume by ID
  * PATCH /water/1.0/billing-volumes/{billingVolumeId} - update billing volume
  * @param {String} request.params.billingVolumeId
@@ -143,5 +168,6 @@ exports.getBatchLicences = getBatchLicences;
 exports.getBatchLicenceVolumes = getBatchLicenceVolumes;
 exports.deleteBatchLicence = deleteBatchLicence;
 exports.getBillingVolume = getBillingVolume;
+exports.deleteBatchLicenceBillingVolumes = deleteBatchLicenceBillingVolumes;
 exports.patchBillingVolume = patchBillingVolume;
 exports.postApproveReviewBatch = postApproveReviewBatch;

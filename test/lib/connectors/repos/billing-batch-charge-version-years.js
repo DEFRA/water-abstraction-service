@@ -258,4 +258,24 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
       );
     });
   });
+
+  experiment('.deleteByBatchIdAndLicenceIdAndFinancialYearEnding', () => {
+    const batchId = 'test-batch-id';
+    const licenceId = 'test-charge-version-id';
+    const financialYearEnding = 2020;
+
+    beforeEach(async () => {
+      await repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceIdAndFinancialYearEnding(
+        batchId, licenceId, financialYearEnding
+      );
+    });
+
+    test('calls knex.raw with correct params', async () => {
+      expect(bookshelf.knex.raw.calledWith(queries.deleteByBatchIdAndLicenceIdAndFinancialYearEnding, {
+        batchId,
+        licenceId,
+        financialYearEnding
+      })).to.be.true();
+    });
+  });
 });
