@@ -24,7 +24,6 @@ const billingVolumesService = require('./billing-volumes-service');
 const invoiceService = require('../../../lib/services/invoice-service');
 const licencesService = require('../../../lib/services/licences');
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
-const chargeVersionService = require('../../../lib/services/charge-versions');
 // Models
 const Event = require('../../../lib/models/event');
 const Batch = require('../../../lib/models/batch');

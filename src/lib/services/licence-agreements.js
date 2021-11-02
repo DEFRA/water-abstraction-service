@@ -17,7 +17,6 @@ const Event = require('../models/event');
 
 // Services
 const agreementsService = require('./agreements');
-const chargeVersionService = require('./charge-versions');
 const licencesService = require('./licences');
 const service = require('./service');
 const eventService = require('./events');
@@ -161,8 +160,7 @@ const patchLicenceAgreement = async (licenceAgreementId, data, issuer) => {
   // Log event and flag licence for supplementary billing
   return Promise.all([
     createEvent(EVENT_TYPES.update, licenceAgreement, issuer),
-    licencesService.flagForSupplementaryBilling(response.licence.licenceId),
-    chargeVersionService.setTwoPartTariffRecalculationFlag(licenceAgreement.licenceNumber, licenceAgreement.startDate)
+    licencesService.flagForSupplementaryBilling(response.licence.licenceId)
   ]);
 };
 

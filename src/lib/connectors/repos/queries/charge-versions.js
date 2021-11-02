@@ -12,7 +12,8 @@ select distinct
   upper(t1.charge_period_dates) as end_date,
   t1.licence_ref,
   t1.licence_id,
-  t1.include_in_supplementary_billing
+  t1.include_in_supplementary_billing,
+  t2.two_part_tariff_dates<>'empty' as is_two_part_tariff
 from (
   select
     cv.charge_version_id,
