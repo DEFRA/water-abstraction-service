@@ -42,9 +42,8 @@ const postUpload = async (request, h) => {
     const filename = getUploadFilename(event.id, type);
     await s3.upload(filename, request.payload.fileData);
 
-    // Format and publish PG boss message
-    const message = startUploadJob.createMessage(event, companyId);
-    const jobId = await request.messageQueue.publish(message);
+    // Format and add BullMQ message
+    const jobId = await request.queueManager.add(startUploadJob.jobName, event, companyId);
 
     return h.response({
       data: {
@@ -164,9 +163,8 @@ const postUploadSubmit = async (request, h) => {
     // Update event
     eventsService.update(applySubmitting(request.event, valid));
 
-    // Format and publish PG boss message
-    const message = persistReturnsJob.createMessage({ eventId, companyId });
-    await request.messageQueue.publish(message);
+    // Format and add BullMQ message
+    await request.queueManager.add(persistReturnsJob.jobName, { eventId });
 
     return { data, error: null };
   } catch (error) {
