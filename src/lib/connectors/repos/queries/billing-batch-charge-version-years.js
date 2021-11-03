@@ -48,4 +48,5 @@ where y.billing_batch_id=:batchId
   and cv.licence_ref=l.licence_ref
   and l.licence_id=:licenceId
   and y.financial_year_ending=:financialYearEnding
+  and y.transaction_type = 'two_part_tariff'
 `;
