@@ -26,10 +26,10 @@ const handleGetRecipients = async job => {
     const data = await batchNotifications.loadJobData(eventId);
 
     // Use config.getRecipients to get recipient list for this notification
-    return data.config.getRecipients(data);
+    await data.config.getRecipients(data);
   } catch (err) {
     logger.error('Batch notifications handleGetRecipients error', err, { eventId });
-    return eventsService.updateStatus(eventId, EVENT_STATUS_ERROR);
+    await eventsService.updateStatus(eventId, EVENT_STATUS_ERROR);
   }
 };
 

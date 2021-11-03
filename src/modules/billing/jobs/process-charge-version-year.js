@@ -68,7 +68,7 @@ const onComplete = async (job, queueManager) => {
   try {
     const { batch, processing } = job.returnvalue;
 
-    // When all charge version years are processed, publish next job
+    // When all charge version years are processed, add next job
     if (processing === 0 && (batch.status === BATCH_STATUS.processing)) {
       await queueManager.add(prepareTransactionsJobName, batch.id);
     }
