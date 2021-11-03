@@ -48,18 +48,17 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
 
   const types = getAnnualTransactionTypes();
 
-  const dateRangers = new DateRange(chargeVersion.startDate, chargeVersion.endDate);
+  const chargeVersioinDateRange = new DateRange(chargeVersion.startDate, chargeVersion.endDate);
 
-  const fullChargeVersion = await chargeVersionService.getByChargeVersionId(chargeVersion.chargeVersionId);
-  let check = false;
-  if (fullChargeVersion) {
-    check = fullChargeVersion.licence.licenceAgreements.some(licAgreement => {
-      return licAgreement.dateDeleted === null &&
-         licAgreement.dateRange.overlaps(dateRangers);
-    });
-  }
+  const chargeVersionWithRelated = await chargeVersionService.getByChargeVersionId(chargeVersion.chargeVersionId);
 
-  if (check) {
+  const chargeVersionHasTwoPartAgreement = chargeVersionWithRelated.licence.licenceAgreements.some(licAgreement => {
+    return licAgreement.dateDeleted === null &&
+         licAgreement.dateRange.overlaps(chargeVersioinDateRange) &&
+         licAgreement.agreement.code === 'S127';
+  }) || false;
+
+  if (chargeVersionHasTwoPartAgreement) {
     const twoPartTariffSeasons = await twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion(chargeVersion, existingTPTBatches);
 
     // find historic 2PT batch types for financial year

@@ -52,10 +52,11 @@ const getTwoPartTariffTransactionDescription = transaction => {
 };
 
 class Transaction extends Model {
-  constructor (id, value, isCredit = false) {
+  constructor (id, value, isCredit = false, isCreditedBack = false) {
     super(id);
     this.value = value;
     this.isCredit = isCredit;
+    this._isCreditedBack = isCreditedBack;
     this._agreements = [];
     this.status = statuses.candidate;
   }
@@ -425,11 +426,11 @@ class Transaction extends Model {
    */
   set isCreditedBack (value) {
     validators.assertIsBoolean(value);
-    this._isDeMinimis = value;
+    this._isCreditedBack = value;
   }
 
   get isCreditedBack () {
-    return this._isDeMinimis;
+    return this._isCreditedBack;
   }
 }
 

@@ -1,5 +1,5 @@
 ALTER TABLE water.billing_transactions
-ADD COLUMN is_credited_back boolean default null;
+ADD COLUMN is_credited_back boolean default false;
 
 UPDATE water.billing_transactions 
 SET is_credited_back = true
