@@ -136,6 +136,11 @@ const patchCompanyContact = async request => {
   return companyContactsService.patchCompanyContact(companyId, contactId, request.payload);
 };
 
+const deleteCompanyContact = async request => {
+  const { companyId, companyContactId } = request.params;
+  return companyContactsService.deleteCompanyContact(companyId, companyContactId);
+};
+
 const getCompanyInvoiceAccounts = async request => {
   const { companyId } = request.params;
   const { regionId } = request.query;
@@ -166,5 +171,6 @@ exports.createCompanyInvoiceAccount = createCompanyInvoiceAccount;
 exports.getCompanyContacts = getCompanyContacts;
 exports.postCompanyContact = postCompanyContact;
 exports.patchCompanyContact = patchCompanyContact;
+exports.deleteCompanyContact = deleteCompanyContact;
 exports.getCompanyInvoiceAccounts = getCompanyInvoiceAccounts;
 exports.getCompanyLicences = getCompanyLicences;
