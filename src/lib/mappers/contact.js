@@ -13,6 +13,7 @@ const { createModel } = require('./lib/helpers');
  */
 const crmToModelMapper = createMapper()
   .copy(
+    'salutation',
     'firstName',
     'initials',
     'middleInitials',
@@ -24,10 +25,11 @@ const crmToModelMapper = createMapper()
     'isTest'
   )
   .map('contactId').to('id')
-  .map('contactType').to('type')
-  .map('salutation').to('title');
+  .map('contactType').to('type');
 
-const crmToModel = row => createModel(Contact, row, crmToModelMapper);
+const crmToModel = row => {
+  return createModel(Contact, row, crmToModelMapper);
+};
 
 /**
  * Maps only an id or new contact data from the UI
@@ -52,8 +54,7 @@ const uiToModel = contactData => {
 const modelToCrm = contact => {
   const data = contact.toJSON();
   return {
-    ...omit(data, 'title', 'fullName'),
-    salutation: data.title
+    ...omit(data, 'fullName')
   };
 };
 
@@ -72,7 +73,7 @@ const pojoToModel = object => {
     'department',
     'type',
     'dataSource',
-    'title'
+    'salutation'
   ]);
 };
 

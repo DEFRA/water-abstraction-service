@@ -27,7 +27,7 @@ const schema = Joi.object({
     contact: Joi.object({
       initials: OPTIONAL_NULLABLE_STRING,
       middleInitials: OPTIONAL_NULLABLE_STRING,
-      title: OPTIONAL_NULLABLE_STRING,
+      salutation: OPTIONAL_NULLABLE_STRING,
       firstName: OPTIONAL_NULLABLE_STRING,
       lastName: OPTIONAL_NULLABLE_STRING,
       suffix: OPTIONAL_NULLABLE_STRING,
