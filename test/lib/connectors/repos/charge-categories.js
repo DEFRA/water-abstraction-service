@@ -19,6 +19,8 @@ const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
 experiment('lib/connectors/repos/charge-categories', () => {
   beforeEach(async () => {
     sandbox.stub(helpers, 'create');
+    sandbox.stub(helpers, 'findMany');
+    sandbox.stub(helpers, 'findOne');
   });
 
   afterEach(async () => {
@@ -47,10 +49,10 @@ experiment('lib/connectors/repos/charge-categories', () => {
   });
 
   experiment('.findOneById', () => {
-    test('delegates to helpers.findMany', async () => {
+    test('delegates to helpers.findOne', async () => {
       const tempGuid = uuid();
       await repo.findOneById(tempGuid);
-      expect(helpers.findMany.calledWith(
+      expect(helpers.findOne.calledWith(
         tempGuid
       ));
     });
