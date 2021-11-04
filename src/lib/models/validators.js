@@ -62,6 +62,7 @@ const assertLicenceNumber = licenceNumber => assert(licenceNumber, VALID_LICENCE
 const assertId = id => assert(id, VALID_GUID);
 const assertNullableId = id => assert(id, VALID_NULLABLE_GUID);
 const assertString = value => assert(value, VALID_STRING);
+const assertStringWithLengthLimit = (value, length) => assert(value, VALID_STRING.max(length));
 const assertNullableString = value => assert(value, VALID_NULLABLE_STRING);
 const assertIsBoolean = value => assert(value, Joi.boolean().required());
 const assertDate = date => assert(date, VALID_DATE);
@@ -106,6 +107,7 @@ exports.assertAccountNumber = assertAccountNumber;
 exports.assertLicenceNumber = assertLicenceNumber;
 exports.assertId = assertId;
 exports.assertNullableId = assertNullableId;
+exports.assertStringWithLengthLimit = assertStringWithLengthLimit;
 exports.assertString = assertString;
 exports.assertNullableString = assertNullableString;
 exports.assertDate = assertDate;

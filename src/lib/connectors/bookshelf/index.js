@@ -6,6 +6,7 @@ exports.BillingInvoice = require('./BillingInvoice');
 exports.BillingInvoiceLicence = require('./BillingInvoiceLicence');
 exports.BillingTransaction = require('./BillingTransaction');
 exports.BillingVolume = require('./BillingVolume');
+exports.ChargeCategory = require('./ChargeCategory');
 exports.ChargeElement = require('./ChargeElement');
 exports.ChangeReason = require('./ChangeReason');
 exports.ChargeVersion = require('./ChargeVersion');
