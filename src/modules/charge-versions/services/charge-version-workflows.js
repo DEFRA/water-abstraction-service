@@ -25,13 +25,8 @@ const Role = require('../../../lib/models/role');
 const { NotFoundError, InvalidEntityError } = require('../../../lib/errors');
 const { logger } = require('../../../logger');
 
-const chargeVersionWorkflowsRepoFindAllWithPaging = async (page, perPage, tabFilter) => {
-  const { pagination, data } = await chargeVersionWorkflowsRepo.findAllWithPaging(page, perPage, tabFilter);
-  if (data) {
-    data.pagination = pagination;
-  }
-  return data;
-};
+const chargeVersionWorkflowsRepoFindAllWithPaging = async (page, perPage, tabFilter) =>
+  chargeVersionWorkflowsRepo.findAllWithPaging(page, perPage, tabFilter);
 
 /**
  * Gets all charge version workflows from the DB
@@ -39,7 +34,8 @@ const chargeVersionWorkflowsRepoFindAllWithPaging = async (page, perPage, tabFil
  */
 const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeVersionWorkflowMapper);
 
-const getAllWithPaging = (page, perPage, tabFilter) => service.findAllWithPaging(chargeVersionWorkflowsRepoFindAllWithPaging, chargeVersionWorkflowMapper, page, perPage, tabFilter);
+const getAllWithPaging = (page, perPage, tabFilter) =>
+  service.findAllWithPaging(chargeVersionWorkflowsRepoFindAllWithPaging, chargeVersionWorkflowMapper, page, perPage, tabFilter);
 
 /**
  * Gets the licence-holder role for the supplied ChargeVersionWorkflow model
@@ -75,7 +71,11 @@ const getAllWithLicenceHolder = async () => {
 
 const getAllWithLicenceHolderWithPaging = async (page = 1, perPage = 10, tabFilter = '') => {
   const chargeVersionWorkflows = await getAllWithPaging(page, perPage, tabFilter);
-  return bluebird.map(chargeVersionWorkflows, getLicenceHolderRole);
+  const data = await bluebird.map(chargeVersionWorkflows.data, getLicenceHolderRole);
+  return {
+    data: data,
+    pagination: chargeVersionWorkflows.pagination
+  };
 };
 
 /**

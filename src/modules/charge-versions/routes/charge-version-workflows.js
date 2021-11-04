@@ -26,8 +26,8 @@ module.exports = {
         headers,
         query: Joi.object().keys({
           licenceId: Joi.string().guid().optional(),
-          page: Joi.string().optional(),
-          perPage: Joi.string().optional(),
+          page: Joi.number().integer().optional(),
+          perPage: Joi.number().integer().optional(),
           tabFilter: Joi.string().optional()
         })
       }

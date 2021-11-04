@@ -39,8 +39,8 @@ const findAll = async (fetchDataFunc, mapper) => {
 };
 
 const findAllWithPaging = async (fetchDataFunc, mapper, page, perPage, tabFilter) => {
-  const data = await fetchDataFunc(page, perPage, tabFilter);
-  return data.map(mapper.dbToModel);
+  const dataAndPagination = await fetchDataFunc(page, perPage, tabFilter);
+  return { data: dataAndPagination.data.map(mapper.dbToModel), pagination: dataAndPagination.pagination };
 };
 
 exports.findOne = findOne;
