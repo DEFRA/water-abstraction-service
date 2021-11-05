@@ -12,9 +12,9 @@ const chargePeriod = require('../lib/charge-period');
  * Filter charge elements for matching season
  * Call repo to retrieve billing volumes for charge elements and financial year
  */
-const getVolumesForChargeElements = async (chargeElements, financialYear) => {
+const getVolumesForChargeElements = async (chargeElements, financialYear, batchId) => {
   const chargeElementIds = chargeElements.map(chargeElement => chargeElement.id);
-  const data = await billingVolumesRepo.findApprovedByChargeElementIdsAndFinancialYear(chargeElementIds, financialYear.endYear);
+  const data = await billingVolumesRepo.findApprovedByChargeElementIdsAndFinancialYear(chargeElementIds, financialYear.endYear, batchId);
   return data.map(mappers.billingVolume.dbToModel);
 };
 

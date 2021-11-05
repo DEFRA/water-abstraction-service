@@ -20,14 +20,15 @@ const create = async data => {
  * @param {Array<String>} ids - guids
  * @param {Number} financialYear
  */
-const findApprovedByChargeElementIdsAndFinancialYear = async (ids, financialYear) => {
+const findApprovedByChargeElementIdsAndFinancialYear = async (ids, financialYear, batchId) => {
   const result = await BillingVolume
     .forge()
     .query('whereIn', 'charge_element_id', ids)
     .where({
       financial_year: financialYear,
       is_approved: true,
-      errored_on: null
+      errored_on: null,
+      billing_batch_id: batchId
     })
     .fetchAll();
 
