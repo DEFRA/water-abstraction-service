@@ -3,8 +3,8 @@
 
 // Dependencies
 const moment = require('moment');
-const Promise = require('bluebird');
-const csvParse = Promise.promisify(require('csv-parse'));
+const BlueBirdPromise = require('bluebird');
+const csvParse = BlueBirdPromise.promisify(require('csv-parse'));
 const { logger } = require('../../../logger');
 const s3Connector = require('../../../lib/services/s3');
 
