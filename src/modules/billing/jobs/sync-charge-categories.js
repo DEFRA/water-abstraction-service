@@ -14,7 +14,6 @@ const csvKey = 'billing-metadata/charge-categories.csv';
 
 // Handy stuff
 const config = require('../../../../config');
-const helpers = require('./lib/helpers');
 const applicationState = require('../../../lib/services/application-state');
 
 // Charge Categories Repo
