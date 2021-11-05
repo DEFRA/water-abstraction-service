@@ -126,9 +126,8 @@ const persistDeMinimis = batch => {
   ]);
 };
 
-const updateIsCredited = (regionId) => {
+const updateIsCredited = (regionId) =>
   newRepos.billingTransactions.updateIsCredited(regionId);
-};
 
 /**
  * Delete one or more transactions by ID
