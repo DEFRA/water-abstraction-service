@@ -77,3 +77,16 @@ exports.countByBatchId = `
     join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
     where i.billing_batch_id=:billingBatchId
 `;
+
+exports.updateIsCredited = `
+update water.billing_transactions t1
+set is_credited_back = true
+where billing_transaction_id IN 
+(select source_transaction_id
+  from water.billing_transactions t2
+  join water.billing_invoice_licences il on t2.billing_invoice_licence_id=il.billing_invoice_licence_id
+    join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
+    join water.billing_batches b on i.billing_batch_id = b.billing_batch_id
+    where b.region_id=:regionId and t2.is_credit = true and t2.source_transaction_id is not null)
+and t1.is_credited_back = false;
+`;

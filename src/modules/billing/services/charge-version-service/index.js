@@ -28,10 +28,15 @@ const getReturnSeasonKey = isSummer => isSummer ? RETURN_SEASONS.summer : RETURN
  *
  * @returns {Array} an array of objects describing the transaction types needed, e.g. [{ type : 'two_part_tariff', isSummer: false }]
  */
-const getAnnualTransactionTypes = () => ([{
-  type: TRANSACTION_TYPE.annual,
-  isSummer: false
-}]);
+const getAnnualTransactionTypes = () => (
+  {
+    types: [{
+      type: TRANSACTION_TYPE.annual,
+      isSummer: false
+    }],
+    chargeVersionHasAgreement: false
+  }
+);
 
 /**
  * Gets the required supplementary transaction types for the given batch and charge version
@@ -43,18 +48,18 @@ const getAnnualTransactionTypes = () => ([{
  */
 const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTPTBatches) => {
   if (!chargeVersion.includeInSupplementaryBilling) {
-    return [];
+    return { types: [], chargeVersionHasAgreement: false };
   }
 
-  const types = getAnnualTransactionTypes();
+  const transactionTypesWithTwoPartAgreementFlag = getAnnualTransactionTypes();
 
-  const chargeVersioinDateRange = new DateRange(chargeVersion.startDate, chargeVersion.endDate);
+  const chargeVersionDateRange = new DateRange(chargeVersion.startDate, chargeVersion.endDate);
 
   const chargeVersionWithRelated = await chargeVersionService.getByChargeVersionId(chargeVersion.chargeVersionId);
 
   const chargeVersionHasTwoPartAgreement = chargeVersionWithRelated.licence.licenceAgreements.some(licAgreement => {
     return licAgreement.dateDeleted === null &&
-         licAgreement.dateRange.overlaps(chargeVersioinDateRange) &&
+         licAgreement.dateRange.overlaps(chargeVersionDateRange) &&
          licAgreement.agreement.code === 'S127';
   }) || false;
 
@@ -70,14 +75,15 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
     }, []);
 
     if (twoPartTariffSeasons[RETURN_SEASONS.summer] && (historicTransactionTypes.includes('summer'))) {
-      types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: true });
+      transactionTypesWithTwoPartAgreementFlag.types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: true });
     }
     if (twoPartTariffSeasons[RETURN_SEASONS.winterAllYear] && (historicTransactionTypes.includes('winter'))) {
-      types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: false });
+      transactionTypesWithTwoPartAgreementFlag.types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: false });
     }
+    transactionTypesWithTwoPartAgreementFlag.chargeVersionHasAgreement = true;
   }
 
-  return types;
+  return transactionTypesWithTwoPartAgreementFlag;
 };
 
 /**
@@ -90,9 +96,10 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
 const getTwoPartTariffTransactionTypes = async (batch, chargeVersion) => {
   const twoPartTariffSeasons = await twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion(chargeVersion);
   if (twoPartTariffSeasons[getReturnSeasonKey(batch.isSummer)]) {
-    return [
-      { type: TRANSACTION_TYPE.twoPartTariff, isSummer: batch.isSummer }
-    ];
+    return {
+      types: [{ type: TRANSACTION_TYPE.twoPartTariff, isSummer: batch.isSummer }],
+      chargeVersionHasAgreement: true
+    };
   }
   return [];
 };
@@ -124,11 +131,10 @@ const getRequiredTransactionTypes = async (batch, ...args) => {
  * @returns {Promise<Array>} water.billing_batch_charge_version_year records
  */
 const processChargeVersionFinancialYear = async (batch, financialYear, existingTPTBatches, chargeVersion) => {
-  const transactionTypes = await getRequiredTransactionTypes(batch, chargeVersion, existingTPTBatches);
-
+  const { types, chargeVersionHasAgreement } = await getRequiredTransactionTypes(batch, chargeVersion, existingTPTBatches);
   return bluebird.mapSeries(
-    transactionTypes,
-    ({ type, isSummer }) => chargeVersionYearService.createBatchChargeVersionYear(batch, chargeVersion.chargeVersionId, financialYear, type, isSummer)
+    types,
+    ({ type, isSummer }) => chargeVersionYearService.createBatchChargeVersionYear(batch, chargeVersion.chargeVersionId, financialYear, type, isSummer, chargeVersionHasAgreement)
   );
 };
 
