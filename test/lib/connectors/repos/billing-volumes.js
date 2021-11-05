@@ -70,10 +70,10 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     });
   });
 
-  experiment('.findApprovedByChargeElementIdsAndFinancialYear', () => {
+  experiment('.findApprovedByChargeElementIdsFinancialYearAndBatchId', () => {
     let result;
     beforeEach(async () => {
-      result = await billingVolumes.findApprovedByChargeElementIdsAndFinancialYear(['test-id-1', 'test-id-2'], 2020);
+      result = await billingVolumes.findApprovedByChargeElementIdsFinancialYearAndBatchId(['test-id-1', 'test-id-2'], 2020, 'test-batch-id');
     });
 
     test('calls model.forge', async () => {
@@ -90,7 +90,8 @@ experiment('lib/connectors/repos/billing-volumes', () => {
       expect(stub.where.calledWith({
         financial_year: 2020,
         is_approved: true,
-        errored_on: null
+        errored_on: null,
+        billing_batch_id: 'test-batch-id'
       })).to.be.true();
     });
 
