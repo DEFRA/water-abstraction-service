@@ -51,7 +51,7 @@ experiment('modules/billing/services/billing-volumes-service', () => {
   experiment('.getVolumesForChargeElements', () => {
     const tempId = uuid();
     beforeEach(async () => {
-      await billingVolumesService.getVolumesForChargeElements([{ id: tempId }], { endYear: '2020' });
+      await billingVolumesService.getVolumesForChargeElements([{ id: tempId }], { endYear: '2020' }, 'test-batch-id');
     });
 
     test('calls volumes repo findApprovedByChargeElementIdsAndFinancialYear', () => {
@@ -60,7 +60,7 @@ experiment('modules/billing/services/billing-volumes-service', () => {
 
     test('calls with the right params', () => {
       const params = billingVolumesRepo.findApprovedByChargeElementIdsAndFinancialYear.lastCall.args;
-      expect(params).to.equal([[tempId], '2020']);
+      expect(params).to.equal([[tempId], '2020', 'test-batch-id']);
     });
   });
 
