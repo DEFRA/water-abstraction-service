@@ -38,6 +38,16 @@ const getAnnualTransactionTypes = () => (
   }
 );
 
+const chargeVersionHasTwoPartAgreement = (chargeVersionWithRelated, chargeVersion) => {
+  const chargeVersionDateRange = new DateRange(chargeVersion.startDate, chargeVersion.endDate);
+
+  return chargeVersionWithRelated.licence.licenceAgreements.some(licAgreement => {
+    return licAgreement.dateDeleted === null &&
+       licAgreement.dateRange.overlaps(chargeVersionDateRange) &&
+       licAgreement.agreement.code === 'S127';
+  }) || false;
+};
+
 /**
  * Gets the required supplementary transaction types for the given batch and charge version
  *
@@ -52,18 +62,9 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
   }
 
   const transactionTypesWithTwoPartAgreementFlag = getAnnualTransactionTypes();
-
-  const chargeVersionDateRange = new DateRange(chargeVersion.startDate, chargeVersion.endDate);
-
   const chargeVersionWithRelated = await chargeVersionService.getByChargeVersionId(chargeVersion.chargeVersionId);
 
-  const chargeVersionHasTwoPartAgreement = chargeVersionWithRelated.licence.licenceAgreements.some(licAgreement => {
-    return licAgreement.dateDeleted === null &&
-         licAgreement.dateRange.overlaps(chargeVersionDateRange) &&
-         licAgreement.agreement.code === 'S127';
-  }) || false;
-
-  if (chargeVersionHasTwoPartAgreement) {
+  if (chargeVersionHasTwoPartAgreement(chargeVersionWithRelated, chargeVersion)) {
     const twoPartTariffSeasons = await twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion(chargeVersion, existingTPTBatches);
 
     // find historic 2PT batch types for financial year
