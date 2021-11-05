@@ -24,6 +24,7 @@ experiment('lib/licence-transformer/nald-transformer', () => {
           current_version: {
             purposes: []
           },
+          purposes: [],
           versions: [
             {
               STATUS: 'CURR',
