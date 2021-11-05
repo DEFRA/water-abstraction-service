@@ -133,7 +133,7 @@ const countByBatchId = async billingBatchId => {
  * @param {String} billingInvoiceId
  * @return {Promise}
  */
-const updateIsCredited = (regionId) => bookshelf
+const updateIsCredited = regionId => bookshelf
   .knex
   .raw(queries.updateIsCredited, { regionId });
 
