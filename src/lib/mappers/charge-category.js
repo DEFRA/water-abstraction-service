@@ -1,4 +1,5 @@
 'use strict';
+const { truncate } = require('lodash');
 
 const { createMapper } = require('../object-mapper');
 const helpers = require('./lib/helpers');
@@ -21,7 +22,7 @@ const csvToModel = data => {
     reference,
     description,
     subsistenceCharge: subsistence_charge,
-    shortDescription: short_description
+    shortDescription: truncate(short_description, { length: 150 })
   });
 };
 
