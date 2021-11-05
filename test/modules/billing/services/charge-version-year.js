@@ -185,7 +185,7 @@ experiment('modules/billing/services/charge-version-year', () => {
     beforeEach(async () => {
       batch = new Batch(uuid());
       financialYear = new FinancialYear(2020);
-      await chargeVersionYearService.createBatchChargeVersionYear(batch, testChargeVersionId, financialYear, 'annual', false);
+      await chargeVersionYearService.createBatchChargeVersionYear(batch, testChargeVersionId, financialYear, 'annual', false, false);
     });
 
     test('calls the repo method to create the record', async () => {
