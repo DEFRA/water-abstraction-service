@@ -72,11 +72,10 @@ const create = async data => {
  * @param {String} regionId
  * @param {Number} financialYearEnding
  */
-const findValidInRegionAndFinancialYear = (regionId, financialYearEnding, includeInSupplementaryStatus) => {
+const findValidInRegionAndFinancialYear = (regionId, financialYearEnding) => {
   const params = {
     regionId,
-    financialYearEnding,
-    includeInSupplementaryStatus
+    financialYearEnding
   };
   return raw.multiRow(queries.findValidInRegionAndFinancialYear, params);
 };

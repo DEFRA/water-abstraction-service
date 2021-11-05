@@ -172,13 +172,13 @@ const setErrorStatus = async (batchId, errorCode) => {
 
 const approveBatch = async (batch, internalCallingUser) => {
   try {
-    await Promise.all(
+    await Promise.all([
       await chargeModuleBillRunConnector.approve(batch.externalId),
       await chargeModuleBillRunConnector.send(batch.externalId),
       await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch),
       await licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch(batch.id),
       await invoiceService.resetIsFlaggedForRebilling(batch.id)
-    );
+    ]);
 
     if (batch.type === BATCH_TYPE.supplementary) {
       await transactionsService.updateIsCredited(batch.region.id);
