@@ -19,8 +19,9 @@ const create = async data => {
  * Gets billing volumes for charge elements and financial year
  * @param {Array<String>} ids - guids
  * @param {Number} financialYear
+ * @param {String} batchId findApprovedByChargeElementIdsFinancialYearAndBatchId
  */
-const findApprovedByChargeElementIdsAndFinancialYear = async (ids, financialYear, batchId) => {
+const findApprovedByChargeElementIdsFinancialYearAndBatchId = async (ids, financialYear, batchId) => {
   const result = await BillingVolume
     .forge()
     .query('whereIn', 'charge_element_id', ids)
@@ -189,7 +190,7 @@ const deleteByFinancialYearEnding = (batchId, licenceId, financialYearEnding) =>
   });
 
 exports.create = create;
-exports.findApprovedByChargeElementIdsAndFinancialYear = findApprovedByChargeElementIdsAndFinancialYear;
+exports.findApprovedByChargeElementIdsFinancialYearAndBatchId = findApprovedByChargeElementIdsFinancialYearAndBatchId;
 exports.update = update;
 exports.getUnapprovedVolumesForBatch = getUnapprovedVolumesForBatch;
 exports.findByBatchId = findByBatchId;

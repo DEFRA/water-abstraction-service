@@ -14,7 +14,7 @@ const chargePeriod = require('../lib/charge-period');
  */
 const getVolumesForChargeElements = async (chargeElements, financialYear, batchId) => {
   const chargeElementIds = chargeElements.map(chargeElement => chargeElement.id);
-  const data = await billingVolumesRepo.findApprovedByChargeElementIdsAndFinancialYear(chargeElementIds, financialYear.endYear, batchId);
+  const data = await billingVolumesRepo.findApprovedByChargeElementIdsFinancialYearAndBatchId(chargeElementIds, financialYear.endYear, batchId);
   return data.map(mappers.billingVolume.dbToModel);
 };
 
