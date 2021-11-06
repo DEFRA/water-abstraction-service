@@ -81,21 +81,6 @@ const findValidInRegionAndFinancialYear = (regionId, financialYearEnding) => {
 };
 
 /**
- * Gets the charge versions that are valid for charging
- * in the specified region/financial year
- *
- * @param {String} regionId
- * @param {Number} financialYearEnding
- */
-const findValidInRegionAndFinancialYearSupplementary = (regionId, financialYearEnding) => {
-  const params = {
-    regionId,
-    financialYearEnding
-  };
-  return raw.multiRow(queries.findValidInRegionAndFinancialYearSupplementary, params);
-};
-
-/**
  * Updates the specified charge version with the supplied changes
  *
  * @param {String} id
@@ -111,4 +96,3 @@ exports.findByLicenceRef = findByLicenceRef;
 exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear;
 exports.update = update;
 exports.findByLicenceId = findByLicenceId;
-exports.findValidInRegionAndFinancialYearSupplementary = findValidInRegionAndFinancialYearSupplementary;
