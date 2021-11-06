@@ -35,7 +35,7 @@ experiment('modules/billing/jobs/sync-charge-categories', () => {
     sandbox.stub(applicationStateService, 'get').resolves({ data: { etag: 'crumpets' } });
     sandbox.stub(applicationStateService, 'save').resolves();
     sandbox.stub(s3Connector, 'getObject').resolves({
-      Body: 'reference,description,subsistence_charge,short_description\ncat1,descriptionvalue,100,description',
+      Body: 'reference,description,subsistence_charge,short_description\ncat1,a very long description,100,short description',
       ETag: 'butter'
     });
     sandbox.stub(chargeCategoriesRepo, 'findOneByReference').resolves({

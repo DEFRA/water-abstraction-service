@@ -17,11 +17,10 @@ const csvToModel = data => {
     short_description
   } = data;
   /* eslint-enable */
-
   return chargeCategory.fromHash({
     reference,
     description,
-    subsistenceCharge: subsistence_charge,
+    subsistenceCharge: parseInt(subsistence_charge),
     shortDescription: truncate(short_description, { length: 150 })
   });
 };

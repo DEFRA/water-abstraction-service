@@ -17,7 +17,8 @@ experiment('lib/mappers/charge-category', () => {
   const chargeCategoryFromCsv = {
     reference: '1.0.0.0',
     description: 'Some category',
-    short_description: 'Some category'
+    short_description: 'Some category',
+    subsistence_charge: 100
   };
 
   experiment('.csvToModel', () => {

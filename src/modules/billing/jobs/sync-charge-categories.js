@@ -2,6 +2,7 @@
 'use strict';
 
 // Dependencies
+const { pick, isEqual } = require('lodash');
 const moment = require('moment');
 const BlueBirdPromise = require('bluebird');
 const csvParse = BlueBirdPromise.promisify(require('csv-parse'));
@@ -46,14 +47,17 @@ const handler = async () => {
   }
 
   const arraysFromCSV = await csvParse(Body, { columns: true });
-
   for (let i = 0; i < arraysFromCSV.length; i++) {
     const mappedChargeCategory = chargeCategoriesMapper.csvToModel(arraysFromCSV[i]);
     const chargeCategoryExists = await chargeCategoriesRepo.findOneByReference(mappedChargeCategory.reference);
 
+    const keys = ['description', 'shortDescription', 'subsistenceCharge'];
+
     if (chargeCategoryExists) {
-      logger.info(`Updating an existing charge category: ${mappedChargeCategory.reference}`);
-      await chargeCategoriesRepo.updateByReference(mappedChargeCategory.reference, mappedChargeCategory);
+      if (!isEqual(pick(chargeCategoryExists, keys), pick(mappedChargeCategory, keys))) {
+        logger.info(`Updating an existing charge category: ${mappedChargeCategory.reference}`);
+        await chargeCategoriesRepo.updateByReference(mappedChargeCategory.reference, mappedChargeCategory);
+      }
     } else {
       logger.info(`Creating a new charge category: ${mappedChargeCategory.reference}`);
       await chargeCategoriesRepo.create(mappedChargeCategory);
