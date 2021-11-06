@@ -261,4 +261,117 @@ experiment('modules/billing/services/charge-version-service', () => {
       });
     });
   });
+
+  experiment('._getAnnualTransactionTypes', () => {
+    test('the correct object is returned', async () => {
+      const result = chargeVersionService._getAnnualTransactionTypes();
+      expect(result).to.equal({
+        types: [{
+          type: TRANSACTION_TYPE.annual,
+          isSummer: false
+        }],
+        chargeVersionHasAgreement: false
+      });
+    });
+  });
+  experiment('._getTwoPartTariffTransactionTypes', () => {
+    const chargeVersion = createChargeVersionRow();
+    test('when th batch is summer', async () => {
+      twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion.resolves({
+        [RETURN_SEASONS.summer]: true,
+        [RETURN_SEASONS.winterAllYear]: true
+      });
+      const result = await chargeVersionService._getTwoPartTariffTransactionTypes({ isSummer: true }, chargeVersion);
+      expect(result).to.equal({
+        types: [{ type: TRANSACTION_TYPE.twoPartTariff, isSummer: true }],
+        chargeVersionHasAgreement: true
+      });
+    });
+    test('when the batch is winter/all year', async () => {
+      twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion.resolves({
+        [RETURN_SEASONS.summer]: true,
+        [RETURN_SEASONS.winterAllYear]: true
+      });
+      const result = await chargeVersionService._getTwoPartTariffTransactionTypes({ isSummer: false }, chargeVersion);
+      expect(result).to.equal({
+        types: [{ type: TRANSACTION_TYPE.twoPartTariff, isSummer: false }],
+        chargeVersionHasAgreement: true
+      });
+    });
+  });
+  experiment('._getSupplementaryTransactionTypes', () => {
+    let chargeVersion;
+    beforeEach(async => {
+      chargeVersion = createChargeVersionRow();
+    });
+    afterEach(async => {
+      sandbox.restore();
+    });
+    test('when the charge version should not be included in supplementary billing', async () => {
+      const result = await chargeVersionService._getSupplementaryTransactionTypes({ isSummer: false }, chargeVersion);
+      expect(result).to.equal({ types: [], chargeVersionHasAgreement: false });
+    });
+    experiment('when the charge version should be included in supplementary billing', () => {
+      beforeEach(async => {
+        chargeVersion.includeInSupplementaryBilling = true;
+        chargeVersionServices.getByChargeVersionId.resolves(chargeVersion);
+      });
+      test('when the charge version does not have a 2pt agreement', async () => {
+        chargeVersion.licence.licenceAgreements = [];
+        chargeVersionServices.getByChargeVersionId.resolves(chargeVersion);
+        const result = await chargeVersionService._getSupplementaryTransactionTypes({ isSummer: false }, chargeVersion);
+        expect(result).to.equal({
+          types: [{
+            type: TRANSACTION_TYPE.annual,
+            isSummer: false
+          }],
+          chargeVersionHasAgreement: false
+        });
+      });
+      test('when the charge version does have a 2pt agreement but no previous 2PT batches', async () => {
+        const exiistingTPTBatches = [createBatch(Batch.BATCH_TYPE.supplementary)];
+        const result = await chargeVersionService._getSupplementaryTransactionTypes({ isSummer: false }, chargeVersion, exiistingTPTBatches);
+        expect(result).to.equal({
+          types: [
+            { type: TRANSACTION_TYPE.annual, isSummer: false }
+          ],
+          chargeVersionHasAgreement: true
+        });
+      });
+      test('when the charge version does have a 2pt agreement with previous summer 2PT batch', async () => {
+        const exiistingTPTBatches = [createBatch(Batch.BATCH_TYPE.twoPartTariff, true)];
+        const result = await chargeVersionService._getSupplementaryTransactionTypes({ isSummer: false }, chargeVersion, exiistingTPTBatches);
+        expect(result).to.equal({
+          types: [
+            { type: TRANSACTION_TYPE.annual, isSummer: false },
+            { isSummer: true, type: 'two_part_tariff' }],
+          chargeVersionHasAgreement: true
+        });
+      });
+      test('when the charge version does have a 2pt agreement with previous winter 2PT batch', async () => {
+        const exiistingTPTBatches = [createBatch(Batch.BATCH_TYPE.twoPartTariff, false)];
+        const result = await chargeVersionService._getSupplementaryTransactionTypes({ isSummer: false }, chargeVersion, exiistingTPTBatches);
+        expect(result).to.equal({
+          types: [
+            { type: TRANSACTION_TYPE.annual, isSummer: false },
+            { isSummer: false, type: 'two_part_tariff' }
+          ],
+          chargeVersionHasAgreement: true
+        });
+      });
+      test('when the charge version does have a 2pt agreement with previous summer and winter 2PT batches', async () => {
+        const exiistingTPTBatches = [
+          createBatch(Batch.BATCH_TYPE.twoPartTariff, true),
+          createBatch(Batch.BATCH_TYPE.twoPartTariff, false)];
+        const result = await chargeVersionService._getSupplementaryTransactionTypes({ isSummer: false }, chargeVersion, exiistingTPTBatches);
+        expect(result).to.equal({
+          types: [
+            { type: TRANSACTION_TYPE.annual, isSummer: false },
+            { isSummer: true, type: 'two_part_tariff' },
+            { isSummer: false, type: 'two_part_tariff' }],
+          chargeVersionHasAgreement: true
+        });
+      });
+    });
+  });
 });

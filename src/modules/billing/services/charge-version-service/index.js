@@ -182,3 +182,7 @@ const createForBatch = async batch => {
 };
 
 exports.createForBatch = createForBatch;
+// these are only exported for testing
+exports._getAnnualTransactionTypes = getAnnualTransactionTypes;
+exports._getTwoPartTariffTransactionTypes = getTwoPartTariffTransactionTypes;
+exports._getSupplementaryTransactionTypes = getSupplementaryTransactionTypes;

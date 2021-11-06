@@ -198,10 +198,22 @@ experiment('modules/billing/services/transactions-service', () => {
         expect(testResult.includes(secondPartTrx)).to.be.false();
       });
       test('the second part transactions are not filtered out if there is matching licenceId and financial year', async () => {
-        chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2020 };
+        chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2020, hasTwoPartAgreement: true, transactionType: 'two_part_tariff' };
         repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
         const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
         expect(testResult.includes(secondPartTrx)).to.be.true();
+      });
+      test('the second part transactions are not filtered out annual transaction types where there is no agreement', async () => {
+        chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual' };
+        repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
+        const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
+        expect(testResult.includes(secondPartTrx)).to.be.true();
+      });
+      test('the second part transactions are filtered out if annual transaction type that has a two part agreement', async () => {
+        chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2020, hasTwoPartAgreement: true, transactionType: 'annual' };
+        repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
+        const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
+        expect(testResult.includes(secondPartTrx)).to.be.false();
       });
     });
   });
