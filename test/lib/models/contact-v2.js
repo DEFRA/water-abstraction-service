@@ -5,7 +5,7 @@ const Contact = require('../../../src/lib/models/contact-v2');
 
 const data = {
   id: '7931b58b-6410-44c0-b0a5-12a1ec14de64',
-  title: 'Captain',
+  salutation: 'Captain',
   firstName: 'John',
   initials: 'A B C',
   middleInitials: 'B C',
@@ -73,19 +73,19 @@ experiment('lib/models/contact-v2 model', () => {
     }
   });
 
-  test('can set/get title to a string', async () => {
-    contact.title = data.title;
-    expect(contact.title).to.equal(data.title);
+  test('can set/get salutation to a string', async () => {
+    contact.salutation = data.salutation;
+    expect(contact.salutation).to.equal(data.salutation);
   });
 
-  test('can set/get title to null', async () => {
-    contact.title = null;
-    expect(contact.title).to.equal(null);
+  test('can set/get salutation to null', async () => {
+    contact.salutation = null;
+    expect(contact.salutation).to.equal(null);
   });
 
-  test('setting title to a type other than string/null throws an error', async () => {
+  test('setting salutation to a type other than string/null throws an error', async () => {
     try {
-      contact.title = 123;
+      contact.salutation = 123;
       fail();
     } catch (err) {
       expect(err).to.be.an.error();
@@ -236,7 +236,7 @@ experiment('lib/models/contact-v2 model', () => {
     beforeEach(async () => {
       contact.id = data.id;
       contact.initials = data.initials;
-      contact.title = data.title;
+      contact.salutation = data.salutation;
       contact.firstName = data.firstName;
       contact.lastName = data.lastName;
       contact.dataSource = Contact.DATA_SOURCE_TYPES.nald;
@@ -282,7 +282,7 @@ experiment('lib/models/contact-v2 model', () => {
       const json = contact.toJSON();
       expect(json).to.equal({
         id: data.id,
-        title: data.title,
+        salutation: data.salutation,
         initials: data.initials,
         firstName: data.firstName,
         lastName: data.lastName,
@@ -296,7 +296,7 @@ experiment('lib/models/contact-v2 model', () => {
       expect(json).to.equal({
         id: data.id,
         type: Contact.CONTACT_TYPES.person,
-        title: data.title,
+        salutation: data.salutation,
         initials: data.initials,
         firstName: data.firstName,
         lastName: data.lastName,
@@ -309,7 +309,7 @@ experiment('lib/models/contact-v2 model', () => {
       beforeEach(async () => {
         contact = new Contact();
         contact.middleInitials = data.middleInitials;
-        contact.title = data.title;
+        contact.salutation = data.salutation;
         contact.firstName = data.firstName;
         contact.lastName = data.lastName;
         contact.dataSource = Contact.DATA_SOURCE_TYPES.nald;
@@ -326,8 +326,8 @@ experiment('lib/models/contact-v2 model', () => {
         beforeEach(() => {
           contact.type = Contact.CONTACT_TYPES.person;
         });
-        experiment('title, middleInitials, suffix, department', () => {
-          const keys = ['title', 'middleInitials', 'suffix', 'department'];
+        experiment('salutation, middleInitials, suffix, department', () => {
+          const keys = ['salutation', 'middleInitials', 'suffix', 'department'];
 
           keys.forEach(key => {
             test(`${key}: is optional`, async () => {

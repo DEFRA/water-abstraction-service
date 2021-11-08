@@ -40,7 +40,7 @@ const companySchema = Joi.object().keys({
 const contactSchema = Joi.object().keys({
   id: OPTIONAL_GUID,
   type: Joi.string().valid(...Object.values(CONTACT_TYPES)).optional().allow(null),
-  title: OPTIONAL_NULLABLE_STRING.example('Ms'),
+  salutation: OPTIONAL_NULLABLE_STRING.example('Ms'),
   firstName: OPTIONAL_NULLABLE_STRING.example('Janice'),
   initials: OPTIONAL_NULLABLE_STRING,
   middleInitials: OPTIONAL_NULLABLE_STRING.example('A'),

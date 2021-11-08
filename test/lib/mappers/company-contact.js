@@ -92,7 +92,7 @@ experiment('modules/billing/mappers/company-contact', () => {
     test('has the mapped contact', async () => {
       expect(mapped.contact).to.be.instanceOf(Contact);
       expect(mapped.contact.id).to.equal(row.contact.contactId);
-      expect(mapped.contact.title).to.equal(row.contact.salutation);
+      expect(mapped.contact.salutation).to.equal(row.contact.salutation);
       expect(mapped.contact.firstName).to.equal(row.contact.firstName);
       expect(mapped.contact.middleInitials).to.equal(row.contact.middleInitials);
       expect(mapped.contact.initials).to.equal(row.contact.initials);
