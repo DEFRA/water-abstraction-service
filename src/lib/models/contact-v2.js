@@ -117,21 +117,20 @@ class Contact extends Model {
    * @return {String}
    */
   get fullName () {
-    if (this.type === CONTACT_TYPES.department) {
-      return this.department;
+    if (this._dataSource === DATA_SOURCE_TYPES.wrls && this.type === CONTACT_TYPES.department) {
+      return this._department;
+    } else {
+      // Please note that nald appears to use the lastName for the department, so this will cover those cases
+      const initials = this._dataSource === DATA_SOURCE_TYPES.nald ? this._initials : getInitials(this._firstName, this._middleInitials);
+      return [this._salutation, initials || this._firstName, this._lastName, this._suffix].filter((item) => !!item).join(' ');
     }
-
-    const initials = this._dataSource === DATA_SOURCE_TYPES.nald ? this._initials : getInitials(this._firstName, this._middleInitials);
-
-    const parts = [this._salutation, initials || this._firstName, this._lastName, this._suffix];
-    return parts.filter(x => x).join(' ');
   }
 
   toJSON () {
     const data = {
       ...super.toJSON()
     };
-    if (this._type === CONTACT_TYPES.person) data.fullName = this.fullName;
+    data.fullName = this.fullName;
     return data;
   }
 
