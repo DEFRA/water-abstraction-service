@@ -172,14 +172,15 @@ const setErrorStatus = async (batchId, errorCode) => {
 
 const approveBatch = async (batch, internalCallingUser) => {
   try {
-    await Promise.all([
-      await chargeModuleBillRunConnector.approve(batch.externalId),
-      await chargeModuleBillRunConnector.send(batch.externalId),
-      await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch),
-      await licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch(batch.id),
-      await invoiceService.resetIsFlaggedForRebilling(batch.id)
-    ]);
+    await chargeModuleBillRunConnector.approve(batch.externalId);
+    await chargeModuleBillRunConnector.send(batch.externalId);
+    await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
+    await licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch(batch.id);
+    await invoiceService.resetIsFlaggedForRebilling(batch.id);
 
+    // if it is a supplementary batch mark all the
+    // old transactions in previous batches that was credited back in new invoices sent in this batch
+    // foir the relevant region.
     if (batch.type === BATCH_TYPE.supplementary) {
       await transactionsService.updateIsCredited(batch.region.id);
     }
