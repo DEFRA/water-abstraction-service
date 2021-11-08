@@ -116,7 +116,7 @@ experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients'
                       postcode: 'test-post-code'
                     },
                     contact: {
-                      title: 'test-contact-title',
+                      salutation: 'test-contact-salutation',
                       firstName: 'test-contact-first-name',
                       lastName: 'test-contact-last-name',
                       initials: 'test-contact-initials'
@@ -142,7 +142,7 @@ experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients'
                       postcode: 'test-post-code'
                     },
                     contact: {
-                      title: 'test-contact-title',
+                      salutation: 'test-contact-salutation',
                       firstName: 'test-contact-first-name',
                       lastName: 'test-contact-last-name',
                       initials: 'test-contact-initials'
@@ -192,7 +192,7 @@ experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients'
           });
 
           test('address_line_1', async () => {
-            expect(personalisation.address_line_1).to.equal('FAO test-contact-title test-contact-first-name test-contact-last-name, test-company-name');
+            expect(personalisation.address_line_1).to.equal('FAO test-contact-salutation test-contact-first-name test-contact-last-name, test-company-name');
           });
 
           test('address_line_2', async () => {
