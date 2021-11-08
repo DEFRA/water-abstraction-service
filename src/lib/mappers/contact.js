@@ -27,9 +27,7 @@ const crmToModelMapper = createMapper()
   .map('contactId').to('id')
   .map('contactType').to('type');
 
-const crmToModel = row => {
-  return createModel(Contact, row, crmToModelMapper);
-};
+const crmToModel = row => createModel(Contact, row, crmToModelMapper);
 
 /**
  * Maps only an id or new contact data from the UI
