@@ -2,7 +2,6 @@
 
 const { LicenceAgreement } = require('../bookshelf');
 const helpers = require('./lib/helpers');
-const moment = require('moment');
 /**
  * Gets a list of licence agreements of the given types for the specified
  * licence number
@@ -57,7 +56,7 @@ const update = async (id, changes) => {
  * @param {String} licenceAgreementId
  */
 const softDeleteOne = async licenceAgreementId =>
-  helpers.update(LicenceAgreement, 'licenceAgreementId', licenceAgreementId, { dateDeleted: moment() });
+  helpers.update(LicenceAgreement, 'licenceAgreementId', licenceAgreementId, { dateDeleted: new Date() });
 
 /**
  * Create new licence agreement
