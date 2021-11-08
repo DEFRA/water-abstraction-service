@@ -128,9 +128,9 @@ const countByBatchId = async billingBatchId => {
 };
 
 /**
- * Updates the isCredited flag for the batch for all transactions
+ * Updates the isCredited flag for the region for all transactions
  * that was credited back
- * @param {String} billingInvoiceId
+ * @param {String} regionId
  * @return {Promise}
  */
 const updateIsCredited = regionId => bookshelf
