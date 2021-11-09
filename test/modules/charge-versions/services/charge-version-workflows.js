@@ -112,6 +112,20 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     });
   });
 
+  experiment('.getAllWithLicenceHolderWithPaging', () => {
+    beforeEach(async () => {
+      const page = 1;
+      const perPage = 10;
+      const tabFilter = 'to_setup';
+      result = await chargeVersionWorkflowService.getAllWithLicenceHolderWithPaging(page, perPage, tabFilter);
+    });
+
+    test('return expected data', async () => {
+      const { data } = result;
+      expect(data[0].status).to.equal('to_setup');
+    });
+  });
+
   experiment('.getAllWithLicenceHolder', () => {
     beforeEach(async () => {
       result = await chargeVersionWorkflowService.getAllWithLicenceHolder();

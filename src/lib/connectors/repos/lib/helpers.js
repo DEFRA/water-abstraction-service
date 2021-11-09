@@ -23,7 +23,7 @@ exports.findMany = async (bookshelfModel, conditions = {}, withRelated = []) => 
   return result.toJSON();
 };
 
-exports.findManyWithPaging = async (bookshelfModel, conditions = {}, withRelated = [], page = 1, perPage = 10) => {
+exports.findManyWithPaging = async (bookshelfModel, conditions = {}, withRelated = [], page = 1, pageSize = 10) => {
   const result = await bookshelfModel
     .forge()
     .where(conditions)
@@ -31,7 +31,7 @@ exports.findManyWithPaging = async (bookshelfModel, conditions = {}, withRelated
     .orderBy('charge_version_workflow_id', 'desc')
     .fetchPage({
       page,
-      pageSize: perPage,
+      pageSize,
       withRelated
     });
 
