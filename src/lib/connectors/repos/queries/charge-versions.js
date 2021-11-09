@@ -60,7 +60,7 @@ left join (
     from water.licence_agreements la
     join water.financial_agreement_types a on la.financial_agreement_type_id=a.financial_agreement_type_id
     where a.financial_agreement_code='S127' 
-      and la.end_date is null or la.end_date>=la.start_date
+      and (la.end_date is null or la.end_date>=la.start_date) and date_deleted IS NULL
 ) t2 on t1.licence_ref=t2.licence_ref and t1.charge_period_dates * t2.two_part_tariff_dates <> 'empty'
 where t1.charge_period_dates <> 'empty'
 `;

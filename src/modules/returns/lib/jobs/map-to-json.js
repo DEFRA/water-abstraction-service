@@ -8,16 +8,23 @@ const idmConnector = require('../../../../lib/connectors/idm');
 const errorEvent = require('./error-event');
 const uploadAdapters = require('../upload-adapters');
 const config = require('../../../../../config');
+const validateReturns = require('./validate-returns');
 
 /**
- * Creates a message for PG Boss
+ * Creates a message for Bull MQ
  * @param {Object} data containing eventId and companyId
  * @returns {Object}
  */
-const createMessage = data => ({
-  name: JOB_NAME,
-  data: returnsUpload.buildJobData(data)
-});
+const createMessage = data => {
+  logger.info(`Create Message ${JOB_NAME}`);
+  return [
+    JOB_NAME,
+    returnsUpload.buildJobData(data),
+    {
+      jobId: `${JOB_NAME}.${data.eventId}`
+    }
+  ];
+};
 
 const validateUser = user => {
   if (!user) {
@@ -40,15 +47,16 @@ const mapToJson = async (evt, s3Object, user) => {
 };
 
 /**
- * Handler for the 'return-upload-to-json' job in PG Boss.
+ * Handler for the 'return-upload-to-json' job in Bull MQ.
  *
  * This will acquire the saved document from AWS S3,
  * convert the XML/CSV to a JSON representation, then put the JSON
  * back to S3 for future processing.
  *
- * @param {Object} job The job data from PG Boss
+ * @param {Object} job The job data from Bull MQ
  */
 const handleReturnsMapToJsonStart = async job => {
+  logger.info(`Handling: ${JOB_NAME}:${job.id}`);
   const event = await eventsService.findOne(job.data.eventId);
   if (!event) return errorEvent.throwEventNotFoundError(job.data.eventId);
 
@@ -87,6 +95,19 @@ const uploadJsonToS3 = (eventId, json) => {
   return s3.upload(jsonFileName, Buffer.from(str, 'utf8'));
 };
 
+const onFailed = async (job, err) => {
+  logger.error(`${JOB_NAME}: Job has failed`, err);
+};
+
+const onComplete = async (job, queueManager) => {
+  // Format and add BullMQ message
+  const { eventId, companyId } = job.data;
+  await queueManager.add(validateReturns.jobName, { eventId, companyId });
+  logger.info(`${JOB_NAME}: Job has completed`);
+};
+
 exports.createMessage = createMessage;
 exports.handler = handleReturnsMapToJsonStart;
+exports.onFailed = onFailed;
+exports.onComplete = onComplete;
 exports.jobName = JOB_NAME;

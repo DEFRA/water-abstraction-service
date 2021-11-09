@@ -9,7 +9,8 @@ const dbToModelMapper = createMapper()
   .map('financialAgreementCode').to('code')
   .copy(
     'dateCreated',
-    'dateUpdated'
+    'dateUpdated',
+    'dateDeleted'
   );
 
 /**

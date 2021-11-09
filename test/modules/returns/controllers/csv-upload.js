@@ -46,8 +46,8 @@ const requestFactory = (returnId) => {
       returnId: 'y',
       lines: []
     }],
-    messageQueue: {
-      publish: sandbox.stub()
+    queueManager: {
+      add: sandbox.stub().resolves()
     }
   };
 };
@@ -74,8 +74,8 @@ experiment('modules/returns/controllers/csv-upload', () => {
         params: {
           type: 'xml'
         },
-        messageQueue: {
-          publish: sandbox.stub().resolves('test-job-id')
+        queueManager: {
+          add: sandbox.stub().resolves()
         }
       };
 
@@ -112,14 +112,16 @@ experiment('modules/returns/controllers/csv-upload', () => {
     test('creates a new job for the task queue', async () => {
       await controller.postUpload(request, h);
 
-      expect(request.messageQueue.publish.calledWith({
-        name: 'returns-upload',
-        data: {
-          eventId: testEventId,
-          companyId: request.payload.companyId,
-          subtype: 'xml'
-        }
-      })).to.be.true();
+      const { args } = request.queueManager.add.lastCall;
+      expect(args).to.equal([
+        'returns-upload',
+        {
+          _id: testEventId,
+          _licences: [],
+          _subtype: 'xml'
+        },
+        request.payload.companyId
+      ]);
     });
 
     test('response contains the expected data', async () => {
@@ -127,7 +129,6 @@ experiment('modules/returns/controllers/csv-upload', () => {
       const [responseData] = h.response.lastCall.args;
 
       expect(responseData.data.eventId).to.match(UUIDV4_REGEX);
-      expect(responseData.data.jobId).to.equal('test-job-id');
 
       const expectedStatusLink = `/water/1.0/event/${responseData.data.eventId}`;
       expect(responseData.data.statusLink).to.equal(expectedStatusLink);
@@ -165,7 +166,7 @@ experiment('modules/returns/controllers/csv-upload', () => {
           code: sinon.spy()
         })
       };
-      sandbox.stub(logger, 'error');
+      sandbox.stub(logger, 'error').returns();
       sandbox.stub(uploadValidator, 'validate').resolves(uploadedReturns);
       sandbox.stub(returnsConnector.returns, 'findOne').resolves(returnServiceResponse);
     });
@@ -216,7 +217,7 @@ experiment('modules/returns/controllers/csv-upload', () => {
 
     beforeEach(async () => {
       sandbox.stub(eventsService, 'update');
-      sandbox.stub(logger, 'error');
+      sandbox.stub(logger, 'error').returns();
       h = {
         response: sinon.stub().returns({
           code: sinon.spy()

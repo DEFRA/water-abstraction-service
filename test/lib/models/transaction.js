@@ -135,6 +135,7 @@ experiment('lib/models/transaction', () => {
         id: transaction.id,
         value: transaction.value,
         isCredit: transaction.isCredit,
+        isCreditedBack: false,
         status: 'candidate',
         agreements: []
       });

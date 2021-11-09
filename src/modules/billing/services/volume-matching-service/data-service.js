@@ -8,7 +8,6 @@ const { getChargePeriod } = require('../../lib/charge-period');
 // Services
 const chargeVersionService = require('../../../../lib/services/charge-versions');
 const returnGroupService = require('./return-group-service');
-const billingVolumesService = require('../billing-volumes-service');
 
 // Models
 const FinancialYear = require('../../../../lib/models/financial-year');
@@ -28,12 +27,11 @@ const createChargeElementGroup = (chargeVersion, chargePeriod) => {
  * @param {DateRange0} chargePeriod
  * @return {Object}
  */
-const createTPTChargeElementGroup = (chargeVersion, chargePeriod, financialYear, billingVolumes) => {
+const createTPTChargeElementGroup = (chargeVersion, chargePeriod, financialYear) => {
   return createChargeElementGroup(chargeVersion, chargePeriod)
     .createForChargePeriod()
     .createForTwoPartTariff()
-    .setFinancialYear(financialYear)
-    .setBillingVolumes(billingVolumes);
+    .setFinancialYear(financialYear);
 };
 
 /**
@@ -57,7 +55,7 @@ const getChargeVersion = async chargeVersionId => {
  * @param {FinancialYear} financialYear
  * @return {Promise<Object>}
  */
-const getData = async (chargeVersionId, financialYear, batchId) => {
+const getData = async (chargeVersionId, financialYear) => {
   validators.assertId(chargeVersionId);
   validators.assertIsInstanceOf(financialYear, FinancialYear);
 
@@ -68,20 +66,13 @@ const getData = async (chargeVersionId, financialYear, batchId) => {
   const chargePeriod = getChargePeriod(financialYear, chargeVersion);
 
   // Load billing volumes and returns grouped by season
-  const [billingVolumes, returnGroups] = await Promise.all([
-    billingVolumesService.getVolumesForChargeElements(chargeVersion.chargeElements, financialYear),
-    returnGroupService.getReturnGroups(
-      chargeVersion.licence.licenceNumber,
-      financialYear
-    )
-  ]);
-  const newBillingVolumes = billingVolumes.map(row => {
-    row.billingBatchId = batchId;
-    row.isApproved = false;
-    return row;
-  });
+  const returnGroups = await returnGroupService.getReturnGroups(
+    chargeVersion.licence.licenceNumber,
+    financialYear
+  );
+
   // Get charge element group
-  const chargeElementGroup = createTPTChargeElementGroup(chargeVersion, chargePeriod, financialYear, newBillingVolumes);
+  const chargeElementGroup = createTPTChargeElementGroup(chargeVersion, chargePeriod, financialYear);
 
   return {
     chargeVersion,

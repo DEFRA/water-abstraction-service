@@ -17,7 +17,7 @@ const getByEventId = async (request, h) => scheduledNotificationsService.getByEv
 /**
  * Prepares batch notification ready for sending
  * - Creates an event in the events table to describe the message
- * - Fires a PG boss event to prepare the messages ready for sending
+ * - Fires a Bull MQ event to prepare the messages ready for sending
  */
 const postPrepare = async (request, h) => {
   const { messageType } = request.params;

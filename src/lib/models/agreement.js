@@ -38,6 +38,18 @@ class Agreement extends Model {
     assertFactor(factor);
     this._factor = factor;
   }
+
+  /**
+   * Date deleted
+   * @param {String} timestamp
+   */
+  set dateDeleted (value) {
+    this._dateDeleted = value === null ? null : this.getDateTimeFromValue(value);
+  }
+
+  get dateDeleted () {
+    return this._dateDeleted;
+  }
 }
 
 module.exports = Agreement;

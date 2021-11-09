@@ -10,9 +10,10 @@ const { RETURN_SEASONS } = require('../../../../lib/models/constants');
 const { BATCH_TYPE } = require('../../../../lib/models/batch');
 const { TRANSACTION_TYPE } = require('../../../../lib/models/charge-version-year');
 const FinancialYear = require('../../../../lib/models/financial-year');
-
+const chargeVersionService = require('../../../../lib/services/charge-versions');
 const chargeVersionYearService = require('../charge-version-year');
 const batchService = require('../batch-service');
+const DateRange = require('../../../../lib/models/date-range');
 
 /**
  * Gets the return season string from the isSummer flag
@@ -27,10 +28,25 @@ const getReturnSeasonKey = isSummer => isSummer ? RETURN_SEASONS.summer : RETURN
  *
  * @returns {Array} an array of objects describing the transaction types needed, e.g. [{ type : 'two_part_tariff', isSummer: false }]
  */
-const getAnnualTransactionTypes = () => ([{
-  type: TRANSACTION_TYPE.annual,
-  isSummer: false
-}]);
+const getAnnualTransactionTypes = () => (
+  {
+    types: [{
+      type: TRANSACTION_TYPE.annual,
+      isSummer: false
+    }],
+    chargeVersionHasAgreement: false
+  }
+);
+
+const chargeVersionHasTwoPartAgreement = (chargeVersionWithRelated, chargeVersion) => {
+  const chargeVersionDateRange = new DateRange(chargeVersion.startDate, chargeVersion.endDate);
+
+  return chargeVersionWithRelated.licence.licenceAgreements.some(licAgreement => {
+    return licAgreement.dateDeleted === null &&
+       licAgreement.dateRange.overlaps(chargeVersionDateRange) &&
+       licAgreement.agreement.code === 'S127';
+  }) || false;
+};
 
 /**
  * Gets the required supplementary transaction types for the given batch and charge version
@@ -42,29 +58,33 @@ const getAnnualTransactionTypes = () => ([{
  */
 const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTPTBatches) => {
   if (!chargeVersion.includeInSupplementaryBilling) {
-    return [];
+    return { types: [], chargeVersionHasAgreement: false };
   }
 
-  const types = getAnnualTransactionTypes();
+  const transactionTypesWithTwoPartAgreementFlag = getAnnualTransactionTypes();
+  const chargeVersionWithRelated = await chargeVersionService.getByChargeVersionId(chargeVersion.chargeVersionId);
 
-  const twoPartTariffSeasons = await twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion(chargeVersion, existingTPTBatches);
+  if (chargeVersionHasTwoPartAgreement(chargeVersionWithRelated, chargeVersion)) {
+    const twoPartTariffSeasons = await twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion(chargeVersion, existingTPTBatches);
 
-  // find historic 2PT batch types for financial year
-  const historicTransactionTypes = existingTPTBatches.reduce((acc, batchRow) => {
-    if (batchRow.type === BATCH_TYPE.twoPartTariff) {
-      acc.push(batchRow.isSummer ? 'summer' : 'winter');
+    // find historic 2PT batch types for financial year
+    const historicTransactionTypes = existingTPTBatches.reduce((acc, batchRow) => {
+      if (batchRow.type === BATCH_TYPE.twoPartTariff) {
+        acc.push(batchRow.isSummer ? 'summer' : 'winter');
+      }
+      return acc;
+    }, []);
+
+    if (twoPartTariffSeasons[RETURN_SEASONS.summer] && (historicTransactionTypes.includes('summer'))) {
+      transactionTypesWithTwoPartAgreementFlag.types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: true });
     }
-    return acc;
-  }, []);
-
-  if (twoPartTariffSeasons[RETURN_SEASONS.summer] && historicTransactionTypes.includes('summer')) {
-    types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: true });
-  }
-  if (twoPartTariffSeasons[RETURN_SEASONS.winterAllYear] && historicTransactionTypes.includes('winter')) {
-    types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: false });
+    if (twoPartTariffSeasons[RETURN_SEASONS.winterAllYear] && (historicTransactionTypes.includes('winter'))) {
+      transactionTypesWithTwoPartAgreementFlag.types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: false });
+    }
+    transactionTypesWithTwoPartAgreementFlag.chargeVersionHasAgreement = true;
   }
 
-  return types;
+  return transactionTypesWithTwoPartAgreementFlag;
 };
 
 /**
@@ -77,9 +97,10 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
 const getTwoPartTariffTransactionTypes = async (batch, chargeVersion) => {
   const twoPartTariffSeasons = await twoPartTariffSeasonsService.getTwoPartTariffSeasonsForChargeVersion(chargeVersion);
   if (twoPartTariffSeasons[getReturnSeasonKey(batch.isSummer)]) {
-    return [
-      { type: TRANSACTION_TYPE.twoPartTariff, isSummer: batch.isSummer }
-    ];
+    return {
+      types: [{ type: TRANSACTION_TYPE.twoPartTariff, isSummer: batch.isSummer }],
+      chargeVersionHasAgreement: true
+    };
   }
   return [];
 };
@@ -111,11 +132,10 @@ const getRequiredTransactionTypes = async (batch, ...args) => {
  * @returns {Promise<Array>} water.billing_batch_charge_version_year records
  */
 const processChargeVersionFinancialYear = async (batch, financialYear, existingTPTBatches, chargeVersion) => {
-  const transactionTypes = await getRequiredTransactionTypes(batch, chargeVersion, existingTPTBatches);
-
+  const { types, chargeVersionHasAgreement } = await getRequiredTransactionTypes(batch, chargeVersion, existingTPTBatches);
   return bluebird.mapSeries(
-    transactionTypes,
-    ({ type, isSummer }) => chargeVersionYearService.createBatchChargeVersionYear(batch, chargeVersion.chargeVersionId, financialYear, type, isSummer)
+    types,
+    ({ type, isSummer }) => chargeVersionYearService.createBatchChargeVersionYear(batch, chargeVersion.chargeVersionId, financialYear, type, isSummer, chargeVersionHasAgreement)
   );
 };
 
@@ -162,3 +182,7 @@ const createForBatch = async batch => {
 };
 
 exports.createForBatch = createForBatch;
+// these are only exported for testing
+exports._getAnnualTransactionTypes = getAnnualTransactionTypes;
+exports._getTwoPartTariffTransactionTypes = getTwoPartTariffTransactionTypes;
+exports._getSupplementaryTransactionTypes = getSupplementaryTransactionTypes;

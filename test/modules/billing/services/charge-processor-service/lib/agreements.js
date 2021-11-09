@@ -22,11 +22,13 @@ experiment('modules/billing/services/charge-processor-service/lib/agreements', (
       const licenceAgreements = [
         new LicenceAgreement().fromHash({
           dateRange: new DateRange('1996-10-30', '2005-09-15'),
-          agreement: twoPartTariffAgreement
+          agreement: twoPartTariffAgreement,
+          dateDeleted: null
         }),
         new LicenceAgreement().fromHash({
           dateRange: new DateRange('2004-10-01', null),
-          agreement: twoPartTariffAgreement
+          agreement: twoPartTariffAgreement,
+          dateDeleted: null
         })
       ];
 
@@ -47,11 +49,13 @@ experiment('modules/billing/services/charge-processor-service/lib/agreements', (
       const licenceAgreements = [
         new LicenceAgreement().fromHash({
           dateRange: new DateRange('2004-10-01', null),
-          agreement: twoPartTariffAgreement
+          agreement: twoPartTariffAgreement,
+          dateDeleted: null
         }),
         new LicenceAgreement().fromHash({
           dateRange: new DateRange('1996-10-30', '2005-09-15'),
-          agreement: twoPartTariffAgreement
+          agreement: twoPartTariffAgreement,
+          dateDeleted: null
         })
       ];
 
@@ -74,11 +78,13 @@ experiment('modules/billing/services/charge-processor-service/lib/agreements', (
       const licenceAgreements = [
         new LicenceAgreement().fromHash({
           dateRange: new DateRange('1996-10-30', '2005-09-15'),
-          agreement: twoPartTariffAgreement
+          agreement: twoPartTariffAgreement,
+          dateDeleted: null
         }),
         new LicenceAgreement().fromHash({
           dateRange: new DateRange('2004-10-01', '2021-01-01'),
-          agreement: twoPartTariffAgreement
+          agreement: twoPartTariffAgreement,
+          dateDeleted: null
         })
       ];
 
@@ -117,7 +123,8 @@ experiment('modules/billing/services/charge-processor-service/lib/agreements', (
 
         new LicenceAgreement().fromHash({
           dateRange: new DateRange('2020-12-01', '2021-01-01'),
-          agreement: twoPartTariffAgreement
+          agreement: twoPartTariffAgreement,
+          dateDeleted: null
         })
       ];
 
@@ -168,11 +175,13 @@ experiment('modules/billing/services/charge-processor-service/lib/agreements', (
         }),
         new LicenceAgreement().fromHash({
           dateRange: new DateRange('2004-10-01', '2021-01-01'),
-          agreement: twoPartTariffAgreement
+          agreement: twoPartTariffAgreement,
+          dateDeleted: null
         }),
         new LicenceAgreement().fromHash({
           dateRange: new DateRange('2004-10-01', '2021-01-01'),
-          agreement: canalAndRiversTrustAgreement
+          agreement: canalAndRiversTrustAgreement,
+          dateDeleted: null
         })
       ];
 

@@ -5,7 +5,6 @@ const { experiment, test, beforeEach, afterEach } = exports.lab = Lab.script();
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
-const { omit } = require('lodash');
 
 const contactsService = require('../../../src/lib/services/contacts-service');
 const contactMapper = require('../../../src/lib/mappers/contact');
@@ -45,10 +44,7 @@ experiment('modules/contacts/controller', () => {
 
   beforeEach(async () => {
     contactModel = new Contact(contactId);
-    contactModel.fromHash({
-      ...omit(contact, 'salutation'),
-      title: contact.salutation
-    });
+    contactModel.fromHash(contact);
     sandbox.stub(contactsService, 'createContact');
     sandbox.stub(contactsService, 'patchContact');
     sandbox.stub(contactsService, 'getContact');
@@ -93,7 +89,7 @@ experiment('modules/contacts/controller', () => {
       expect(response).to.be.instanceOf(Contact);
       expect(response.id).to.equal(contactId);
       expect(response.type).to.equal(contact.type);
-      expect(response.title).to.equal(contact.salutation);
+      expect(response.salutation).to.equal(contact.salutation);
       expect(response.firstName).to.equal(contact.firstName);
       expect(response.lastName).to.equal(contact.lastName);
       expect(response.middleInitials).to.equal(contact.middleInitials);

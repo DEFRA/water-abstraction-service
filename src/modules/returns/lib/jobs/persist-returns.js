@@ -10,15 +10,20 @@ const bluebird = require('bluebird');
 const JOB_NAME = 'persist-bulk-returns';
 
 /**
- * Creates a message for PG Boss
+ * Creates a message for Bull MQ
  * @param {Object} data containing eventId and companyId
  * @returns {Object}
  */
-const createMessage = data => ({
-  name: JOB_NAME,
-  data: returnsUpload.buildJobData(data)
-});
-
+const createMessage = data => {
+  logger.info(`Create Message ${JOB_NAME}`);
+  return [
+    JOB_NAME,
+    returnsUpload.buildJobData(data),
+    {
+      jobId: `${JOB_NAME}.${data.eventId}`
+    }
+  ];
+};
 const updateEvent = (event, updatedReturns) => {
   set(event, 'metadata.returns', updatedReturns);
   event.status = uploadStatus.SUBMITTED;
@@ -97,9 +102,10 @@ const getReturnsFromS3 = async eventId => {
  * With each persist attempt, the result is written back to the event
  * metadata.
  *
- * @param {object} job PG Boss Job containing the event id
+ * @param {object} job Bull MQ Job containing the event id
  */
 const handlePersistReturns = async job => {
+  logger.info(`Handling: ${JOB_NAME}:${job.id}`);
   const { eventId } = job.data;
   let event;
 
@@ -121,6 +127,16 @@ const handlePersistReturns = async job => {
   }
 };
 
-exports.jobName = JOB_NAME;
+const onFailed = async (job, err) => {
+  logger.error(`${JOB_NAME}: Job has failed`, err);
+};
+
+const onComplete = async () => {
+  logger.info(`${JOB_NAME}: Job has completed`);
+};
+
 exports.createMessage = createMessage;
 exports.handler = handlePersistReturns;
+exports.onFailed = onFailed;
+exports.onComplete = onComplete;
+exports.jobName = JOB_NAME;

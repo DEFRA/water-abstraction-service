@@ -58,7 +58,7 @@ experiment('getRecipients', () => {
 
     sandbox.stub(scheduledNotifications.repository, 'create').resolves();
     sandbox.stub(eventHelpers, 'markAsProcessed');
-    sandbox.stub(logger, 'error');
+    sandbox.stub(logger, 'error').returns();
   });
 
   afterEach(async () => {

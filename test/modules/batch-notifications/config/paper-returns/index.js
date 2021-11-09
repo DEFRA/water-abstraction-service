@@ -34,7 +34,7 @@ experiment('modules/batch-notifications/config/paper-returns', () => {
           contact: {
             initials: 'BSP',
             middleInitials: 'S',
-            title: 'Mr',
+            salutation: 'Mr',
             firstName: 'Bill',
             lastName: 'Preston',
             suffix: 'Esq',

@@ -4,14 +4,9 @@ const { returns } = require('../../lib/connectors/returns');
 const permitConnector = require('../../lib/connectors/permit');
 const eventFactory = require('./lib/event-factory');
 const generateReference = require('../../lib/reference-generator');
-
-const messageQueue = require('../../lib/message-queue');
+const returnsNotificationSend = require('./lib/returns-notification-send');
 const { getJobData } = require('./lib/message-helpers');
 const { parseRequest } = require('./lib/request-parser');
-
-const pgOptions = {
-  expireIn: '1 day'
-};
 
 /**
  * Previews what will be send by the returns notification, by using the
@@ -77,7 +72,7 @@ const postReturnNotification = async (request, h) => {
   // Schedule building of individual messages
   for (const row of data) {
     const job = getJobData(row, e, messageRef, config);
-    await messageQueue.publish('returnsNotification.send', job, pgOptions);
+    request.queueManager.add(returnsNotificationSend.jobName, job);
   }
 
   return { event: e.data };
