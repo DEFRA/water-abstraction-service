@@ -62,6 +62,28 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
     });
   });
 
+  experiment('.getChargeVersionWorkflows with paging', () => {
+    experiment('when licence id is present', () => {
+      let res = [];
+      const request = {
+        query: {
+          page: 1,
+          perPage: 10,
+          tabFilter: 'to_setup'
+        }
+      };
+
+      beforeEach(async () => {
+        res = await cvWorkflowsController.getChargeVersionWorkflows(request);
+      });
+
+      test('calls workflow service and return data', async () => {
+        const { data } = res;
+        expect(data[0].status).to.equal(request.query.tabFilter);
+      });
+    });
+  });
+
   experiment('.getChargeVersionWorkflow', () => {
     const request = {
       params: {
