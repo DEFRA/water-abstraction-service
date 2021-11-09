@@ -1,0 +1,2 @@
+ALTER TABLE water.billing_batch_charge_version_years
+DROP COLUMN has_two_part_agreement;

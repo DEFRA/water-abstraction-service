@@ -8,7 +8,6 @@ const returnRequirementVersionService = require('../../../../lib/services/return
 const { RETURN_SEASONS } = require('../../../../lib/models/constants');
 const { BATCH_SOURCE } = require('../../../../lib/models/batch');
 const DateRange = require('../../../../lib/models/date-range');
-
 /**
  * Creates an object which describes whether 2-part tariff billing is needed in
  * each season

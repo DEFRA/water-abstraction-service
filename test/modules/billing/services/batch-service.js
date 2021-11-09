@@ -110,6 +110,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     sandbox.stub(transactionsService, 'saveTransactionToDB');
     sandbox.stub(transactionsService, 'persistDeMinimis').resolves();
+    sandbox.stub(transactionsService, 'updateIsCredited').resolves();
 
     sandbox.stub(invoiceLicencesService, 'saveInvoiceLicenceToDB');
 
@@ -451,7 +452,9 @@ experiment('modules/billing/services/batch-service', () => {
     beforeEach(async () => {
       batch = {
         id: uuid(),
-        externalId: uuid()
+        externalId: uuid(),
+        type: 'supplementary',
+        region: { id: 'test-regioin-id' }
       };
 
       internalCallingUser = {

@@ -34,6 +34,7 @@ experiment('modules/billing/services/supplementary-billing-service/data-service'
     sandbox.stub(billingTransactionsRepo, 'findHistoryByBatchId');
     sandbox.stub(billingTransactionsRepo, 'create');
     sandbox.stub(billingTransactionsRepo, 'delete');
+    sandbox.stub(billingTransactionsRepo, 'update');
 
     sandbox.stub(invoiceService, 'getOrCreateInvoice');
     sandbox.stub(invoiceLicenceService, 'getOrCreateInvoiceLicence');

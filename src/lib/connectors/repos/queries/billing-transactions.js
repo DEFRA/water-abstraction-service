@@ -17,9 +17,10 @@ join (
   join water.billing_batches b on i.billing_batch_id=b.billing_batch_id
   where 
     b.billing_batch_id<>:batchId
+    and t.is_credited_back = false
+    and t.source_transaction_id is null
     and b.status='sent'
     and i.is_de_minimis=false
-    and i.net_amount <> 0
 ) t on t.licence_id=l.licence_id and t.financial_year_ending>= b.from_financial_year_ending and t.financial_year_ending<=b.to_financial_year_ending
 where b.billing_batch_id=:batchId
 and l.licence_id not in (
@@ -75,4 +76,17 @@ exports.countByBatchId = `
     join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
     join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
     where i.billing_batch_id=:billingBatchId
+`;
+
+exports.updateIsCredited = `
+update water.billing_transactions t1
+set is_credited_back = true
+where billing_transaction_id IN 
+(select source_transaction_id
+  from water.billing_transactions t2
+  join water.billing_invoice_licences il on t2.billing_invoice_licence_id=il.billing_invoice_licence_id
+    join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
+    join water.billing_batches b on i.billing_batch_id = b.billing_batch_id
+    where b.region_id=:regionId and t2.is_credit = true and t2.source_transaction_id is not null)
+and t1.is_credited_back = false;
 `;

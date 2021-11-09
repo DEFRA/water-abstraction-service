@@ -89,19 +89,21 @@ const getTwoPartTariffForBatch = batchId => {
  * @param {FinancialYear} financialYear
  * @return {Promise}
  */
-const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear, transactionType, isSummer) => {
+const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear, transactionType, isSummer, hasTwoPartAgreement) => {
   validators.assertIsInstanceOf(batch, Batch);
   validators.assertId(chargeVersionId);
   validators.assertIsInstanceOf(financialYear, FinancialYear);
   validators.assertEnum(transactionType, Object.values(TRANSACTION_TYPE));
   validators.assertIsBoolean(isSummer);
+  validators.assertIsBoolean(hasTwoPartAgreement);
   return repos.billingBatchChargeVersionYears.create({
     billingBatchId: batch.id,
     chargeVersionId: chargeVersionId,
     financialYearEnding: financialYear.endYear,
     status: BATCH_STATUS.processing,
     transactionType,
-    isSummer
+    isSummer,
+    hasTwoPartAgreement
   });
 };
 

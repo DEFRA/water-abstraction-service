@@ -164,6 +164,7 @@ experiment('modules/billing/mappers/transaction', () => {
           loss: 'low',
           season: CHARGE_SEASON.summer,
           isCredit: false,
+          isCreditedBack: false,
           chargeType: 'standard',
           authorisedQuantity: 12.5,
           billableQuantity: 10,
