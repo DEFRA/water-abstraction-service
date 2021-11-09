@@ -12,7 +12,8 @@ const dbToModelMapper = createMapper()
   .map('licenceRef').to('licenceNumber')
   .map(['startDate', 'endDate']).to('dateRange', (startDate, endDate) => new DateRange(startDate, endDate))
   .map('financialAgreementType').to('agreement', agreementMapper.dbToModel)
-  .map('dateSigned').to('dateSigned');
+  .map('dateSigned').to('dateSigned')
+  .map('dateDeleted').to('dateDeleted');
 
 const dbToModel = row => createModel(LicenceAgreement, row, dbToModelMapper);
 

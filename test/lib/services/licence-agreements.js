@@ -55,7 +55,7 @@ experiment('src/lib/services/licence-agreements', () => {
     sandbox.stub(service, 'findOne');
     sandbox.stub(service, 'findMany');
 
-    sandbox.stub(licenceAgreementRepo, 'deleteOne');
+    sandbox.stub(licenceAgreementRepo, 'softDeleteOne');
     sandbox.stub(licenceAgreementRepo, 'create');
     sandbox.stub(licenceAgreementRepo, 'update');
   });
@@ -173,7 +173,7 @@ experiment('src/lib/services/licence-agreements', () => {
       });
 
       test('the record is deleted', async () => {
-        expect(licenceAgreementRepo.deleteOne.calledWith(
+        expect(licenceAgreementRepo.softDeleteOne.calledWith(
           licenceAgreementId
         )).to.be.true();
       });

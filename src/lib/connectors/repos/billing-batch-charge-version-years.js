@@ -61,14 +61,17 @@ const deleteByInvoiceId = billingInvoiceId => bookshelf
 
 /**
  * Finds all charge version years for the supplied batch ID
+ * with optional charge version as related entity
  * @param {String} billingBatchId
  */
-const findByBatchId = async billingBatchId => {
+const findByBatchId = async (billingBatchId, includeRelated = false) => {
   const conditions = {
     billing_batch_id: billingBatchId
   };
 
-  return helpers.findMany(BillingBatchChargeVersionYear, conditions);
+  const withRelated = includeRelated ? ['chargeVersion'] : [];
+
+  return helpers.findMany(BillingBatchChargeVersionYear, conditions, withRelated);
 };
 
 /**
