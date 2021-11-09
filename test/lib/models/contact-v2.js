@@ -279,14 +279,11 @@ experiment('lib/models/contact-v2 model', () => {
     });
 
     test('.toJSON returns all data', async () => {
+      const { id, salutation, initials, firstName, lastName } = data;
       const json = contact.toJSON();
+      const fullName = [salutation, initials, lastName].join(' ');
       expect(json).to.equal({
-        id: data.id,
-        salutation: data.salutation,
-        initials: data.initials,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        dataSource: Contact.DATA_SOURCE_TYPES.nald
+        id, salutation, initials, firstName, lastName, fullName, dataSource: Contact.DATA_SOURCE_TYPES.nald
       });
     });
 
