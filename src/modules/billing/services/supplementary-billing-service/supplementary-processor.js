@@ -42,6 +42,7 @@ const commonTransactionKeys = [
   'section126Factor',
   'section127Agreement',
   'section130Agreement',
+  'isTwoPartTariffSupplementary',
   'invoiceAccountNumber',
   'financialYearEnding'
 ];
@@ -59,7 +60,7 @@ const commonTransactionKeys = [
 const getGroupingKey = transaction => {
   // Create a list of keys which will form the grouping key
   const keys = [...commonTransactionKeys];
-  ((transaction.description.slice(0, 6).toLowerCase()) === 'second')
+  transaction.isTwoPartTariffSupplementary
     ? keys.push('isSummer')
     : keys.push('authorisedDays', 'volume');
 
