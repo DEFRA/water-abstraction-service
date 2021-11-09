@@ -181,13 +181,8 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
             isTwoPartTariffSupplementary: true,
             isCredit: false
           }),
-          createTransaction('historical-batch', ids[1], {
-            volume: 10,
-            isTwoPartTariffSupplementary: true,
-            isCredit: true
-          }),
           createTransaction(batchId, ids[2], {
-            volume: 10.345,
+            volume: 20.345,
             isTwoPartTariffSupplementary: true,
             isCredit: false
           })
@@ -197,7 +192,6 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
 
       test('the historical transactions are not reversed', async () => {
         expect(findTransactionById(result, ids[0]).action).to.be.null();
-        expect(findTransactionById(result, ids[1]).action).to.be.null();
       });
 
       test('the current batch transaction is deleted', async () => {
