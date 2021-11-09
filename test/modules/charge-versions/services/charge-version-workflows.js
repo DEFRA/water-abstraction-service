@@ -76,6 +76,8 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     );
 
     sandbox.stub(service, 'findAll').resolves([chargeVersionWorkflow]);
+    sandbox.stub(chargeVersionWorkflowRepo, 'findAllWithPaging').resolves({ status: 'review', data: [{ licence: { startDate: '2002-05-03' } }, { licence: { startDate: '2000-09-30' } }] });
+
     sandbox.stub(service, 'findOne').resolves(chargeVersionWorkflow);
     sandbox.stub(service, 'findMany').resolves([chargeVersionWorkflow]);
 
@@ -120,9 +122,9 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       result = await chargeVersionWorkflowService.getAllWithLicenceHolderWithPaging(page, perPage, tabFilter);
     });
 
-    test('return expected data', async () => {
+    test('return expected data length', async () => {
       const { data } = result;
-      expect(data[0].status).to.equal('to_setup');
+      expect(data.length).to.equal(2);
     });
   });
 
