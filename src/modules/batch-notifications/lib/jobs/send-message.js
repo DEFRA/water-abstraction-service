@@ -37,10 +37,10 @@ const handleSendMessage = async messageId => {
       );
     }
     const notifyResponse = await notify.send(scheduledNotification);
-    return scheduledNotificationService.updateScheduledNotificationWithNotifyResponse(messageId, notifyResponse);
+    await scheduledNotificationService.updateScheduledNotificationWithNotifyResponse(messageId, notifyResponse);
   } catch (err) {
     logger.error('Error sending batch message', err, { messageId });
-    return messageHelpers.markMessageAsErrored(messageId, err);
+    await messageHelpers.markMessageAsErrored(messageId, err);
   }
 };
 

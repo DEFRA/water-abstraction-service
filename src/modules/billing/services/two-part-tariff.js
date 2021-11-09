@@ -35,7 +35,7 @@ const decorateBillingVolumesWithBatchId = (billingVolumes, billingBatchId) =>
 const processChargeVersionYear = async chargeVersionYear => {
   const { chargeVersionId, financialYearEnding, isSummer, billingBatchId } = chargeVersionYear;
 
-  const billingVolumes = await volumeMatchingService.matchVolumes(chargeVersionId, new FinancialYear(financialYearEnding), isSummer, billingBatchId);
+  const billingVolumes = await volumeMatchingService.matchVolumes(chargeVersionId, new FinancialYear(financialYearEnding), isSummer);
   decorateBillingVolumesWithBatchId(billingVolumes, billingBatchId);
   return bluebird.mapSeries(billingVolumes, billingVolumesService.persist);
 };

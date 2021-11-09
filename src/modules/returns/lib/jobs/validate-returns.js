@@ -8,25 +8,32 @@ const { mapMultipleReturn } = require('../../lib/upload-preview-mapper');
 const { set } = require('lodash');
 
 /**
- * Creates a message for PG Boss
+ * Creates a message for Bull MQ
  * @param {Object} data containing eventId and companyId
  * @returns {Object}
  */
-const createMessage = data => ({
-  name: JOB_NAME,
-  data: returnsUpload.buildJobData(data)
-});
+const createMessage = data => {
+  logger.info(`Create Message ${JOB_NAME}`);
+  return [
+    JOB_NAME,
+    returnsUpload.buildJobData(data),
+    {
+      jobId: `${JOB_NAME}.${data.eventId}`
+    }
+  ];
+};
 
 /**
-* Handler for the 'validate-uploaded-returns-data' job in PG Boss.
-*
-* This will acquire the saved document from AWS S3,
-* validate the JSON representation, then put the JSON
-* back to S3 for future processing.
-*
-* @param {Object} job The job data from PG Boss
-*/
+ * Handler for the 'validate-uploaded-returns-data' job in Bull MQ.
+ *
+ * This will acquire the saved document from AWS S3,
+ * validate the JSON representation, then put the JSON
+ * back to S3 for future processing.
+ *
+ * @param {Object} job The job data from Bull MQ
+ */
 const handleValidateReturnsStart = async job => {
+  logger.info(`Handling: ${JOB_NAME}:${job.id}`);
   const { eventId, companyId } = job.data;
   const event = await eventsService.findOne(eventId);
   if (!event) return errorEvent.throwEventNotFoundError(eventId);
@@ -71,6 +78,16 @@ const getEventReturnData = data =>
     totalVolume: ret.totalVolume
   }));
 
+const onFailed = async (job, err) => {
+  logger.error(`${JOB_NAME}: Job has failed`, err);
+};
+
+const onComplete = async () => {
+  logger.info(`${JOB_NAME}: Job has completed`);
+};
+
 exports.createMessage = createMessage;
 exports.handler = handleValidateReturnsStart;
+exports.onFailed = onFailed;
+exports.onComplete = onComplete;
 exports.jobName = JOB_NAME;

@@ -75,7 +75,7 @@ experiment('refreshEvent job', () => {
         sandbox.stub(eventHelpers, 'refreshEventStatus').rejects(err);
         await refreshEvent.handler({ id: jobId });
         const [msg, error] = logger.error.lastCall.args;
-        expect(msg).to.equal(`Error handling: ${jobId}`);
+        expect(msg).to.equal('Error refreshing batch message event');
         expect(error).to.equal(err);
       });
     });

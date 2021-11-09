@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "2.11.2",
+  "version": "2.12.0",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "repository": {
@@ -92,7 +92,6 @@
     "p-waterfall": "^2.1.0",
     "path": "^0.12.7",
     "pg": "^8.0.3",
-    "pg-boss": "^3.2.2",
     "promise-retry": "^1.0.2",
     "proxy-agent": "^4.0.1",
     "puppeteer": "^9.0.0",
