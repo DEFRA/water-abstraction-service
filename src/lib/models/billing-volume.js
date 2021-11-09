@@ -235,15 +235,15 @@ class BillingVolume extends Model {
    */
   get approvedOrCalculatedVolume () {
     if (this.isApproved) {
-      return isNull(this.volume) ? null : new Decimal(this.volume);
+      return isNull(this.volume) ? new Decimal(0) : new Decimal(this.volume);
     }
-    return this.calculatedVolume;
+    return new Decimal(this.calculatedVolume || 0);
   }
 
   toJSON () {
     return {
       ...super.toJSON(),
-      calculatedVolume: isNull(this.calculatedVolume) ? null : this.calculatedVolume.toDecimalPlaces(6).toNumber()
+      calculatedVolume: isNull(this.calculatedVolume) ? new Decimal(0) : this.calculatedVolume.toDecimalPlaces(6).toNumber()
     };
   }
 }
