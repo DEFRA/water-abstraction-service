@@ -6,7 +6,7 @@ const { get } = require('lodash');
 const service = require('../../../lib/services/service');
 const documentsService = require('../../../lib/services/documents-service');
 const chargeVersionService = require('../../../lib/services/charge-versions');
-
+const licencesService = require('../../../lib/services/licences');
 // Repos
 const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-version-workflows');
 
@@ -191,8 +191,10 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
   // Persist the new charge version
   const persistedChargeVersion = await chargeVersionService.create(chargeVersion);
 
+  // flag for supplementary billing
+  await licencesService.flagForSupplementaryBilling(chargeVersionWorkflow.licence.id);
+
   // Delete the charge version workflow record as it is no longer needed
-  // and flag for supplementary billing
   await deleteOne(chargeVersionWorkflow, false);
 
   return persistedChargeVersion;
