@@ -52,10 +52,11 @@ const getTwoPartTariffTransactionDescription = transaction => {
 };
 
 class Transaction extends Model {
-  constructor (id, value, isCredit = false) {
+  constructor (id, value, isCredit = false, isCreditedBack = false) {
     super(id);
     this.value = value;
     this.isCredit = isCredit;
+    this._isCreditedBack = isCreditedBack;
     this._agreements = [];
     this.status = statuses.candidate;
   }
@@ -416,6 +417,20 @@ class Transaction extends Model {
    */
   get isErrorStatus () {
     return this.status === statuses.error;
+  }
+
+  /**
+   * If true the transaction has been
+   * reversed/credited in a previous bill run
+   * @param {Boolean}
+   */
+  set isCreditedBack (value) {
+    validators.assertIsBoolean(value);
+    this._isCreditedBack = value;
+  }
+
+  get isCreditedBack () {
+    return this._isCreditedBack;
   }
 }
 

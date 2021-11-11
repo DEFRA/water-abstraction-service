@@ -127,6 +127,16 @@ const countByBatchId = async billingBatchId => {
   return parseInt(count);
 };
 
+/**
+ * Updates the isCredited flag for the region for all transactions
+ * that was credited back
+ * @param {String} regionId
+ * @return {Promise}
+ */
+const updateIsCredited = regionId => bookshelf
+  .knex
+  .raw(queries.updateIsCredited, { regionId });
+
 exports.findOne = findOne;
 exports.find = find;
 exports.findHistoryByBatchId = findHistoryByBatchId;
@@ -139,3 +149,4 @@ exports.deleteByInvoiceLicenceId = deleteByInvoiceLicenceId;
 exports.deleteByBatchId = deleteByBatchId;
 exports.deleteByInvoiceId = deleteByInvoiceId;
 exports.countByBatchId = countByBatchId;
+exports.updateIsCredited = updateIsCredited;

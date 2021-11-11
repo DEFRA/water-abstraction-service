@@ -20,7 +20,9 @@ const agreements = require('./lib/agreements');
 const DATE_FORMAT = 'YYYY-MM-DD';
 
 const isTwoPartTariffApplied = (agreement, chargeElement) =>
-  agreement.isTwoPartTariff() && chargeElement.purposeUse.isTwoPartTariff && chargeElement.isSection127AgreementEnabled;
+  agreement.isTwoPartTariff() &&
+  chargeElement.purposeUse.isTwoPartTariff &&
+  chargeElement.isSection127AgreementEnabled;
 /**
  * Predicate to check whether an agreement should be applied to the transaction
  * @param {Agreement} agreement

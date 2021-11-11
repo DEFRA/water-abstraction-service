@@ -110,6 +110,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     sandbox.stub(transactionsService, 'saveTransactionToDB');
     sandbox.stub(transactionsService, 'persistDeMinimis').resolves();
+    sandbox.stub(transactionsService, 'updateIsCredited').resolves();
 
     sandbox.stub(invoiceLicencesService, 'saveInvoiceLicenceToDB');
 
@@ -451,7 +452,9 @@ experiment('modules/billing/services/batch-service', () => {
     beforeEach(async () => {
       batch = {
         id: uuid(),
-        externalId: uuid()
+        externalId: uuid(),
+        type: 'supplementary',
+        region: { id: 'test-regioin-id' }
       };
 
       internalCallingUser = {
@@ -1065,7 +1068,7 @@ experiment('modules/billing/services/batch-service', () => {
     });
 
     test('a batch is created in the charge module with the correct region', async () => {
-      expect(chargeModuleBillRunConnector.create.calledWith(REGION_ID));
+      expect(chargeModuleBillRunConnector.create.calledWith(REGION_ID, 'presroc'));
     });
 
     test('the batch is updated with the values from the CM', async () => {

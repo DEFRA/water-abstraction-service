@@ -10,7 +10,8 @@ const helpers = require('../../../lib/mappers/lib/helpers');
 const dbToModelMapper = createMapper()
   .copy(
     'transactionType',
-    'isSummer'
+    'isSummer',
+    'hasTwoPartAgreement'
   )
   .map('billingBatchChargeVersionYearId').to('id')
   .map('billingBatch').to('batch', batchMapper.dbToModel)

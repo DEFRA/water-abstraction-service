@@ -24,7 +24,6 @@ const billingVolumesService = require('./billing-volumes-service');
 const invoiceService = require('../../../lib/services/invoice-service');
 const licencesService = require('../../../lib/services/licences');
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
-
 // Models
 const Event = require('../../../lib/models/event');
 const Batch = require('../../../lib/models/batch');
@@ -175,11 +174,16 @@ const approveBatch = async (batch, internalCallingUser) => {
   try {
     await chargeModuleBillRunConnector.approve(batch.externalId);
     await chargeModuleBillRunConnector.send(batch.externalId);
-
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
-
     await licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch(batch.id);
     await invoiceService.resetIsFlaggedForRebilling(batch.id);
+
+    // if it is a supplementary batch mark all the
+    // old transactions in previous batches that was credited back in new invoices sent in this batch
+    // foir the relevant region.
+    if (batch.type === BATCH_TYPE.supplementary) {
+      await transactionsService.updateIsCredited(batch.region.id);
+    }
 
     return batch;
   } catch (err) {
@@ -282,7 +286,7 @@ const createChargeModuleBillRun = async batchId => {
   const batch = await getBatchById(batchId);
 
   // Create CM batch
-  const { billRun: cmBillRun } = await chargeModuleBillRunConnector.create(batch.region.code);
+  const { billRun: cmBillRun } = await chargeModuleBillRunConnector.create(batch.region.code, 'presroc');
 
   // Update DB row
   const row = await newRepos.billingBatches.update(batch.id, {

@@ -68,7 +68,7 @@ const deleteLicenceAgreementById = async (licenceAgreementId, issuer) => {
   }
 
   // Delete
-  await licenceAgreementRepo.deleteOne(licenceAgreementId);
+  await licenceAgreementRepo.softDeleteOne(licenceAgreementId);
 
   // Get licence
   const licence = await licencesService.getLicenceByLicenceRef(licenceAgreement.licenceNumber);
