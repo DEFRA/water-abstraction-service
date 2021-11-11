@@ -217,13 +217,13 @@ class Transaction extends Model {
     } else {
       /* Important note
       The volume in the transactions table for historic nald
-      transactions was rounded up in some cases. When trying to raise 
+      transactions was rounded up in some cases. When trying to raise
       a credit transaction for one of these transactions it fails at the
-      charge module therefore it is overriden here and set to the maximum quantity 
+      charge module therefore it is overriden here and set to the maximum quantity
       */
       parseFloat(volume) > parseFloat(this.chargeElement.maxAnnualQuantity)
-      ? this._volume = this.chargeElement.maxAnnualQuantity
-      : this._volume = volume;
+        ? this._volume = this.chargeElement.maxAnnualQuantity
+        : this._volume = volume;
     }
   }
 

@@ -386,7 +386,7 @@ experiment('lib/models/transaction', () => {
 
     test('returns the max annual quantity if the volume is greater than charge element max quantity', async () => {
       transaction.volume = 20;
-      expect(transaction.volume).to.equal(transaction.chargeElement.authorisedAnnualQuantity)
+      expect(transaction.volume).to.equal(transaction.chargeElement.authorisedAnnualQuantity);
     });
 
     test('can be set to a quantity between billable and auth quantity', async () => {
