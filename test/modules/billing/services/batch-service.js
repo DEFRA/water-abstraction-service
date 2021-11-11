@@ -1068,7 +1068,7 @@ experiment('modules/billing/services/batch-service', () => {
     });
 
     test('a batch is created in the charge module with the correct region', async () => {
-      expect(chargeModuleBillRunConnector.create.calledWith(REGION_ID));
+      expect(chargeModuleBillRunConnector.create.calledWith(REGION_ID, 'presroc'));
     });
 
     test('the batch is updated with the values from the CM', async () => {
