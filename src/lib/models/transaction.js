@@ -211,11 +211,19 @@ class Transaction extends Model {
   }
 
   set volume (volume) {
+    validators.assertNullableQuantity(volume);
     if (isNull(volume)) {
       this._volume = volume;
     } else {
-      validators.assertNullableQuantityWithMaximum(volume, this.chargeElement.maxAnnualQuantity);
-      this._volume = volume;
+      /* Important note
+      The volume in the transactions table for historic nald
+      transactions was rounded up in some cases. When trying to raise 
+      a credit transaction for one of these transactions it fails at the
+      charge module therefore it is overriden here and set to the maximum quantity 
+      */
+      parseFloat(volume) > parseFloat(this.chargeElement.maxAnnualQuantity)
+      ? this._volume = this.chargeElement.maxAnnualQuantity
+      : this._volume = volume;
     }
   }
 
