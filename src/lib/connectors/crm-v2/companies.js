@@ -68,8 +68,10 @@ const createCompanyContact = async (companyId, companyContact) => {
   return serviceRequest.post(uri, { body: companyContact });
 };
 
-const deleteCompanyContact = async (companyId, companyContactId) =>
-  serviceRequest.delete(getUri(companyId, 'contacts', companyContactId));
+const deleteCompanyContact = async (companyId, companyContactId) => {
+  const uri = getUri(companyId, 'contacts', companyContactId);
+  return serviceRequest.delete(uri);
+};
 
 /**
  * Get the CompanyContacts for a given company id
