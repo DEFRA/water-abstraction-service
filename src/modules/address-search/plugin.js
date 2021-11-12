@@ -9,7 +9,7 @@ const addressService = require('./services/address-service');
 
 const config = {
   cache: {
-    expiresIn: 24 * 60 * 60 * 1000,
+    expiresIn: 6 * 60 * 60 * 1000,
     generateTimeout: 2000
   }
 };

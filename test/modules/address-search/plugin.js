@@ -42,7 +42,7 @@ experiment('modules/address-search/plugin.js', () => {
     expect(func).to.equal(addressService.getAddressesByPostcode);
     expect(options).to.equal({
       cache: {
-        expiresIn: 24 * 60 * 60 * 1000,
+        expiresIn: 6 * 60 * 60 * 1000,
         generateTimeout: 2000
       }
     });
