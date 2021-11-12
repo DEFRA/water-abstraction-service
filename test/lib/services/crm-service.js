@@ -16,11 +16,13 @@ const companiesConnector = require('../../../src/lib/connectors/crm-v2/companies
 
 const Address = require('../../../src/lib/models/address');
 const CompanyAddress = require('../../../src/lib/models/company-address');
+const CompanyContact = require('../../../src/lib/models/company-contact');
 
 experiment('lib/services/crm-service', () => {
   beforeEach(() => {
     sandbox.stub(addressesConnector, 'deleteAddress').resolves();
     sandbox.stub(companiesConnector, 'deleteCompanyAddress').resolves();
+    sandbox.stub(companiesConnector, 'deleteCompanyContact').resolves();
   });
 
   afterEach(() => sandbox.restore());
@@ -36,11 +38,14 @@ experiment('lib/services/crm-service', () => {
     test('calls the relevant services for each entity', async () => {
       const address = new Address(uuid());
       const companyAddress = new CompanyAddress(uuid());
-      await crmService.deleteEntities([address, companyAddress]);
+      const companyContact = new CompanyContact(uuid());
+      await crmService.deleteEntities([address, companyAddress, companyContact]);
       const [addressId] = addressesConnector.deleteAddress.lastCall.args;
       const [, companyAddressId] = companiesConnector.deleteCompanyAddress.lastCall.args;
+      const [, companyContactId] = companiesConnector.deleteCompanyContact.lastCall.args;
       expect(addressId).to.equal(address.id);
       expect(companyAddressId).to.equal(companyAddress.id);
+      expect(companyContactId).to.equal(companyContact.id);
     });
   });
 });
