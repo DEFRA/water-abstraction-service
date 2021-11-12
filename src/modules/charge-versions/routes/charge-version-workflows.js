@@ -5,6 +5,7 @@ const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer, vie
 const controller = require('../controllers/charge-version-workflow');
 const Joi = require('joi');
 const preHandlers = require('../controllers/pre-handlers');
+const { optional } = require('@hapi/joi');
 
 const headers = async values => {
   Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
@@ -28,7 +29,7 @@ module.exports = {
           licenceId: Joi.string().guid().optional(),
           page: Joi.number().integer().optional(),
           perPage: Joi.number().integer().optional(),
-          tabFilter: Joi.string().optional()
+          tabFilter: Joi.string().optional().valid('to_setup', 'review', 'changes_requested')
         })
       }
     }

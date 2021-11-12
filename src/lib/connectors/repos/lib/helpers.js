@@ -27,14 +27,11 @@ exports.findManyWithPaging = async (bookshelfModel, conditions = {}, withRelated
   const result = await bookshelfModel
     .forge()
     .where(conditions)
-    .where('charge_version_workflow_id', 'is not', null)
-    .orderBy('charge_version_workflow_id', 'desc')
     .fetchPage({
       page,
       pageSize,
       withRelated
     });
-
   return paginationHelper.paginatedEnvelope(result);
 };
 

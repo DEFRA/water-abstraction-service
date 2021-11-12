@@ -99,7 +99,7 @@ const getByIdWithLicenceHolder = async id => {
  * @param {String} licenceId
  */
 const getManyByLicenceId = async licenceId =>
-  service.findMany(licenceId, chargeVersionWorkflowsRepo.findManyForLicence, chargeVersionWorkflowMapper);
+  chargeVersionWorkflowsRepo.findManyForLicence(licenceId);
 
 /**
  * Updates the properties on the model - if any errors,

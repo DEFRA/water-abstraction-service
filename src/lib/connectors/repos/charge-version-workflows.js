@@ -16,7 +16,7 @@ const findOne = id =>
 const findAll = () =>
   helpers.findMany(ChargeVersionWorkflow, { date_deleted: null }, relatedModels);
 
-const findAllWithPaging = (page = 1, perPage = 10, tabFilter = '') =>
+const findAllWithPaging = (page = 1, perPage = 10, tabFilter) =>
   helpers.findManyWithPaging(ChargeVersionWorkflow, { status: tabFilter, date_deleted: null }, relatedModels, page, perPage);
 
 const findManyForLicence = licenceId =>

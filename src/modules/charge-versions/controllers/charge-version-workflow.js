@@ -15,22 +15,13 @@ const { logger } = require('../../../logger');
  * @param {String} request.query.licenceId
  */
 const getChargeVersionWorkflows = async request => {
-  const { licenceId } = request.query;
+  const { licenceId, page, perPage, tabFilter } = request.query;
   if (licenceId) {
     return { data: await chargeVersionsWorkflowService.getManyByLicenceId(licenceId) };
+  } else if (tabFilter) {
+    return chargeVersionsWorkflowService.getAllWithLicenceHolderWithPaging(page, perPage, tabFilter);
   } else {
-    const { page, perPage, tabFilter } = request.query;
-    /* Example paging values sent from UI:
-    page = 1;
-    perPage = 12;
-    tabFilter = 'review' // options: to_setup, review, changes_requested
-    */
-
-    if (page) {
-      return chargeVersionsWorkflowService.getAllWithLicenceHolderWithPaging(page, perPage, tabFilter);
-    } else {
-      return chargeVersionsWorkflowService.getAllWithLicenceHolder();
-    }
+    return chargeVersionsWorkflowService.getAllWithLicenceHolder();
   }
 };
 
