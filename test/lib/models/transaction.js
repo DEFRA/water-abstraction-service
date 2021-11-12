@@ -384,12 +384,9 @@ experiment('lib/models/transaction', () => {
       expect(func).to.throw();
     });
 
-    test('throws an error if volume is greater than charge element max quantity', async () => {
-      const func = () => {
-        transaction.volume = 20;
-      };
-
-      expect(func).to.throw();
+    test('returns the max annual quantity if the volume is greater than charge element max quantity', async () => {
+      transaction.volume = 20;
+      expect(transaction.volume).to.equal(transaction.chargeElement.authorisedAnnualQuantity);
     });
 
     test('can be set to a quantity between billable and auth quantity', async () => {
