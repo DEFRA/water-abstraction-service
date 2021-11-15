@@ -32,7 +32,7 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
     sandbox.stub(licencesService, 'flagForSupplementaryBilling').resolves();
 
     sandbox.stub(licenceVersions, 'findByLicenceId').resolves({ licenceId: 'test-lv-id', version: 100, increment: 1 });
-    sandbox.stub(chargeVersionWorkflowService, 'getAllWithLicenceHolderWithPaging').resolves({ status: 'review', data: [{ licence: { startDate: '2002-05-03' } }, { licence: { startDate: '2000-09-30' } }] });
+    sandbox.stub(chargeVersionWorkflowService, 'getAllWithLicenceHolderWithPaging').resolves({ status: 'changes_requested', data: [{ licence: { startDate: '2002-05-03' } }, { licence: { startDate: '2000-09-30' } }] });
     sandbox.stub(chargeVersionWorkflowService, 'getAllWithLicenceHolder').resolves({ status: 'changes_requested', licence: { startDate: '2002-05-03' } }, { licence: { startDate: '2000-09-30' } });
     sandbox.stub(chargeVersionWorkflowService, 'create');
     sandbox.stub(chargeVersionWorkflowService, 'update');

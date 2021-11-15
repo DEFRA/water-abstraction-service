@@ -24,17 +24,16 @@ const Role = require('../../../lib/models/role');
 const { NotFoundError, InvalidEntityError } = require('../../../lib/errors');
 const { logger } = require('../../../logger');
 
-const chargeVersionWorkflowsRepoFindAllWithPaging = async (page, perPage, tabFilter) =>
-  chargeVersionWorkflowsRepo.findAllWithPaging(page, perPage, tabFilter);
-
 /**
  * Gets all charge version workflows from the DB
  * @return {Promise<Array>}
  */
 const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeVersionWorkflowMapper);
 
-const getAllWithPaging = (page, perPage, tabFilter) =>
-  service.findAllWithPaging(chargeVersionWorkflowsRepoFindAllWithPaging, chargeVersionWorkflowMapper, page, perPage, tabFilter);
+const getAllWithPaging = async (page, perPage, tabFilter) => {
+  const result = await chargeVersionWorkflowsRepo.findAllWithPaging(page, perPage, tabFilter);
+  return { data: result.data.map(chargeVersionWorkflowMapper.dbToModel), pagination: result.pagination };
+};
 
 /**
  * Gets the licence-holder role for the supplied ChargeVersionWorkflow model
@@ -99,7 +98,7 @@ const getByIdWithLicenceHolder = async id => {
  * @param {String} licenceId
  */
 const getManyByLicenceId = async licenceId =>
-  chargeVersionWorkflowsRepo.findManyForLicence(licenceId);
+  service.findMany(licenceId, chargeVersionWorkflowsRepo.findManyForLicence, chargeVersionWorkflowMapper);
 
 /**
  * Updates the properties on the model - if any errors,

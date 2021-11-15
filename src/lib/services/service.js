@@ -38,12 +38,6 @@ const findAll = async (fetchDataFunc, mapper) => {
   return data.map(mapper.dbToModel);
 };
 
-const findAllWithPaging = async (fetchDataFunc, mapper, page, perPage, tabFilter) => {
-  const dataAndPagination = await fetchDataFunc(page, perPage, tabFilter);
-  return { data: dataAndPagination.data.map(mapper.dbToModel), pagination: dataAndPagination.pagination };
-};
-
 exports.findOne = findOne;
 exports.findMany = findMany;
 exports.findAll = findAll;
-exports.findAllWithPaging = findAllWithPaging;
