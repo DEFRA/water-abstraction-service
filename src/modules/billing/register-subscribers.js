@@ -14,6 +14,7 @@ const checkForUpdatedInvoiceAccounts = require('./jobs/check-for-updated-invoice
 const approveBatch = require('./jobs/approve-batch');
 const deleteErroredBatch = require('./jobs/delete-errored-batch');
 const customerFileRefresh = require('./jobs/customer-file-refresh');
+const syncChargeCategories = require('./jobs/sync-charge-categories');
 
 module.exports = {
   name: 'billing-jobs',
@@ -33,8 +34,10 @@ module.exports = {
       .register(checkForUpdatedInvoiceAccounts)
       .register(approveBatch)
       .register(deleteErroredBatch)
-      .register(customerFileRefresh);
+      .register(customerFileRefresh)
+      .register(syncChargeCategories);
 
+    server.queueManager.add(syncChargeCategories.jobName);
     server.queueManager.add(customerFileRefresh.jobName);
   }
 };
