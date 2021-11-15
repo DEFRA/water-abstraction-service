@@ -182,6 +182,7 @@ module.exports = {
   import: {
     returns: { importYears: process.env.IMPORT_RETURNS_YEARS || 3 },
     gaugingStationsSyncFrequencyInMS: 21600000,
+    chargeCategoriesSyncFrequencyInMS: 21600000,
     digitiseToLVPCSyncFrequencyInMS: 43200000,
     digitiseToLicenceGaugingStationsFrequencyInMS: 43200000,
     zipPassword: process.env.NALD_ZIP_PASSWORD
@@ -221,7 +222,7 @@ module.exports = {
   },
 
   redis: {
-    maxListenerCount: 64,
+    maxListenerCount: 65,
     connection: {
       host: process.env.REDIS_HOST || '127.0.0.1',
       port: process.env.REDIS_PORT || 6379,
