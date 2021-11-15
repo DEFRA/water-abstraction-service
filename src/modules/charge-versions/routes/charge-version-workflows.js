@@ -5,7 +5,6 @@ const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer, vie
 const controller = require('../controllers/charge-version-workflow');
 const Joi = require('joi');
 const preHandlers = require('../controllers/pre-handlers');
-const { optional } = require('@hapi/joi');
 
 const headers = async values => {
   Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
