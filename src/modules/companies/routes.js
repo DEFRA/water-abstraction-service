@@ -142,6 +142,21 @@ module.exports = {
     }
   },
 
+  deleteCompanyContact: {
+    path: '/water/1.0/companies/{companyId}/contacts/{companyContactId}',
+    method: 'DELETE',
+    handler: controller.deleteCompanyContact,
+    config: {
+      description: 'Deletes a given companyContact',
+      validate: {
+        params: Joi.object().keys({
+          companyId: Joi.string().uuid().required(),
+          companyContactId: Joi.string().uuid().required()
+        })
+      }
+    }
+  },
+
   getCompanyInvoiceAccounts: {
     path: '/water/1.0/companies/{companyId}/invoice-accounts',
     method: 'GET',
