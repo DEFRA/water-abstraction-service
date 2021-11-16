@@ -242,4 +242,57 @@ experiment('lib/connectors/repos/lib/helpers', () => {
       expect(model.destroy.called).to.be.true();
     });
   });
+
+  experiment('.findManyWithPaging', () => {
+    let result;
+    let model;
+    let response;
+
+    beforeEach(async () => {
+      result = {
+        toJSON: sandbox.spy(),
+        pagination: {
+          page: 1,
+          pageSize: 100,
+          rowCount: 243
+        }
+      };
+      model = {
+        forge: sandbox.stub().returnsThis(),
+        where: sandbox.stub().returnsThis(),
+        fetchPage: sandbox.stub().resolves(result)
+      };
+      // conditions = {}, withRelated = [], page = 1, pageSize = 10
+      response = await helpers.findManyWithPaging(model, { testKey: 'test-id' }, ['relatedModel'], 2, 100);
+    });
+
+    test('filters the result', async () => {
+      const [idFilter] = model.where.lastCall.args;
+      expect(idFilter).to.equal({
+        testKey: 'test-id'
+      });
+    });
+
+    test('fetches all relevant data woth fetchPage', async () => {
+      expect(model.fetchPage.called).to.be.true();
+    });
+
+    test('will not throw if no entity found', async () => {
+      const [options] = model.fetchPage.lastCall.args;
+      expect(options.page).to.equal(2);
+      expect(options.pageSize).to.equal(100);
+    });
+
+    test('will not throw if no entity found', async () => {
+      expect(response.pagination).to.equal({
+        page: 1,
+        perPage: 100,
+        totalRows: 243
+      });
+    });
+
+    test('returns the entity as JSON', async () => {
+      expect(result.toJSON.called).to.equal(true);
+    });
+  });
 });

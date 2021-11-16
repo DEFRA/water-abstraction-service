@@ -1,4 +1,5 @@
 'use strict';
+const paginationHelper = require('../lib/envelope');
 
 const findOneBy = async (bookshelfModel, conditions, withRelated = []) => {
   const result = await bookshelfModel
@@ -20,6 +21,18 @@ exports.findMany = async (bookshelfModel, conditions = {}, withRelated = []) => 
     .fetchAll({ require: false, withRelated });
 
   return result.toJSON();
+};
+
+exports.findManyWithPaging = async (bookshelfModel, conditions = {}, withRelated = [], page = 1, pageSize = 10) => {
+  const result = await bookshelfModel
+    .forge()
+    .where(conditions)
+    .fetchPage({
+      page,
+      pageSize,
+      withRelated
+    });
+  return paginationHelper.paginatedEnvelope(result);
 };
 
 exports.create = async (bookShelfModel, data) => {
