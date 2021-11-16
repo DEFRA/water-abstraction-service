@@ -17,7 +17,7 @@ const csvKey = 'billing-metadata/supported-sources.csv';
 const config = require('../../../../config');
 const applicationState = require('../../../lib/services/application-state');
 
-// Charge Categories Repo
+// Supported Sources Repo
 const supportedSourcesRepo = require('../../../lib/connectors/repos/supported-sources');
 const supportedSourcesMapper = require('../../../lib/mappers/supported-source');
 

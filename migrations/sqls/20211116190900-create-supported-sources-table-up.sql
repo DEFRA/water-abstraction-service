@@ -2,8 +2,8 @@ create table water.billing_supported_sources (
   billing_supported_source_id uuid primary key default public.gen_random_uuid(),
   reference varchar not null,
   name varchar(255) not null,
-  date_created timestamp not null,
-  date_updated timestamp,
+  date_created timestamp NOT NULL DEFAULT NOW(),
+  date_updated timestamp NOT NULL DEFAULT NOW(),
   unique(reference)
 );
 
