@@ -15,9 +15,11 @@ const { logger } = require('../../../logger');
  * @param {String} request.query.licenceId
  */
 const getChargeVersionWorkflows = async request => {
-  const { licenceId } = request.query;
+  const { licenceId, page, perPage, tabFilter } = request.query;
   if (licenceId) {
     return { data: await chargeVersionsWorkflowService.getManyByLicenceId(licenceId) };
+  } else if (tabFilter) {
+    return chargeVersionsWorkflowService.getAllWithLicenceHolderWithPaging(tabFilter, page, perPage);
   } else {
     return chargeVersionsWorkflowService.getAllWithLicenceHolder();
   }
