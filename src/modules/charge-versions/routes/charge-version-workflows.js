@@ -25,7 +25,10 @@ module.exports = {
       validate: {
         headers,
         query: Joi.object().keys({
-          licenceId: Joi.string().guid().optional()
+          licenceId: Joi.string().guid().optional(),
+          page: Joi.number().integer().optional().default(1),
+          perPage: Joi.number().integer().optional().default(100),
+          tabFilter: Joi.string().optional().valid('to_setup', 'review', 'changes_requested')
         })
       }
     }
