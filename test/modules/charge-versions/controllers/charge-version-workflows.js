@@ -82,6 +82,12 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
         const { data } = res;
         expect(data[0].licence.startDate).to.equal('2002-05-03');
       });
+      test('calls getAllWithLicenceHolderWithPaging with the correct parameters', async () => {
+        const args = chargeVersionWorkflowService.getAllWithLicenceHolderWithPaging.lastCall.args;
+        expect(args[0]).to.equal('review');
+        expect(args[1]).to.equal(2);
+        expect(args[2]).to.equal(20);
+      });
     });
   });
 
