@@ -23,7 +23,10 @@ const create = () => {
   const refDates = {
     name: '$returnDates',
     obj: {
-      dueDate: moment().add(1, 'month').format('YYYY-MM-DD')
+      dueDate: moment().add(1, 'month').format('YYYY-MM-DD'),
+      endDate: moment().subtract(1, 'month').format('YYYY-MM-DD'),
+      startDate: moment().subtract(3, 'month').format('YYYY-MM-DD'),
+      refId: `v1:1:AT/CURR/MONTHLY/02:9999992:${moment().subtract(3, 'month').format('YYYY-MM-DD')}:${moment().subtract(1, 'month').format('YYYY-MM-DD')}`
     }
   };
 
