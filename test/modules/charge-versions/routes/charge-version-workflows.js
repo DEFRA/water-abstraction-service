@@ -46,6 +46,20 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
       request = makeGet('/water/1.0/charge-version-workflows');
     });
 
+    test('numeric paging parameters working for chargeVersionWorkflowReviewer', async () => {
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
+      request.url = '/water/1.0/charge-version-workflows?page=1&perPage=10&tabFilter=review';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('non-numberic paging parameters rejected', async () => {
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
+      request.url = '/water/1.0/charge-version-workflows?page=abc&perPage=abc&tabFilter=review';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
     test('http 403 error when user has insufficient scope', async () => {
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(403);

@@ -102,7 +102,10 @@ const getTwoPartTariffTransactionTypes = async (batch, chargeVersion) => {
       chargeVersionHasAgreement: true
     };
   }
-  return [];
+  return {
+    types: [],
+    chargeVersionHasAgreement: false
+  };
 };
 
 /**

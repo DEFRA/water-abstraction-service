@@ -32,7 +32,8 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
     sandbox.stub(licencesService, 'flagForSupplementaryBilling').resolves();
 
     sandbox.stub(licenceVersions, 'findByLicenceId').resolves({ licenceId: 'test-lv-id', version: 100, increment: 1 });
-
+    sandbox.stub(chargeVersionWorkflowService, 'getAllWithLicenceHolderWithPaging').resolves({ status: 'changes_requested', data: [{ licence: { startDate: '2002-05-03' } }, { licence: { startDate: '2000-09-30' } }] });
+    sandbox.stub(chargeVersionWorkflowService, 'getAllWithLicenceHolder').resolves({ status: 'changes_requested', licence: { startDate: '2002-05-03' } }, { licence: { startDate: '2000-09-30' } });
     sandbox.stub(chargeVersionWorkflowService, 'create');
     sandbox.stub(chargeVersionWorkflowService, 'update');
     sandbox.stub(chargeVersionWorkflowService, 'delete');
@@ -58,6 +59,53 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
       test('calls workflow service to get many for the licence id', async () => {
         const [licenceId] = chargeVersionWorkflowService.getManyByLicenceId.lastCall.args;
         expect(licenceId).to.equal(request.query.licenceId);
+      });
+    });
+  });
+
+  experiment('.getChargeVersionWorkflows with paging tab', () => {
+    experiment('when licence id is present', () => {
+      let res = [];
+      const request = {
+        query: {
+          page: 2,
+          perPage: 20,
+          tabFilter: 'review'
+        }
+      };
+
+      beforeEach(async () => {
+        res = await cvWorkflowsController.getChargeVersionWorkflows(request);
+      });
+
+      test('calls workflow service and return data', async () => {
+        const { data } = res;
+        expect(data[0].licence.startDate).to.equal('2002-05-03');
+      });
+      test('calls getAllWithLicenceHolderWithPaging with the correct parameters', async () => {
+        const args = chargeVersionWorkflowService.getAllWithLicenceHolderWithPaging.lastCall.args;
+        expect(args[0]).to.equal('review');
+        expect(args[1]).to.equal(2);
+        expect(args[2]).to.equal(20);
+      });
+    });
+  });
+
+  experiment('.getChargeVersionWorkflows without page parameter', () => {
+    experiment('when licence id is present', () => {
+      let res = [];
+      const request = {
+        query: {
+          tabFilter: 'changes_requested'
+        }
+      };
+
+      beforeEach(async () => {
+        res = await cvWorkflowsController.getChargeVersionWorkflows(request);
+      });
+
+      test('calls workflow service and return data', async () => {
+        expect(res.status).to.equal('changes_requested');
       });
     });
   });
