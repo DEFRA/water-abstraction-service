@@ -12,6 +12,9 @@ const patchCompanyContact = companiesRepo.patchCompanyContact;
 
 const postCompanyContact = companiesRepo.postCompanyContact;
 
+const deleteCompanyContact = companiesRepo.deleteCompanyContact;
+
 exports.getCompanyContacts = getCompanyContacts;
 exports.patchCompanyContact = patchCompanyContact;
 exports.postCompanyContact = postCompanyContact;
+exports.deleteCompanyContact = deleteCompanyContact;

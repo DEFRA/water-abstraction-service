@@ -390,6 +390,12 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       )).to.be.true();
     });
 
+    test('the licence is flagged for supplementary billing', async () => {
+      expect(licencesService.flagForSupplementaryBilling.calledWith(
+        chargeVersionWorkflow.licence.id
+      )).to.be.true();
+    });
+
     test('the approver of the new charge version is set', async () => {
       const [chargeVersion] = chargeVersionService.create.lastCall.args;
       expect(chargeVersion.approvedBy).to.equal(approvingUser);
