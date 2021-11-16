@@ -23,7 +23,7 @@ exports.findMany = async (bookshelfModel, conditions = {}, withRelated = []) => 
   return result.toJSON();
 };
 
-exports.findManyWithPaging = async (bookshelfModel, conditions = {}, withRelated = [], page = 1, pageSize = 10) => {
+exports.findManyWithPaging = async (bookshelfModel, conditions = {}, withRelated = [], page, pageSize) => {
   const result = await bookshelfModel
     .forge()
     .where(conditions)

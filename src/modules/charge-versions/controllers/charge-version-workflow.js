@@ -19,7 +19,7 @@ const getChargeVersionWorkflows = async request => {
   if (licenceId) {
     return { data: await chargeVersionsWorkflowService.getManyByLicenceId(licenceId) };
   } else if (tabFilter) {
-    return chargeVersionsWorkflowService.getAllWithLicenceHolderWithPaging(page, perPage, tabFilter);
+    return chargeVersionsWorkflowService.getAllWithLicenceHolderWithPaging(tabFilter, page, perPage);
   } else {
     return chargeVersionsWorkflowService.getAllWithLicenceHolder();
   }

@@ -30,8 +30,15 @@ const { logger } = require('../../../logger');
  */
 const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeVersionWorkflowMapper);
 
-const getAllWithPaging = async (page, perPage, tabFilter) => {
-  const result = await chargeVersionWorkflowsRepo.findAllWithPaging(page, perPage, tabFilter);
+/**
+ * Gets paged charge version workflows where the state = tabFilter
+ * @param {String} tabFilter to_setup, review, changes_requested
+ * @param {Integer} page default at the route is 1
+ * @param {Integer} perPage default at the route is 100
+ * @returns {Array} returns an array of ChargeVersionWorkflow model instances
+ */
+const getAllWithPaging = async (tabFilter, page, perPage) => {
+  const result = await chargeVersionWorkflowsRepo.findAllWithPaging(tabFilter, page, perPage);
   return { data: result.data.map(chargeVersionWorkflowMapper.dbToModel), pagination: result.pagination };
 };
 
@@ -67,8 +74,8 @@ const getAllWithLicenceHolder = async () => {
   return bluebird.map(chargeVersionWorkflows, getLicenceHolderRole);
 };
 
-const getAllWithLicenceHolderWithPaging = async (page = 1, perPage = 10, tabFilter = '') => {
-  const chargeVersionWorkflows = await getAllWithPaging(page, perPage, tabFilter);
+const getAllWithLicenceHolderWithPaging = async (tabFilter, page, perPage) => {
+  const chargeVersionWorkflows = await getAllWithPaging(tabFilter, page, perPage);
   const data = await bluebird.map(chargeVersionWorkflows.data, getLicenceHolderRole);
   return {
     data: data,
