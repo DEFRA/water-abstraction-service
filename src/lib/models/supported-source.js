@@ -9,7 +9,7 @@ class SupportedSource extends Model {
     return this._supportedSourceId;
   }
 
-  set chargeCategoryId (supportedSourceId) {
+  set supportedSourceId (supportedSourceId) {
     validators.assertId(supportedSourceId);
     this._supportedSourceId = supportedSourceId;
   }
