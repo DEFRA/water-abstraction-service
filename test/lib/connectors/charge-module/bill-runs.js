@@ -36,12 +36,12 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = gotCM.post.lastCall.args;
-      expect(path).to.equal('v3/wrls/bill-runs');
+      expect(path).to.equal('v2/wrls/bill-runs');
     });
 
     test('the region is included in the payload', async () => {
       const [, options] = gotCM.post.lastCall.args;
-      expect(options).to.equal({ json: { region: 'A', ruleset: 'presroc' } });
+      expect(options).to.equal({ json: { region: 'A' } });
     });
   });
 
