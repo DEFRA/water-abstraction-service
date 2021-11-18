@@ -176,7 +176,7 @@ experiment('modules/billing/services/supplementary-billing-service/data-service'
           'section126Factor',
           'section127Agreement',
           'section130Agreement',
-          'isTwoPartTariffSupplementary',
+          'isTwoPartSecondPartCharge',
           'calculatedVolume',
           'twoPartTariffError',
           'twoPartTariffStatus',
