@@ -6,4 +6,4 @@ add column is_two_part_second_part_charge boolean default false not null;
 
 update water.billing_transactions 
 set is_two_part_second_part_charge = true
-where lower(description) like 'second%';
+where description ilike 'second%';

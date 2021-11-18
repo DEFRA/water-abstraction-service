@@ -105,9 +105,7 @@ const mapTransaction = (transactionMap, cmTransaction) => {
     ? transactionMap.get(cmTransaction.id)
     : new Transaction();
 
-  return transaction.fromHash({
-    ...transactionMapper.cmToPojo(cmTransaction)
-  });
+  return transaction.fromHash(transactionMapper.cmToPojo(cmTransaction));
 };
 
 const getCMTransactionId = cmTransaction => cmTransaction.id;
