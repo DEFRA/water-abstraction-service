@@ -42,7 +42,7 @@ const getPurposeUseDescription = purposeUse => {
 };
 
 const getTwoPartTariffTransactionDescription = transaction => {
-  const prefix = transaction.isTwoPartTariffSupplementary ? 'Second' : 'First';
+  const prefix = transaction.isTwoPartSecondPartCharge ? 'Second' : 'First';
   const purposeUseDescription = getPurposeUseDescription(transaction.chargeElement.purposeUse);
   const { description } = transaction.chargeElement;
 
@@ -297,7 +297,7 @@ class Transaction extends Model {
       ...this.chargeElement.pick('source', 'season', 'loss'),
       licenceNumber: licence.licenceNumber,
       regionCode: batch.region.code,
-      isTwoPartTariff: this.isTwoPartTariffSupplementary
+      isTwoPartTariff: this.isTwoPartSecondPartCharge
     };
   }
 
@@ -305,13 +305,13 @@ class Transaction extends Model {
    * Whether this transaction is a two-part tariff supplementary charge
    * @return {Boolean}
    */
-  get isTwoPartTariffSupplementary () {
-    return this._isTwoPartTariffSupplementary;
+  get isTwoPartSecondPartCharge () {
+    return this._isTwoPartSecondPartCharge;
   }
 
-  set isTwoPartTariffSupplementary (isTwoPartTariffSupplementary) {
-    validators.assertIsBoolean(isTwoPartTariffSupplementary);
-    this._isTwoPartTariffSupplementary = isTwoPartTariffSupplementary;
+  set isTwoPartSecondPartCharge (isTwoPartSecondPartCharge) {
+    validators.assertIsBoolean(isTwoPartSecondPartCharge);
+    this._isTwoPartSecondPartCharge = isTwoPartSecondPartCharge;
   }
 
   /**

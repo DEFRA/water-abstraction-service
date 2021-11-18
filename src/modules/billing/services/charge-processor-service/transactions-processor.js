@@ -34,8 +34,8 @@ const agreementAppliesToTransaction = (agreement, chargeElement) => {
   return isCanalApplied || isTwoPartTariffApplied(agreement, chargeElement);
 };
 
-const getBillableDays = (absPeriod, startDate, endDate, isTwoPartTariffSupplementary) =>
-  isTwoPartTariffSupplementary
+const getBillableDays = (absPeriod, startDate, endDate, isTwoPartSecondPartCharge) =>
+  isTwoPartSecondPartCharge
     ? 0
     : helpers.charging.getBillableDays(absPeriod, startDate, endDate);
 
@@ -47,7 +47,7 @@ const getBillableDays = (absPeriod, startDate, endDate, isTwoPartTariffSupplemen
  * @param {FinancialYear} financialYear
  * @param {Object} flags
  * @param {Boolean} flags.isCompensationCharge
- * @param {Boolean} flags.isTwoPartTariffSupplementary
+ * @param {Boolean} flags.isTwoPartSecondPartCharge
  * @param {Boolean} flags.isMinimumCharge
  * @return {Transaction}
  */
@@ -59,10 +59,10 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
     chargePeriod,
     agreements: agreements.filter(agreement => agreementAppliesToTransaction(agreement, chargeElement)),
     status: Transaction.statuses.candidate,
-    authorisedDays: getBillableDays(absPeriod, financialYear.start.format(DATE_FORMAT), financialYear.end.format(DATE_FORMAT), flags.isTwoPartTariffSupplementary),
-    billableDays: getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate, flags.isTwoPartTariffSupplementary),
+    authorisedDays: getBillableDays(absPeriod, financialYear.start.format(DATE_FORMAT), financialYear.end.format(DATE_FORMAT), flags.isTwoPartSecondPartCharge),
+    billableDays: getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate, flags.isTwoPartSecondPartCharge),
     volume: billingVolume ? billingVolume.volume : chargeElement.volume,
-    isTwoPartTariffSupplementary: flags.isTwoPartTariffSupplementary || false,
+    isTwoPartSecondPartCharge: flags.isTwoPartSecondPartCharge || false,
     isCompensationCharge: flags.isCompensationCharge || false,
     isNewLicence: flags.isMinimumCharge || false
   });
@@ -154,7 +154,7 @@ const createTwoPartTariffTransactions = (elementChargePeriod, chargeElement, agr
   const elementBillingVolumes = getBillingVolumesForChargeElement(chargeElement, billingVolumes);
   elementBillingVolumes.forEach(billingVolume => {
     if (hasTwoPartTariffAgreement(agreements, chargeElement)) {
-      transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isTwoPartTariffSupplementary: true }, billingVolume));
+      transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isTwoPartSecondPartCharge: true }, billingVolume));
     }
   });
 

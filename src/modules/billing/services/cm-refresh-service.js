@@ -106,8 +106,7 @@ const mapTransaction = (transactionMap, cmTransaction) => {
     : new Transaction();
 
   return transaction.fromHash({
-    ...transactionMapper.cmToPojo(cmTransaction),
-    isTwoPartTariffSupplementary: false
+    ...transactionMapper.cmToPojo(cmTransaction)
   });
 };
 
