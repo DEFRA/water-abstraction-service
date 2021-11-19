@@ -100,7 +100,7 @@ const getBatchTransactionHistory = async batchId => {
 
   // filter the transaction so that it does not include any 2PT transactions where there is no 2PT charge version year
   return historicTransactions.filter(trx =>
-    ((trx.description.slice(0, 6).toLowerCase()) === 'second')
+    trx.isTwoPartSecondPartCharge
       ? twoPartTariffChargeVersionYears.some(cvy =>
         trx.licenceId === cvy.chargeVersion.licenceId &&
         trx.financialYearEnding === cvy.financialYearEnding &&

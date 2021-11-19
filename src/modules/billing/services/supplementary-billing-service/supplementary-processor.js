@@ -42,7 +42,7 @@ const commonTransactionKeys = [
   'section126Factor',
   'section127Agreement',
   'section130Agreement',
-  'isTwoPartTariffSupplementary',
+  'isTwoPartSecondPartCharge',
   'invoiceAccountNumber',
   'financialYearEnding'
 ];
@@ -60,7 +60,7 @@ const commonTransactionKeys = [
 const getGroupingKey = transaction => {
   // Create a list of keys which will form the grouping key
   const keys = [...commonTransactionKeys];
-  transaction.isTwoPartTariffSupplementary
+  transaction.isTwoPartSecondPartCharge
     ? keys.push('isSummer')
     : keys.push('authorisedDays', 'volume');
 
@@ -101,7 +101,7 @@ const xor = (a, b) => a ? !b : b;
  */
 const mapTransactionGroup = (batchId, transactions) => transactions.reduce((acc, transaction) => {
   const isCurrentBatch = transaction.billingBatchId === batchId;
-  const propertyKey = transaction.isTwoPartTariffSupplementary ? 'volume' : 'billableDays';
+  const propertyKey = transaction.isTwoPartSecondPartCharge ? 'volume' : 'billableDays';
   const propertyValue = transaction[propertyKey] || 0;
   let value = new Decimal(propertyValue);
   if (xor(transaction.isCredit, !isCurrentBatch)) {
@@ -176,7 +176,7 @@ const markCurrentBatchTransactionsForDeletion = group => {
 const getPairGroupingKey = transaction => {
   const keys = ['startDate', 'endDate'];
   keys.push(
-    transaction.isTwoPartTariffSupplementary ? 'volume' : 'billableDays'
+    transaction.isTwoPartSecondPartCharge ? 'volume' : 'billableDays'
   );
   return JSON.stringify(pick(transaction, keys));
 };

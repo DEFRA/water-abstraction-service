@@ -89,13 +89,13 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
             dateCreated: '2020-04-03 12:00:00',
             volume: null,
             isCredit: false,
-            isTwoPartTariffSupplementary: true
+            isTwoPartSecondPartCharge: true
           }),
           createTransaction('historical-batch', ids[4], {
             dateCreated: '2020-04-03 12:00:00',
             isCredit: false,
             volume: 0,
-            isTwoPartTariffSupplementary: true
+            isTwoPartSecondPartCharge: true
           })
         ];
         result = supplementaryBillingProcessor.processBatch(batchId, transactions);
@@ -178,17 +178,17 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
         const transactions = [
           createTransaction('historical-batch', ids[0], {
             volume: 20.345,
-            isTwoPartTariffSupplementary: true,
+            isTwoPartSecondPartCharge: true,
             isCredit: false
           }),
           createTransaction('historical-batch', ids[1], {
             volume: 10,
-            isTwoPartTariffSupplementary: true,
+            isTwoPartSecondPartCharge: true,
             isCredit: true
           }),
           createTransaction(batchId, ids[2], {
             volume: 10.345,
-            isTwoPartTariffSupplementary: true,
+            isTwoPartSecondPartCharge: true,
             isCredit: false
           })
         ];
@@ -210,17 +210,17 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
         const transactions = [
           createTransaction('historical-batch', ids[0], {
             volume: 20.345,
-            isTwoPartTariffSupplementary: true,
+            isTwoPartSecondPartCharge: true,
             isCredit: false
           }),
           createTransaction('historical-batch', ids[1], {
             volume: 10,
-            isTwoPartTariffSupplementary: true,
+            isTwoPartSecondPartCharge: true,
             isCredit: true
           }),
           createTransaction(batchId, ids[2], {
             volume: 15,
-            isTwoPartTariffSupplementary: true,
+            isTwoPartSecondPartCharge: true,
             isCredit: false
           })
         ];
