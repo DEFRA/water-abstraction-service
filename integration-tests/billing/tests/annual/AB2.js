@@ -120,7 +120,7 @@ experiment('annual batch ref: AB2', () => {
           test('is a standard charge', async () => {
             expect(transaction.chargeType).to.equal('standard');
             expect(transaction.isCredit).to.be.false();
-            expect(transaction.isTwoPartTariffSupplementary).to.be.false();
+            expect(transaction.isTwoPartSecondPartCharge).to.be.false();
             expect(transaction.isDeMinimis).to.be.false();
             expect(transaction.isNewLicence).to.be.false();
           });
