@@ -184,6 +184,17 @@ const deleteAllBillingData = async (request, h) => {
   }
 };
 
+const putSetBatchStatusToError = async (request, h) => {
+  const { batch } = request.pre;
+  try {
+    // set the batch status to error
+    await batchService.setStatus(batch.id, BATCH_STATUS.error);
+    return h.response().code(204);
+  } catch (err) {
+    return err;
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchDownloadData = getBatchDownloadData;
@@ -198,3 +209,4 @@ exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 
 exports.deleteAllBillingData = deleteAllBillingData;
+exports.putSetBatchStatusToError = putSetBatchStatusToError;
