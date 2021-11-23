@@ -188,7 +188,6 @@ const deleteAllBillingData = async (request, h) => {
 const postSetBatchStatusToError = async (request, h) => {
   const { batch } = request.pre;
   try {
-
     batchStatus.assertBatchIsProcessing(batch);
     // set the batch status to error
     await batchService.setStatus(batch.id, BATCH_STATUS.error);
