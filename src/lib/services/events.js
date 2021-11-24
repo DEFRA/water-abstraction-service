@@ -81,17 +81,18 @@ const getNotificationEvents = async (page = 1, filter = '', sentBy = '') => {
       perPage: 50
     });
 
-  const messageRef = filter.split(',').map(noteType => `'${noteType}'`).join(',');
-  // Single option selected
-  if (filter.indexOf("'") <= 0) {
-    filter = `'${filter}'`;
+  const selectionList = [];
+  filter.split(',').map(noteType => selectionList.push(noteType));
+  let filterLength = selectionList.length;
+  if (filter === '') {
+    filterLength = 0;
   }
-
   // Find and map data to NotificationEvent service models
   const { rows } = await repo.events.findNotifications({
     limit: pagination.perPage,
     offset: pagination.startIndex,
-    messageRef: messageRef,
+    filterLength,
+    messageRef: JSON.stringify(selectionList),
     sentBy: sentBy
   });
   const data = rows

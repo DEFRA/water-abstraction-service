@@ -93,6 +93,7 @@ left join (
   --
   select 
     n.event_id, 
+    n.message_ref,
     sum(n.count) as recipient_count,
     jsonb_agg(jsonb_build_object('status', n.status, 'notify_status', n.notify_status, 'count', n.count)) as statuses
   from (
@@ -100,15 +101,15 @@ left join (
     -- this inner query fetches a count of messages in each status/notify_status combination
     -- grouped by the event_id
     --
-    select n.event_id, n.status, n.notify_status, count(*) as "count"
+    select n.event_id, n.message_ref, n.status, n.notify_status, count(*) as "count"
     from water.scheduled_notification n
-    where n.event_id is not null and ( n.message_ref in (:messageRef) )
-    group by n.event_id, n.status, n.notify_status
+    where n.event_id is not null and ( (CAST(:filterLength AS INTEGER) < 1) or (n.message_ref in (select * from json_array_elements_text(:messageRef)) ) )
+    group by n.event_id, n.message_ref, n.status, n.notify_status
   ) n
-  group by n.event_id
+  group by n.event_id, n.message_ref
 ) e2 on e.event_id=e2.event_id
 where 
-  e.type='notification'
+  e.type='notification' and ( (CAST(:filterLength AS INTEGER) < 1) or (e2.message_ref in (select * from json_array_elements_text(:messageRef)) ) )
   and e.status in ('sent', 'completed', 'sending')
   and (e.issuer = :sentBy or :sentBy = '')
 group by e.event_id, e2.recipient_count, e2.statuses
