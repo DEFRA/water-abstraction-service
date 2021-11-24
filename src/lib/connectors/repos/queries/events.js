@@ -102,7 +102,7 @@ left join (
     --
     select n.event_id, n.status, n.notify_status, count(*) as "count"
     from water.scheduled_notification n
-    where n.event_id is not null
+    where n.event_id is not null and ( n.message_ref in (:messageRef) )
     group by n.event_id, n.status, n.notify_status
   ) n
   group by n.event_id
@@ -110,6 +110,7 @@ left join (
 where 
   e.type='notification'
   and e.status in ('sent', 'completed', 'sending')
+  and (e.issuer = :sentBy or :sentBy = '')
 group by e.event_id, e2.recipient_count, e2.statuses
 order by e.created desc
 limit :limit 

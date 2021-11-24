@@ -92,7 +92,7 @@ experiment('lib/connectors/repos/events', () => {
   });
 
   experiment('.findNotifications', () => {
-    const params = { limit: 10, offset: 10 };
+    const params = { limit: 10, offset: 10, filter: 'water_abstraction_alert_stop', sentBy: 'test@user.eu' };
 
     beforeEach(async () => {
       await events.findNotifications(params);

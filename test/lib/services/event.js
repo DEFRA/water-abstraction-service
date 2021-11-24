@@ -264,7 +264,9 @@ experiment('lib/services/event', () => {
     test('calls repo .findNotifications method with expected limit/offset params', async () => {
       expect(repo.events.findNotifications.calledWith({
         limit: 50,
-        offset: 100
+        offset: 100,
+        filter: 'water_abstraction_alert_stop',
+        sentBy: 'test@user.eu'
       })).to.be.true();
     });
 
