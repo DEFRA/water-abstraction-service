@@ -266,7 +266,7 @@ experiment('lib/services/event', () => {
 
     test('calls repo .findNotifications method with expected limit/offset params', async () => {
       const selectionList = [];
-      filter.split(',').map(noteType => selectionList.push(noteType));
+      filter.split(',').forEach(noteType => selectionList.push(noteType));
       let filterLength = selectionList.length;
       if (filter === '') {
         filterLength = 0;
@@ -275,9 +275,9 @@ experiment('lib/services/event', () => {
       expect(repo.events.findNotifications.calledWith({
         limit: 50,
         offset: 100,
-        filterLength,
         messageRef: JSON.stringify(selectionList),
-        sentBy: sentBy
+        filterLength,
+        sentBy
       })).to.be.true();
     });
 

@@ -82,7 +82,7 @@ const getNotificationEvents = async (page = 1, filter = '', sentBy = '') => {
     });
 
   const selectionList = [];
-  filter.split(',').map(noteType => selectionList.push(noteType));
+  filter.split(',').forEach(noteType => selectionList.push(noteType));
   let filterLength = selectionList.length;
   if (filter === '') {
     filterLength = 0;
@@ -91,9 +91,9 @@ const getNotificationEvents = async (page = 1, filter = '', sentBy = '') => {
   const { rows } = await repo.events.findNotifications({
     limit: pagination.perPage,
     offset: pagination.startIndex,
-    filterLength,
     messageRef: JSON.stringify(selectionList),
-    sentBy: sentBy
+    filterLength,
+    sentBy
   });
   const data = rows
     .map(camelCase)
