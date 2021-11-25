@@ -764,4 +764,46 @@ experiment('modules/billing/controller', () => {
       });
     });
   });
+
+  experiment('.postSetBatchStatusToError', () => {
+    let request;
+    let batch;
+    beforeEach(async () => {
+      batch = new Batch(uuid());
+      batch.status = 'processing';
+      request = {
+        payload: {
+          userEmail: 'test@example.com',
+          regionId: '22222222-2222-2222-2222-222222222222',
+          batchType: 'annual',
+          financialYearEnding: 2019,
+          isSummer: true
+        },
+        queueManager: {
+          add: sandbox.stub().resolves()
+        },
+        pre: { batch }
+      };
+      await controller.postCreateBatch(request, h);
+    });
+
+    test('publishes a new job to the message queue with the batch ID', async () => {
+      const [jobName, batchId] = request.queueManager.add.lastCall.args;
+      expect(jobName).to.equal('billing.create-bill-run');
+      expect(batchId).to.equal('00000000-0000-0000-0000-000000000000');
+    });
+
+    test('returns request has succeeded in changing batch status to erorr', async () => {
+      await controller.postSetBatchStatusToError(request, h);
+      const [code] = hapiResponseStub.code.lastCall.args;
+      expect(code).to.equal(204);
+    });
+
+    test('returns the error from the service if it fails', async () => {
+      const err = new Error('Failed to change batch status to error');
+      batchService.setStatus.rejects(err);
+      const result = await controller.postSetBatchStatusToError(request, h);
+      expect(result).to.equal(err);
+    });
+  });
 });
