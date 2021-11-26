@@ -15,7 +15,7 @@ const createMessage = batchId => ([
     batchId
   },
   {
-    jobId: `${JOB_NAME}.${moment().format('YYYYMMDDHH')}`,
+    jobId: JOB_NAME,
     repeat: {
       every: config.chargeModule.customerFileRefreshFrequencyInMS
     }
