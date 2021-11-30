@@ -3,7 +3,7 @@ create type return_version_status as enum('draft', 'superseded', 'current');
 
 create table water.return_versions (
   return_version_id uuid primary key default public.gen_random_uuid(),
-  licence_id uuid not null references licences(licence_id),
+  licence_id uuid not null references water.licences(licence_id),
   version_number integer not null,
   start_date date not null,
   end_date date,

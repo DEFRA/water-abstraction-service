@@ -4,7 +4,7 @@ CREATE TYPE water.water_abstraction_restriction_status as enum ('warning', 'redu
 
 CREATE TABLE IF NOT EXISTS water.licence_gauging_stations (
     licence_gauging_station_id uuid PRIMARY KEY DEFAULT public.gen_random_uuid(),
-    licence_id uuid not null references licences(licence_id),
+    licence_id uuid not null references water.licences(licence_id),
     gauging_station_id uuid not null references gauging_stations(gauging_station_id),
     source licence_gauging_stations_sources NOT NULL,
     licence_version_purpose_condition_id uuid references licence_version_purpose_conditions(licence_version_purpose_condition_id),
