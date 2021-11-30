@@ -18,11 +18,11 @@ INSERT INTO "water"."picklists" (picklist_id, name, id_required, created) VALUES
   ('measurement_point', 'Measurement point', false, NOW());
 
 INSERT INTO "water"."picklist_items" (picklist_item_id, picklist_id, value, created) VALUES
- (public.gen_random_uuid(), 'measurement_point', 'Upstream', NOW()),
- (public.gen_random_uuid(), 'measurement_point', 'Downstream', NOW()),
- (public.gen_random_uuid(), 'measurement_point', 'NGR', NOW()),
- (public.gen_random_uuid(), 'measurement_point', 'Borehole', NOW()),
- (public.gen_random_uuid(), 'measurement_point', 'Ref point on map', NOW());
+ (gen_random_uuid(), 'measurement_point', 'Upstream', NOW()),
+ (gen_random_uuid(), 'measurement_point', 'Downstream', NOW()),
+ (gen_random_uuid(), 'measurement_point', 'NGR', NOW()),
+ gen_random_uuid(), 'measurement_point', 'Borehole', NOW()),
+ (gen_random_uuid(), 'measurement_point', 'Ref point on map', NOW());
 
 /* water bodies */
 INSERT INTO "water"."picklists" (picklist_id, name, id_required, created) VALUES
@@ -33,9 +33,9 @@ INSERT INTO "water"."picklists" (picklist_id, name, id_required, created) VALUES
     ('rate_type', 'Rate type', false, NOW());
 
 INSERT INTO "water"."picklist_items" (picklist_item_id, picklist_id, value, created) VALUES
-   (public.gen_random_uuid(), 'rate_type', 'Instantaneous', NOW()),
-   (public.gen_random_uuid(), 'rate_type', 'Hourly', NOW()),
-   (public.gen_random_uuid(), 'rate_type', 'Daily', NOW());
+   (gen_random_uuid(), 'rate_type', 'Instantaneous', NOW()),
+   (gen_random_uuid(), 'rate_type', 'Hourly', NOW()),
+   (gen_random_uuid(), 'rate_type', 'Daily', NOW());
 
  /* gauging stations */
  INSERT INTO "water"."picklists" (picklist_id, name, id_required, created) VALUES
