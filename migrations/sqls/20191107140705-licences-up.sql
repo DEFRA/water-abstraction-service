@@ -1,4 +1,4 @@
-drop table if exists water.licencs;
+drop table if exists water.licences;
 
 create table water.licences (
   licence_id uuid primary key default public.gen_random_uuid(),
