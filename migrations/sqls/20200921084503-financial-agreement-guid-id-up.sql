@@ -13,7 +13,7 @@ alter table water.financial_agreement_types
   rename column id to financial_agreement_code;
 
 alter table water.financial_agreement_types
-  add column financial_agreement_type_id uuid default gen_random_uuid() not null;
+  add column financial_agreement_type_id uuid default public.gen_random_uuid() not null;
 
 alter table water.financial_agreement_types
   add primary key(financial_agreement_type_id);

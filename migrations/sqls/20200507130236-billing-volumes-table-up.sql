@@ -1,5 +1,5 @@
 create table water.billing_volumes (
-  billing_volume_id uuid primary key default gen_random_uuid(),
+  billing_volume_id uuid primary key default public.gen_random_uuid(),
   charge_element_id uuid not null
     constraint billing_volumes_charge_element_id_fkey
     references water.charge_elements (charge_element_id),

@@ -3,7 +3,7 @@
 
 alter table water.purposes_primary
   drop constraint "purposes_primary_pkey",
-  add column "purpose_primary_id" uuid default gen_random_uuid(),
+  add column "purpose_primary_id" uuid default public.gen_random_uuid(),
   add primary key ("purpose_primary_id");
 
 alter table water.purposes_primary rename column "id" to "legacy_id";
@@ -14,7 +14,7 @@ alter table water.purposes_primary
 
 alter table water.purposes_secondary
   drop constraint "purposes_secondary_pkey",
-  add column "purpose_secondary_id" uuid default gen_random_uuid(),
+  add column "purpose_secondary_id" uuid default public.gen_random_uuid(),
   add primary key ("purpose_secondary_id");
 
 alter table water.purposes_secondary rename column "id" to "legacy_id";
@@ -25,7 +25,7 @@ alter table water.purposes_secondary
 
 alter table water.purposes_uses
   drop constraint "purposes_uses_pkey",
-  add column "purpose_use_id" uuid default gen_random_uuid(),
+  add column "purpose_use_id" uuid default public.gen_random_uuid(),
   add primary key ("purpose_use_id");
 
 alter table water.purposes_uses rename column "id" to "legacy_id";

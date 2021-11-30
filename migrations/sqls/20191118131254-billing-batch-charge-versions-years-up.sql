@@ -1,7 +1,7 @@
 create table water.billing_batch_charge_version_years (
   billing_batch_charge_version_year_id uuid
     primary key
-    default gen_random_uuid(),
+    default public.gen_random_uuid(),
   billing_batch_id uuid
     not null
     constraint billing_batch_charge_version_years_billing_batch_id_fkey

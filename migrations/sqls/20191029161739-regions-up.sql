@@ -1,5 +1,5 @@
 create table water.regions (
-  region_id uuid primary key default gen_random_uuid(),
+  region_id uuid primary key default public.gen_random_uuid(),
   charge_region_id character varying not null,
   nald_region_id integer not null,
   name character varying not null,

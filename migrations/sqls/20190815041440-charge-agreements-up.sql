@@ -3,7 +3,7 @@ CREATE TYPE water.charge_agreement_code AS ENUM ('S126', 'S127', 'INST');
 
 /* Replace with your SQL commands */
 CREATE TABLE IF NOT EXISTS "water"."charge_agreements" (
-  "charge_agreement_id" varchar NOT NULL DEFAULT gen_random_uuid(),
+  "charge_agreement_id" varchar NOT NULL DEFAULT public.gen_random_uuid(),
   "charge_element_id" varchar NOT NULL,
   "agreement_code" water.charge_agreement_code,
   "start_date" date NOT NULL,

@@ -1,6 +1,6 @@
 /* Replace with your SQL commands */
   CREATE TABLE IF NOT EXISTS "water"."licence_version_purpose_condition_types" (
-    "licence_version_purpose_condition_type_id" uuid PRIMARY KEY default gen_random_uuid(),
+    "licence_version_purpose_condition_type_id" uuid PRIMARY KEY default public.gen_random_uuid(),
     "code" VARCHAR NOT NULL,
     "subcode" VARCHAR NOT NULL,
     "description" VARCHAR NOT NULL,
@@ -11,7 +11,7 @@
 );
 
 CREATE TABLE IF NOT EXISTS "water"."licence_version_purpose_conditions" (
-  "licence_version_purpose_condition_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "licence_version_purpose_condition_id" uuid PRIMARY KEY DEFAULT public.gen_random_uuid(),
   "licence_version_purpose_id" uuid NOT NULL,
   "licence_version_purpose_condition_type_id" uuid NOT NULL,
   "param_1" VARCHAR,

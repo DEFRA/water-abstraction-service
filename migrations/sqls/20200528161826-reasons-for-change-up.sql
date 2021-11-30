@@ -1,6 +1,6 @@
 /* Replace with your SQL commands */
 CREATE TABLE water.change_reasons (
-  change_reason_id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  change_reason_id uuid DEFAULT public.gen_random_uuid() PRIMARY KEY,
   description varchar not null,
   position integer,
   date_created timestamp not null,

@@ -1,5 +1,5 @@
 create table water.billing_batch_charge_versions (
-  billing_batch_charge_version_id uuid primary key default gen_random_uuid(),
+  billing_batch_charge_version_id uuid primary key default public.gen_random_uuid(),
   billing_batch_id uuid not null
     constraint billing_batch_charge_versions_billing_batch_id_fkey
     references water.billing_batches (billing_batch_id),

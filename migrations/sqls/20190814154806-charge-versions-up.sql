@@ -9,7 +9,7 @@ CREATE TYPE water.charge_element_loss AS ENUM ('high', 'medium', 'low', 'very lo
 
 /* Replace with your SQL commands */
 CREATE TABLE IF NOT EXISTS "water"."charge_versions" (
-  "charge_version_id" varchar NOT NULL DEFAULT gen_random_uuid(),
+  "charge_version_id" varchar NOT NULL DEFAULT public.gen_random_uuid(),
   "licence_ref" varchar NOT NULL,
   "scheme" water.charge_scheme NOT NULL,
   "external_id" integer,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS "water"."charge_versions" (
 );
 
 CREATE TABLE IF NOT EXISTS "water"."charge_elements" (
-  "charge_element_id" varchar NOT NULL DEFAULT gen_random_uuid(),
+  "charge_element_id" varchar NOT NULL DEFAULT public.gen_random_uuid(),
   "charge_version_id" varchar NOT NULL,
   "external_id" integer DEFAULT null,
   "abstraction_period_start_day" smallint NOT NULL,
