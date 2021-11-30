@@ -28,8 +28,11 @@ and l.licence_id not in (
   from water.charge_version_workflows cvw
   where cvw.date_deleted is null
 )
-and t.licence_ref IN (select licence_ref from water.billing_invoice_licences il join water.billing_invoices i ON il.billing_invoice_id = i.billing_invoice_id
-  join water.billing_batches b ON i.billing_batch_id = b.billing_batch_id where b.billing_batch_id=:batchId)
+and t.licence_ref IN (
+    select licence_ref from water.charge_versions cv join 
+        water.billing_batch_charge_version_years bbcvy on bbcvy.charge_version_id=cv.charge_version_id
+    where bbcvy.billing_batch_id=:batchId
+      )
 order by t.date_created asc
 `;
 
