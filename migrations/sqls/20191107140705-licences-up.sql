@@ -1,3 +1,5 @@
+SELECT '§§§§§§§§1';
+SELECT * FROM information_schema.columns WHERE table_schema = 'water' AND table_name = 'licences';
 
 create table IF NOT EXISTS water.licences (
   licence_id uuid primary key default public.gen_random_uuid(),
