@@ -163,7 +163,7 @@ experiment('supplementary ref: SB1', () => {
           test('is a standard charge', async () => {
             expect(transaction.chargeType).to.equal('standard');
             expect(transaction.isCredit).to.be.false();
-            expect(transaction.isTwoPartTariffSupplementary).to.be.false();
+            expect(transaction.isTwoPartSecondPartCharge).to.be.false();
           });
 
           test('has the correct charge period', async () => {
@@ -222,7 +222,7 @@ experiment('supplementary ref: SB1', () => {
           test('is a standard charge', async () => {
             expect(transaction.chargeType).to.equal('standard');
             expect(transaction.isCredit).to.equal(true);
-            expect(transaction.isTwoPartTariffSupplementary).to.equal(false);
+            expect(transaction.isTwoPartSecondPartCharge).to.equal(false);
             expect(transaction.isDeMinimis).to.be.false();
             expect(transaction.isNewLicence).to.be.false();
           });

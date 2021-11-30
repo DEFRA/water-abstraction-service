@@ -171,7 +171,7 @@ experiment('modules/billing/services/transactions-service', () => {
   experiment('.getBatchTransactionHistory', () => {
     let batch, result, chargeVersionYear;
     const licenceId = uuid();
-    const secondPartTrx = { licenceId, description: 'Second Part Spray', financialYearEnding: 2020 };
+    const secondPartTrx = { licenceId, description: 'Second Part Spray', financialYearEnding: 2020, isTwoPartSecondPartCharge: true };
     const firstPartTrx = { licenceId, description: 'First Part Spray', financialYearEnding: 2020 };
     const normalTrx = { licenceId, description: 'Evaporating Cooling', financialYearEnding: 2020 };
     chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2019 };

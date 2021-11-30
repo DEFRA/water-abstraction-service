@@ -56,7 +56,7 @@ const createTransaction = (options = {}) => {
     billableDays: 366,
     description: 'Tiny pond',
     volume: 5.64,
-    isTwoPartTariffSupplementary: !!options.isTwoPartTariffSupplementary,
+    isTwoPartSecondPartCharge: !!options.isTwoPartSecondPartCharge,
     isNewLicence: !!options.isNewLicence
   });
   return transaction;
@@ -176,7 +176,7 @@ experiment('modules/billing/mappers/transaction', () => {
           section126Factor: null,
           section127Agreement: false,
           section130Agreement: null,
-          isTwoPartTariffSupplementary: false,
+          isTwoPartSecondPartCharge: false,
           isNewLicence: false
         });
       });
@@ -209,14 +209,14 @@ experiment('modules/billing/mappers/transaction', () => {
       });
 
       test('the transaction is not a two-part tariff supplementary', async () => {
-        expect(result.isTwoPartTariffSupplementary).to.equal(false);
+        expect(result.isTwoPartSecondPartCharge).to.equal(false);
       });
     });
 
     experiment('when the transaction has a two-part tariff agreement and is two-part tariff supplementary', () => {
       beforeEach(async () => {
         invoiceLicence = createInvoiceLicence({
-          isTwoPartTariffSupplementary: true
+          isTwoPartSecondPartCharge: true
         });
         invoiceLicence.transactions[0].agreements = [createAgreement('S127')];
         result = transactionMapper.modelToDb(invoiceLicence, invoiceLicence.transactions[0]);
@@ -229,7 +229,7 @@ experiment('modules/billing/mappers/transaction', () => {
       });
 
       test('the transaction is a two-part tariff supplementary', async () => {
-        expect(result.isTwoPartTariffSupplementary).to.equal(true);
+        expect(result.isTwoPartSecondPartCharge).to.equal(true);
       });
     });
 
@@ -474,7 +474,7 @@ experiment('modules/billing/mappers/transaction', () => {
         });
         experiment('when transaction is 2PT', () => {
           beforeEach(async () => {
-            transaction.isTwoPartTariffSupplementary = true;
+            transaction.isTwoPartSecondPartCharge = true;
             result = transactionMapper.modelToChargeModule(batch, invoice, invoiceLicence, transaction);
           });
 
@@ -488,7 +488,7 @@ experiment('modules/billing/mappers/transaction', () => {
     experiment('when the transaction is two-part tariff supplementary', () => {
       beforeEach(async () => {
         batch.type = Batch.BATCH_TYPE.twoPartTariff;
-        transaction.isTwoPartTariffSupplementary = true;
+        transaction.isTwoPartSecondPartCharge = true;
         result = transactionMapper.modelToChargeModule(batch, invoice, invoiceLicence, transaction);
       });
 

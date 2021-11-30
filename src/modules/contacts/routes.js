@@ -34,13 +34,13 @@ module.exports = {
           contactId: Joi.string().guid().required()
         }),
         payload: Joi.object().keys({
-          salutation: Joi.string().optional().allow(''),
+          salutation: Joi.string().optional().allow(null),
           email: Joi.string().email().optional(),
-          firstName: Joi.string().optional().allow(''),
-          lastName: Joi.string().optional().allow(''),
-          department: Joi.string().optional().allow(''),
-          middleInitials: Joi.string().optional().allow(''),
-          suffix: Joi.string().optional().allow('')
+          firstName: Joi.string().optional().allow(null),
+          lastName: Joi.string().optional().allow(null),
+          department: Joi.string().optional().allow(null),
+          middleInitials: Joi.string().optional().allow(null),
+          suffix: Joi.string().optional().allow(null)
         })
       }
     }

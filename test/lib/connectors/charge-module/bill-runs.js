@@ -145,7 +145,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
       await billRunsApiConnector.getInvoiceTransactions('test-id', 'test-invoice-id');
     });
 
-    test('the correct endpoint is called', async () => {
+    test('the correct endpoint is called', () => {
       const [path] = gotCM.get.lastCall.args;
       expect(path).to.equal('v2/wrls/bill-runs/test-id/invoices/test-invoice-id');
     });

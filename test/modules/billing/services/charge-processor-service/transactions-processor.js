@@ -34,7 +34,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         expect(transactions[0].isCompensationCharge).to.equal(false);
         expect(transactions[0].isNewLicence).to.equal(true);
         expect(transactions[0].agreements).to.equal([]);
-        expect(transactions[0].isTwoPartTariffSupplementary).to.equal(false);
+        expect(transactions[0].isTwoPartSecondPartCharge).to.equal(false);
         expect(transactions[0].description).to.equal('Test Description');
       });
 
@@ -43,7 +43,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         expect(transactions[1].isCompensationCharge).to.equal(true);
         expect(transactions[1].isNewLicence).to.equal(true);
         expect(transactions[1].agreements).to.equal([]);
-        expect(transactions[1].isTwoPartTariffSupplementary).to.equal(false);
+        expect(transactions[1].isTwoPartSecondPartCharge).to.equal(false);
         expect(transactions[1].description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
       });
 
@@ -52,7 +52,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         expect(transactions[2].isCompensationCharge).to.equal(false);
         expect(transactions[2].isNewLicence).to.equal(true);
         expect(transactions[2].agreements[0].code).to.equal('S127');
-        expect(transactions[2].isTwoPartTariffSupplementary).to.equal(false);
+        expect(transactions[2].isTwoPartSecondPartCharge).to.equal(false);
         expect(transactions[2].description).to.equal('First Part Spray Irrigation Direct Charge Test Description');
       });
 
@@ -61,7 +61,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         expect(transactions[3].isCompensationCharge).to.equal(true);
         expect(transactions[3].isNewLicence).to.equal(true);
         expect(transactions[3].agreements[0].code).to.equal('S127');
-        expect(transactions[3].isTwoPartTariffSupplementary).to.equal(false);
+        expect(transactions[3].isTwoPartSecondPartCharge).to.equal(false);
         expect(transactions[3].description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
       });
     });
@@ -141,7 +141,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         expect(transactions[0].isCompensationCharge).to.equal(false);
         expect(transactions[0].isMinimumCharge).to.be.undefined();
         expect(transactions[0].agreements[0].code).to.equal('S127');
-        expect(transactions[0].isTwoPartTariffSupplementary).to.equal(true);
+        expect(transactions[0].isTwoPartSecondPartCharge).to.equal(true);
         expect(transactions[0].description).to.equal('Second Part Spray Irrigation Direct Charge Test Description');
       });
 

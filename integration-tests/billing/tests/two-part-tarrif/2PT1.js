@@ -122,7 +122,7 @@ experiment('two part tariff ref: 2PT1', () => {
             test('is a standard charge', async () => {
               expect(transaction.chargeType).to.equal('standard');
               expect(transaction.isCredit).to.be.false();
-              expect(transaction.isTwoPartTariffSupplementary).to.be.true();
+              expect(transaction.isTwoPartSecondPartCharge).to.be.true();
               expect(transaction.isDeMinimis).to.be.false();
               expect(transaction.isNewLicence).to.be.false();
             });
