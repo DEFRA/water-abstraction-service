@@ -1,8 +1,4 @@
-select * from pg_proc where proname like 'gen_random_%';
-
-Drop extension pgcrypto;
-
-CREATE EXTENSION pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
 /* Replace with your SQL commands */
 
