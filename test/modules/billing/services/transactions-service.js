@@ -37,7 +37,7 @@ experiment('modules/billing/services/transactions-service', () => {
     sandbox.stub(repos.billingTransactions, 'delete');
     sandbox.stub(repos.billingTransactions, 'findByBatchId');
     sandbox.stub(repos.billingTransactions, 'findHistoryByBatchId').resolves([transactionDBRow]);
-    sandbox.stub(repos.billingBatchChargeVersionYears, 'findTwoPartTariffByBatchId');
+    sandbox.stub(repos.billingBatchChargeVersionYears, 'findByBatchId');
 
     sandbox.stub(billingVolumesService, 'getVolumesForBatch');
 
@@ -171,7 +171,7 @@ experiment('modules/billing/services/transactions-service', () => {
   experiment('.getBatchTransactionHistory', () => {
     let batch, result, chargeVersionYear;
     const licenceId = uuid();
-    const secondPartTrx = { licenceId, description: 'Second Part Spray', financialYearEnding: 2020 };
+    const secondPartTrx = { licenceId, description: 'Second Part Spray', financialYearEnding: 2020, isTwoPartSecondPartCharge: true };
     const firstPartTrx = { licenceId, description: 'First Part Spray', financialYearEnding: 2020 };
     const normalTrx = { licenceId, description: 'Evaporating Cooling', financialYearEnding: 2020 };
     chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2019 };
@@ -179,7 +179,7 @@ experiment('modules/billing/services/transactions-service', () => {
     experiment('when there are no matching 2PT charge version years', () => {
       beforeEach(async () => {
         batch = createBatch();
-        repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId.resolves([chargeVersionYear]);
+        repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
         repos.billingTransactions.findHistoryByBatchId.resolves([firstPartTrx, secondPartTrx, normalTrx]);
         result = await transactionsService.getBatchTransactionHistory(batch.id);
       });
@@ -193,15 +193,27 @@ experiment('modules/billing/services/transactions-service', () => {
       });
       test('the second part transactions are filtered out if there is no matching licenceId', async () => {
         chargeVersionYear = { chargeVersion: { licenceId: 'test id' }, financialYearEnding: 2020 };
-        repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId.resolves([chargeVersionYear]);
+        repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
         const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
         expect(testResult.includes(secondPartTrx)).to.be.false();
       });
       test('the second part transactions are not filtered out if there is matching licenceId and financial year', async () => {
-        chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2020 };
-        repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId.resolves([chargeVersionYear]);
+        chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2020, hasTwoPartAgreement: true, transactionType: 'two_part_tariff' };
+        repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
         const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
         expect(testResult.includes(secondPartTrx)).to.be.true();
+      });
+      test('the second part transactions are not filtered out annual transaction types where there is no agreement', async () => {
+        chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual' };
+        repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
+        const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
+        expect(testResult.includes(secondPartTrx)).to.be.true();
+      });
+      test('the second part transactions are filtered out if annual transaction type that has a two part agreement', async () => {
+        chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2020, hasTwoPartAgreement: true, transactionType: 'annual' };
+        repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
+        const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
+        expect(testResult.includes(secondPartTrx)).to.be.false();
       });
     });
   });

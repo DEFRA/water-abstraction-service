@@ -75,7 +75,7 @@ const dbToModelMapper = createMapper()
     'billableDays',
     'description',
     'externalId',
-    'isTwoPartTariffSupplementary',
+    'isTwoPartSecondPartCharge',
     'isDeMinimis',
     'isNewLicence',
     'calcSeasonFactor',
@@ -83,7 +83,8 @@ const dbToModelMapper = createMapper()
     'calcEiucSourceFactor',
     'calcSourceFactor',
     'calcEiucFactor',
-    'calcSucFactor'
+    'calcSucFactor',
+    'isCreditedBack'
   )
   .map('calcS126Factor').to('calcS126FactorValue')
   .map('calcS127Factor').to('calcS127FactorValue')
@@ -132,7 +133,7 @@ const modelToDbMapper = createMapper()
     'description',
     'status',
     'volume',
-    'isTwoPartTariffSupplementary',
+    'isTwoPartSecondPartCharge',
     'isNewLicence',
     'externalId',
     'calcSourceFactor',
@@ -140,7 +141,8 @@ const modelToDbMapper = createMapper()
     'calcLossFactor',
     'calcSucFactor',
     'calcEiucFactor',
-    'calcEiucSourceFactor'
+    'calcEiucSourceFactor',
+    'isCreditedBack'
   )
   .map('chargeElement.id').to('chargeElementId')
   .map('chargePeriod.startDate').to('startDate')
@@ -249,7 +251,7 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     billableDays: transaction.billableDays,
     authorisedDays: transaction.authorisedDays,
     volume: transaction.volume,
-    twoPartTariff: transaction.isTwoPartTariffSupplementary,
+    twoPartTariff: transaction.isTwoPartSecondPartCharge,
     compensationCharge: transaction.isCompensationCharge,
     ...mapAgreementsToChargeModule(transaction),
     customerReference: invoice.invoiceAccount.accountNumber,
@@ -258,11 +260,9 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     batchNumber: batch.id,
     ...mapChargeElementToChargeModuleTransaction(transaction.chargeElement),
     ...mapLicenceToChargeElementTransaction(invoiceLicence.licence),
-    subjectToMinimumCharge: !transaction.isTwoPartTariffSupplementary
+    subjectToMinimumCharge: !transaction.isTwoPartSecondPartCharge
   };
 };
-
-const mapIsTwoPartTariffSupplementary = twoPartTariff => twoPartTariff === true;
 
 const cmStatusMap = new Map([
   ['unbilled', Transaction.statuses.chargeCreated]
@@ -284,7 +284,7 @@ const cmToModelMapper = createMapper()
   .map('minimumChargeAdjustment').to('isMinimumCharge')
   .map('deminimis').to('isDeMinimis')
   .map('subjectToMinimumCharge').to('isNewLicence')
-  .map('twoPartTariff').to('isTwoPartTariffSupplementary', mapIsTwoPartTariffSupplementary)
+  .map('twoPartTariff').to('isTwoPartSecondPartCharge')
   .map('transactionStatus').to('status', mapCMTransactionStatus)
   .map('calculation.WRLSChargingResponse.sourceFactor').to('calcSourceFactor')
   .map('calculation.WRLSChargingResponse.seasonFactor').to('calcSeasonFactor')

@@ -76,6 +76,8 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     );
 
     sandbox.stub(service, 'findAll').resolves([chargeVersionWorkflow]);
+    sandbox.stub(chargeVersionWorkflowRepo, 'findAllWithPaging').resolves({ status: 'review', data: [{ licence: { startDate: '2002-05-03' } }, { licence: { startDate: '2000-09-30' } }] });
+
     sandbox.stub(service, 'findOne').resolves(chargeVersionWorkflow);
     sandbox.stub(service, 'findMany').resolves([chargeVersionWorkflow]);
 
@@ -109,6 +111,20 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     test('resolves with an array of ChargeVersionWorkflow models', async () => {
       expect(result).to.be.an.array().length(1);
       expect(result[0]).to.equal(chargeVersionWorkflow);
+    });
+  });
+
+  experiment('.getAllWithLicenceHolderWithPaging', () => {
+    beforeEach(async () => {
+      const page = 1;
+      const perPage = 10;
+      const tabFilter = 'to_setup';
+      result = await chargeVersionWorkflowService.getAllWithLicenceHolderWithPaging(page, perPage, tabFilter);
+    });
+
+    test('return expected data length', async () => {
+      const { data } = result;
+      expect(data.length).to.equal(2);
     });
   });
 
@@ -348,12 +364,6 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         expect(chargeVersionWorkflowRepo.softDeleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
       });
 
-      test('the licence is flagged for supplementary billing', async () => {
-        expect(licencesService.flagForSupplementaryBilling.calledWith(
-          chargeVersionWorkflow.licence.id
-        )).to.be.true();
-      });
-
       test('if there is an error, catches and rethrows a NotFoundError', async () => {
         chargeVersionWorkflowRepo.softDeleteOne.throws(new Error('oh no!'));
         const func = () => chargeVersionWorkflowService.delete(chargeVersionWorkflow);
@@ -371,12 +381,6 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
       test('calls the repo .deleteOne method', async () => {
         expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
-      });
-
-      test('the licence is flagged for supplementary billing', async () => {
-        expect(licencesService.flagForSupplementaryBilling.calledWith(
-          chargeVersionWorkflow.licence.id
-        )).to.be.true();
       });
     });
   });
@@ -399,6 +403,12 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     test('the new charge version is persisted', async () => {
       expect(chargeVersionService.create.calledWith(
         chargeVersionWorkflow.chargeVersion
+      )).to.be.true();
+    });
+
+    test('the licence is flagged for supplementary billing', async () => {
+      expect(licencesService.flagForSupplementaryBilling.calledWith(
+        chargeVersionWorkflow.licence.id
       )).to.be.true();
     });
 

@@ -37,7 +37,7 @@ const pickKeys = [
   'section126Factor',
   'section127Agreement',
   'section130Agreement',
-  'isTwoPartTariffSupplementary',
+  'isTwoPartSecondPartCharge',
   'calculatedVolume',
   'twoPartTariffError',
   'twoPartTariffStatus',

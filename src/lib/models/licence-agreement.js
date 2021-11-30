@@ -52,6 +52,14 @@ class LicenceAgreement extends Model {
   set dateSigned (dateSigned) {
     this._dateSigned = this.getDateTimeFromValue(dateSigned);
   }
+
+  get dateDeleted () {
+    return this._dateDeleted ? this._dateDeleted.format(DATE_FORMAT) : this._dateDeleted;
+  }
+
+  set dateDeleted (dateDeleted) {
+    this._dateDeleted = this.getDateTimeFromValue(dateDeleted);
+  }
 }
 
 module.exports = LicenceAgreement;

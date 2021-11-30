@@ -19,15 +19,17 @@ const create = async data => {
  * Gets billing volumes for charge elements and financial year
  * @param {Array<String>} ids - guids
  * @param {Number} financialYear
+ * @param {String} batchId findApprovedByChargeElementIdsFinancialYearAndBatchId
  */
-const findApprovedByChargeElementIdsAndFinancialYear = async (ids, financialYear) => {
+const findApprovedByChargeElementIdsFinancialYearAndBatchId = async (ids, financialYear, batchId) => {
   const result = await BillingVolume
     .forge()
     .query('whereIn', 'charge_element_id', ids)
     .where({
       financial_year: financialYear,
       is_approved: true,
-      errored_on: null
+      errored_on: null,
+      billing_batch_id: batchId
     })
     .fetchAll();
 
@@ -175,8 +177,20 @@ const findByChargeVersionFinancialYearAndSeason = async (chargeVersionId, financ
 const findByChargeVersionAndFinancialYear = (chargeVersionId, financialYearEnding) =>
   raw.multiRow(queries.findByChargeVersionAndFinancialYear, { chargeVersionId, financialYearEnding });
 
+/**
+ * Finds billing volumes for the specified charge version ID
+ * in the supplied financial year.  Includes the batch source
+ *
+ * @param {String} billingBatchId
+ * @param {String} licenceId
+ */
+const deleteByFinancialYearEnding = (batchId, licenceId, financialYearEnding) =>
+  raw.multiRow(queries.deleteByFinancialYearEnding, {
+    batchId, licenceId, financialYearEnding
+  });
+
 exports.create = create;
-exports.findApprovedByChargeElementIdsAndFinancialYear = findApprovedByChargeElementIdsAndFinancialYear;
+exports.findApprovedByChargeElementIdsFinancialYearAndBatchId = findApprovedByChargeElementIdsFinancialYearAndBatchId;
 exports.update = update;
 exports.getUnapprovedVolumesForBatch = getUnapprovedVolumesForBatch;
 exports.findByBatchId = findByBatchId;
@@ -190,3 +204,4 @@ exports.updateByBatchId = updateByBatchId;
 exports.markVolumesAsErrored = markVolumesAsErrored;
 exports.findByChargeVersionFinancialYearAndSeason = findByChargeVersionFinancialYearAndSeason;
 exports.findByChargeVersionAndFinancialYear = findByChargeVersionAndFinancialYear;
+exports.deleteByFinancialYearEnding = deleteByFinancialYearEnding;

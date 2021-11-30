@@ -5,6 +5,7 @@ const { logger } = require('../../../logger');
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const { get, flatMap } = require('lodash');
+const { TRANSACTION_TYPE } = require('../../../lib/models/charge-version-year');
 
 /**
  * Saves a row to water.billing_transactions for the given Transaction
@@ -95,12 +96,16 @@ const getBatchTransactionHistory = async batchId => {
   const historicTransactions = await newRepos.billingTransactions.findHistoryByBatchId(batchId);
 
   // get licences that need to have the 2nd part recalculated for supplementary
-  const twoPartTariffChargeVersionYears = await newRepos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(batchId, true);
+  const twoPartTariffChargeVersionYears = await newRepos.billingBatchChargeVersionYears.findByBatchId(batchId, true);
 
   // filter the transaction so that it does not include any 2PT transactions where there is no 2PT charge version year
-  return historicTransactions.filter(trx => (((trx.description.slice(0, 6).toLowerCase()) === 'second')
-    ? twoPartTariffChargeVersionYears.some(cvy => trx.licenceId === cvy.chargeVersion.licenceId && trx.financialYearEnding === cvy.financialYearEnding)
-    : true));
+  return historicTransactions.filter(trx =>
+    trx.isTwoPartSecondPartCharge
+      ? twoPartTariffChargeVersionYears.some(cvy =>
+        trx.licenceId === cvy.chargeVersion.licenceId &&
+        trx.financialYearEnding === cvy.financialYearEnding &&
+        ((cvy.transactionType === TRANSACTION_TYPE.twoPartTariff) || (!cvy.hasTwoPartAgreement)))
+      : true);
 };
 
 /**
@@ -121,6 +126,9 @@ const persistDeMinimis = batch => {
   ]);
 };
 
+const updateIsCredited = regionId =>
+  newRepos.billingTransactions.updateIsCredited(regionId);
+
 /**
  * Delete one or more transactions by ID
  * @param {String|Array} ids
@@ -135,3 +143,4 @@ exports.setErrorStatus = setErrorStatus;
 exports.persistDeMinimis = persistDeMinimis;
 exports.deleteById = deleteById;
 exports.getBatchTransactionHistory = getBatchTransactionHistory;
+exports.updateIsCredited = updateIsCredited;

@@ -14,17 +14,12 @@ moment.locale('en-gb');
 
 // -------------- Require project code -----------------
 const config = require('./config');
-const messageQueue = require('./src/lib/message-queue');
 const routes = require('./src/routes/water.js');
 const notify = require('./src/modules/notify');
 const returnsNotifications = require('./src/modules/returns-notifications');
-const batchNotifications = require('./src/modules/batch-notifications/lib/jobs/init-batch-notifications');
 const db = require('./src/lib/connectors/db');
 const CatboxRedis = require('@hapi/catbox-redis');
 const { validate } = require('./src/lib/validate');
-
-// Notification cron jobs
-require('./src/modules/batch-notifications/cron').scheduleJobs();
 
 // Initialise logger
 const { logger } = require('./src/logger');
@@ -44,11 +39,11 @@ const server = Hapi.server({
 });
 
 const plugins = [
-  require('./src/lib/message-queue').plugin,
   require('./src/lib/message-queue-v2').plugin,
   require('./src/modules/returns/register-subscribers'),
   require('./src/modules/address-search/plugin'),
   require('./src/modules/billing/register-subscribers'),
+  require('./src/modules/batch-notifications/register-subscribers'),
   require('./src/modules/gauging-stations/register-subscribers'),
   require('./src/modules/charge-versions/plugin').plugin
 ];
@@ -109,9 +104,8 @@ const configureServerAuthStrategy = (server) => {
 };
 
 const configureMessageQueue = async (server) => {
-  notify(messageQueue).registerSubscribers();
-  await returnsNotifications(messageQueue).registerSubscribers();
-  await batchNotifications.registerSubscribers(messageQueue);
+  notify.registerSubscribers(server.queueManager);
+  returnsNotifications.registerSubscribers(server.queueManager);
   server.log('info', 'Message queue started');
 };
 
@@ -177,18 +171,16 @@ process
     logger.info('Stopping water service');
 
     await server.stop();
-    logger.info('1/4: Hapi server stopped');
+    logger.info('1/3: Hapi server stopped');
 
     await server.queueManager.stop();
-    logger.info('2/4: Bull MQ stopped');
+    logger.info('2/3: Bull MQ stopped');
 
-    await server.messageQueue.stop();
-    logger.info('3/4: PG Boss stopped');
     logger.info('Waiting 10 secs to allow jobs to finish');
 
     setTimeout(async () => {
       await db.pool.end();
-      logger.info('4/4: Connection pool closed');
+      logger.info('3/3: Connection pool closed');
 
       return process.exit(0);
     }, 10000);

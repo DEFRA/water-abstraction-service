@@ -18,7 +18,10 @@ const invoiceAccountMapper = require('../../../src/lib/mappers/invoice-account')
 const dbRow = {
   invoiceAccountId: '00000000-0000-0000-0000-000000000000',
   invoiceAccountNumber: 'A12345678A',
+  lastTransactionFileReference: 'some-file',
+  dateLastTransactionFileReferenceUpdated: '2010-10-10',
   startDate: '2010-10-05',
+  dateCreated: '2010-10-05',
   endDate: null,
   company: {
     companyId: '11111111-1111-1111-1111-111111111111',
@@ -58,6 +61,14 @@ experiment('modules/billing/mappers/invoice-account', () => {
 
     test('has the expected account number value', async () => {
       expect(result.accountNumber).to.equal(dbRow.invoiceAccountNumber);
+    });
+
+    test('has the expected lastTransactionFileReference', async () => {
+      expect(result.lastTransactionFileReference).to.equal(dbRow.lastTransactionFileReference);
+    });
+
+    test('has the expected dateLastTransactionFileReferenceUpdated', async () => {
+      expect(result.dateLastTransactionFileReferenceUpdated).to.equal(dbRow.dateLastTransactionFileReferenceUpdated);
     });
 
     experiment('company', () => {

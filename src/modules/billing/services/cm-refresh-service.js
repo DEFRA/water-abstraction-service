@@ -105,10 +105,7 @@ const mapTransaction = (transactionMap, cmTransaction) => {
     ? transactionMap.get(cmTransaction.id)
     : new Transaction();
 
-  return transaction.fromHash({
-    ...transactionMapper.cmToPojo(cmTransaction),
-    isTwoPartTariffSupplementary: false
-  });
+  return transaction.fromHash(transactionMapper.cmToPojo(cmTransaction));
 };
 
 const getCMTransactionId = cmTransaction => cmTransaction.id;
@@ -204,7 +201,7 @@ const updateInvoices = async (batch, cmResponse) => {
   );
 };
 
-const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating';
+const isCMGeneratingSummary = cmResponse => ['generating', 'pending', 'deleting'].includes(get(cmResponse, 'billRun.status'));
 
 /**
  * Updates the batch with the given batch ID

@@ -1,33 +1,31 @@
 'use strict';
 
-const { get } = require('lodash');
 const { logger } = require('../../../../logger');
 const messageHelpers = require('../message-helpers');
-const { createJobPublisher } = require('../batch-notifications');
 const notify = require('../notify-connector');
 const scheduledNotificationService = require('../../../../lib/services/scheduled-notifications');
 const licenceGaugingStationConnector = require('../../../../lib/connectors/repos/licence-gauging-stations');
+const config = require('../../../../../config');
+const queries = require('../queries');
 
-/**
- * The name of this event in the PG Boss
- * @type {String}
- */
 const JOB_NAME = 'notifications.sendMessage';
 
-/**
- * Publishes send message job
- * @param  {String} messageId - GUID in scheduled_notification table
- * @return {Promise}           resolves when message published
- */
-const publishSendMessage = createJobPublisher(JOB_NAME, 'messageId', true);
+const createMessage = () => {
+  logger.info(`Create Message ${JOB_NAME}`);
+  return [
+    JOB_NAME,
+    {},
+    {
+      jobId: JOB_NAME,
+      repeat: {
+        every: config.jobs.batchNotifications.sendMessages
+      }
+    }
+  ];
+};
 
-/**
- * Sends a single message
- * @param  {Object}  job - job data
- * @return {Promise}     - resolves when message sent
- */
-const handleSendMessage = async job => {
-  const messageId = get(job, 'data.messageId');
+const handleSendMessage = async messageId => {
+  logger.info(`Sending notification message: ${messageId}`);
 
   try {
     const scheduledNotification = await scheduledNotificationService.getScheduledNotificationById(messageId);
@@ -46,6 +44,28 @@ const handleSendMessage = async job => {
   }
 };
 
-exports.publish = publishSendMessage;
-exports.handler = handleSendMessage;
+const handler = async job => {
+  logger.info(`Handling: ${JOB_NAME}:${job.id}`);
+  try {
+    const batch = await queries.getSendingMessageBatch();
+    logger.info(`Sending notify messages - ${batch.length} item(s) found`);
+    await Promise.all((batch.map(({ id }) => handleSendMessage(id))));
+  } catch (err) {
+    logger.error(`Error handling: ${job.id}`, err, job.data);
+  }
+};
+
+const onFailed = async (job, err) => {
+  logger.error(`${JOB_NAME}: Job has failed`, err);
+};
+
+const onComplete = async () => {
+  logger.info(`${JOB_NAME}: Job has completed`);
+};
+
+exports.handler = handler;
+exports.onFailed = onFailed;
+exports.onComplete = onComplete;
 exports.jobName = JOB_NAME;
+exports.createMessage = createMessage;
+exports.hasScheduler = true;

@@ -18,14 +18,14 @@ const dbRow = {
   middleInitials: 'A',
   lastName: 'Testington',
   suffix: 'OBE',
-  deparment: 'Department',
+  department: 'Department',
   contactType: 'person',
   dataSource: 'wrls',
   isTest: true
 };
 
 const contactData = {
-  title: 'Admiral',
+  salutation: 'Admiral',
   firstName: 'John',
   middleInitials: 'A',
   lastName: 'Testington',
@@ -54,8 +54,8 @@ experiment('modules/billing/mappers/contact', () => {
       expect(result.id).to.equal(dbRow.contactId);
     });
 
-    test('has the expected title value', async () => {
-      expect(result.title).to.equal(dbRow.salutation);
+    test('has the expected salutation value', async () => {
+      expect(result.salutation).to.equal(dbRow.salutation);
     });
 
     test('has the expected first name value', async () => {
@@ -103,7 +103,7 @@ experiment('modules/billing/mappers/contact', () => {
     });
 
     test('maps data properly', async () => {
-      expect(result.title).to.equal(contactData.title);
+      expect(result.salutation).to.equal(contactData.salutation);
       expect(result.firstName).to.equal(contactData.firstName);
       expect(result.middleInitials).to.equal(contactData.middleInitials);
       expect(result.lastName).to.equal(contactData.lastName);
@@ -125,11 +125,8 @@ experiment('modules/billing/mappers/contact', () => {
       result = contactMapper.modelToCrm(contact);
     });
 
-    test('maps title to salutation', async () => {
-      expect(result.salutation).to.equal(contact.title);
-    });
-
     test('maps data properly', async () => {
+      expect(result.salutation).to.equal(contact.salutation);
       expect(result.firstName).to.equal(contact.firstName);
       expect(result.middleInitials).to.equal(contact.middleInitials);
       expect(result.lastName).to.equal(contact.lastName);

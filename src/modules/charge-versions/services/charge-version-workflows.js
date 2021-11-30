@@ -7,7 +7,6 @@ const service = require('../../../lib/services/service');
 const documentsService = require('../../../lib/services/documents-service');
 const chargeVersionService = require('../../../lib/services/charge-versions');
 const licencesService = require('../../../lib/services/licences');
-
 // Repos
 const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-version-workflows');
 
@@ -30,6 +29,18 @@ const { logger } = require('../../../logger');
  * @return {Promise<Array>}
  */
 const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeVersionWorkflowMapper);
+
+/**
+ * Gets paged charge version workflows where the state = tabFilter
+ * @param {String} tabFilter to_setup, review, changes_requested
+ * @param {Integer} page default at the route is 1
+ * @param {Integer} perPage default at the route is 100
+ * @returns {Array} returns an array of ChargeVersionWorkflow model instances
+ */
+const getAllWithPaging = async (tabFilter, page, perPage) => {
+  const result = await chargeVersionWorkflowsRepo.findAllWithPaging(tabFilter, page, perPage);
+  return { data: result.data.map(chargeVersionWorkflowMapper.dbToModel), pagination: result.pagination };
+};
 
 /**
  * Gets the licence-holder role for the supplied ChargeVersionWorkflow model
@@ -61,6 +72,15 @@ const getLicenceHolderRole = async chargeVersionWorkflow => {
 const getAllWithLicenceHolder = async () => {
   const chargeVersionWorkflows = await getAll();
   return bluebird.map(chargeVersionWorkflows, getLicenceHolderRole);
+};
+
+const getAllWithLicenceHolderWithPaging = async (tabFilter, page, perPage) => {
+  const chargeVersionWorkflows = await getAllWithPaging(tabFilter, page, perPage);
+  const data = await bluebird.map(chargeVersionWorkflows.data, getLicenceHolderRole);
+  return {
+    data: data,
+    pagination: chargeVersionWorkflows.pagination
+  };
 };
 
 /**
@@ -166,7 +186,6 @@ const deleteOne = async (chargeVersionWorkflow, isSoftDelete = true) => {
       ? chargeVersionWorkflowsRepo.softDeleteOne
       : chargeVersionWorkflowsRepo.deleteOne;
     await deleteFunc(chargeVersionWorkflow.id);
-    await licencesService.flagForSupplementaryBilling(chargeVersionWorkflow.licence.id);
   } catch (err) {
     throw new NotFoundError(`Charge version workflow ${chargeVersionWorkflow.id} not found`);
   }
@@ -193,14 +212,18 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
   // Persist the new charge version
   const persistedChargeVersion = await chargeVersionService.create(chargeVersion);
 
+  // flag for supplementary billing
+  await licencesService.flagForSupplementaryBilling(chargeVersionWorkflow.licence.id);
+
   // Delete the charge version workflow record as it is no longer needed
-  // and flag for supplementary billing
   await deleteOne(chargeVersionWorkflow, false);
 
   return persistedChargeVersion;
 };
 
 exports.getAll = getAll;
+exports.getAllWithPaging = getAllWithPaging;
+exports.getAllWithLicenceHolderWithPaging = getAllWithLicenceHolderWithPaging;
 exports.getAllWithLicenceHolder = getAllWithLicenceHolder;
 exports.getById = getById;
 exports.getByIdWithLicenceHolder = getByIdWithLicenceHolder;

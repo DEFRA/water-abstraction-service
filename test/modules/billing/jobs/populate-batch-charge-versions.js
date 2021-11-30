@@ -11,7 +11,6 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
 const { logger } = require('../../../../src/logger');
-const messageQueue = require('../../../../src/lib/message-queue');
 const populateBatchChargeVersionsJob = require('../../../../src/modules/billing/jobs/populate-batch-charge-versions');
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 
@@ -55,8 +54,6 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
     sandbox.stub(batchJob, 'logOnCompleteError');
-
-    sandbox.stub(messageQueue, 'publish').resolves();
 
     batch = createBatch();
     billingBatchChargeVersionYears = createBillingBatchChargeVersionYears(batch);

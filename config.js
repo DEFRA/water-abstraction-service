@@ -39,6 +39,14 @@ module.exports = {
     showAuth: true
   },
 
+  jobs: {
+    batchNotifications: {
+      requestEvent: 60000, // 1 minute
+      checkStatus: 15000, // 15 seconds
+      sendMessages: 15000 // 15 seconds
+    }
+  },
+
   jwt: {
     key: process.env.JWT_SECRET,
     verifyOptions: { algorithms: ['HS256'] }
@@ -174,6 +182,8 @@ module.exports = {
   import: {
     returns: { importYears: process.env.IMPORT_RETURNS_YEARS || 3 },
     gaugingStationsSyncFrequencyInMS: 21600000,
+    chargeCategoriesSyncFrequencyInMS: 21600000,
+    supportedSourcesSyncFrequencyInMS: 21600000,
     digitiseToLVPCSyncFrequencyInMS: 43200000,
     digitiseToLicenceGaugingStationsFrequencyInMS: 43200000,
     zipPassword: process.env.NALD_ZIP_PASSWORD
@@ -198,7 +208,8 @@ module.exports = {
       host: process.env.COGNITO_HOST,
       username: process.env.COGNITO_USERNAME,
       password: process.env.COGNITO_PASSWORD
-    }
+    },
+    customerFileRefreshFrequencyInMS: 3600000
   },
 
   proxy: process.env.PROXY,
@@ -212,7 +223,7 @@ module.exports = {
   },
 
   redis: {
-    maxListenerCount: 64,
+    maxListenerCount: 65,
     connection: {
       host: process.env.REDIS_HOST || '127.0.0.1',
       port: process.env.REDIS_PORT || 6379,

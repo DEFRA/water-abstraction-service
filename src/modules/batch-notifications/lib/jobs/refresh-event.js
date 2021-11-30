@@ -1,29 +1,27 @@
-const { get } = require('lodash');
-const { logger } = require('../../../../logger');
-const eventHelpers = require('../event-helpers');
-const { createJobPublisher } = require('../batch-notifications');
+'use strict';
 
-/**
- * The name of this event in the PG Boss
- * @type {String}
- */
+const { logger } = require('../../../../logger');
+const config = require('../../../../../config');
+const queries = require('../queries');
+const eventHelpers = require('../event-helpers');
+
 const JOB_NAME = 'notifications.refreshEvent';
 
-/**
- * Publishes refresh event job.
- * @TODO include singleton key
- * @param  {String} eventId - GUID in scheduled_notification table
- * @return {Promise}           resolves when message published
- */
-const publishRefreshEvent = createJobPublisher(JOB_NAME, 'eventId', true);
+const createMessage = () => {
+  logger.info(`Create Message ${JOB_NAME}`);
+  return [
+    JOB_NAME,
+    {},
+    {
+      jobId: JOB_NAME,
+      repeat: {
+        every: config.jobs.batchNotifications.requestEvent
+      }
+    }
+  ];
+};
 
-/**
- * Sends a single message
- * @param  {Object}  job - job data
- * @return {Promise}     - resolves when message sent
- */
-const handleRefreshEvent = async job => {
-  const eventId = get(job, 'data.eventId');
+const handleRefreshEvent = async eventId => {
   try {
     await eventHelpers.refreshEventStatus(eventId);
   } catch (err) {
@@ -31,6 +29,28 @@ const handleRefreshEvent = async job => {
   }
 };
 
-exports.publish = publishRefreshEvent;
-exports.handler = handleRefreshEvent;
+const handler = async job => {
+  logger.info(`Handling: ${JOB_NAME}:${job.id}`);
+  try {
+    const batch = await queries.getSendingEvents();
+    logger.info(`Refreshing notify message events - ${batch.length} item(s) found`);
+    await Promise.all((batch.map(({ event_id: id }) => handleRefreshEvent(id))));
+  } catch (err) {
+    logger.error(`Error handling: ${job.id}`, err);
+  }
+};
+
+const onFailed = async (job, err) => {
+  logger.error(`${JOB_NAME}: Job has failed`, err);
+};
+
+const onComplete = async () => {
+  logger.info(`${JOB_NAME}: Job has completed`);
+};
+
+exports.handler = handler;
+exports.onFailed = onFailed;
+exports.onComplete = onComplete;
 exports.jobName = JOB_NAME;
+exports.createMessage = createMessage;
+exports.hasScheduler = true;

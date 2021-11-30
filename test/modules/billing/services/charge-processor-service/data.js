@@ -104,7 +104,8 @@ const createLicenceAgreement = (overrides = {}) => {
   const licenceAgreement = new LicenceAgreement();
   return licenceAgreement.fromHash({
     dateRange,
-    agreement
+    agreement,
+    dateDeleted: null
   });
 };
 

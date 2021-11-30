@@ -106,6 +106,57 @@ module.exports = {
     }
   },
 
+  postCompanyContact: {
+    path: '/water/1.0/companies/{companyId}/contacts',
+    method: 'POST',
+    handler: controller.postCompanyContact,
+    config: {
+      description: 'Gives a contact a role within a company',
+      validate: {
+        params: Joi.object().keys({
+          companyId: Joi.string().uuid().required()
+        }),
+        payload: Joi.object().keys({
+          contactId: Joi.string().uuid().required(),
+          roleName: Joi.string().allow('additionalContact').required()
+        })
+      }
+    }
+  },
+
+  patchCompanyContact: {
+    path: '/water/1.0/companies/{companyId}/contacts/{contactId}',
+    method: 'PATCH',
+    handler: controller.patchCompanyContact,
+    config: {
+      description: 'Updates a given companyContact',
+      validate: {
+        params: Joi.object().keys({
+          companyId: Joi.string().uuid().required(),
+          contactId: Joi.string().uuid().required()
+        }),
+        payload: Joi.object().keys({
+          waterAbstractionAlertsEnabled: Joi.boolean()
+        })
+      }
+    }
+  },
+
+  deleteCompanyContact: {
+    path: '/water/1.0/companies/{companyId}/contacts/{companyContactId}',
+    method: 'DELETE',
+    handler: controller.deleteCompanyContact,
+    config: {
+      description: 'Deletes a given companyContact',
+      validate: {
+        params: Joi.object().keys({
+          companyId: Joi.string().uuid().required(),
+          companyContactId: Joi.string().uuid().required()
+        })
+      }
+    }
+  },
+
   getCompanyInvoiceAccounts: {
     path: '/water/1.0/companies/{companyId}/invoice-accounts',
     method: 'GET',

@@ -83,6 +83,28 @@ const getBillingVolume = {
   }
 };
 
+const deleteBatchLicenceBillingVolumes = {
+  method: 'DELETE',
+  path: '/water/1.0/billing/batches/{batchId}/licences/{licenceId}/financial-year-ending/{financialYearEnding}',
+  handler: controller.deleteBatchLicenceBillingVolumes,
+  config: {
+    description: 'Deletes the 2PT billing volume and charge version year by financial year',
+    validate: {
+      params: Joi.object().keys({
+        batchId: Joi.string().uuid().required(),
+        licenceId: Joi.string().uuid().required(),
+        financialYearEnding: Joi.number().required()
+      })
+    },
+    auth: {
+      scope: [billing]
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
+  }
+};
+
 const patchBillingVolume = {
   method: 'PATCH',
   path: '/water/1.0/billing/volumes/{billingVolumeId}',
@@ -126,5 +148,6 @@ exports.getBatchLicences = getBatchLicences;
 exports.getBatchLicenceVolumes = getBatchLicenceVolumes;
 exports.deleteBatchLicence = deleteBatchLicence;
 exports.getBillingVolume = getBillingVolume;
+exports.deleteBatchLicenceBillingVolumes = deleteBatchLicenceBillingVolumes;
 exports.patchBillingVolume = patchBillingVolume;
 exports.postApproveReviewBatch = postApproveReviewBatch;

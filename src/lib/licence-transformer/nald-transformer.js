@@ -23,11 +23,17 @@ class NALDTransformer extends BaseTransformer {
 
     const currentVersion = nald.findCurrent(data.data.versions);
 
+    const mostRecentVersionPurposes = data.data.purposes.filter(purpose => purpose.AABV_INCR_NO !== data.data.versions.sort((a, b) => parseInt(b.INCR_NO) - parseInt(a.INCR_NO)));
+
     const licenceHolderParty = find(currentVersion.parties, (party) => {
       return party.ID === currentVersion.ACON_APAR_ID;
     });
 
-    const conditions = await this.conditionFormatter(data.data.current_version.purposes);
+    const purposes = data.data.current_version
+      ? data.data.current_version.purposes
+      : mostRecentVersionPurposes;
+
+    const conditions = await this.conditionFormatter(purposes);
 
     this.data = {
       licenceNumber: data.LIC_NO,
@@ -41,15 +47,15 @@ class NALDTransformer extends BaseTransformer {
       expiryDate: nald.dates.calendarToIso(data.EXPIRY_DATE),
       versionCount: data.data.versions.length,
       conditions: conditions,
-      points: this.pointsFormatter(data.data.current_version.purposes),
-      abstractionPeriods: this.periodsFormatter(data.data.current_version.purposes),
-      aggregateQuantity: this.aggregateQuantitiesFormatter(data.data.current_version.purposes),
+      points: this.pointsFormatter(purposes),
+      abstractionPeriods: this.periodsFormatter(purposes),
+      aggregateQuantity: this.aggregateQuantitiesFormatter(purposes),
       contacts: this.contactsFormatter(currentVersion, data.data.roles),
-      purposes: this.purposesFormatter(data.data.current_version.purposes),
-      uniquePurposeNames: this.uniquePurposeNamesFormatter(data.data.current_version.purposes),
+      purposes: this.purposesFormatter(purposes),
+      uniquePurposeNames: this.uniquePurposeNamesFormatter(purposes),
       hofTypes: this.getHofTypes(conditions),
-      sourcesOfSupply: this.getSourcesOfSupply(data.data.current_version.purposes),
-      returnFormats: this.formatsFormatter(data.data.current_version.formats)
+      sourcesOfSupply: this.getSourcesOfSupply(purposes),
+      returnFormats: data.data.current_version ? this.formatsFormatter(data.data.current_version.formats) : null
     };
 
     return this.data;

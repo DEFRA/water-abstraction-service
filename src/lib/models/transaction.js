@@ -42,7 +42,7 @@ const getPurposeUseDescription = purposeUse => {
 };
 
 const getTwoPartTariffTransactionDescription = transaction => {
-  const prefix = transaction.isTwoPartTariffSupplementary ? 'Second' : 'First';
+  const prefix = transaction.isTwoPartSecondPartCharge ? 'Second' : 'First';
   const purposeUseDescription = getPurposeUseDescription(transaction.chargeElement.purposeUse);
   const { description } = transaction.chargeElement;
 
@@ -52,10 +52,11 @@ const getTwoPartTariffTransactionDescription = transaction => {
 };
 
 class Transaction extends Model {
-  constructor (id, value, isCredit = false) {
+  constructor (id, value, isCredit = false, isCreditedBack = false) {
     super(id);
     this.value = value;
     this.isCredit = isCredit;
+    this._isCreditedBack = isCreditedBack;
     this._agreements = [];
     this.status = statuses.candidate;
   }
@@ -210,11 +211,19 @@ class Transaction extends Model {
   }
 
   set volume (volume) {
+    validators.assertNullableQuantity(volume);
     if (isNull(volume)) {
       this._volume = volume;
     } else {
-      validators.assertNullableQuantityWithMaximum(volume, this.chargeElement.maxAnnualQuantity);
-      this._volume = volume;
+      /* Important note
+      The volume in the transactions table for historic nald
+      transactions was rounded up in some cases. When trying to raise
+      a credit transaction for one of these transactions it fails at the
+      charge module therefore it is overriden here and set to the maximum quantity
+      */
+      this._volume = parseFloat(volume) > parseFloat(this.chargeElement.maxAnnualQuantity)
+        ? this.chargeElement.maxAnnualQuantity
+        : volume;
     }
   }
 
@@ -288,7 +297,7 @@ class Transaction extends Model {
       ...this.chargeElement.pick('source', 'season', 'loss'),
       licenceNumber: licence.licenceNumber,
       regionCode: batch.region.code,
-      isTwoPartTariff: this.isTwoPartTariffSupplementary
+      isTwoPartTariff: this.isTwoPartSecondPartCharge
     };
   }
 
@@ -296,13 +305,13 @@ class Transaction extends Model {
    * Whether this transaction is a two-part tariff supplementary charge
    * @return {Boolean}
    */
-  get isTwoPartTariffSupplementary () {
-    return this._isTwoPartTariffSupplementary;
+  get isTwoPartSecondPartCharge () {
+    return this._isTwoPartSecondPartCharge;
   }
 
-  set isTwoPartTariffSupplementary (isTwoPartTariffSupplementary) {
-    validators.assertIsBoolean(isTwoPartTariffSupplementary);
-    this._isTwoPartTariffSupplementary = isTwoPartTariffSupplementary;
+  set isTwoPartSecondPartCharge (isTwoPartSecondPartCharge) {
+    validators.assertIsBoolean(isTwoPartSecondPartCharge);
+    this._isTwoPartSecondPartCharge = isTwoPartSecondPartCharge;
   }
 
   /**
@@ -416,6 +425,20 @@ class Transaction extends Model {
    */
   get isErrorStatus () {
     return this.status === statuses.error;
+  }
+
+  /**
+   * If true the transaction has been
+   * reversed/credited in a previous bill run
+   * @param {Boolean}
+   */
+  set isCreditedBack (value) {
+    validators.assertIsBoolean(value);
+    this._isCreditedBack = value;
+  }
+
+  get isCreditedBack () {
+    return this._isCreditedBack;
   }
 }
 

@@ -39,3 +39,14 @@ where y.billing_batch_id=:billingBatchId
   and l.licence_id=:licenceId
   and y.transaction_type = 'two_part_tariff'
   `;
+
+exports.deleteByBatchIdAndLicenceIdAndFinancialYearEnding = `
+delete from water.billing_batch_charge_version_years y
+using water.charge_versions cv, water.licences l
+where y.billing_batch_id=:batchId
+  and y.charge_version_id=cv.charge_version_id
+  and cv.licence_ref=l.licence_ref
+  and l.licence_id=:licenceId
+  and y.financial_year_ending=:financialYearEnding
+  and y.transaction_type = 'two_part_tariff'
+`;

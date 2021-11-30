@@ -53,7 +53,7 @@ const getTestDataForHashing = () => {
   transaction.chargeElement = chargeElement;
   transaction.volume = 3;
   transaction.isCompensationCharge = true;
-  transaction.isTwoPartTariffSupplementary = true;
+  transaction.isTwoPartSecondPartCharge = true;
   transaction.isNewLicence = false;
   transaction.isDeMinimis = false;
 
@@ -135,6 +135,7 @@ experiment('lib/models/transaction', () => {
         id: transaction.id,
         value: transaction.value,
         isCredit: transaction.isCredit,
+        isCreditedBack: false,
         status: 'candidate',
         agreements: []
       });
@@ -383,12 +384,9 @@ experiment('lib/models/transaction', () => {
       expect(func).to.throw();
     });
 
-    test('throws an error if volume is greater than charge element max quantity', async () => {
-      const func = () => {
-        transaction.volume = 20;
-      };
-
-      expect(func).to.throw();
+    test('returns the max annual quantity if the volume is greater than charge element max quantity', async () => {
+      transaction.volume = 20;
+      expect(transaction.volume).to.equal(transaction.chargeElement.authorisedAnnualQuantity);
     });
 
     test('can be set to a quantity between billable and auth quantity', async () => {
@@ -501,18 +499,18 @@ experiment('lib/models/transaction', () => {
     });
   });
 
-  experiment('.isTwoPartTariffSupplementary', () => {
+  experiment('.isTwoPartSecondPartCharge', () => {
     test('can be set to boolean', async () => {
       const transaction = new Transaction();
-      transaction.isTwoPartTariffSupplementary = true;
-      expect(transaction.isTwoPartTariffSupplementary).to.equal(true);
+      transaction.isTwoPartSecondPartCharge = true;
+      expect(transaction.isTwoPartSecondPartCharge).to.equal(true);
     });
 
     test('throws an error if set to any other type', async () => {
       const transaction = new Transaction();
 
       const func = () => {
-        transaction.isTwoPartTariffSupplementary = null;
+        transaction.isTwoPartSecondPartCharge = null;
       };
 
       expect(func).to.throw();
@@ -556,7 +554,7 @@ experiment('lib/models/transaction', () => {
     experiment('when the transaction has a two-part tariff agreement', () => {
       test('the standard charge description includes the charge element description', async () => {
         transaction.isCompensationCharge = false;
-        transaction.isTwoPartTariffSupplementary = false;
+        transaction.isTwoPartSecondPartCharge = false;
         const description = transaction.createDescription();
         expect(description).to.equal('First Part Spray Irrigation Charge Test Description');
         expect(transaction.description).to.equal(description);
@@ -564,7 +562,7 @@ experiment('lib/models/transaction', () => {
 
       test('the standard charge description excludes the charge element description if null', async () => {
         transaction.isCompensationCharge = false;
-        transaction.isTwoPartTariffSupplementary = false;
+        transaction.isTwoPartSecondPartCharge = false;
         transaction.chargeElement.description = null;
 
         const description = transaction.createDescription();
@@ -573,14 +571,14 @@ experiment('lib/models/transaction', () => {
 
       test('the compensation charge text is preset', async () => {
         transaction.isCompensationCharge = true;
-        transaction.isTwoPartTariffSupplementary = false;
+        transaction.isTwoPartSecondPartCharge = false;
         const description = transaction.createDescription();
         expect(description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
       });
 
       test('the two-part tariff supplementary charge text includes the charge element description', async () => {
         transaction.isCompensationCharge = false;
-        transaction.isTwoPartTariffSupplementary = true;
+        transaction.isTwoPartSecondPartCharge = true;
         const description = transaction.createDescription();
         expect(description).to.equal('Second Part Spray Irrigation Charge Test Description');
       });

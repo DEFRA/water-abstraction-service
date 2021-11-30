@@ -103,7 +103,7 @@ const assertMatchingDays = (batchTransaction, chargeModuleTransaction) => {
 };
 
 const assertMatchingAgreements = (batchTransaction, chargeModuleTransaction) => {
-  expect(batchTransaction.isTwoPartTariffSupplementary).to.equal(chargeModuleTransaction.twoPartTariff);
+  expect(batchTransaction.isTwoPartSecondPartCharge).to.equal(chargeModuleTransaction.twoPartTariff);
   expect(!!batchTransaction.section127Agreement).to.equal(chargeModuleTransaction.section127Agreement);
   expect(!!batchTransaction.section130Agreement).to.equal(chargeModuleTransaction.section130Agreement);
 };

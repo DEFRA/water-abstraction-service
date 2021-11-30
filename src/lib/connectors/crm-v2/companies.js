@@ -1,5 +1,6 @@
 'use strict';
 
+const moment = require('moment');
 const urlJoin = require('url-join');
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
@@ -67,8 +68,10 @@ const createCompanyContact = async (companyId, companyContact) => {
   return serviceRequest.post(uri, { body: companyContact });
 };
 
-const deleteCompanyContact = async (companyId, companyContactId) =>
-  serviceRequest.delete(getUri(companyId, 'contacts', companyContactId));
+const deleteCompanyContact = async (companyId, companyContactId) => {
+  const uri = getUri(companyId, 'contacts', companyContactId);
+  return serviceRequest.delete(uri);
+};
 
 /**
  * Get the CompanyContacts for a given company id
@@ -78,6 +81,17 @@ const deleteCompanyContact = async (companyId, companyContactId) =>
 const getCompanyContacts = companyId => {
   return serviceRequest.get(getUri(companyId, 'contacts'));
 };
+
+const patchCompanyContact = (companyId, contactId, body) =>
+  serviceRequest.patch(getUri(companyId, 'contacts', contactId), { body });
+
+const postCompanyContact = (companyId, body) => serviceRequest.post(getUri(companyId, 'contacts'), {
+  body: {
+    ...body,
+    startDate: moment().format('YYYY-MM-DD'),
+    isDefault: false
+  }
+});
 
 /**
  * Returns the invoice accounts associated with a company by its GUID
@@ -97,6 +111,8 @@ exports.deleteCompanyAddress = deleteCompanyAddress;
 exports.createCompanyContact = createCompanyContact;
 exports.deleteCompanyContact = deleteCompanyContact;
 exports.getCompanyContacts = getCompanyContacts;
+exports.patchCompanyContact = patchCompanyContact;
+exports.postCompanyContact = postCompanyContact;
 exports.getInvoiceAccountsByCompanyId = getInvoiceAccountsByCompanyId;
 exports.searchCompaniesByName = searchCompaniesByName;
 exports.getCompanyLicences = getCompanyLicences;

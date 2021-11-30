@@ -64,7 +64,7 @@
     description: "Abstraction from Lazy river"
     volume: 15.54
     section127Agreement: false
-    isTwoPartTariffSupplementary: false
+    isTwoPartSecondPartCharge: false
     isNewLicence: false
     isDeMinimis: false
     metadata: { source: "acceptance-test-setup" }
@@ -94,7 +94,7 @@
     description: "Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element"
     volume: 15.54
     section127Agreement: false
-    isTwoPartTariffSupplementary: false
+    isTwoPartSecondPartCharge: false
     isNewLicence: false
     isDeMinimis: false
     metadata: { source: "acceptance-test-setup" }

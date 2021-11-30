@@ -61,14 +61,17 @@ const deleteByInvoiceId = billingInvoiceId => bookshelf
 
 /**
  * Finds all charge version years for the supplied batch ID
+ * with optional charge version as related entity
  * @param {String} billingBatchId
  */
-const findByBatchId = async billingBatchId => {
+const findByBatchId = async (billingBatchId, includeRelated = false) => {
   const conditions = {
     billing_batch_id: billingBatchId
   };
 
-  return helpers.findMany(BillingBatchChargeVersionYear, conditions);
+  const withRelated = includeRelated ? ['chargeVersion'] : [];
+
+  return helpers.findMany(BillingBatchChargeVersionYear, conditions, withRelated);
 };
 
 /**
@@ -111,6 +114,18 @@ const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId, twoPartTarrifOnl
  */
 const create = async data => helpers.create(BillingBatchChargeVersionYear, data);
 
+/**
+ * Deletes records from BBCYV table given a specific financial year, licenceId and batchId
+ * @param {String} batchId
+ * @param {String} licenceId
+ * @param {Number} financialYearEnding
+ * @returns {Knex.Raw<TResult>}
+ */
+const deleteByBatchIdAndLicenceIdAndFinancialYearEnding = (batchId, licenceId, financialYearEnding) =>
+  bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceIdAndFinancialYearEnding, {
+    batchId, licenceId, financialYearEnding
+  });
+
 exports.findOne = findOne;
 exports.update = update;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
@@ -120,3 +135,4 @@ exports.findByBatchId = findByBatchId;
 exports.findTwoPartTariffByBatchId = findTwoPartTariffByBatchId;
 exports.deleteByBatchIdAndLicenceId = deleteByBatchIdAndLicenceId;
 exports.create = create;
+exports.deleteByBatchIdAndLicenceIdAndFinancialYearEnding = deleteByBatchIdAndLicenceIdAndFinancialYearEnding;

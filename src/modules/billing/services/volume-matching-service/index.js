@@ -16,12 +16,12 @@ const { RETURN_SEASONS } = require('../../../../lib/models/constants');
  * @param {Boolean} isSummer - flag to indicate summer or winter/all-year TPT matching
  * @return {Promise<Array>} resolves with an array of BillingVolume instances
  */
-const matchVolumes = async (chargeVersionId, financialYear, isSummer, batchId) => {
+const matchVolumes = async (chargeVersionId, financialYear, isSummer) => {
   validators.assertId(chargeVersionId);
   validators.assertIsInstanceOf(financialYear, FinancialYear);
   validators.assertIsBoolean(isSummer);
 
-  const { chargeElementGroup, returnGroups, chargePeriod } = await dataService.getData(chargeVersionId, financialYear, batchId);
+  const { chargeElementGroup, returnGroups, chargePeriod } = await dataService.getData(chargeVersionId, financialYear);
 
   const seasonKey = isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
 

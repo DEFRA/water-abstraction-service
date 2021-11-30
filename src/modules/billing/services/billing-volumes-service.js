@@ -12,9 +12,9 @@ const chargePeriod = require('../lib/charge-period');
  * Filter charge elements for matching season
  * Call repo to retrieve billing volumes for charge elements and financial year
  */
-const getVolumesForChargeElements = async (chargeElements, financialYear) => {
+const getVolumesForChargeElements = async (chargeElements, financialYear, batchId) => {
   const chargeElementIds = chargeElements.map(chargeElement => chargeElement.id);
-  const data = await billingVolumesRepo.findApprovedByChargeElementIdsAndFinancialYear(chargeElementIds, financialYear.endYear);
+  const data = await billingVolumesRepo.findApprovedByChargeElementIdsFinancialYearAndBatchId(chargeElementIds, financialYear.endYear, batchId);
   return data.map(mappers.billingVolume.dbToModel);
 };
 
@@ -160,6 +160,15 @@ const getBillingVolumeChargePeriod = async billingVolume => {
   return { chargePeriod: chargePeriod.getChargePeriod(billingVolume.financialYear, chargeVersion), invoiceAccountId: chargeVersion.invoiceAccount.id };
 };
 
+/**
+ * Deletes billing volumes given a batchId, licenceId, and fin year.
+ * @param batchId
+ * @param licenceId
+ * @param financialYearEnding
+ * @returns {Promise<void>}
+ */
+const deleteBillingVolumeByFinancialYearEnding = billingVolumesRepo.deleteByFinancialYearEnding;
+
 exports.updateBillingVolume = updateBillingVolume;
 exports.getUnapprovedVolumesForBatchCount = getUnapprovedVolumesForBatchCount;
 exports.getVolumesForBatch = getVolumesForBatch;
@@ -170,3 +179,4 @@ exports.getBillingVolumeById = getBillingVolumeById;
 exports.getVolumesForChargeElements = getVolumesForChargeElements;
 exports.getBillingVolumesByChargeVersion = getBillingVolumesByChargeVersion;
 exports.getBillingVolumeChargePeriod = getBillingVolumeChargePeriod;
+exports.deleteBillingVolumeByFinancialYearEnding = deleteBillingVolumeByFinancialYearEnding;

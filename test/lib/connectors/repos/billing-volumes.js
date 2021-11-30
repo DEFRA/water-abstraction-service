@@ -6,6 +6,7 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
+const uuid = require('uuid/v4');
 
 const billingVolumes = require('../../../../src/lib/connectors/repos/billing-volumes');
 const { BillingVolume, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
@@ -69,10 +70,10 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     });
   });
 
-  experiment('.findApprovedByChargeElementIdsAndFinancialYear', () => {
+  experiment('.findApprovedByChargeElementIdsFinancialYearAndBatchId', () => {
     let result;
     beforeEach(async () => {
-      result = await billingVolumes.findApprovedByChargeElementIdsAndFinancialYear(['test-id-1', 'test-id-2'], 2020);
+      result = await billingVolumes.findApprovedByChargeElementIdsFinancialYearAndBatchId(['test-id-1', 'test-id-2'], 2020, 'test-batch-id');
     });
 
     test('calls model.forge', async () => {
@@ -89,7 +90,8 @@ experiment('lib/connectors/repos/billing-volumes', () => {
       expect(stub.where.calledWith({
         financial_year: 2020,
         is_approved: true,
-        errored_on: null
+        errored_on: null,
+        billing_batch_id: 'test-batch-id'
       })).to.be.true();
     });
 
@@ -368,6 +370,22 @@ experiment('lib/connectors/repos/billing-volumes', () => {
           chargeVersionId,
           financialYearEnding
         }
+      ));
+    });
+  });
+
+  experiment('.deleteByFinancialYearEnding', () => {
+    const batchId = uuid();
+    const licenceId = uuid();
+    const financialYearEnding = 2022;
+
+    beforeEach(async () => {
+      await billingVolumes.deleteByFinancialYearEnding(batchId, licenceId, financialYearEnding);
+    });
+
+    test('calls raw.multiRow with the query and params', async () => {
+      expect(raw.multiRow.calledWith(
+        queries.deleteByFinancialYearEnding, { batchId, licenceId, financialYearEnding }
       ));
     });
   });

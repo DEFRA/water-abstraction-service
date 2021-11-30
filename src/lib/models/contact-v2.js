@@ -1,6 +1,6 @@
 'use strict';
 
-const { assertNullableString, assertNullableEnum, assertEnum } = require('./validators');
+const { assertNullableString, assertNullableEnum, assertEnum, assertNullableStringAllowEmpty } = require('./validators');
 const Model = require('./model');
 const Joi = require('joi');
 const { omit } = require('lodash');
@@ -13,7 +13,7 @@ const getInitials = (firstName, middleInitials) => middleInitials
   : null;
 
 const contactPersonSchema = Joi.object({
-  title: Joi.string().allow(null).optional(),
+  salutation: Joi.string().allow(null).optional(),
   firstName: Joi.string().required(),
   initials: Joi.string().allow(null).optional(),
   middleInitials: Joi.string().allow(null).optional(),
@@ -41,7 +41,7 @@ class Contact extends Model {
   }
 
   set middleInitials (middleInitials) {
-    assertNullableString(middleInitials);
+    assertNullableStringAllowEmpty(middleInitials);
     this._middleInitials = middleInitials;
   }
 
@@ -49,17 +49,17 @@ class Contact extends Model {
     return this._middleInitials;
   }
 
-  set title (title) {
-    assertNullableString(title);
-    this._title = title;
+  set salutation (salutation) {
+    assertNullableStringAllowEmpty(salutation);
+    this._salutation = salutation;
   }
 
-  get title () {
-    return this._title;
+  get salutation () {
+    return this._salutation;
   }
 
   set firstName (firstName) {
-    assertNullableString(firstName);
+    assertNullableStringAllowEmpty(firstName);
     this._firstName = firstName;
   }
 
@@ -68,7 +68,7 @@ class Contact extends Model {
   }
 
   set lastName (lastName) {
-    assertNullableString(lastName);
+    assertNullableStringAllowEmpty(lastName);
     this._lastName = lastName;
   }
 
@@ -77,7 +77,7 @@ class Contact extends Model {
   }
 
   set suffix (suffix) {
-    assertNullableString(suffix);
+    assertNullableStringAllowEmpty(suffix);
     this._suffix = suffix;
   }
 
@@ -86,7 +86,7 @@ class Contact extends Model {
   }
 
   set department (department) {
-    assertNullableString(department);
+    assertNullableStringAllowEmpty(department);
     this._department = department;
   }
 
@@ -113,25 +113,24 @@ class Contact extends Model {
   }
 
   /**
-   * Gets the contact's full name including title, first name/initial, surname and suffix
+   * Gets the contact's full name including salutation, first name/initial, surname and suffix
    * @return {String}
    */
   get fullName () {
-    if (this.type === CONTACT_TYPES.department) {
-      return this.department;
+    if (this._dataSource === DATA_SOURCE_TYPES.wrls && this.type === CONTACT_TYPES.department) {
+      return this._department;
+    } else {
+      // Please note that nald appears to use the lastName for the department, so this will cover those cases
+      const initials = this._dataSource === DATA_SOURCE_TYPES.nald ? this._initials : getInitials(this._firstName, this._middleInitials);
+      return [this._salutation, initials || this._firstName, this._lastName, this._suffix].filter((item) => !!item).join(' ');
     }
-
-    const initials = this._dataSource === DATA_SOURCE_TYPES.nald ? this._initials : getInitials(this._firstName, this._middleInitials);
-
-    const parts = [this._title, initials || this._firstName, this._lastName, this._suffix];
-    return parts.filter(x => x).join(' ');
   }
 
   toJSON () {
     const data = {
       ...super.toJSON()
     };
-    if (this._type === CONTACT_TYPES.person) data.fullName = this.fullName;
+    data.fullName = this.fullName;
     return data;
   }
 

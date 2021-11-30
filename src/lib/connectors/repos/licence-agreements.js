@@ -2,7 +2,6 @@
 
 const { LicenceAgreement } = require('../bookshelf');
 const helpers = require('./lib/helpers');
-
 /**
  * Gets a list of licence agreements of the given types for the specified
  * licence number
@@ -10,10 +9,12 @@ const helpers = require('./lib/helpers');
  * @param {Array} agreementTypes
  * @return {Promise<Array>}
  */
+
 const findByLicenceRef = async (licenceRef, agreementTypes = []) => {
   let licenceAgreements = LicenceAgreement
     .forge()
-    .query('where', 'licence_ref', licenceRef);
+    .query('where', 'licence_ref', licenceRef)
+    .query('where', 'date_deleted', null);
 
   if (agreementTypes.length) {
     licenceAgreements = licenceAgreements
@@ -54,8 +55,8 @@ const update = async (id, changes) => {
  * Deletes a licence agreement by
  * @param {String} licenceAgreementId
  */
-const deleteOne = async licenceAgreementId =>
-  helpers.deleteOne(LicenceAgreement, 'licenceAgreementId', licenceAgreementId);
+const softDeleteOne = async licenceAgreementId =>
+  helpers.update(LicenceAgreement, 'licenceAgreementId', licenceAgreementId, { dateDeleted: new Date() });
 
 /**
  * Create new licence agreement
@@ -67,5 +68,5 @@ const create = data => helpers.create(LicenceAgreement, data);
 exports.findByLicenceRef = findByLicenceRef;
 exports.findOne = findOne;
 exports.update = update;
-exports.deleteOne = deleteOne;
+exports.softDeleteOne = softDeleteOne;
 exports.create = create;

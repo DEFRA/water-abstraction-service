@@ -11,6 +11,7 @@ const crmToModel = entity => {
     'companyId',
     'roleId',
     'isDefault',
+    'waterAbstractionAlertsEnabled',
     'dateCreated',
     'dateUpdated'
   ]);

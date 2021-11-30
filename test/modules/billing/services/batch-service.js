@@ -110,6 +110,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     sandbox.stub(transactionsService, 'saveTransactionToDB');
     sandbox.stub(transactionsService, 'persistDeMinimis').resolves();
+    sandbox.stub(transactionsService, 'updateIsCredited').resolves();
 
     sandbox.stub(invoiceLicencesService, 'saveInvoiceLicenceToDB');
 
@@ -451,7 +452,9 @@ experiment('modules/billing/services/batch-service', () => {
     beforeEach(async () => {
       batch = {
         id: uuid(),
-        externalId: uuid()
+        externalId: uuid(),
+        type: 'supplementary',
+        region: { id: 'test-regioin-id' }
       };
 
       internalCallingUser = {
@@ -819,10 +822,10 @@ experiment('modules/billing/services/batch-service', () => {
       });
     });
 
-    experiment('when the CM batch is showing as "pending"', () => {
+    experiment('when the CM batch is showing as "billed"', () => {
       beforeEach(async () => {
         newRepos.billingTransactions.countByBatchId.resolves(5);
-        cmResponse.billRun.status = 'pending';
+        cmResponse.billRun.status = 'billed';
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
 
@@ -842,7 +845,7 @@ experiment('modules/billing/services/batch-service', () => {
     experiment('when there are 0 transactions in the batch', () => {
       beforeEach(async () => {
         newRepos.billingTransactions.countByBatchId.resolves(0);
-        cmResponse.billRun.status = 'pending';
+        cmResponse.billRun.status = 'billing_not_required';
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
 
@@ -1065,7 +1068,7 @@ experiment('modules/billing/services/batch-service', () => {
     });
 
     test('a batch is created in the charge module with the correct region', async () => {
-      expect(chargeModuleBillRunConnector.create.calledWith(REGION_ID));
+      expect(chargeModuleBillRunConnector.create.calledWith(REGION_ID, 'presroc'));
     });
 
     test('the batch is updated with the values from the CM', async () => {

@@ -68,6 +68,17 @@ const fetchInvoiceAccountsWithUpdatedEntities = () => {
 
 const getInvoiceAccountByRef = ref => serviceRequest.get(getSingularUri(), { qs: { ref } });
 
+const updateInvoiceAccountsWithCustomerFileReference = (fileReference, exportedAt, exportedCustomers) => {
+  const url = getPluralisedUri('customer-file-references');
+  return serviceRequest.post(url, {
+    body: {
+      fileReference,
+      exportedAt,
+      exportedCustomers
+    }
+  });
+};
+
 exports.createInvoiceAccount = createInvoiceAccount;
 exports.deleteInvoiceAccount = deleteInvoiceAccount;
 exports.createInvoiceAccountAddress = createInvoiceAccountAddress;
@@ -75,3 +86,4 @@ exports.getInvoiceAccountById = getInvoiceAccountById;
 exports.getInvoiceAccountsByIds = getInvoiceAccountsByIds;
 exports.fetchInvoiceAccountsWithUpdatedEntities = fetchInvoiceAccountsWithUpdatedEntities;
 exports.getInvoiceAccountByRef = getInvoiceAccountByRef;
+exports.updateInvoiceAccountsWithCustomerFileReference = updateInvoiceAccountsWithCustomerFileReference;
