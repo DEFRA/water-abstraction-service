@@ -1,6 +1,4 @@
-drop table if exists water.licences;
-
-create table water.licences (
+create table if not exists water.licences (
   licence_id uuid primary key default public.gen_random_uuid(),
   region_id uuid not null
     constraint licences_region_id_fkey
