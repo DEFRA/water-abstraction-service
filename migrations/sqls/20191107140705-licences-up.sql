@@ -1,7 +1,6 @@
-SELECT '§§§§§§§§1';
-SELECT * FROM information_schema.columns WHERE table_schema = 'water' AND table_name = 'licences';
+drop table if exists water.licencs;
 
-create table IF NOT EXISTS water.licences (
+create table water.licences (
   licence_id uuid primary key default public.gen_random_uuid(),
   region_id uuid not null
     constraint licences_region_id_fkey
