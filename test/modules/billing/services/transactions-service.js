@@ -203,6 +203,12 @@ experiment('modules/billing/services/transactions-service', () => {
         const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
         expect(testResult.includes(secondPartTrx)).to.be.true();
       });
+      test('the second part transactions are not filtered out if the charge version is non chargable', async () => {
+        chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2020, hasTwoPartAgreement: true, transactionType: 'two_part_tariff', isChargeable: false };
+        repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
+        const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
+        expect(testResult.includes(secondPartTrx)).to.be.true();
+      });
       test('the second part transactions are not filtered out annual transaction types where there is no agreement', async () => {
         chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
         repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
