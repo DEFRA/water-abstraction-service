@@ -822,10 +822,10 @@ experiment('modules/billing/services/batch-service', () => {
       });
     });
 
-    experiment('when the CM batch is showing as "pending"', () => {
+    experiment('when the CM batch is showing as "billed"', () => {
       beforeEach(async () => {
         newRepos.billingTransactions.countByBatchId.resolves(5);
-        cmResponse.billRun.status = 'pending';
+        cmResponse.billRun.status = 'billed';
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
 
@@ -845,7 +845,7 @@ experiment('modules/billing/services/batch-service', () => {
     experiment('when there are 0 transactions in the batch', () => {
       beforeEach(async () => {
         newRepos.billingTransactions.countByBatchId.resolves(0);
-        cmResponse.billRun.status = 'pending';
+        cmResponse.billRun.status = 'billing_not_required';
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
 
@@ -1068,7 +1068,7 @@ experiment('modules/billing/services/batch-service', () => {
     });
 
     test('a batch is created in the charge module with the correct region', async () => {
-      expect(chargeModuleBillRunConnector.create.calledWith(REGION_ID, 'presroc'));
+      expect(chargeModuleBillRunConnector.create.calledWith(REGION_ID));
     });
 
     test('the batch is updated with the values from the CM', async () => {
