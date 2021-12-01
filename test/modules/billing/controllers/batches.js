@@ -765,7 +765,7 @@ experiment('modules/billing/controller', () => {
     });
   });
 
-  experiment('.postSetBatchStatusToError', () => {
+  experiment('.postSetBatchStatusToCancel', () => {
     let request;
     let batch;
     beforeEach(async () => {
@@ -793,16 +793,16 @@ experiment('modules/billing/controller', () => {
       expect(batchId).to.equal('00000000-0000-0000-0000-000000000000');
     });
 
-    test('returns request has succeeded in changing batch status to erorr', async () => {
-      await controller.postSetBatchStatusToError(request, h);
+    test('returns request has succeeded in changing batch status to cancel', async () => {
+      await controller.postSetBatchStatusToCancel(request, h);
       const [code] = hapiResponseStub.code.lastCall.args;
       expect(code).to.equal(204);
     });
 
     test('returns the error from the service if it fails', async () => {
-      const err = new Error('Failed to change batch status to error');
+      const err = new Error('Failed to change batch status to cancel');
       batchService.setStatus.rejects(err);
-      const result = await controller.postSetBatchStatusToError(request, h);
+      const result = await controller.postSetBatchStatusToCancel(request, h);
       expect(result).to.equal(err);
     });
   });

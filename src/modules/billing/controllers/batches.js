@@ -185,12 +185,12 @@ const deleteAllBillingData = async (request, h) => {
   }
 };
 
-const postSetBatchStatusToError = async (request, h) => {
+const postSetBatchStatusToCancel = async (request, h) => {
   const { batch } = request.pre;
   try {
     batchStatus.assertBatchIsProcessing(batch);
-    // set the batch status to error
-    await batchService.setStatus(batch.id, BATCH_STATUS.error);
+    // set the batch status to cancel
+    await batchService.setStatus(batch.id, BATCH_STATUS.cancel);
     return h.response().code(204);
   } catch (err) {
     return err;
@@ -211,4 +211,4 @@ exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 
 exports.deleteAllBillingData = deleteAllBillingData;
-exports.postSetBatchStatusToError = postSetBatchStatusToError;
+exports.postSetBatchStatusToCancel = postSetBatchStatusToCancel;

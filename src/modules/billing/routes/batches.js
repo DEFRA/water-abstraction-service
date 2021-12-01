@@ -255,10 +255,10 @@ if (config.featureToggles.deleteAllBillingData) {
   exports.deleteAllBillingData = deleteAllBillingData;
 }
 
-const postSetBatchStatusToError = {
+const postSetBatchStatusToCancel = {
   method: 'POST',
   path: `${BASE_PATH}/{batchId}/status/error`,
-  handler: controller.postSetBatchStatusToError,
+  handler: controller.postSetBatchStatusToCancel,
   config: {
     validate: {
       params: Joi.object().keys({
@@ -287,4 +287,4 @@ exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 exports.postApproveReviewBatch = postApproveReviewBatch;
 exports.getBatchDownloadData = getBatchDownloadData;
-exports.postSetBatchStatusToError = postSetBatchStatusToError;
+exports.postSetBatchStatusToCancel = postSetBatchStatusToCancel;
