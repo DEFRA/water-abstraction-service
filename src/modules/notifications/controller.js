@@ -73,11 +73,12 @@ const getNotifications = async request => {
   const { filter } = request.query;
   const { page } = request.query;
   const { sentBy } = request.query;
-  const { data, pagination } = await eventsService.getNotificationEvents(page, filter, sentBy);
+  const { data, pagination, notificationCategories } = await eventsService.getNotificationEvents(page, filter, sentBy);
 
   return {
     data: data.map(mapNotificationEvent),
-    pagination
+    pagination,
+    notificationCategories
   };
 };
 

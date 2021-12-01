@@ -80,6 +80,7 @@ GROUP BY month, year, current_year ORDER BY year desc, month desc;`;
  *   "sent", "completed", "sending"
  * - a "recipient_count" for each event (count of related rows in water.scheduled_notifications)
  * - a jsonb blob of message "statuses" with counts for each event, e.g. [{ status: 'error', notify_status: null, count :3 }, ...]
+ * - a json array of message_ref filtering events e.g. ['water_abstraction_alert_reduce_warning','water_abstraction_alert_stop',...]
  */
 exports.findNotifications = `
 select e.*,
@@ -124,4 +125,11 @@ select count(e.*)
 where 
   e.type='notification'
   and e.status in ('sent', 'completed', 'sending')
+`;
+
+/**
+* findNotificationCategories return all available message_ref in water.scheduled_notification
+*/
+exports.findNotificationCategories = `
+select distinct message_ref as value, regexp_replace(INITCAP(message_ref), '_', ' ', 'g') as label from water.scheduled_notification order by message_ref
 `;

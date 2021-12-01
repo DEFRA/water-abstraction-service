@@ -103,7 +103,10 @@ const getNotificationEvents = async (page = 1, filter = '', sentBy = '') => {
   const { rows: [{ count: totalRows }] } = await repo.events.findNotificationsCount();
   pagination.totalRows = totalRows;
 
-  return { pagination, data };
+  // Get a list of available categories
+  const { rows: notificationCategories } = await repo.events.findNotificationCategories();
+
+  return { pagination, data, notificationCategories };
 };
 
 exports.create = create;
