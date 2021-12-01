@@ -1,3 +1,19 @@
+select '§§§§§§1§';
+SELECT table_schema||'.'||table_name AS full_rel_name
+  FROM information_schema.tables
+ WHERE table_schema = 'water';
+
+ SELECT EXISTS (
+    SELECT FROM information_schema.tables
+    WHERE  table_schema = 'water'
+    AND    table_name   = 'licences'
+    );
+
+
+    select *
+    from water.licences
+    where false;
+
 create table water.licences (
   licence_id uuid primary key default public.gen_random_uuid(),
   region_id uuid not null
