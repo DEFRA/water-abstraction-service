@@ -38,6 +38,10 @@ class ChargeVersion extends Model {
     this._chargeElements = [];
   }
 
+  get licence () {
+    return this._licence;
+  }
+
   /**
    * Licence
    * @param {Licence}
@@ -47,8 +51,8 @@ class ChargeVersion extends Model {
     this._licence = licence;
   }
 
-  get licence () {
-    return this._licence;
+  get scheme () {
+    return this._scheme;
   }
 
   /**
@@ -60,8 +64,8 @@ class ChargeVersion extends Model {
     this._scheme = scheme;
   }
 
-  get scheme () {
-    return this._scheme;
+  get versionNumber () {
+    return this._versionNumber;
   }
 
   /**
@@ -73,8 +77,8 @@ class ChargeVersion extends Model {
     this._versionNumber = versionNumber;
   }
 
-  get versionNumber () {
-    return this._versionNumber;
+  get dateRange () {
+    return this._dateRange;
   }
 
   /**
@@ -86,8 +90,8 @@ class ChargeVersion extends Model {
     this._dateRange = dateRange;
   }
 
-  get dateRange () {
-    return this._dateRange;
+  get status () {
+    return this._status;
   }
 
   /**
@@ -97,10 +101,6 @@ class ChargeVersion extends Model {
   set status (status) {
     validators.assertEnum(status, Object.values(STATUS));
     this._status = status;
-  }
-
-  get status () {
-    return this._status;
   }
 
   /**
@@ -116,6 +116,10 @@ class ChargeVersion extends Model {
     this._region = region;
   }
 
+  get source () {
+    return this._source;
+  }
+
   /**
    * Source
    * @param {String}
@@ -125,8 +129,8 @@ class ChargeVersion extends Model {
     this._source = source;
   }
 
-  get source () {
-    return this._source;
+  get company () {
+    return this._company;
   }
 
   /**
@@ -138,8 +142,8 @@ class ChargeVersion extends Model {
     this._company = company;
   }
 
-  get company () {
-    return this._company;
+  get invoiceAccount () {
+    return this._invoiceAccount;
   }
 
   /**
@@ -151,8 +155,8 @@ class ChargeVersion extends Model {
     this._invoiceAccount = invoiceAccount;
   }
 
-  get invoiceAccount () {
-    return this._invoiceAccount;
+  get chargeElements () {
+    return this._chargeElements;
   }
 
   /**
@@ -164,21 +168,21 @@ class ChargeVersion extends Model {
     this._chargeElements = chargeElements;
   }
 
-  get chargeElements () {
-    return this._chargeElements;
+  get changeReason () {
+    return this._changeReason;
   }
 
   /**
- * Change Reason
- * @param {ChangeReason}
- */
+   * Change Reason
+   * @param {ChangeReason}
+   */
   set changeReason (changeReason) {
     validators.assertIsNullableInstanceOf(changeReason, ChangeReason);
     this._changeReason = changeReason;
   }
 
-  get changeReason () {
-    return this._changeReason;
+  get apportionment () {
+    return this._apportionment;
   }
 
   /*
@@ -190,7 +194,9 @@ class ChargeVersion extends Model {
     this._apportionment = apportionment;
   }
 
-  get apportionment () { return this._apportionment; }
+  get error () {
+    return this._error;
+  }
 
   /**
    * Set the error flag
@@ -201,7 +207,9 @@ class ChargeVersion extends Model {
     this._error = error;
   }
 
-  get error () { return this._error; }
+  get billedUpToDate () {
+    return this._billedUpToDate;
+  }
 
   /**
    * Set the billed up to date
@@ -211,16 +219,24 @@ class ChargeVersion extends Model {
     this._billedUpToDate = this.getDateTimeFromValue(billedUpToDate);
   }
 
-  get billedUpToDate () { return this._billedUpToDate; }
+  get dateCreated () {
+    return this._dateCreated;
+  }
 
-  get dateCreated () { return this._dateCreated; }
   set dateCreated (value) {
     this._dateCreated = this.getDateTimeFromValue(value);
   }
 
-  get dateUpdated () { return this._dateUpdated; }
+  get dateUpdated () {
+    return this._dateUpdated;
+  }
+
   set dateUpdated (value) {
     this._dateUpdated = this.getDateTimeFromValue(value);
+  }
+
+  get createdBy () {
+    return this._createdBy;
   }
 
   /**
@@ -232,8 +248,8 @@ class ChargeVersion extends Model {
     this._createdBy = createdBy;
   }
 
-  get createdBy () {
-    return this._createdBy;
+  get approvedBy () {
+    return this._approvedBy;
   }
 
   /**
@@ -245,8 +261,17 @@ class ChargeVersion extends Model {
     this._approvedBy = approvedBy;
   }
 
-  get approvedBy () {
-    return this._approvedBy;
+  get chargingScheme () {
+    return this._chargingScheme;
+  }
+
+  set chargingScheme (chargingScheme) {
+    if (!chargingScheme) {
+      this._chargingScheme = 'presroc';
+    } else {
+      validators.assertNullableEnum(chargingScheme, ['sroc', 'presroc']);
+      this._chargingScheme = chargingScheme;
+    }
   }
 }
 

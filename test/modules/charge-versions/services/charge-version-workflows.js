@@ -417,6 +417,11 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       expect(chargeVersion.approvedBy).to.equal(approvingUser);
     });
 
+    test('the charging scheme of the new charge version is set', async () => {
+      const [chargeVersion] = chargeVersionService.create.lastCall.args;
+      expect(chargeVersion.chargingScheme).to.equal('presroc');
+    });
+
     test('the workflow record is deleted', async () => {
       expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
     });
