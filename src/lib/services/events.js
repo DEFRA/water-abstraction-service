@@ -100,7 +100,11 @@ const getNotificationEvents = async (page = 1, filter = '', sentBy = '') => {
     .map(notificationEventMapper.dbToModel);
 
   // Update pagination with total rows
-  const { rows: [{ count: totalRows }] } = await repo.events.findNotificationsCount();
+  const { rows: [{ count: totalRows }] } = await repo.events.findNotificationsCount({
+    messageRef: JSON.stringify(selectionList),
+    filterLength,
+    sentBy
+  });
   pagination.totalRows = totalRows;
 
   // Get a list of available categories

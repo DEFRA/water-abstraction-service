@@ -56,8 +56,8 @@ const findNotifications = params =>
 /**
  * Gets total row count for above
  */
-const findNotificationsCount = () =>
-  bookshelf.knex.raw(queries.findNotificationsCount);
+const findNotificationsCount = params =>
+  bookshelf.knex.raw(queries.findNotificationsCount, params);
 
 /**
  * Gets list of categories for filtering notifications

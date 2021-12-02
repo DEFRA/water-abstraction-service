@@ -121,10 +121,13 @@ offset :offset
 
 exports.findNotificationsCount = `
 select count(e.*)
-  from water.events e
+from water.events e
+left join water.scheduled_notification n 
+on e.event_id=n.event_id
 where 
-  e.type='notification'
+  e.type='notification' and ( (CAST(:filterLength AS INTEGER) < 1) or (n.message_ref in (select * from json_array_elements_text(:messageRef)) ) )
   and e.status in ('sent', 'completed', 'sending')
+  and (e.issuer = :sentBy or :sentBy = '')
 `;
 
 /**
