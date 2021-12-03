@@ -8,12 +8,16 @@
 const YAML = require('yamljs');
 const path = require('path');
 const { mapValues, isString } = require('lodash');
+const { getFinancialDateRange } = require('../lib/financial-date-range');
+const moment = require('moment');
+const Uuid = require('uuid');
 
 const refRegex = /^(\$[^.]+)\.([a-z0-9-_]+)$/i;
 
 /**
  * Gets a referenced value if one is available
  * @param {String} value
+ * @param {Object} refs
  * @return {Mixed} value
  */
 const mapValue = (value, refs) => {
@@ -29,11 +33,63 @@ const mapValue = (value, refs) => {
   return refs.get(match[1])[match[2]];
 };
 
+/**
+ * Calculates the value if the input value is a reference to a calculation
+ * @param {Any} value
+ * @param {Integer} index
+ * @return {Any | Integer | String} value
+ */
+const calcValue = (value, index = 0) => {
+  const previousYearsDateLessIndex = moment()
+    .subtract(1, 'year') // previous year
+    .subtract(index, 'year'); // less the index
+
+  const previousYearsLessIndexFinancialDateRange = getFinancialDateRange(previousYearsDateLessIndex);
+
+  switch (value) {
+    case '$previousYearsDateLessIndex': {
+      return previousYearsDateLessIndex.format('YYYY-MM-DD');
+    }
+    case '$previousStartDateLessIndex': {
+      return previousYearsLessIndexFinancialDateRange.startDate.format('YYYY-MM-DD');
+    }
+    case '$previousEndDateLessIndex': {
+      return previousYearsLessIndexFinancialDateRange.endDate.format('YYYY-MM-DD');
+    }
+    case '$previousYearLessIndex': {
+      return previousYearsLessIndexFinancialDateRange.endDate.year();
+    }
+    case '$annualInvoice': return `TEST00${index}1`;
+    case '$2PT2Invoice': return `TEST00${index}2`;
+    case '$uuid': return Uuid.v4();
+    case '$billRunNumber': return String(new Date().getMilliseconds()).padStart(4, '0') + index;
+    default:
+      return value;
+  }
+};
+
+/**
+ * Substitutes all config values within the data where the prop is found as $$[prop]
+ * @param {Object} data
+ * @param {Object} config
+ * @return {Object} data
+ */
+const applyConfig = (data, config) => {
+  if (config) {
+    return JSON.parse(Object.entries(config).reduce((dataString, [prop, value = '']) => {
+      return dataString.split(`$$[${prop}]`).join(calcValue(value, config.index));
+    }, JSON.stringify(data)));
+  } else {
+    return data;
+  }
+};
+
 class FixtureLoader {
   /**
    * @constructor
    * @param {Object} adapter - adapter
    * @param {String} dir - path to YAML files
+   * @param {Object} refs
    */
   constructor (adapter, dir, refs = null) {
     this._adapter = adapter;
@@ -65,7 +121,7 @@ class FixtureLoader {
 
   /**
    * Sets initial value for refs
-   * @param {Map}
+   * @param {Map} refs
    */
   setRefs (refs) {
     this._refs = refs;
@@ -74,7 +130,7 @@ class FixtureLoader {
 
   /**
    * Sets initial value for refs
-   * @param {Map}
+   * @param {Map} refs
    */
   addRefs (refs) {
     this._refs = new Map([...this._refs, ...refs]);
@@ -100,12 +156,17 @@ class FixtureLoader {
   /**
    * Load fixtures from specified YAML file
    * @param {String} yamlFile
+   * @param {Object} config
    * @return {Promise<Array>} created Bookshelf models
    */
-  async load (yamlFile) {
+  async load (yamlFile, config) {
     const file = path.resolve(this._dir, yamlFile);
-    const data = YAML.load(file);
+    const data = applyConfig(YAML.load(file), config);
     const { _refs } = this;
+
+    if (config) {
+      console.log(data);
+    }
 
     for (const config of data) {
       // Pre-process field data to include references to previously inserted models

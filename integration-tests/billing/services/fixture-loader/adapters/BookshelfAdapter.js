@@ -17,10 +17,15 @@ class BookshelfAdapter {
   async create ({ model: modelName, constraints, ref }, data) {
     // Attempt insert
     try {
+      let timeStamps;
+      // Allow date_created to be overridden if set
+      if (data.dateCreated) {
+        timeStamps = { date_created: new Date(data.dateCreated) };
+      }
       const model = await this._bookshelf
         .model(modelName)
         .forge(data)
-        .save();
+        .save(timeStamps);
 
       return model.toJSON();
     } catch (err) {
