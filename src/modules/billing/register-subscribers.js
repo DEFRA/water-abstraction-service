@@ -41,7 +41,7 @@ module.exports = {
 
     server.queueManager.add(syncChargeCategories.jobName);
     server.queueManager.add(syncSupportedSources.jobName);
-    await server.queueManager.deleteKeysByPattern('*customer-file-refresh*');
+    await server.queueManager.deleteKeysByPattern('billing.customer-file-refresh*');
     server.queueManager.add(customerFileRefresh.jobName);
   }
 };
