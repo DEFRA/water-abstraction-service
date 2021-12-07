@@ -20,6 +20,7 @@ const BATCH_STATUS = {
   ready: 'ready', // processing completed - awaiting approval
   sent: 'sent', // approved & sent to Charge Module
   error: 'error',
+  cancel: 'cancel',
   // if there are no charge versions, or all billing has already happened
   // in earlier run, or all customers have been removed from the batch
   empty: 'empty'
@@ -283,7 +284,8 @@ class Batch extends Totals {
       BATCH_STATUS.empty,
       BATCH_STATUS.error,
       BATCH_STATUS.ready,
-      BATCH_STATUS.review
+      BATCH_STATUS.review,
+      BATCH_STATUS.cancel
     );
   }
 

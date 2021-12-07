@@ -141,6 +141,7 @@ experiment('modules/billing/services/charge-version-year', () => {
       chargeVersionYear = new ChargeVersionYear();
       batch = new Batch();
       chargeVersionYear.batch = batch;
+      chargeVersionYear.isChargeable = true;
       result = await chargeVersionYearService.processChargeVersionYear(chargeVersionYear);
     });
 

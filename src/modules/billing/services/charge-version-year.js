@@ -57,9 +57,11 @@ const getStatusCounts = async batchId => {
  * @return {Batch}
  */
 const processChargeVersionYear = async chargeVersionYear => {
-  const { batch } = chargeVersionYear;
-  const invoice = await chargeProcessorService.processChargeVersionYear(chargeVersionYear);
-  batch.invoices = [invoice];
+  const { batch, isChargeable } = chargeVersionYear;
+  if (isChargeable) {
+    const invoice = await chargeProcessorService.processChargeVersionYear(chargeVersionYear);
+    batch.invoices = [invoice];
+  }
   return batch;
 };
 
@@ -89,13 +91,14 @@ const getTwoPartTariffForBatch = batchId => {
  * @param {FinancialYear} financialYear
  * @return {Promise}
  */
-const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear, transactionType, isSummer, hasTwoPartAgreement) => {
+const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear, transactionType, isSummer, hasTwoPartAgreement, isChargeable = true) => {
   validators.assertIsInstanceOf(batch, Batch);
   validators.assertId(chargeVersionId);
   validators.assertIsInstanceOf(financialYear, FinancialYear);
   validators.assertEnum(transactionType, Object.values(TRANSACTION_TYPE));
   validators.assertIsBoolean(isSummer);
   validators.assertIsBoolean(hasTwoPartAgreement);
+  validators.assertIsBoolean(isChargeable);
   return repos.billingBatchChargeVersionYears.create({
     billingBatchId: batch.id,
     chargeVersionId: chargeVersionId,
@@ -103,7 +106,8 @@ const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear, tra
     status: BATCH_STATUS.processing,
     transactionType,
     isSummer,
-    hasTwoPartAgreement
+    hasTwoPartAgreement,
+    isChargeable
   });
 };
 

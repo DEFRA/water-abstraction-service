@@ -135,11 +135,15 @@ const getRequiredTransactionTypes = async (batch, ...args) => {
  * @returns {Promise<Array>} water.billing_batch_charge_version_year records
  */
 const processChargeVersionFinancialYear = async (batch, financialYear, existingTPTBatches, chargeVersion) => {
-  const { types, chargeVersionHasAgreement } = await getRequiredTransactionTypes(batch, chargeVersion, existingTPTBatches);
-  return bluebird.mapSeries(
-    types,
-    ({ type, isSummer }) => chargeVersionYearService.createBatchChargeVersionYear(batch, chargeVersion.chargeVersionId, financialYear, type, isSummer, chargeVersionHasAgreement)
-  );
+  if (!chargeVersion.isChargeable && batch.type === BATCH_TYPE.supplementary) {
+    return chargeVersionYearService.createBatchChargeVersionYear(batch, chargeVersion.chargeVersionId, financialYear, 'annual', false, false, false);
+  } else {
+    const { types, chargeVersionHasAgreement } = await getRequiredTransactionTypes(batch, chargeVersion, existingTPTBatches);
+    return bluebird.mapSeries(
+      types,
+      ({ type, isSummer }) => chargeVersionYearService.createBatchChargeVersionYear(batch, chargeVersion.chargeVersionId, financialYear, type, isSummer, chargeVersionHasAgreement)
+    );
+  }
 };
 
 /**
@@ -157,7 +161,7 @@ const processFinancialYear = async (batch, financialYear) => {
 
   // Get charge versions in financial year
   const chargeVersions = await repos.chargeVersions.findValidInRegionAndFinancialYear(
-    batch.region.id, financialYear.endYear
+    batch.region.id, financialYear.endYear, batch.type === BATCH_TYPE.supplementary
   );
 
   const chargeVersionYears = await bluebird.mapSeries(
