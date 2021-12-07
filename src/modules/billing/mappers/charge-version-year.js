@@ -11,7 +11,8 @@ const dbToModelMapper = createMapper()
   .copy(
     'transactionType',
     'isSummer',
-    'hasTwoPartAgreement'
+    'hasTwoPartAgreement',
+    'isChargeable'
   )
   .map('billingBatchChargeVersionYearId').to('id')
   .map('billingBatch').to('batch', batchMapper.dbToModel)

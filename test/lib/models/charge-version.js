@@ -362,4 +362,28 @@ experiment('lib/models/charge-version', () => {
       expect(func).to.throw();
     });
   });
+
+  experiment('.chargingScheme', () => {
+    test('can be set to sroc', async () => {
+      chargeVersion.chargingScheme = 'sroc';
+      expect(chargeVersion.chargingScheme).to.equal('sroc');
+    });
+
+    test('can be set to presroc', async () => {
+      chargeVersion.chargingScheme = 'presroc';
+      expect(chargeVersion.chargingScheme).to.equal('presroc');
+    });
+
+    test('can be set to null, which will default to presroc', async () => {
+      chargeVersion.chargingScheme = null;
+      expect(chargeVersion.chargingScheme).to.equal('presroc');
+    });
+
+    test('throws an error if set to any other type', async () => {
+      const func = () => {
+        chargeVersion.chargingScheme = new TestModel();
+      };
+      expect(func).to.throw();
+    });
+  });
 });

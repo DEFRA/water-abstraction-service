@@ -67,6 +67,15 @@ class ChargeVersionYear extends Model {
     validators.assertIsBoolean(isSummer);
     this._isSummer = isSummer;
   }
+
+  get isChargeable () {
+    return this._isChargeable;
+  }
+
+  set isChargeable (isChargeable) {
+    validators.assertIsBoolean(isChargeable);
+    this._isChargeable = isChargeable;
+  }
 }
 
 module.exports = ChargeVersionYear;
