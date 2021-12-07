@@ -555,7 +555,7 @@ experiment('modules/billing/routes', () => {
 
       request = {
         method: 'POST',
-        url: `/water/1.0/billing/batches/${validBatchId}/status/error`,
+        url: `/water/1.0/billing/batches/${validBatchId}/status/cancel`,
         auth,
         headers: {}
       };
