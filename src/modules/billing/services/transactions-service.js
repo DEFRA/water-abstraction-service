@@ -104,7 +104,7 @@ const getBatchTransactionHistory = async batchId => {
       ? twoPartTariffChargeVersionYears.some(cvy =>
         trx.licenceId === cvy.chargeVersion.licenceId &&
         trx.financialYearEnding === cvy.financialYearEnding &&
-        ((cvy.transactionType === TRANSACTION_TYPE.twoPartTariff) || (!cvy.hasTwoPartAgreement)))
+        (cvy.transactionType === TRANSACTION_TYPE.twoPartTariff || !cvy.hasTwoPartAgreement || !cvy.isChargeable))
       : true);
 };
 
