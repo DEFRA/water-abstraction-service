@@ -257,7 +257,7 @@ if (config.featureToggles.deleteAllBillingData) {
 
 const postSetBatchStatusToCancel = {
   method: 'POST',
-  path: `${BASE_PATH}/{batchId}/status/error`,
+  path: `${BASE_PATH}/{batchId}/status/cancel`,
   handler: controller.postSetBatchStatusToCancel,
   config: {
     validate: {
