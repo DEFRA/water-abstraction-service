@@ -543,4 +543,52 @@ experiment('modules/billing/routes', () => {
       expect(pre[0].assign).to.equal('batch');
     });
   });
+
+  experiment('postSetBatchStatusToCancel', () => {
+    let request;
+    let server;
+    let validBatchId;
+
+    beforeEach(async () => {
+      server = await getServer(routes.postSetBatchStatusToCancel);
+      validBatchId = uuid();
+
+      request = {
+        method: 'POST',
+        url: `/water/1.0/billing/batches/${validBatchId}/status/cancel`,
+        auth,
+        headers: {}
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 200 if unknown headers are passed', async () => {
+      request.headers['x-custom-header'] = '123';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the batch id is not a uuid', async () => {
+      request.url = request.url.replace(validBatchId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 403 if the calling user has insufficent scope', async () => {
+      request.auth.credentials.scope = [];
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(403);
+    });
+
+    test('contains a pre handler to load the batch', async () => {
+      const { pre } = routes.postSetBatchStatusToCancel.config;
+      expect(pre).to.have.length(1);
+      expect(pre[0].method).to.equal(preHandlers.loadBatch);
+      expect(pre[0].assign).to.equal('batch');
+    });
+  });
 });

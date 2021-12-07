@@ -255,6 +255,25 @@ if (config.featureToggles.deleteAllBillingData) {
   exports.deleteAllBillingData = deleteAllBillingData;
 }
 
+const postSetBatchStatusToCancel = {
+  method: 'POST',
+  path: `${BASE_PATH}/{batchId}/status/cancel`,
+  handler: controller.postSetBatchStatusToCancel,
+  config: {
+    validate: {
+      params: Joi.object().keys({
+        batchId: Joi.string().uuid().required()
+      })
+    },
+    auth: {
+      scope: [billing]
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
@@ -268,3 +287,4 @@ exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 exports.postApproveReviewBatch = postApproveReviewBatch;
 exports.getBatchDownloadData = getBatchDownloadData;
+exports.postSetBatchStatusToCancel = postSetBatchStatusToCancel;
