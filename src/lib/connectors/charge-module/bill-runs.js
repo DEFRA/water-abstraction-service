@@ -7,8 +7,8 @@ const got = require('./lib/got-cm');
  * @param {String} region - the single letter region code
  * @return {Promise<Object>} response payload
  */
-const create = (region, ruleset = 'sroc') =>
-  got.post('v3/wrls/bill-runs', { json: { region, ruleset } });
+const create = (region) =>
+  got.post('v2/wrls/bill-runs', { json: { region } });
 
 /**
  * Adds a transaction to the specified bill run

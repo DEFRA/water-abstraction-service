@@ -57,6 +57,7 @@ const createChargeVersionRow = (options = {}, finYearEnding = 2022) => {
     includeInSupplementaryBilling: false,
     isTwoPartTariff: false,
     dateRange,
+    isChargeable: true,
     ...options
   });
   return chargeVersion;
