@@ -103,7 +103,7 @@ experiment('modules/billing/jobs/two-part-tariff-matching', () => {
           err,
           Batch.BATCH_ERROR_CODE.failedToProcessTwoPartTariff
         )).to.be.true();
-        expect(err.message).to.equal('Expected processing batch status');
+        expect(err.message).to.equal('Expected processing,sending batch status');
       });
     });
 

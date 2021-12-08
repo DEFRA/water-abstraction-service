@@ -180,7 +180,7 @@ const approveBatch = async (batch, internalCallingUser) => {
 
     // if it is a supplementary batch mark all the
     // old transactions in previous batches that was credited back in new invoices sent in this batch
-    // foir the relevant region.
+    // for the relevant region.
     if (batch.type === BATCH_TYPE.supplementary) {
       await transactionsService.updateIsCredited(batch.region.id);
     }

@@ -9,14 +9,14 @@ const Batch = require('../../../../lib/models/batch');
  * @param {Batch} batch
  * @param {String} status
  */
-const assertBatchIsStatus = (batch, status) => {
-  if (!batch.statusIsOneOf(status)) {
-    throw new Error(`Expected ${status} batch status`);
+const assertBatchIsStatus = (batch, statuses) => {
+  if (!batch.statusIsOneOf(...statuses)) {
+    throw new Error(`Expected ${statuses} batch status`);
   }
 };
 
-const assertBatchIsProcessing = partialRight(assertBatchIsStatus, Batch.BATCH_STATUS.processing);
-const assertBatchIsInReview = partialRight(assertBatchIsStatus, Batch.BATCH_STATUS.review);
+const assertBatchIsProcessing = partialRight(assertBatchIsStatus, [Batch.BATCH_STATUS.processing, Batch.BATCH_STATUS.sending]);
+const assertBatchIsInReview = partialRight(assertBatchIsStatus, [Batch.BATCH_STATUS.review]);
 
 exports.assertBatchIsProcessing = assertBatchIsProcessing;
 exports.assertBatchIsInReview = assertBatchIsInReview;
