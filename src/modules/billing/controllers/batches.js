@@ -138,7 +138,7 @@ const postApproveBatch = async request => {
   try {
     await request.queueManager.add(approveBatchJobName, batch.id, internalCallingUser);
     // set the batch status to processing
-    return batchService.setStatus(batch.id, BATCH_STATUS.processing);
+    return batchService.setStatus(batch.id, BATCH_STATUS.sending);
   } catch (err) {
     return err;
   }
@@ -189,6 +189,9 @@ const postSetBatchStatusToCancel = async (request, h) => {
   const { batch } = request.pre;
   try {
     batchStatus.assertBatchIsProcessing(batch);
+
+    // delete all jobs for the batch
+    await request.queueManager.deleteKeysByPattern(`*${batch.id}*`);
     // set the batch status to cancel
     await batchService.setStatus(batch.id, BATCH_STATUS.cancel);
     return h.response().code(204);

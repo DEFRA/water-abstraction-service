@@ -18,6 +18,7 @@ const BATCH_STATUS = {
   processing: 'processing', // processing transactions
   review: 'review', // two-part tariff only - reviewing results of returns matching
   ready: 'ready', // processing completed - awaiting approval
+  sending: 'sending', // await response from CM for send and approve request
   sent: 'sent', // approved & sent to Charge Module
   error: 'error',
   cancel: 'cancel',

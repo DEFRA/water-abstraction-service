@@ -121,7 +121,7 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
       test('an error is logged and rethrown', async () => {
         const func = () => processChargeVersionsJob.handler(message);
         const err = await expect(func()).to.reject();
-        expect(err.message).to.equal('Expected processing batch status');
+        expect(err.message).to.equal('Expected processing,sending batch status');
         expect(batchJob.logHandlingErrorAndSetBatchStatus.calledWith(message, err, Batch.BATCH_ERROR_CODE.failedToProcessChargeVersions)).to.be.true();
       });
     });
