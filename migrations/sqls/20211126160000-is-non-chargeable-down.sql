@@ -1,0 +1,1 @@
+alter table water.billing_batch_charge_version_years drop column is_chargeable;

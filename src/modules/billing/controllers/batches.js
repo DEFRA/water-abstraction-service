@@ -22,6 +22,7 @@ const importConnector = require('../../../lib/connectors/import');
 const { jobName: createBillRunJobName } = require('../jobs/create-bill-run');
 const { jobName: refreshTotalsJobName } = require('../jobs/refresh-totals');
 const { jobName: approveBatchJobName } = require('../jobs/approve-batch');
+const batchStatus = require('../jobs/lib/batch-status');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 /**
  * Resource that will create a new batch skeleton which will
@@ -184,6 +185,18 @@ const deleteAllBillingData = async (request, h) => {
   }
 };
 
+const postSetBatchStatusToCancel = async (request, h) => {
+  const { batch } = request.pre;
+  try {
+    batchStatus.assertBatchIsProcessing(batch);
+    // set the batch status to cancel
+    await batchService.setStatus(batch.id, BATCH_STATUS.cancel);
+    return h.response().code(204);
+  } catch (err) {
+    return err;
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchDownloadData = getBatchDownloadData;
@@ -198,3 +211,4 @@ exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 
 exports.deleteAllBillingData = deleteAllBillingData;
+exports.postSetBatchStatusToCancel = postSetBatchStatusToCancel;

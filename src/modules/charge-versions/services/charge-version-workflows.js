@@ -206,6 +206,7 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
   chargeVersion.fromHash({
     createdBy: chargeVersionWorkflow.createdBy,
     approvedBy,
+    chargingScheme: 'presroc',
     licence
   });
 

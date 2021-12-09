@@ -286,7 +286,7 @@ const createChargeModuleBillRun = async batchId => {
   const batch = await getBatchById(batchId);
 
   // Create CM batch
-  const { billRun: cmBillRun } = await chargeModuleBillRunConnector.create(batch.region.code, 'presroc');
+  const { billRun: cmBillRun } = await chargeModuleBillRunConnector.create(batch.region.code);
 
   // Update DB row
   const row = await newRepos.billingBatches.update(batch.id, {
@@ -441,7 +441,7 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
   // Extract counts/totals from CM bill run response
   const { invoiceCount, creditNoteCount, invoiceValue, creditNoteValue, netTotal, status: cmStatus, transactionFileReference } = cmResponse.billRun;
   // Calculate next batch status
-  const cmCompletedStatuses = ['pending', 'billed', 'billing_not_required'];
+  const cmCompletedStatuses = ['billed', 'billing_not_required'];
   const status = cmCompletedStatuses.includes(cmStatus) ? Batch.BATCH_STATUS.sent : Batch.BATCH_STATUS.ready;
 
   // Get transaction count in local DB
