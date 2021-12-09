@@ -33,7 +33,7 @@ module.exports = {
         query: Joi.object().keys({
           page: Joi.number().integer().min(1).default(1),
           filter: [Joi.object().optional(), Joi.string().allow('')],
-          sentBy: Joi.string().allow('')
+          sentBy: Joi.string().email().allow('')
         })
       }
     }
