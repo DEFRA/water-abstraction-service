@@ -15,6 +15,8 @@ const licencesRepo = require('../../../../src/lib/connectors/repos/licences');
 const { Licence, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
+const moment = require('moment');
+const uuid = require('uuid');
 
 experiment('lib/connectors/repos/licences.js', () => {
   let model, stub;
@@ -193,6 +195,37 @@ experiment('lib/connectors/repos/licences.js', () => {
       const [, params] = bookshelf.knex.raw.lastCall.args;
       expect(params).to.equal({
         batchId: 'test-batch-id',
+        from: 'from-value',
+        to: 'to-value'
+      });
+    });
+  });
+
+  experiment('.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate', () => {
+    let batchCreatedDate;
+    let regionId;
+
+    beforeEach(async () => {
+      batchCreatedDate = moment();
+      regionId = uuid();
+      await licencesRepo.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(
+        regionId,
+        batchCreatedDate,
+        'from-value',
+        'to-value'
+      );
+    });
+
+    test('uses the expected SQL query', async () => {
+      const [query] = bookshelf.knex.raw.lastCall.args;
+      expect(query).to.equal(licenceQueries.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate);
+    });
+
+    test('passes the expected params to the query', async () => {
+      const [, params] = bookshelf.knex.raw.lastCall.args;
+      expect(params).to.equal({
+        regionId,
+        batchCreatedDate: batchCreatedDate.toISOString(),
         from: 'from-value',
         to: 'to-value'
       });

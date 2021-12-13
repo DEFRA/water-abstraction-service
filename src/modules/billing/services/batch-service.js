@@ -175,7 +175,13 @@ const approveBatch = async (batch, internalCallingUser) => {
     await chargeModuleBillRunConnector.approve(batch.externalId);
     await chargeModuleBillRunConnector.send(batch.externalId);
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
-    await licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch(batch.id);
+    await licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(batch.region.id, batch.dateCreated);
+
+    // Set reprocess to yes for situations where the batch has been sent and therefore the licences
+    // don't need to be includes in a future supplementary bill run.
+    // use the unsent function to save writing the same logic twice, even though
+    // the function name is a little misleading here.
+    await licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batch.id);
     await invoiceService.resetIsFlaggedForRebilling(batch.id);
 
     // if it is a supplementary batch mark all the

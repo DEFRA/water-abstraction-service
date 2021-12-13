@@ -14,6 +14,7 @@ const { jobName: refreshTotalsJobName } = require('./refresh-totals');
 
 const { logger } = require('../../../logger');
 const supplementaryBillingService = require('../services/supplementary-billing-service');
+const licenceService = require('../services/licences-service');
 
 const billingBatchesRepo = require('../../../lib/connectors/repos/billing-batches');
 const billingTransactionsRepo = require('../../../lib/connectors/repos/billing-transactions');
@@ -70,6 +71,8 @@ const onComplete = async (job, queueManager) => {
       if (numberOfTransactionsInBatch.length === 0) {
         logger.info(`Batch ${batchId} is empty - WRLS will mark is as Empty, and will not ask the Charging module to generate it.`);
         await billingBatchesRepo.update(batchId, { status: BATCH_STATUS.empty });
+        // Set "IncludeInSupplementaryBillingStatus" to 'no' for all licences in this batch
+        await licenceService.updateIncludeInSupplementaryBillingStatusForEmptyBatch(batchId);
       } else {
         await batchService.requestCMBatchGeneration(batchId);
         await queueManager.add(refreshTotalsJobName, batchId);
