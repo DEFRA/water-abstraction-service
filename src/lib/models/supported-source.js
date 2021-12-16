@@ -23,6 +23,24 @@ class SupportedSource extends Model {
     this._reference = reference;
   }
 
+  get listOrder () {
+    return this._listOrder;
+  }
+
+  set listOrder (listOrder) {
+    validators.assertNullablePositiveOrZeroInteger(listOrder);
+    this._listOrder = listOrder;
+  }
+
+  get regionTag () {
+    return this._name;
+  }
+
+  set regionTag (regionTag) {
+    validators.assertStringWithLengthLimit(regionTag, 255);
+    this._regionTag = regionTag;
+  }
+
   get name () {
     return this._name;
   }

@@ -28,6 +28,8 @@ const dbToModelMapper = createMapper()
     'supportedSourceId',
     'name',
     'reference',
+    'listOrder',
+    'regionTag',
     'dateCreated',
     'dateUpdated'
   );
