@@ -11,7 +11,7 @@ const s3Connector = require('../../../lib/services/s3');
 
 // Constants
 const JOB_NAME = 'billing.charge-categories.sync-from-csv';
-const csvKey = 'billing-metadata/charge-categories.csv';
+const csvKey = 'billing-metadata/charge_categories_test.csv';
 
 // Handy stuff
 const config = require('../../../../config');
@@ -51,7 +51,17 @@ const handler = async () => {
     const mappedChargeCategory = chargeCategoriesMapper.csvToModel(arraysFromCSV[i]);
     const chargeCategoryExists = await chargeCategoriesRepo.findOneByReference(mappedChargeCategory.reference);
 
-    const keys = ['description', 'shortDescription', 'subsistenceCharge'];
+    const keys = [
+      'description',
+      'shortDescription',
+      'subsistenceCharge',
+      'minVolume',
+      'maxVolume',
+      'isTidal',
+      'lossFactor',
+      'modelTier',
+      'restrictedSource'
+    ];
 
     if (chargeCategoryExists) {
       if (!isEqual(pick(chargeCategoryExists, keys), pick(mappedChargeCategory, keys))) {

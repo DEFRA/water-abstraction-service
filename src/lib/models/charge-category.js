@@ -49,6 +49,54 @@ class ChargeCategory extends Model {
     validators.assertStringWithLengthLimit(shortDescription, 150);
     this._shortDescription = shortDescription;
   }
+
+  get minVolume () {
+    return this._minVolume;
+  }
+
+  set minVolume (minVolume) {
+    this._minVolume = minVolume;
+  }
+
+  get maxVolume () {
+    return this._maxVolume;
+  }
+
+  set maxVolume (maxVolume) {
+    this._maxVolume = maxVolume;
+  }
+
+  get isTidal () {
+    return this._isTidal;
+  }
+
+  set isTidal (isTidal) {
+    this._isTidal = isTidal;
+  }
+
+  get lossFactor () {
+    return this._lossFactor;
+  }
+
+  set lossFactor (lossFactor) {
+    this._lossFactor = lossFactor;
+  }
+
+  get modelTier () {
+    return this._modelTier;
+  }
+
+  set modelTier (modelTier) {
+    this._modelTier = modelTier;
+  }
+
+  get restrictedSource () {
+    return this._restrictedSource;
+  }
+
+  set restrictedSource (restrictedSource) {
+    this._restrictedSource = restrictedSource;
+  }
 }
 
 module.exports = ChargeCategory;

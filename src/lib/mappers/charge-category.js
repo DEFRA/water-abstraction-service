@@ -14,14 +14,26 @@ const csvToModel = data => {
     reference,
     subsistence_charge,
     description,
-    short_description
+    short_description,
+    min_volume,
+    max_volume,
+    is_tidal,
+    loss_factor,
+    model_tier,
+    restricted_source
   } = data;
   /* eslint-enable */
   return chargeCategory.fromHash({
     reference,
     description,
     subsistenceCharge: parseInt(subsistence_charge),
-    shortDescription: truncate(short_description, { length: 150 })
+    shortDescription: truncate(short_description, { length: 150 }),
+    minVolume: parseInt(min_volume),
+    maxVolume: parseInt(max_volume),
+    isTidal: is_tidal,
+    lossFactor: loss_factor,
+    modelTier: model_tier,
+    restrictedSource: restricted_source
   });
 };
 
@@ -34,7 +46,13 @@ const dbToModelMapper = createMapper()
     'short_description',
     'reference',
     'dateCreated',
-    'dateUpdated'
+    'dateUpdated',
+    'minVolume',
+    'maxVolume',
+    'isTidal',
+    'lossFactor',
+    'modelTier',
+    'restrictedSource'
   );
 
 const dbToModel = row => helpers.createModel(ChargeCategory, row, dbToModelMapper);
