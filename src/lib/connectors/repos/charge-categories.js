@@ -37,7 +37,7 @@ const findOneByProperties = async (isTidal, lossFactor, restrictedSource, modelT
     .where({ is_tidal: isTidal, loss_factor: lossFactor, model_tier: modelTier, restricted_source: restrictedSource })
     .where('min_volume', '<', volume)
     .where('max_volume', '>=', volume)
-    .fetchAll({ require: false });
+    .fetch({ require: false });
 
   return result.toJSON();
 };
