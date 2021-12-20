@@ -18,8 +18,8 @@ const config = require('../../../../config');
 const applicationState = require('../../../lib/services/application-state');
 
 // Supported Sources Repo
-const supportedSourcesRepo = require('../../../lib/connectors/repos/supported-sources');
-const supportedSourcesMapper = require('../../../lib/mappers/supported-source');
+const supportedSourcesUpdateRepo = require('../../../lib/connectors/repos/supported-sources');
+const supportedSourcesUpdateMapper = require('../../../lib/mappers/supported-source');
 
 const createMessage = () => ([
   JOB_NAME,
@@ -32,7 +32,7 @@ const createMessage = () => ([
   }
 ]);
 
-const handler = async () => {
+const updateHandler = async () => {
   logger.info(`${JOB_NAME}: Job has started`);
 
   // Get the Body and the ETag of the S3 object
@@ -48,19 +48,19 @@ const handler = async () => {
 
   const arraysFromCSV = await csvParse(Body, { columns: true });
   for (let i = 0; i < arraysFromCSV.length; i++) {
-    const mappedSupportedSource = supportedSourcesMapper.csvToModel(arraysFromCSV[i]);
-    const supportedSourceExists = await supportedSourcesRepo.findOneByReference(mappedSupportedSource.reference);
+    const mappedSupportedSource = supportedSourcesUpdateMapper.csvToModel(arraysFromCSV[i]);
+    const supportedSourceExists = await supportedSourcesUpdateRepo.findOneByReference(mappedSupportedSource.reference);
 
     const keys = ['name', 'reference', 'listOrder', 'regionTag'];
 
     if (supportedSourceExists) {
       if (!isEqual(pick(supportedSourceExists, keys), pick(mappedSupportedSource, keys))) {
         logger.info(`Updating an existing supported source: ${mappedSupportedSource.reference}`);
-        await supportedSourcesRepo.updateByReference(mappedSupportedSource.reference, mappedSupportedSource);
+        await supportedSourcesUpdateRepo.updateByReference(mappedSupportedSource.reference, mappedSupportedSource);
       }
     } else {
       logger.info(`Creating a new supported source: ${mappedSupportedSource.reference}`);
-      await supportedSourcesRepo.create(mappedSupportedSource);
+      await supportedSourcesUpdateRepo.create(mappedSupportedSource);
     }
   }
 
@@ -77,7 +77,7 @@ const onComplete = async () => {
 
 exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
-exports.handler = handler;
+exports.handler = updateHandler;
 exports.onFailed = onFailedHandler;
 exports.onComplete = onComplete;
 exports.hasScheduler = true;

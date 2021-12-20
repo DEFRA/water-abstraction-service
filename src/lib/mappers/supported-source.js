@@ -20,8 +20,8 @@ const csvToModel = data => {
   return supportedSource.fromHash({
     reference,
     name: truncate(name, { length: 255 }),
-    listOrder,
-    regionTag: truncate(regionTag, { length: 255 })
+    regionTag: truncate(regionTag, { length: 255 }),
+    listOrder
   });
 };
 
