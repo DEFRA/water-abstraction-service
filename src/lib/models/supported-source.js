@@ -33,11 +33,10 @@ class SupportedSource extends Model {
   }
 
   get regionTag () {
-    return this._name;
+    return this._regionTag;
   }
 
   set regionTag (regionTag) {
-    validators.assertStringWithLengthLimit(regionTag, 255);
     this._regionTag = regionTag;
   }
 

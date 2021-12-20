@@ -184,6 +184,7 @@ module.exports = {
     gaugingStationsSyncFrequencyInMS: 21600000,
     chargeCategoriesSyncFrequencyInMS: 21600000,
     supportedSourcesSyncFrequencyInMS: 21600000,
+    supportedSourcesUpdateSyncFrequencyInMS: 21700000,
     digitiseToLVPCSyncFrequencyInMS: 43200000,
     digitiseToLicenceGaugingStationsFrequencyInMS: 43200000,
     zipPassword: process.env.NALD_ZIP_PASSWORD
