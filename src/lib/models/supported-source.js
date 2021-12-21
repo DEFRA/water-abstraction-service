@@ -23,21 +23,21 @@ class SupportedSource extends Model {
     this._reference = reference;
   }
 
-  get listOrder () {
-    return this._listOrder;
+  get line () {
+    return this._line;
   }
 
-  set listOrder (listOrder) {
-    validators.assertNullablePositiveOrZeroInteger(listOrder);
-    this._listOrder = listOrder;
+  set line (line) {
+    validators.assertNullablePositiveOrZeroInteger(line);
+    this._line = line;
   }
 
-  get regionTag () {
-    return this._regionTag;
+  get region () {
+    return this._region;
   }
 
-  set regionTag (regionTag) {
-    this._regionTag = regionTag;
+  set region (region) {
+    this._region = region;
   }
 
   get name () {

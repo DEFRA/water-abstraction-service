@@ -13,15 +13,15 @@ const csvToModel = data => {
   const {
     reference,
     name,
-    listOrder,
-    regionTag
+    line,
+    region
   } = data;
   /* eslint-enable */
   return supportedSource.fromHash({
     reference,
+    line,
     name: truncate(name, { length: 255 }),
-    regionTag: truncate(regionTag, { length: 255 }),
-    listOrder
+    region: truncate(region, { length: 255 })
   });
 };
 
@@ -32,8 +32,8 @@ const dbToModelMapper = createMapper()
     'supportedSourceId',
     'name',
     'reference',
-    'listOrder',
-    'regionTag',
+    'line',
+    'region',
     'dateCreated',
     'dateUpdated'
   );

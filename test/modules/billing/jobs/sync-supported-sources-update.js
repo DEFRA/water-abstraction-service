@@ -35,14 +35,14 @@ experiment('modules/billing/jobs/sync-supported-sources-update', () => {
     sandbox.stub(applicationStateService, 'get').resolves({ data: { etag: 'crumpets' } });
     sandbox.stub(applicationStateService, 'save').resolves();
     sandbox.stub(s3Connector, 'getObject').resolves({
-      Body: 'name,reference,listorder,regiontag\nCandover,SS.1.1,16,Southern',
+      Body: 'name,reference,line,region\nCandover,SS.1.1,16,Southern',
       ETag: 'butter'
     });
     sandbox.stub(supportedSourcesRepo, 'findOneByReference').resolves({
       reference: 'SS.1.1',
       name: 'Candover',
-      listOrder: null,
-      regionTag: null
+      line: null,
+      region: null
     });
     sandbox.stub(supportedSourcesRepo, 'updateByReference').resolves();
     sandbox.stub(supportedSourcesRepo, 'create').resolves();
@@ -90,8 +90,8 @@ experiment('modules/billing/jobs/sync-supported-sources-update', () => {
           await supportedSourcesRepo.findOneByReference.resolves({
             reference: 'SS.1.1',
             name: 'Candover',
-            listOrder: 1,
-            regionTag: 'Southern'
+            line: 1,
+            region: 'Southern'
           });
           await syncSupportedSourcesUpdateJob.handler();
         });

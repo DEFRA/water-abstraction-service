@@ -47,11 +47,12 @@ const updateHandler = async () => {
   }
 
   const arraysFromCSV = await csvParse(Body, { columns: true });
+
   for (let i = 0; i < arraysFromCSV.length; i++) {
     const mappedSupportedSource = supportedSourcesUpdateMapper.csvToModel(arraysFromCSV[i]);
     const supportedSourceExists = await supportedSourcesUpdateRepo.findOneByReference(mappedSupportedSource.reference);
 
-    const keys = ['name', 'reference', 'listOrder', 'regionTag'];
+    const keys = ['name', 'line', 'region'];
 
     if (supportedSourceExists) {
       if (!isEqual(pick(supportedSourceExists, keys), pick(mappedSupportedSource, keys))) {
