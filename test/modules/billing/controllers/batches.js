@@ -780,7 +780,8 @@ experiment('modules/billing/controller', () => {
           isSummer: true
         },
         queueManager: {
-          add: sandbox.stub().resolves()
+          add: sandbox.stub().resolves(),
+          deleteKeysByPattern: sandbox.stub().resolves()
         },
         pre: { batch }
       };
