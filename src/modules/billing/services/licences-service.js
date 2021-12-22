@@ -58,9 +58,7 @@ const deleteBatchLicence = async (batch, licenceId) => {
   await licencesService.flagForSupplementaryBilling(licenceId);
 };
 
-const updateIncludeInSupplementaryBillingStatusForEmptyBatch = async (batchId) => {
-  return licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch(batchId);
-};
+const updateIncludeInSupplementaryBillingStatusForEmptyBatch = async batchId => licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch(batchId);
 
 exports.getByBatchIdForTwoPartTariffReview = getByBatchIdForTwoPartTariffReview;
 exports.deleteBatchLicence = deleteBatchLicence;

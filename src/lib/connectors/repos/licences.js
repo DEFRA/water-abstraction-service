@@ -109,7 +109,7 @@ const updateIncludeInSupplementaryBillingStatusForBatch = (batchId, from, to) =>
  * @param {String} to The status value to move to (enum water.include_in_supplementary_billing)
  */
 const updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = (regionId, batchCreatedDate, from, to) => {
-  const params = { regionId, batchCreatedDate: batchCreatedDate.toISOString(), from, to };
+  const params = { batchCreatedDate: batchCreatedDate.toISOString(), from, to, regionId };
 
   return bookshelf
     .knex
