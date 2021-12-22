@@ -56,8 +56,14 @@ const findNotifications = params =>
 /**
  * Gets total row count for above
  */
-const findNotificationsCount = () =>
-  bookshelf.knex.raw(queries.findNotificationsCount);
+const findNotificationsCount = params =>
+  bookshelf.knex.raw(queries.findNotificationsCount, params);
+
+/**
+ * Gets list of categories for filtering notifications
+ */
+const findNotificationCategories = () =>
+  bookshelf.knex.raw(queries.findNotificationCategories);
 
 exports.create = create;
 exports.update = update;
@@ -67,3 +73,4 @@ exports.getKPIReturnsMonthlyData = getKPIReturnsMonthlyData;
 exports.getKPILicenceNamesData = getKPILicenceNamesData;
 exports.findNotifications = findNotifications;
 exports.findNotificationsCount = findNotificationsCount;
+exports.findNotificationCategories = findNotificationCategories;
