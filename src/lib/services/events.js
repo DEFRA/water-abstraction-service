@@ -73,7 +73,7 @@ const getKPILicenceNames = async () => {
  * @param {Number} page
  * @return {Promise<Object>} { data : [], pagination : {} }
  */
-const getNotificationEvents = async (page = 1) => {
+const getNotificationEvents = async (page = 1, filter = '', sentBy = '') => {
   // Initialise pagination model
   const pagination = new Pagination()
     .fromHash({
@@ -81,20 +81,36 @@ const getNotificationEvents = async (page = 1) => {
       perPage: 50
     });
 
+  const selectionList = [];
+  filter.split(',').forEach(noteType => selectionList.push(noteType));
+  let filterLength = selectionList.length;
+  if (filter === '') {
+    filterLength = 0;
+  }
   // Find and map data to NotificationEvent service models
   const { rows } = await repo.events.findNotifications({
     limit: pagination.perPage,
-    offset: pagination.startIndex
+    offset: pagination.startIndex,
+    messageRef: JSON.stringify(selectionList),
+    filterLength,
+    sentBy
   });
   const data = rows
     .map(camelCase)
     .map(notificationEventMapper.dbToModel);
 
   // Update pagination with total rows
-  const { rows: [{ count: totalRows }] } = await repo.events.findNotificationsCount();
+  const { rows: [{ count: totalRows }] } = await repo.events.findNotificationsCount({
+    messageRef: JSON.stringify(selectionList),
+    filterLength,
+    sentBy
+  });
   pagination.totalRows = totalRows;
 
-  return { pagination, data };
+  // Get a list of available categories
+  const { rows: notificationCategories } = await repo.events.findNotificationCategories();
+
+  return { pagination, data, notificationCategories };
 };
 
 exports.create = create;

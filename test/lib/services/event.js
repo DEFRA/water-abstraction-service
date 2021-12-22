@@ -241,6 +241,8 @@ experiment('lib/services/event', () => {
   experiment('.getNotificationEvents', () => {
     let result;
     const page = 3;
+    const filter = 'water_abstraction_alert_stop';
+    const sentBy = 'test@user.eu';
 
     beforeEach(async () => {
       repo.events.findNotifications.resolves({
@@ -258,13 +260,24 @@ experiment('lib/services/event', () => {
           count: 123
         }]
       });
-      result = await eventsService.getNotificationEvents(page);
+
+      result = await eventsService.getNotificationEvents(page, filter, sentBy);
     });
 
     test('calls repo .findNotifications method with expected limit/offset params', async () => {
+      const selectionList = [];
+      filter.split(',').forEach(noteType => selectionList.push(noteType));
+      let filterLength = selectionList.length;
+      if (filter === '') {
+        filterLength = 0;
+      }
+
       expect(repo.events.findNotifications.calledWith({
         limit: 50,
-        offset: 100
+        offset: 100,
+        messageRef: JSON.stringify(selectionList),
+        filterLength,
+        sentBy
       })).to.be.true();
     });
 
