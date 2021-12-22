@@ -4,6 +4,7 @@ const raw = require('./lib/raw');
 const { Licence, bookshelf } = require('../bookshelf');
 const queries = require('./queries/licences');
 const helpers = require('./lib/helpers');
+const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/constants');
 
 const deleteTest = () => Licence
   .forge()
@@ -56,6 +57,9 @@ const findByLicenceRef = async licenceNumbers => {
 const findByBatchIdForTwoPartTariffReview = billingBatchId =>
   raw.multiRow(queries.findByBatchIdForTwoPartTariffReview, { billingBatchId });
 
+const findMarkedForSupplementaryByRegionId = regionId =>
+  helpers.findMany(Licence, { 'water.licences.region_id': regionId, 'water.licences.include_in_supplementary_billing': INCLUDE_IN_SUPPLEMENTARY_BILLING.yes });
+
 /**
  * Updates a water.licences record for the given id
  *
@@ -95,6 +99,24 @@ const updateIncludeInSupplementaryBillingStatusForBatch = (batchId, from, to) =>
 };
 
 /**
+ * For all licences where the created date is less than the batch created date update the
+ * include_in_supplementary_billing value to a new value where the current
+ * value is equal to the 'from' parameter value.
+ *
+ * @param {String} regionId
+ * @param {Date} batchCreatedDate
+ * @param {String} from The status value to move from (enum water.include_in_supplementary_billing)
+ * @param {String} to The status value to move to (enum water.include_in_supplementary_billing)
+ */
+const updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = (regionId, batchCreatedDate, from, to) => {
+  const params = { batchCreatedDate: batchCreatedDate.toISOString(), from, to, regionId };
+
+  return bookshelf
+    .knex
+    .raw(queries.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate, params);
+};
+
+/**
  * Finds licences which have a 'current' charge version linked to the specified
  * invoice account ID
  *
@@ -110,6 +132,8 @@ exports.findOneByLicenceRef = findOneByLicenceRef;
 exports.findOne = findOne;
 exports.findByLicenceRef = findByLicenceRef;
 exports.findByInvoiceAccountId = findByInvoiceAccountId;
+exports.findMarkedForSupplementaryByRegionId = findMarkedForSupplementaryByRegionId;
 exports.update = update;
 exports.updateIncludeLicenceInSupplementaryBilling = updateIncludeLicenceInSupplementaryBilling;
 exports.updateIncludeInSupplementaryBillingStatusForBatch = updateIncludeInSupplementaryBillingStatusForBatch;
+exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate;

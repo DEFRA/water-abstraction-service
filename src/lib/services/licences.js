@@ -90,23 +90,31 @@ const updateIncludeInSupplementaryBillingStatusForUnsentBatch = batchId => {
 
 /**
  * Sets the water.licences.include_in_supplementary_billing value
- * from yes to no, then reprocess to yes for situations where the batch has
- * been sent and therefore the licences don't need to be includes in
- * a future supplementary bill run.
+ * from yes to no in the specified batch
  *
  * @param {String} batchId
  */
 const updateIncludeInSupplementaryBillingStatusForSentBatch = async batchId => {
-  await repos.licences.updateIncludeInSupplementaryBillingStatusForBatch(
+  return repos.licences.updateIncludeInSupplementaryBillingStatusForBatch(
     batchId,
     INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
     INCLUDE_IN_SUPPLEMENTARY_BILLING.no
   );
-
-  // use the unsent function to save writing the same logic twice, even though
-  // the function name is a little misleading here.
-  return updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId);
 };
+
+/**
+ * Sets the water.licences.include_in_supplementary_billing value
+ * from yes to no based on the region and batch created date
+ *
+ * @param {String} regionId
+ * @param {Date} dateCreated
+ */
+const updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = async (regionId, dateCreated) => repos.licences.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(
+  regionId,
+  dateCreated,
+  INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
+  INCLUDE_IN_SUPPLEMENTARY_BILLING.no
+);
 
 /**
  * Fetches the invoice accounts associated with a licence using the licence ref and date as input.
@@ -225,6 +233,7 @@ exports.getLicenceAccountsByRefAndDate = getLicenceAccountsByRefAndDate;
 exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementaryBillingStatus;
 exports.updateIncludeInSupplementaryBillingStatusForUnsentBatch = updateIncludeInSupplementaryBillingStatusForUnsentBatch;
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch;
+exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate;
 exports.flagForSupplementaryBilling = flagForSupplementaryBilling;
 exports.getLicenceInvoices = getLicenceInvoices;
 exports.getLicencesByInvoiceAccountId = getLicencesByInvoiceAccountId;

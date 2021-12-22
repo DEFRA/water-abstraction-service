@@ -16,6 +16,21 @@ const findByBatchIdForTwoPartTariffReview = `
   group by l.licence_id, invoice_account_id`;
 
 /**
+ * Updates the include_in_supplementary_billing value in the water licences table from a value to a value
+ * when the licence updated date is less than or equal to the batch created date
+ * and the licence is in the specified region
+ * and the licence is not in the charge version workflow table with a null deleted date.
+ */
+const updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = `
+  update water.licences l
+  set include_in_supplementary_billing = :to
+  where l.date_updated <= :batchCreatedDate
+    and l.region_id = :regionId
+    and l.licence_id not in (select licence_id from water.charge_version_workflows where date_deleted is null)
+    and l.include_in_supplementary_billing = :from
+`;
+
+/**
  * Updates the include_in_supplementary_billing value in the
  * water licences table from a value to a value for a given batch
  */
@@ -49,6 +64,7 @@ where cv.invoice_account_id=:invoiceAccountId
 and cv.status='current'
 `;
 
+exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate;
 exports.updateIncludeInSupplementaryBillingStatusForBatch = updateIncludeInSupplementaryBillingStatusForBatch;
 exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview;
 exports.getLicencesByInvoiceAccount = getLicencesByInvoiceAccount;
