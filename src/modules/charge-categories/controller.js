@@ -6,7 +6,7 @@ const Boom = require('@hapi/boom');
 /**
  * Get all change reasons
  */
-const getChargeCategoryByProperties = async (request, h) => {
+const getChargeCategoryByProperties = async (request) => {
   const { source, loss, volume, availability, model } = request.query;
   const chargeCategory = await service.findChargeCategoryByProperties(source, loss, volume, availability, model);
   // Find licence or 404

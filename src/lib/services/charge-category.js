@@ -8,8 +8,7 @@ const repo = require('../connectors/repos/charge-categories');
 const findChargeCategoryByProperties = async (source, lossFactor, volume, availability, modelTier) => {
   const isTidal = source === 'Tidal';
   const restrictedSource = isTidal ? false : availability !== 'Available';
-  const result = await repo.findOneByProperties(isTidal, lossFactor, restrictedSource, modelTier, volume);
-  return result;
+  return repo.findOneByProperties(isTidal, lossFactor, restrictedSource, modelTier, volume);
 };
 
 module.exports.findChargeCategoryByProperties = findChargeCategoryByProperties;
