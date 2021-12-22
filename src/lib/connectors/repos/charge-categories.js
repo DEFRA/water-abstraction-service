@@ -32,14 +32,14 @@ const findOneByReference = async reference => {
 };
 
 const findOneByProperties = async (isTidal, lossFactor, restrictedSource, modelTier, volume) => {
-  const result = await ChargeCategory
+  const model = await ChargeCategory
     .forge()
     .where({ is_tidal: isTidal, loss_factor: lossFactor, model_tier: modelTier, restricted_source: restrictedSource })
     .where('min_volume', '<', volume)
     .where('max_volume', '>=', volume)
     .fetch({ require: false });
 
-  return result.toJSON();
+  return model && model.toJSON();
 };
 
 const findOneById = id => helpers.findOne(ChargeCategory, 'chargeCategoryId', id);
