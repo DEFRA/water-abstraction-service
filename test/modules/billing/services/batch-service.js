@@ -123,6 +123,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatus').resolves();
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForSentBatch').resolves();
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForUnsentBatch').resolves();
+    sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForBatchCreatedDate').resolves();
 
     sandbox.stub(chargeModuleBillRunConnector, 'create').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'get').resolves();
@@ -453,6 +454,7 @@ experiment('modules/billing/services/batch-service', () => {
       batch = {
         id: uuid(),
         externalId: uuid(),
+        dateCreated: '2020-01-09T16:23:24.753Z',
         type: 'supplementary',
         region: { id: 'test-regioin-id' }
       };
@@ -487,9 +489,10 @@ experiment('modules/billing/services/batch-service', () => {
         expect(savedEvent.metadata.batch).to.equal(batch);
       });
 
-      test('updates the include in supplementary billing status for the batch licences', async () => {
-        const [batchId] = licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch.lastCall.args;
-        expect(batchId).to.equal(batch.id);
+      test('updates the include in supplementary billing status for the licences with an updated date <= batch created date', async () => {
+        const [regionId, batchCreatedDate] = licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate.lastCall.args;
+        expect(regionId).to.equal(batch.region.id);
+        expect(batchCreatedDate).to.equal(batch.dateCreated);
       });
 
       test('resets the invoice rebilling flags', async () => {
