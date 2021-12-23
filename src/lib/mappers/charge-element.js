@@ -36,7 +36,7 @@ const dbToModelMapper = createMapper()
 
 /**
  * Creates a ChargeElement instance given a row of charge element data
- * @param {Object} chargeElementRow - charge element row from the charge processor
+ * @param {Object} row - charge element row from the charge processor
  * @return {ChargeElement}
  */
 const dbToModel = row =>
@@ -65,8 +65,21 @@ const pojoToModelMapper = createMapper()
  * @param {Object} pojo
  * @return ChargeElement
  */
-const pojoToModel = pojo =>
-  helpers.createModel(ChargeElement, pojo, pojoToModelMapper);
+const pojoToModel = pojo => {
+  if (pojo.chargingScheme === 'sroc') {
+    return helpers.createModel(ChargeElement, pojo, pojoToModelMapper
+      .copy(
+        'chargingScheme',
+        'availability',
+        'model',
+        'charges')
+      .map('volume').to('billableAnnualQuantity')
+      .map('chargePurposes').to('chargePurposes', chargePurposes => chargePurposes.map(pojoToModel))
+    );
+  } else {
+    return helpers.createModel(ChargeElement, pojo, pojoToModelMapper);
+  }
+};
 
 /**
  * Maps charge element to DB fields

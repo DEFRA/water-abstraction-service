@@ -79,6 +79,7 @@ const pojoToModelMapper = createMapper()
     'id',
     'licenceRef',
     'scheme',
+    'chargingScheme',
     'externalId',
     'versionNumber',
     'status'
