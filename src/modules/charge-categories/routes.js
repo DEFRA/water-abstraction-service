@@ -11,10 +11,10 @@ module.exports = {
     config: {
       validate: {
         query: Joi.object().keys({
-          source: Joi.string().required().valid('Tidal', 'Non-tidal'),
-          loss: Joi.string().required().valid('Low', 'Medium', 'High'),
-          availability: Joi.string().required().valid('Restricted availablity or no availability', 'Available'),
-          model: Joi.string().required().valid('No model', 'Tier 1', 'Tier 2'),
+          source: Joi.string().required().valid('tidal', 'non-tidal'),
+          loss: Joi.string().required().valid('low', 'medium', 'high'),
+          availability: Joi.string().required().valid('restricted availablity or no availability', 'available'),
+          model: Joi.string().required().valid('no model', 'tier 1', 'tier 2'),
           volume: Joi.number().integer().required()
         })
       }
