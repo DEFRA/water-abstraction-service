@@ -13,8 +13,8 @@ module.exports = {
         query: Joi.object().keys({
           source: Joi.string().required().valid('tidal', 'non-tidal'),
           loss: Joi.string().required().valid('low', 'medium', 'high'),
-          availability: Joi.string().required().valid('restricted availablity or no availability', 'available'),
-          model: Joi.string().required().valid('no model', 'tier 1', 'tier 2'),
+          waterAvailability: Joi.string().required().valid('restricted availablity or no availability', 'available'),
+          waterModel: Joi.string().required().valid('no model', 'tier 1', 'tier 2'),
           volume: Joi.number().integer().required()
         })
       }
