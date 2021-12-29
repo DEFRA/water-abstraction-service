@@ -100,7 +100,7 @@
     abstractionPeriodStartMonth: 4
     abstractionPeriodEndDay: 31
     abstractionPeriodEndMonth: 10
-    authorisedAnnualQuantity: 25
+    authorisedAnnualQuantity: 30
     billableAnnualQuantity: 25
     season: summer
     seasonDerived: summer
