@@ -260,19 +260,6 @@ class ChargeVersion extends Model {
     validators.assertIsNullableInstanceOf(approvedBy, User);
     this._approvedBy = approvedBy;
   }
-
-  get chargingScheme () {
-    return this._chargingScheme;
-  }
-
-  set chargingScheme (chargingScheme) {
-    if (!chargingScheme) {
-      this._chargingScheme = 'presroc';
-    } else {
-      validators.assertNullableEnum(chargingScheme, ['sroc', 'presroc']);
-      this._chargingScheme = chargingScheme;
-    }
-  }
 }
 
 module.exports = ChargeVersion;

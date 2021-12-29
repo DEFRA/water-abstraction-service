@@ -2,7 +2,7 @@
 
 const { createMapper } = require('../object-mapper');
 
-const ChargeElement = require('../models/charge-element');
+const ChargePurpose = require('../models/charge-purpose');
 const DateRange = require('../models/date-range');
 const camelCaseKeys = require('../camel-case-keys');
 const purposePrimaryMapper = require('./purpose-primary');
@@ -16,7 +16,7 @@ const timeLimitedDateMapper = (startDate, endDate) =>
   new DateRange(startDate, endDate);
 
 const dbToModelMapper = createMapper()
-  .map('chargeElementId').to('id')
+  .map('chargePurposeId').to('id')
   .copy(
     'source',
     'season',
@@ -35,17 +35,16 @@ const dbToModelMapper = createMapper()
   .map(['timeLimitedStartDate', 'timeLimitedEndDate']).to('timeLimitedPeriod', timeLimitedDateMapper, { mapNull: false });
 
 /**
- * Creates a ChargeElement instance given a row of charge element data
+ * Creates a ChargePurpose instance given a row of charge element data
  * @param {Object} row - charge element row from the charge processor
- * @return {ChargeElement}
+ * @return {ChargePurpose}
  */
 const dbToModel = row =>
-  helpers.createModel(ChargeElement, camelCaseKeys(row), dbToModelMapper);
+  helpers.createModel(ChargePurpose, camelCaseKeys(row), dbToModelMapper);
 
 const pojoToModelMapper = createMapper()
   .copy(
     'id',
-    'externalId',
     'authorisedAnnualQuantity',
     'billableAnnualQuantity',
     'source',
@@ -61,36 +60,31 @@ const pojoToModelMapper = createMapper()
   .map('timeLimitedPeriod').to('timeLimitedPeriod', dateRangeMapper.pojoToModel);
 
 /**
- * Converts a plain object representation of a ChargeElement to a ChargeElement model
+ * Converts a plain object representation of a ChargePurpose to a ChargePurpose model
  * @param {Object} pojo
- * @return ChargeElement
+ * @return ChargePurpose
  */
 const pojoToModel = pojo => {
   if (pojo.scheme === 'sroc') {
-    return helpers.createModel(ChargeElement, pojo, pojoToModelMapper
+    return helpers.createModel(ChargePurpose, pojo, pojoToModelMapper
       .copy(
         'id',
-        'externalId',
         'authorisedAnnualQuantity',
         'billableAnnualQuantity',
         'source',
         'season',
         'loss',
         'description',
-        'isSection127AgreementEnabled',
-        'waterModel',
-        'waterAvailability',
-        'scheme'
+        'isSection127AgreementEnabled'
       )
       .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel)
       .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.pojoToModel)
       .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.pojoToModel)
       .map('purposeUse').to('purposeUse', purposeUseMapper.pojoToModel)
       .map('timeLimitedPeriod').to('timeLimitedPeriod', dateRangeMapper.pojoToModel)
-      .map('chargePurposes').to('chargePurposes', chargePurposes => chargePurposes.map(chargePurposeMapper.pojoToModel))
     );
   } else {
-    return helpers.createModel(ChargeElement, pojo, pojoToModelMapper);
+    return helpers.createModel(ChargePurpose, pojo, pojoToModelMapper);
   }
 };
 
@@ -102,7 +96,7 @@ const pojoToModel = pojo => {
  */
 
 const modelToDbMapper = createMapper()
-  .map('id').to('chargeElementId')
+  .map('id').to('chargePurposeId')
   .copy(
     'source',
     'season',
@@ -124,12 +118,12 @@ const modelToDbMapper = createMapper()
   .map('timeLimitedPeriod').to('timeLimitedEndDate', value => value ? value.endDate : null)
   .map('abstractionPeriod').to('seasonDerived', abstractionPeriod => abstractionPeriod.getChargeSeason());
 
-const chargeVersionMapper = createMapper()
-  .map('id').to('chargeVersionId');
+const chargeElementMapper = createMapper()
+  .map('id').to('chargeElementId');
 
-const modelToDb = (chargeElement, chargeVersion) => ({
-  ...modelToDbMapper.execute(chargeElement),
-  ...chargeVersionMapper.execute(chargeVersion)
+const modelToDb = (chargePurpose, chargeElement) => ({
+  ...modelToDbMapper.execute(chargePurpose),
+  ...chargeElementMapper.execute(chargeElement)
 });
 
 exports.dbToModel = dbToModel;

@@ -7,8 +7,6 @@ const AbstractionPeriod = require('./abstraction-period');
 const DateRange = require('./date-range');
 const Purpose = require('./purpose');
 const PurposeUse = require('./purpose-use');
-const ChargePurpose = require('./charge-purpose');
-const ChargeCategory = require('./charge-category');
 const { CHARGE_SEASON, LOSSES } = require('./constants');
 
 const validators = require('./validators');
@@ -17,24 +15,7 @@ const validSources = {
   supported: 'supported',
   unsupported: 'unsupported',
   tidal: 'tidal',
-  kielder: 'kielder',
-  nonTidal: 'non-tidal'
-};
-
-const WATER_AVAILABILITY = {
-  available: 'available',
-  restricted: 'restricted availablity or no availability'
-};
-
-const WATER_MODEL = {
-  noModel: 'no model',
-  tier1: 'tier 1',
-  tier2: 'tier 2'
-};
-
-const SCHEME = {
-  alcs: 'alcs',
-  sroc: 'sroc'
+  kielder: 'kielder'
 };
 
 class ChargeElement extends Model {
@@ -239,56 +220,12 @@ class ChargeElement extends Model {
   }
 
   /**
-   * Charge purposes
-   * @param {Array<ChargePurpose>}
+   * Charge elements
+   * @param {Array<ChargeElement>}
    */
   set chargePurposes (chargePurposes) {
     validators.assertIsArrayOfType(chargePurposes, ChargePurpose);
     this._chargePurposes = chargePurposes;
-  }
-
-  get waterAvailability () {
-    return this._waterAvailability;
-  }
-
-  set waterAvailability (waterAvailability) {
-    validators.assertEnum(waterAvailability, Object.values(WATER_AVAILABILITY));
-    this._waterAvailability = waterAvailability;
-  }
-
-  get waterModel () {
-    return this._waterModel;
-  }
-
-  set waterModel (waterModel) {
-    validators.assertEnum(waterModel, Object.values(WATER_MODEL));
-    this._waterModel = waterModel;
-  }
-
-  get scheme () {
-    return this._scheme;
-  }
-
-  /**
-   * Scheme - ALCS/SROC
-   * @param {String}
-   */
-  set scheme (scheme) {
-    validators.assertEnum(scheme, Object.values(SCHEME));
-    this._scheme = scheme;
-  }
-
-  get chargeCategory () {
-    return this._chargeCategory;
-  }
-
-  /**
-   * chargeCategory
-   * @param {ChargeCategory}
-   */
-  set chargeCategory (chargeCategory) {
-    validators.assertIsInstanceOf(chargeCategory, ChargeCategory);
-    this._chargeCategory = chargeCategory;
   }
 
   toJSON () {
