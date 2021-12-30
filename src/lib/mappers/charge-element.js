@@ -9,6 +9,7 @@ const purposePrimaryMapper = require('./purpose-primary');
 const purposeSecondaryMapper = require('./purpose-secondary');
 const purposeUseMapper = require('./purpose-use');
 const abstractionPeriodMapper = require('./abstraction-period');
+const chargePurposeMapper = require('./charge-purpose');
 const dateRangeMapper = require('./date-range');
 const helpers = require('./lib/helpers');
 
