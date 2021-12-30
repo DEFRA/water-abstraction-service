@@ -139,12 +139,28 @@ class ChargeElement extends Model {
   }
 
   /**
-   * Gets billing quantity to use
-   * This could be auth, billable or actual quantity
+   * Gets billing volume to use
+   * This could should be null when authorised quantity is not null
    * @return {Number}
    */
   get volume () {
-    return this._billableAnnualQuantity || this._authorisedAnnualQuantity;
+    return isNull(this._volume)
+      ? this._billableAnnualQuantity || this._authorisedAnnualQuantity
+      : this._volume;
+  }
+
+  /**
+   * For SROC volume is used then the
+   * billable and annual quantity is set to null
+   * @return {Number}
+   */
+  set volume (volume) {
+    validators.assertIsEmpty(this._billableAnnualQuantity);
+    validators.assertIsEmpty(this._authorisedAnnualQuantity);
+    validators.assertNullableQuantity(volume);
+    this._billableAnnualQuantity = null;
+    this._authorisedAnnualQuantity = null;
+    this._volume = parseFloat(volume);
   }
 
   /**
