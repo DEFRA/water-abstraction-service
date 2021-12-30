@@ -266,7 +266,8 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
           dateRange: {
             startDate: '2019-01-01',
             endDate: null
-          }
+          },
+          scheme: 'alcs'
         });
       });
 

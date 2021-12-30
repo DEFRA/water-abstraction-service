@@ -65,27 +65,7 @@ const pojoToModelMapper = createMapper()
  * @return ChargePurpose
  */
 const pojoToModel = pojo => {
-  if (pojo.scheme === 'sroc') {
-    return helpers.createModel(ChargePurpose, pojo, pojoToModelMapper
-      .copy(
-        'id',
-        'authorisedAnnualQuantity',
-        'billableAnnualQuantity',
-        'source',
-        'season',
-        'loss',
-        'description',
-        'isSection127AgreementEnabled'
-      )
-      .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel)
-      .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.pojoToModel)
-      .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.pojoToModel)
-      .map('purposeUse').to('purposeUse', purposeUseMapper.pojoToModel)
-      .map('timeLimitedPeriod').to('timeLimitedPeriod', dateRangeMapper.pojoToModel)
-    );
-  } else {
-    return helpers.createModel(ChargePurpose, pojo, pojoToModelMapper);
-  }
+  return helpers.createModel(ChargePurpose, pojo, pojoToModelMapper);
 };
 
 /**

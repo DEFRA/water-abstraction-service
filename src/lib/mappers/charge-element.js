@@ -78,7 +78,8 @@ const pojoToModel = pojo => {
       .copy(
         'externalId',
         'authorisedAnnualQuantity',
-        'billableAnnualQuantity'
+        'billableAnnualQuantity',
+        'scheme'
       )
       .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel)
       .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.pojoToModel)

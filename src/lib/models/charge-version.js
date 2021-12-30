@@ -36,6 +36,7 @@ class ChargeVersion extends Model {
   constructor (id) {
     super(id);
     this._chargeElements = [];
+    this._scheme = SCHEME.alcs;
   }
 
   get licence () {
