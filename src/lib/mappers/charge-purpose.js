@@ -64,9 +64,8 @@ const pojoToModelMapper = createMapper()
  * @param {Object} pojo
  * @return ChargePurpose
  */
-const pojoToModel = pojo => {
-  return helpers.createModel(ChargePurpose, pojo, pojoToModelMapper);
-};
+const pojoToModel = pojo =>
+  helpers.createModel(ChargePurpose, pojo, pojoToModelMapper);
 
 /**
  * Maps charge element to DB fields
