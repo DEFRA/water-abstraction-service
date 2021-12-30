@@ -419,7 +419,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
     test('the charging scheme of the new charge version is set', async () => {
       const [chargeVersion] = chargeVersionService.create.lastCall.args;
-      expect(chargeVersion.chargingScheme).to.equal('presroc');
+      expect(chargeVersion.scheme).to.equal('alcs');
     });
 
     test('the workflow record is deleted', async () => {

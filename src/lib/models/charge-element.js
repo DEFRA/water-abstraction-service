@@ -1,6 +1,6 @@
 'use strict';
 
-const { isNull, max } = require('lodash');
+const { isNull, max, isEmpty } = require('lodash');
 
 const Model = require('./model');
 const AbstractionPeriod = require('./abstraction-period');
@@ -146,7 +146,7 @@ class ChargeElement extends Model {
    * @return {Number}
    */
   get volume () {
-    return isNull(this._volume)
+    return isEmpty(this._volume)
       ? this._billableAnnualQuantity || this._authorisedAnnualQuantity
       : this._volume;
   }

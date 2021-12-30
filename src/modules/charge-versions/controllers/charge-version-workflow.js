@@ -50,7 +50,7 @@ const postChargeVersionWorkflow = async request => {
     return Boom.notFound(`Licence ${licenceId} not found`);
   }
 
-  return user; // chargeVersionsWorkflowService.create(licence, chargeVersion, user);
+  return chargeVersionsWorkflowService.create(licence, chargeVersion, user);
 };
 
 /**
