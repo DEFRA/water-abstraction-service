@@ -18,7 +18,7 @@ const validSources = {
   kielder: 'kielder'
 };
 
-class ChargeElement extends Model {
+class ChargePurpose extends Model {
   constructor (...args) {
     super(...args);
     this.isSection127AgreementEnabled = true;
@@ -237,5 +237,5 @@ class ChargeElement extends Model {
   }
 }
 
-module.exports = ChargeElement;
+module.exports = ChargePurpose;
 module.exports.sources = validSources;
