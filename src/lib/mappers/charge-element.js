@@ -43,23 +43,19 @@ const dbToModelMapper = createMapper()
 const dbToModel = row =>
   helpers.createModel(ChargeElement, camelCaseKeys(row), dbToModelMapper);
 
+/**
+ * common charge element factors that apply to all charging schemes
+ */
 const pojoToModelMapper = createMapper()
   .copy(
     'id',
-    'externalId',
-    'authorisedAnnualQuantity',
-    'billableAnnualQuantity',
     'source',
     'season',
     'loss',
     'description',
-    'isSection127AgreementEnabled'
-  )
-  .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel)
-  .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.pojoToModel)
-  .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.pojoToModel)
-  .map('purposeUse').to('purposeUse', purposeUseMapper.pojoToModel)
-  .map('timeLimitedPeriod').to('timeLimitedPeriod', dateRangeMapper.pojoToModel);
+    'isSection127AgreementEnabled',
+    'isFactorsOverridden'
+  );
 
 /**
  * Converts a plain object representation of a ChargeElement to a ChargeElement model
@@ -70,28 +66,26 @@ const pojoToModel = pojo => {
   if (pojo.scheme === 'sroc') {
     return helpers.createModel(ChargeElement, pojo, pojoToModelMapper
       .copy(
-        'id',
-        'externalId',
-        'authorisedAnnualQuantity',
-        'billableAnnualQuantity',
-        'source',
-        'season',
-        'loss',
-        'description',
-        'isSection127AgreementEnabled',
+        'volume',
         'waterModel',
         'waterAvailability',
         'scheme'
+      )
+      .map('chargePurposes').to('chargePurposes', chargePurposes => chargePurposes.map(chargePurposeMapper.pojoToModel))
+    );
+  } else {
+    return helpers.createModel(ChargeElement, pojo, pojoToModelMapper
+      .copy(
+        'externalId',
+        'authorisedAnnualQuantity',
+        'billableAnnualQuantity'
       )
       .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel)
       .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.pojoToModel)
       .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.pojoToModel)
       .map('purposeUse').to('purposeUse', purposeUseMapper.pojoToModel)
       .map('timeLimitedPeriod').to('timeLimitedPeriod', dateRangeMapper.pojoToModel)
-      .map('chargePurposes').to('chargePurposes', chargePurposes => chargePurposes.map(chargePurposeMapper.pojoToModel))
     );
-  } else {
-    return helpers.createModel(ChargeElement, pojo, pojoToModelMapper);
   }
 };
 
