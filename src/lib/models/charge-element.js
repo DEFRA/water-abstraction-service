@@ -113,6 +113,7 @@ class ChargeElement extends Model {
   }
 
   set authorisedAnnualQuantity (quantity) {
+    validators.assertIsEmpty(this._volume);
     validators.assertQuantity(quantity);
     this._authorisedAnnualQuantity = parseFloat(quantity);
   }
@@ -127,6 +128,7 @@ class ChargeElement extends Model {
 
   set billableAnnualQuantity (quantity) {
     validators.assertNullableQuantity(quantity);
+    validators.assertIsEmpty(this._volume);
     this._billableAnnualQuantity = isNull(quantity) ? null : parseFloat(quantity);
   }
 
@@ -150,16 +152,16 @@ class ChargeElement extends Model {
   }
 
   /**
-   * For SROC volume is used then the
-   * billable and annual quantity is set to null
+   * For SROC volume is set only when billable and
+   * authorised quantities are empty i.e.
+   * undefined, '' or null
+   * authorised quantity cannot be null so should be undefined
    * @return {Number}
    */
   set volume (volume) {
     validators.assertIsEmpty(this._billableAnnualQuantity);
     validators.assertIsEmpty(this._authorisedAnnualQuantity);
-    validators.assertNullableQuantity(volume);
-    this._billableAnnualQuantity = null;
-    this._authorisedAnnualQuantity = null;
+    validators.assertQuantity(volume);
     this._volume = parseFloat(volume);
   }
 
