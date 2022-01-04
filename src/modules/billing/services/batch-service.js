@@ -454,17 +454,22 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
   // if 0, the batch will be set to "empty" status
   const count = await getBatchTransactionCount(batchId);
 
-  const changes = count === 0
-    ? { status: BATCH_STATUS.empty }
-    : {
-      status,
-      invoiceCount,
-      creditNoteCount,
-      invoiceValue,
-      netTotal,
-      transactionFileReference,
-      creditNoteValue: -Math.abs(creditNoteValue)
-    };
+  let changes = {
+    status,
+    invoiceCount,
+    creditNoteCount,
+    invoiceValue,
+    netTotal,
+    transactionFileReference,
+    creditNoteValue: -Math.abs(creditNoteValue)
+  };
+  // if the batch is empty remove the supplementary billing flag from the licences in
+  // the region set before the batch creation date and set the batch status to EMPTY
+  if (count === 0) {
+    changes = { status: BATCH_STATUS.empty };
+    const batch = await newRepos.billingBatches.findOne(batchId);
+    await licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(batch.region.regionId, batch.dateCreated);
+  }
 
   const data = await newRepos.billingBatches.update(batchId, changes);
   return mappers.batch.dbToModel(data);
