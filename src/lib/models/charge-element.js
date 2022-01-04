@@ -65,6 +65,15 @@ class ChargeElement extends Model {
     return this._source === 'tidal' ? 'tidal' : 'other';
   }
 
+  get eiucRegion () {
+    return this._eiucRegion;
+  }
+
+  set eiucRegion (eiucRegion) {
+    validators.assertNullableString(eiucRegion);
+    this._eiucRegion = eiucRegion;
+  }
+
   /**
    * Season
    * @return {String}
