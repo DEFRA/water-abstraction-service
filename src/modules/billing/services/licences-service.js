@@ -58,7 +58,10 @@ const deleteBatchLicence = async (batch, licenceId) => {
   await licencesService.flagForSupplementaryBilling(licenceId);
 };
 
-const updateIncludeInSupplementaryBillingStatusForEmptyBatch = async batchId => licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch(batchId);
+const updateIncludeInSupplementaryBillingStatusForEmptyBatch = async batchId => {
+  const batch = await repos.billingBatches.findOne(batchId);
+  return licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(batch.region.regionId, batch.dateCreated);
+};
 
 exports.getByBatchIdForTwoPartTariffReview = getByBatchIdForTwoPartTariffReview;
 exports.deleteBatchLicence = deleteBatchLicence;
