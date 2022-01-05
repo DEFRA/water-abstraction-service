@@ -12,7 +12,6 @@ const messageQueue = require('../../../lib/message-queue-v2');
 const { BatchStatusError } = require('../lib/errors');
 const { NotFoundError } = require('../../../lib/errors');
 const { BATCH_STATUS, BATCH_TYPE } = require('../../../lib/models/batch');
-const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/constants');
 const config = require('../../../../config');
 
 // Services
@@ -34,6 +33,7 @@ const { jobName: deleteErroredBatchName } = require('../jobs/delete-errored-batc
 /**
  * Loads a Batch instance by ID
  * @param {String} id - batch ID GUID
+ * @param {Boolean} includeInvoices
  * @return {Promise<Batch>}
  */
 const getBatchById = async (id, includeInvoices = false) => {
@@ -336,12 +336,9 @@ const getSentTptBatchesForFinancialYearAndRegion = async (financialYear, region)
    *
    * @param {Object<Invoice>} invoice The invoice containing the licences to update
    */
-const updateInvoiceLicencesForSupplementaryReprocessing = invoice => {
-  return licencesService.updateIncludeInSupplementaryBillingStatus(
-    INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
-    INCLUDE_IN_SUPPLEMENTARY_BILLING.reprocess,
-    ...invoice.getLicenceIds()
-  );
+const updateInvoiceLicencesForSupplementaryReprocessing = async invoice => {
+  const licenceIds = invoice.getLicenceIds();
+  return Promise.all(licenceIds.map(licenceId => licencesService.flagForSupplementaryBilling(licenceId)));
 };
 
 /**
@@ -362,6 +359,8 @@ const deleteInvoicesWithRelatedData = async (batch, invoice) => {
  * Deletes an individual invoice from the batch.  Also deletes CM transactions
  * @param {Batch} batch
  * @param {String} invoiceId
+ * @param {String} originalBillingInvoiceId
+ * @param {String} rebillInvoiceId
  * @return {Promise}
  */
 const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = null, rebillInvoiceId = null) => {
