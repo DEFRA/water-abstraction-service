@@ -31,6 +31,17 @@ const findOneByReference = async reference => {
   return model && model.toJSON();
 };
 
+const findOneByProperties = async (isTidal, lossFactor, isRestrictedSource, modelTier, volume) => {
+  const model = await ChargeCategory
+    .forge()
+    .where({ is_tidal: isTidal, loss_factor: lossFactor, model_tier: modelTier, is_restricted_source: isRestrictedSource })
+    .where('min_volume', '<', volume)
+    .where('max_volume', '>=', volume)
+    .fetch({ require: false });
+
+  return model && model.toJSON();
+};
+
 const findOneById = id => helpers.findOne(ChargeCategory, 'chargeCategoryId', id);
 
 exports.create = create;
@@ -39,3 +50,4 @@ exports.updateById = updateById;
 exports.findAll = findAll;
 exports.findOneByReference = findOneByReference;
 exports.findOneById = findOneById;
+exports.findOneByProperties = findOneByProperties;

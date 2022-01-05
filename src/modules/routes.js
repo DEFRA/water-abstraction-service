@@ -27,5 +27,6 @@ module.exports = [
   ...Object.values(require('./addresses/routes')),
   ...Object.values(require('./contacts/routes')),
   ...Object.values(require('./reporting/routes')),
-  ...Object.values(require('./gauging-stations/routes'))
+  ...Object.values(require('./gauging-stations/routes')),
+  ...Object.values(require('./charge-categories/routes'))
 ];
