@@ -51,7 +51,17 @@ const handler = async () => {
     const mappedChargeCategory = chargeCategoriesMapper.csvToModel(arraysFromCSV[i]);
     const chargeCategoryExists = await chargeCategoriesRepo.findOneByReference(mappedChargeCategory.reference);
 
-    const keys = ['description', 'shortDescription', 'subsistenceCharge'];
+    const keys = [
+      'description',
+      'shortDescription',
+      'subsistenceCharge',
+      'minVolume',
+      'maxVolume',
+      'isTidal',
+      'lossFactor',
+      'modelTier',
+      'isRestrictedSource'
+    ];
 
     if (chargeCategoryExists) {
       if (!isEqual(pick(chargeCategoryExists, keys), pick(mappedChargeCategory, keys))) {
