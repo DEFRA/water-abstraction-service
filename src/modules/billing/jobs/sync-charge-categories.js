@@ -11,7 +11,7 @@ const s3Connector = require('../../../lib/services/s3');
 
 // Constants
 const JOB_NAME = 'billing.charge-categories.sync-from-csv';
-const csvKey = 'billing-metadata/charge-categories-v1.csv';
+const csvKey = 'billing-metadata/charge-categories.csv';
 
 // Handy stuff
 const config = require('../../../../config');

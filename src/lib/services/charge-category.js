@@ -7,6 +7,7 @@ const repo = require('../connectors/repos/charge-categories');
  */
 const findChargeCategoryByProperties = async (source, lossFactor, volume, waterAvailability, modelTier) => {
   const isTidal = source === 'tidal';
+  // if the water source is Tidal the water availability is not restricted
   const restrictedSource = isTidal ? false : waterAvailability !== 'available';
   return repo.findOneByProperties(isTidal, lossFactor, restrictedSource, modelTier, volume);
 };
