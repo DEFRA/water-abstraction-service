@@ -10,6 +10,7 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
 const repoHelpers = require('../../../../src/lib/connectors/repos/lib/helpers');
+const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 const repo = require('../../../../src/lib/connectors/repos/scheduled-notifications');
 const ScheduledNotification = require('../../../../src/lib/connectors/bookshelf/ScheduledNotification');
 const envelope = require('../../../../src/lib/connectors/repos/lib/envelope');
@@ -27,6 +28,7 @@ experiment('lib/connectors/repos/scheduled-notifications', () => {
     sandbox.stub(repoHelpers, 'create');
     sandbox.stub(repoHelpers, 'findOne');
     sandbox.stub(repoHelpers, 'findMany');
+    sandbox.stub(raw, 'multiRow').resolves([]);
     sandbox.stub(ScheduledNotification, 'forge').returns(stub);
     sandbox.stub(envelope, 'paginatedEnvelope');
   });
@@ -116,6 +118,12 @@ experiment('lib/connectors/repos/scheduled-notifications', () => {
 
     test('maps the result to envelope.paginatedEnvelope', async () => {
       expect(envelope.paginatedEnvelope.called).to.be.true();
+    });
+  });
+  experiment('.getScheduledNotificationCategories', () => {
+    beforeEach(() => repo.getScheduledNotificationCategories());
+    test('calls the pool/query builder', () => {
+      expect(raw.multiRow.called).to.be.true();
     });
   });
 });
