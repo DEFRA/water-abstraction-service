@@ -31,10 +31,10 @@ const findOneByReference = async reference => {
   return model && model.toJSON();
 };
 
-const findOneByProperties = async (isTidal, lossFactor, restrictedSource, modelTier, volume) => {
+const findOneByProperties = async (isTidal, lossFactor, isRestrictedSource, modelTier, volume) => {
   const model = await ChargeCategory
     .forge()
-    .where({ is_tidal: isTidal, loss_factor: lossFactor, model_tier: modelTier, restricted_source: restrictedSource })
+    .where({ is_tidal: isTidal, loss_factor: lossFactor, model_tier: modelTier, is_restricted_source: isRestrictedSource })
     .where('min_volume', '<', volume)
     .where('max_volume', '>=', volume)
     .fetch({ require: false });
