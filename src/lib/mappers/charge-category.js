@@ -20,7 +20,7 @@ const csvToModel = data => {
     is_tidal,
     loss_factor,
     model_tier,
-    restricted_source
+    is_restricted_source
   } = data;
   /* eslint-enable */
   return chargeCategory.fromHash({
@@ -33,7 +33,7 @@ const csvToModel = data => {
     isTidal: is_tidal,
     lossFactor: loss_factor,
     modelTier: model_tier,
-    restrictedSource: restricted_source
+    isRestrictedSource: is_restricted_source
   });
 };
 
@@ -52,7 +52,7 @@ const dbToModelMapper = createMapper()
     'isTidal',
     'lossFactor',
     'modelTier',
-    'restrictedSource'
+    'isRestrictedSource'
   );
 
 const dbToModel = row => helpers.createModel(ChargeCategory, row, dbToModelMapper);

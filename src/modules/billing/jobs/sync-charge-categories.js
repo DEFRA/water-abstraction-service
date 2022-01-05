@@ -60,7 +60,7 @@ const handler = async () => {
       'isTidal',
       'lossFactor',
       'modelTier',
-      'restrictedSource'
+      'isRestrictedSource'
     ];
 
     if (chargeCategoryExists) {

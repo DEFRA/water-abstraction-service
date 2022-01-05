@@ -90,12 +90,12 @@ class ChargeCategory extends Model {
     this._modelTier = modelTier;
   }
 
-  get restrictedSource () {
-    return this._restrictedSource;
+  get isRestrictedSource () {
+    return this._isRestrictedSource;
   }
 
-  set restrictedSource (restrictedSource) {
-    this._restrictedSource = restrictedSource;
+  set isRestrictedSource (isRestrictedSource) {
+    this._isRestrictedSource = isRestrictedSource;
   }
 }
 

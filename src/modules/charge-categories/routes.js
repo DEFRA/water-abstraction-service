@@ -13,12 +13,11 @@ module.exports = {
         query: Joi.object().keys({
           source: Joi.string().required().valid('tidal', 'non-tidal'),
           loss: Joi.string().required().valid('low', 'medium', 'high'),
-          waterAvailability: Joi.string().required().valid('restricted availablity or no availability', 'available'),
+          isRestrictedSource: Joi.boolean().required(),
           waterModel: Joi.string().required().valid('no model', 'tier 1', 'tier 2'),
           volume: Joi.number().integer().required()
         })
       }
     }
   }
-
 };
