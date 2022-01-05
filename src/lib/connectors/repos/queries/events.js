@@ -134,6 +134,5 @@ where
 * findNotificationCategories return all available message_ref in water.scheduled_notification
 */
 exports.findNotificationCategories = `
-select distinct message_ref as value, regexp_replace(INITCAP(message_ref), '_', ' ', 'g') as label from water.scheduled_notification 
-where message_ref not ilike '%_test%' order by message_ref
+select category_value as value, category_label as label from water.scheduled_notification_categories where is_enabled is true;
 `;

@@ -1,6 +1,7 @@
 'use strict';
 
 const helpers = require('./lib/helpers');
+const raw = require('./lib/raw');
 const ScheduledNotification = require('../bookshelf/ScheduledNotification');
 const envelope = require('./lib/envelope');
 
@@ -54,9 +55,13 @@ const findByLicenceNumber = async (licenceNumber, page, perPage) => {
   return envelope.paginatedEnvelope(collection);
 };
 
+const getScheduledNotificationCategories = () =>
+  raw.multiRow('SELECT * FROM water.scheduled_notification_categories where is_enabled is true');
+
 exports.create = create;
 exports.findOne = findOne;
 exports.findOneByNotifyId = findOneByNotifyId;
 exports.update = update;
 exports.findByEventId = findByEventId;
 exports.findByLicenceNumber = findByLicenceNumber;
+exports.getScheduledNotificationCategories = getScheduledNotificationCategories;
