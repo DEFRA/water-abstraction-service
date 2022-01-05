@@ -21,11 +21,6 @@ const validSources = {
   nonTidal: 'non-tidal'
 };
 
-const WATER_AVAILABILITY = {
-  available: 'available',
-  restricted: 'restricted availablity or no availability'
-};
-
 const WATER_MODEL = {
   noModel: 'no model',
   tier1: 'tier 1',
@@ -274,13 +269,13 @@ class ChargeElement extends Model {
     this._chargePurposes = chargePurposes;
   }
 
-  get waterAvailability () {
-    return this._waterAvailability;
+  get isRestrictedSource () {
+    return this._isRestrictedSource;
   }
 
-  set waterAvailability (waterAvailability) {
-    validators.assertEnum(waterAvailability, Object.values(WATER_AVAILABILITY));
-    this._waterAvailability = waterAvailability;
+  set isRestrictedSource (isRestrictedSource) {
+    validators.assertIsBoolean(isRestrictedSource);
+    this._isRestrictedSource = isRestrictedSource;
   }
 
   get waterModel () {

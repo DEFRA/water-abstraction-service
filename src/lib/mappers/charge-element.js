@@ -53,7 +53,6 @@ const pojoToModelMapper = createMapper()
     'season',
     'loss',
     'description',
-    'isSection127AgreementEnabled',
     'isFactorsOverridden'
   );
 
@@ -68,7 +67,7 @@ const pojoToModel = pojo => {
       .copy(
         'volume',
         'waterModel',
-        'waterAvailability',
+        'isRestrictedSource',
         'scheme',
         'eiucRegion'
       )
@@ -80,7 +79,8 @@ const pojoToModel = pojo => {
         'externalId',
         'authorisedAnnualQuantity',
         'billableAnnualQuantity',
-        'scheme'
+        'scheme',
+        'isSection127AgreementEnabled'
       )
       .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel)
       .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.pojoToModel)
