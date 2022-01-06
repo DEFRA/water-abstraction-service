@@ -12,15 +12,15 @@ const csvToModel = data => {
   /* eslint-disable */
   const {
     reference,
-    name,
     order,
+    name,
     region
   } = data;
   /* eslint-enable */
   return supportedSource.fromHash({
     reference,
-    name: truncate(name, { length: 255 }),
     order,
+    name: truncate(name, { length: 255 }),
     region: truncate(region, { length: 255 })
   });
 };
