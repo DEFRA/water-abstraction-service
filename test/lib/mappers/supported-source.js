@@ -16,7 +16,9 @@ experiment('lib/mappers/supported-source', () => {
 
   const supportedSourceFromCsv = {
     reference: '1.0.0.0',
-    name: 'Some SupportedSource'
+    name: 'Some SupportedSource',
+    order: 16,
+    region: 'Southern'
   };
 
   experiment('.csvToModel', () => {
@@ -36,14 +38,31 @@ experiment('lib/mappers/supported-source', () => {
       expect(result.name).to.equal(supportedSourceFromCsv.name);
     });
 
-    experiment('when the name is longer than 255 chars', () => {
-      beforeEach(async () => {
-        supportedSourceFromCsv.name = 'Parmesan taleggio cheese on toast. Cheese on toast paneer halloumi cheesy grin cheeseburger cow cut the cheese edam. Lancashire halloumi taleggio cheese triangles edam gouda croque monsieur edam. Bavarian bergkase swiss say cheese cheesecake cream cheese red leicester stilton goat. Say cheese who moved my cheese emmental stilton who moved my cheese cottage cheese bocconcini edam. Lancashire brie croque monsieur macaroni cheese cottage cheese cauliflower cheese babybel dolcelatte. Stilton cheese on toast smelly cheese jarlsberg cheeseburger brie cheddar cottage cheese. Parmesan cut the cheese queso taleggio cheese triangles croque monsieur bocconcini monterey jack. Cheesecake squirty cheese everyone loves pepper jack cheese triangles stilton.';
-        result = supportedSourceMapper.csvToModel(supportedSourceFromCsv);
-      });
+    test('sets the .order property', async () => {
+      expect(result.order).to.equal(supportedSourceFromCsv.order);
+    });
 
+    test('sets the .region property', async () => {
+      expect(result.region).to.equal(supportedSourceFromCsv.region);
+    });
+
+    experiment('when the name is longer than 255 chars', () => {
       test('the name is truncated to 255 chars', async () => {
-        expect(result.name).to.equal('Parmesan taleggio cheese on toast. Cheese on toast paneer halloumi cheesy grin cheeseburger cow cut the cheese edam. Lancashire halloumi taleggio cheese triangles edam gouda croque monsieur edam. Bavarian bergkase swiss say cheese cheesecake cream chee...');
+        const name = new Array(300).join('A');
+        supportedSourceFromCsv.name = name;
+        result = supportedSourceMapper.csvToModel(supportedSourceFromCsv);
+        const expectedName = name.substr(0, 252) + '...';
+        expect(result.name).to.equal(expectedName);
+      });
+    });
+
+    experiment('when the region is longer than 255 chars', () => {
+      test('the region is truncated to 255 chars', async () => {
+        const region = new Array(300).join('A');
+        supportedSourceFromCsv.region = region;
+        result = supportedSourceMapper.csvToModel(supportedSourceFromCsv);
+        const expectedRegion = region.substr(0, 252) + '...';
+        expect(result.region).to.equal(expectedRegion);
       });
     });
   });

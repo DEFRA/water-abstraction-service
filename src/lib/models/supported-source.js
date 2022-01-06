@@ -31,6 +31,24 @@ class SupportedSource extends Model {
     validators.assertStringWithLengthLimit(name, 255);
     this._name = name;
   }
+
+  get order () {
+    return this._order;
+  }
+
+  set order (order) {
+    validators.assertNullablePositiveOrZeroInteger(order);
+    this._order = order;
+  }
+
+  get region () {
+    return this._region;
+  }
+
+  set region (region) {
+    validators.assertStringWithLengthLimit(region, 255);
+    this._region = region;
+  }
 }
 
 module.exports = SupportedSource;
