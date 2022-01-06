@@ -8,6 +8,7 @@ exports.billingInvoiceLicences = require('./billing-invoice-licences');
 exports.billingTransactions = require('./billing-transactions');
 exports.billingVolumes = require('./billing-volumes');
 exports.changeReasons = require('./change-reasons');
+exports.chargeCategories = require('./charge-categories');
 exports.chargeVersions = require('./charge-versions');
 exports.events = require('./events');
 exports.gaugingStations = require('./gauging-stations');
