@@ -35,8 +35,8 @@ const dbToModelMapper = createMapper()
   .map(['timeLimitedStartDate', 'timeLimitedEndDate']).to('timeLimitedPeriod', timeLimitedDateMapper, { mapNull: false });
 
 /**
- * Creates a ChargePurpose instance given a row of charge element data
- * @param {Object} row - charge element row from the charge processor
+ * Creates a ChargePurpose instance given a row of charge purpose data
+ * @param {Object} row - charge purpose row from the charge processor
  * @return {ChargePurpose}
  */
 const dbToModel = row =>
@@ -68,8 +68,8 @@ const pojoToModel = pojo =>
   helpers.createModel(ChargePurpose, pojo, pojoToModelMapper);
 
 /**
- * Maps charge element to DB fields
- * @param {ChargeElement} chargeElement
+ * Maps charge purpose to DB fields
+ * @param {ChargePurpose} chargePurpose
  * @param {ChargeVersion} [chargeVersion]
  * @return {Object}
  */

@@ -201,8 +201,8 @@ class ChargePurpose extends Model {
 
   /**
    * Default value is true, which means a licence-level S127 agreement applies to this
-   * element.  This flag can be set to false, which enables the S127 agreement to be
-   * removed from this element.
+   * purpose.  This flag can be set to false, which enables the S127 agreement to be
+   * removed from this purpose.
    *
    * @returns {Boolean}
    */
@@ -213,19 +213,6 @@ class ChargePurpose extends Model {
   set isSection127AgreementEnabled (isSection127AgreementEnabled) {
     validators.assertIsBoolean(isSection127AgreementEnabled);
     this._isSection127AgreementEnabled = isSection127AgreementEnabled;
-  }
-
-  get chargePurposes () {
-    return this._chargePurposes;
-  }
-
-  /**
-   * Charge elements
-   * @param {Array<ChargeElement>}
-   */
-  set chargePurposes (chargePurposes) {
-    validators.assertIsArrayOfType(chargePurposes, ChargePurpose);
-    this._chargePurposes = chargePurposes;
   }
 
   toJSON () {
