@@ -1,0 +1,1 @@
+-- There is no way to revert the up script as it will not be possible to identify the changed licence rows.

@@ -62,30 +62,14 @@ const getLicenceVersionById = async licenceVersionId =>
 /**
  * Updates the includeInSupplementaryBilling value for the given licence ids
  *
- * @param {String} from The status to move from (yes, no, reprocess)
- * @param {String} to The status to move to (yes, no, reprocess)
+ * @param {String} from The status to move from (yes, no)
+ * @param {String} to The status to move to (yes, no)
  * @param  {...String} licenceIds One or many licences ids to update
  */
 const updateIncludeInSupplementaryBillingStatus = async (from, to, ...licenceIds) => {
   for (const licenceId of licenceIds) {
     await repos.licences.updateIncludeLicenceInSupplementaryBilling(licenceId, from, to);
   }
-};
-
-/**
- * Sets the water.licences.include_in_supplementary_billing value
- * from reprocess to yes for situations where the batch has not got
- * through the the sent phase. This allows the licences to be picked up
- * in a future supplementary bill run.
- *
- * @param {String} batchId
- */
-const updateIncludeInSupplementaryBillingStatusForUnsentBatch = batchId => {
-  return repos.licences.updateIncludeInSupplementaryBillingStatusForBatch(
-    batchId,
-    INCLUDE_IN_SUPPLEMENTARY_BILLING.reprocess,
-    INCLUDE_IN_SUPPLEMENTARY_BILLING.yes
-  );
 };
 
 /**
@@ -231,7 +215,6 @@ exports.getLicenceVersions = getLicenceVersions;
 exports.getLicenceByLicenceRef = getLicenceByLicenceRef;
 exports.getLicenceAccountsByRefAndDate = getLicenceAccountsByRefAndDate;
 exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementaryBillingStatus;
-exports.updateIncludeInSupplementaryBillingStatusForUnsentBatch = updateIncludeInSupplementaryBillingStatusForUnsentBatch;
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch;
 exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate;
 exports.flagForSupplementaryBilling = flagForSupplementaryBilling;
