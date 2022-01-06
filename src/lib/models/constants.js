@@ -33,8 +33,7 @@ exports.RETURN_SEASONS = {
 
 exports.INCLUDE_IN_SUPPLEMENTARY_BILLING = {
   yes: 'yes',
-  no: 'no',
-  reprocess: 'reprocess'
+  no: 'no'
 };
 
 exports.ROLE_NAMES = {

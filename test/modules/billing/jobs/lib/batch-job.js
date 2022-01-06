@@ -12,7 +12,6 @@ const sandbox = require('sinon').createSandbox();
 
 const batchJob = require('../../../../../src/modules/billing/jobs/lib/batch-job');
 const batchService = require('../../../../../src/modules/billing/services/batch-service');
-const licenceService = require('../../../../../src/lib/services/licences');
 const { logger } = require('../../../../../src/logger');
 
 experiment('modules/billing/jobs/lib/batch-job', () => {
@@ -21,11 +20,6 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     sandbox.stub(logger, 'info');
     sandbox.stub(logger, 'error');
-
-    sandbox.stub(
-      licenceService,
-      'updateIncludeInSupplementaryBillingStatusForUnsentBatch'
-    ).resolves();
   });
 
   afterEach(async () => {
