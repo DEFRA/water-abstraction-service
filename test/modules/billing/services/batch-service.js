@@ -124,6 +124,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForSentBatch').resolves();
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForUnsentBatch').resolves();
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForBatchCreatedDate').resolves();
+    sandbox.stub(licencesService, 'flagForSupplementaryBilling').resolves();
 
     sandbox.stub(chargeModuleBillRunConnector, 'create').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'get').resolves();
@@ -1312,10 +1313,8 @@ experiment('modules/billing/services/batch-service', () => {
         });
 
         test('updates the include in supplementary billing status to reprocess where currently yes', async () => {
-          const [from, to, licenceId] = licencesService.updateIncludeInSupplementaryBillingStatus.lastCall.args;
-          expect(from).to.equal('yes');
-          expect(to).to.equal('reprocess');
-          expect(licenceId).to.equal(licenceId);
+          const [LicenceIdArg] = licencesService.flagForSupplementaryBilling.lastCall.args;
+          expect(LicenceIdArg).to.equal(licenceId);
         });
 
         experiment('when the invoice is a rebilling invoice', () => {
