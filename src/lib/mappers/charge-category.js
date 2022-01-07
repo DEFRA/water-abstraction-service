@@ -57,5 +57,11 @@ const dbToModelMapper = createMapper()
 
 const dbToModel = row => helpers.createModel(ChargeCategory, row, dbToModelMapper);
 
+const pojoToModel = pojo => {
+  const model = new ChargeCategory();
+  return model.fromHash(pojo);
+};
+
+exports.pojoToModel = pojoToModel;
 exports.dbToModel = dbToModel;
 exports.csvToModel = csvToModel;

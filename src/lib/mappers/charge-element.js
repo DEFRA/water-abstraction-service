@@ -10,6 +10,7 @@ const purposeSecondaryMapper = require('./purpose-secondary');
 const purposeUseMapper = require('./purpose-use');
 const abstractionPeriodMapper = require('./abstraction-period');
 const chargePurposeMapper = require('./charge-purpose');
+const chargeCategoryMapper = require('./charge-category');
 const dateRangeMapper = require('./date-range');
 const helpers = require('./lib/helpers');
 
@@ -72,6 +73,7 @@ const pojoToModel = pojo => {
         'eiucRegion'
       )
       .map('chargePurposes').to('chargePurposes', chargePurposes => chargePurposes.map(chargePurposeMapper.pojoToModel))
+      .map('chargeCategory').to('chargeCategory', chargeCategoryMapper.pojoToModel)
     );
   } else {
     return helpers.createModel(ChargeElement, pojo, pojoToModelMapper
