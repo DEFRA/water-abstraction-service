@@ -70,15 +70,12 @@ const mapNotificationEvent = notification => ({
  * These are stored in the water.events table with a type of 'notification'
  */
 const getNotifications = async request => {
-  const { filter } = request.query;
   const { page } = request.query;
-  const { sentBy } = request.query;
-  const { data, pagination, notificationCategories } = await eventsService.getNotificationEvents(page, filter, sentBy);
+  const { data, pagination } = await eventsService.getNotificationEvents(page);
 
   return {
     data: data.map(mapNotificationEvent),
-    pagination,
-    notificationCategories
+    pagination
   };
 };
 

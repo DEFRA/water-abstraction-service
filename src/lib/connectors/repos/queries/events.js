@@ -80,7 +80,6 @@ GROUP BY month, year, current_year ORDER BY year desc, month desc;`;
  *   "sent", "completed", "sending"
  * - a "recipient_count" for each event (count of related rows in water.scheduled_notifications)
  * - a jsonb blob of message "statuses" with counts for each event, e.g. [{ status: 'error', notify_status: null, count :3 }, ...]
- * - a json array of message_ref filtering events e.g. ['water_abstraction_alert_reduce_warning','water_abstraction_alert_stop',...]
  */
 exports.findNotifications = `
 select e.*,
@@ -94,7 +93,6 @@ left join (
   --
   select 
     n.event_id, 
-    n.message_ref,
     sum(n.count) as recipient_count,
     jsonb_agg(jsonb_build_object('status', n.status, 'notify_status', n.notify_status, 'count', n.count)) as statuses
   from (
@@ -102,17 +100,16 @@ left join (
     -- this inner query fetches a count of messages in each status/notify_status combination
     -- grouped by the event_id
     --
-    select n.event_id, n.message_ref, n.status, n.notify_status, count(*) as "count"
+    select n.event_id, n.status, n.notify_status, count(*) as "count"
     from water.scheduled_notification n
-    where n.event_id is not null and ( (CAST(:filterLength AS INTEGER) < 1) or (n.message_ref in (select * from json_array_elements_text(:messageRef)) ) )
-    group by n.event_id, n.message_ref, n.status, n.notify_status
+    where n.event_id is not null
+    group by n.event_id, n.status, n.notify_status
   ) n
-  group by n.event_id, n.message_ref
+  group by n.event_id
 ) e2 on e.event_id=e2.event_id
 where 
-  e.type='notification' and ( (CAST(:filterLength AS INTEGER) < 1) or (e2.message_ref in (select * from json_array_elements_text(:messageRef)) ) )
+  e.type='notification'
   and e.status in ('sent', 'completed', 'sending')
-  and (e.issuer = :sentBy or :sentBy = '')
 group by e.event_id, e2.recipient_count, e2.statuses
 order by e.created desc
 limit :limit 
@@ -121,13 +118,10 @@ offset :offset
 
 exports.findNotificationsCount = `
 select count(e.*)
-from water.events e
-left join water.scheduled_notification n 
-on e.event_id=n.event_id
+  from water.events e
 where 
-  e.type='notification' and ( (CAST(:filterLength AS INTEGER) < 1) or (n.message_ref in (select * from json_array_elements_text(:messageRef)) ) )
+  e.type='notification'
   and e.status in ('sent', 'completed', 'sending')
-  and (e.issuer = :sentBy or :sentBy = '')
 `;
 
 /**

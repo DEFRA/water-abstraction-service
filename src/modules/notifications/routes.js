@@ -31,9 +31,7 @@ module.exports = {
       description: 'Gets a list of sent notifications',
       validate: {
         query: Joi.object().keys({
-          page: Joi.number().integer().min(1).default(1),
-          filter: [Joi.object().optional(), Joi.string().allow('')],
-          sentBy: Joi.string().email().allow('')
+          page: Joi.number().integer().min(1).default(1).example(5)
         })
       }
     }
