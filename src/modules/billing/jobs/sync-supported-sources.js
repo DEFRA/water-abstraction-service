@@ -51,7 +51,7 @@ const handler = async () => {
     const mappedSupportedSource = supportedSourcesMapper.csvToModel(arraysFromCSV[i]);
     const supportedSourceExists = await supportedSourcesRepo.findOneByReference(mappedSupportedSource.reference);
 
-    const keys = ['name'];
+    const keys = ['name', 'order', 'region'];
 
     if (supportedSourceExists) {
       if (!isEqual(pick(supportedSourceExists, keys), pick(mappedSupportedSource, keys))) {

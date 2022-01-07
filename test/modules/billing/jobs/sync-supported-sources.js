@@ -35,12 +35,14 @@ experiment('modules/billing/jobs/sync-supported-sources', () => {
     sandbox.stub(applicationStateService, 'get').resolves({ data: { etag: 'crumpets' } });
     sandbox.stub(applicationStateService, 'save').resolves();
     sandbox.stub(s3Connector, 'getObject').resolves({
-      Body: 'name,reference\nname goes here,cat1',
+      Body: 'name,reference,order,region\nCandover,SS.1.1,16,Southern',
       ETag: 'butter'
     });
     sandbox.stub(supportedSourcesRepo, 'findOneByReference').resolves({
-      reference: 'cat1',
-      name: 'Some Description'
+      reference: 'SS.1.1',
+      name: 'Candover',
+      order: null,
+      region: null
     });
     sandbox.stub(supportedSourcesRepo, 'updateByReference').resolves();
     sandbox.stub(supportedSourcesRepo, 'create').resolves();
@@ -86,13 +88,15 @@ experiment('modules/billing/jobs/sync-supported-sources', () => {
       experiment('when the reference already exists', () => {
         beforeEach(async () => {
           await supportedSourcesRepo.findOneByReference.resolves({
-            reference: 'cat1',
-            name: 'Some Description'
+            reference: 'SS.1.1',
+            name: 'Candover',
+            order: 1,
+            region: 'Southern'
           });
           await syncSupportedSourcesJob.handler();
         });
         test('it logs a message', () => {
-          expect(logger.info.calledWith('Updating an existing supported source: cat1')).to.be.true();
+          expect(logger.info.calledWith('Updating an existing supported source: SS.1.1')).to.be.true();
         });
         test('it calls the update repo method', () => {
           expect(supportedSourcesRepo.updateByReference.called).to.be.true();
@@ -107,7 +111,7 @@ experiment('modules/billing/jobs/sync-supported-sources', () => {
           await syncSupportedSourcesJob.handler();
         });
         test('it logs a message', () => {
-          expect(logger.info.calledWith('Creating a new supported source: cat1')).to.be.true();
+          expect(logger.info.calledWith('Creating a new supported source: SS.1.1')).to.be.true();
         });
         test('it calls the create repo method', () => {
           expect(supportedSourcesRepo.create.called).to.be.true();

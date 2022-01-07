@@ -122,7 +122,6 @@ experiment('modules/billing/services/batch-service', () => {
 
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatus').resolves();
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForSentBatch').resolves();
-    sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForUnsentBatch').resolves();
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForBatchCreatedDate').resolves();
     sandbox.stub(licencesService, 'flagForSupplementaryBilling').resolves();
 
@@ -347,11 +346,6 @@ experiment('modules/billing/services/batch-service', () => {
         await batchService.deleteBatch(batch, internalCallingUser);
       });
 
-      test('update the include in supplementary bill run status for all the licences', async () => {
-        const [batchId] = licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.lastCall.args;
-        expect(batchId).to.equal(batch.id);
-      });
-
       test('delete the batch at the charge module', async () => {
         const [externalId] = chargeModuleBillRunConnector.delete.lastCall.args;
         expect(externalId).to.equal(batch.externalId);
@@ -557,14 +551,6 @@ experiment('modules/billing/services/batch-service', () => {
         expect(data).to.equal({ status: 'error', errorCode: Batch.BATCH_ERROR_CODE.failedToCreateCharge });
       });
 
-      test('calls licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch() with the batch ID', async () => {
-        expect(
-          licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.calledWith(
-            batchId
-          )
-        ).to.be.true();
-      });
-
       test('publishes a job to delete the charge module batch', () => {
         expect(queueManagerStub.add.calledWith(
           deleteErroredBatchJob.jobName, batchId
@@ -587,14 +573,6 @@ experiment('modules/billing/services/batch-service', () => {
         const [id, data] = newRepos.billingBatches.update.lastCall.args;
         expect(id).to.equal(batchId);
         expect(data).to.equal({ status: 'error', errorCode: Batch.BATCH_ERROR_CODE.failedToCreateBillRun });
-      });
-
-      test('calls licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch() with the batch ID', async () => {
-        expect(
-          licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.calledWith(
-            batchId
-          )
-        ).to.be.true();
       });
 
       test('does not publish a job to delete the charge module batch', () => {
@@ -1312,7 +1290,7 @@ experiment('modules/billing/services/batch-service', () => {
           expect(newRepos.billingInvoices.delete.calledWith(billingInvoiceId)).to.be.true();
         });
 
-        test('updates the include in supplementary billing status to reprocess where currently yes', async () => {
+        test('updates the include in supplementary billing status to yes', async () => {
           const [LicenceIdArg] = licencesService.flagForSupplementaryBilling.lastCall.args;
           expect(LicenceIdArg).to.equal(licenceId);
         });

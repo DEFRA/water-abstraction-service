@@ -118,7 +118,6 @@ const deleteBatch = async (batch, internalCallingUser) => {
   }
 
   try {
-    await licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batch.id);
     await chargeModuleBillRunConnector.delete(batch.externalId);
 
     // These are populated at every stage in the bill run
@@ -166,8 +165,6 @@ const setErrorStatus = async (batchId, errorCode) => {
   if (errorCode !== Batch.BATCH_ERROR_CODE.failedToCreateBillRun) {
     await messageQueue.getQueueManager().add(deleteErroredBatchName, batchId);
   }
-
-  await licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId);
 };
 
 const approveBatch = async (batch, internalCallingUser) => {
@@ -176,12 +173,6 @@ const approveBatch = async (batch, internalCallingUser) => {
     await chargeModuleBillRunConnector.send(batch.externalId);
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
     await licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(batch.region.id, batch.dateCreated);
-
-    // Set reprocess to yes for situations where the batch has been sent and therefore the licences
-    // don't need to be includes in a future supplementary bill run.
-    // use the unsent function to save writing the same logic twice, even though
-    // the function name is a little misleading here.
-    await licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batch.id);
     await invoiceService.resetIsFlaggedForRebilling(batch.id);
 
     // if it is a supplementary batch mark all the
@@ -332,7 +323,7 @@ const getSentTptBatchesForFinancialYearAndRegion = async (financialYear, region)
 
 /**
    * Updates each licence in the invoice so that the includeInSupplementaryBilling
-   * value is 'reprocess' where it is current 'yes'
+   * value is 'yes'
    *
    * @param {Object<Invoice>} invoice The invoice containing the licences to update
    */
