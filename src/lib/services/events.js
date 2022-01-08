@@ -71,9 +71,11 @@ const getKPILicenceNames = async () => {
 /**
  * Gets paginated notification events
  * @param {Number} page
+ * @param categories
+ * @param sender
  * @return {Promise<Object>} { data : [], pagination : {} }
  */
-const getNotificationEvents = async (page = 1) => {
+const getNotificationEvents = async (page = 1, categories = '', sender = '') => {
   // Initialise pagination model
   const pagination = new Pagination()
     .fromHash({
@@ -84,7 +86,9 @@ const getNotificationEvents = async (page = 1) => {
   // Find and map data to NotificationEvent service models
   const { rows } = await repo.events.findNotifications({
     limit: pagination.perPage,
-    offset: pagination.startIndex
+    offset: pagination.startIndex,
+    categories,
+    sender
   });
   const data = rows
     .map(camelCase)

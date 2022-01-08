@@ -31,7 +31,9 @@ module.exports = {
       description: 'Gets a list of sent notifications',
       validate: {
         query: Joi.object().keys({
-          page: Joi.number().integer().min(1).default(1).example(5)
+          page: Joi.number().integer().min(1).default(1).example(5),
+          categories: Joi.string(),
+          sender: Joi.string().allow('').email()
         })
       }
     }
@@ -86,6 +88,12 @@ module.exports = {
         method: preHandlers.getEvent, assign: 'event'
       }]
     }
+  },
+
+  getNotificationCategories: {
+    method: 'GET',
+    path: '/water/1.0/notifications/categories',
+    handler: controller.getNotificationCategories
   }
 
 };

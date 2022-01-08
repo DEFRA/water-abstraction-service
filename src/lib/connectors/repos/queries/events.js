@@ -82,9 +82,12 @@ GROUP BY month, year, current_year ORDER BY year desc, month desc;`;
  * - a jsonb blob of message "statuses" with counts for each event, e.g. [{ status: 'error', notify_status: null, count :3 }, ...]
  */
 exports.findNotifications = `
+select * from (
 select e.*,
-  e2.recipient_count,
-  e2.statuses
+e2.recipient_count,
+  e2.statuses,
+  e2.message_ref,
+  snc.category_value
 from water.events e
 left join (
   --
@@ -93,6 +96,7 @@ left join (
   --
   select 
     n.event_id, 
+    n.message_ref,
     sum(n.count) as recipient_count,
     jsonb_agg(jsonb_build_object('status', n.status, 'notify_status', n.notify_status, 'count', n.count)) as statuses
   from (
@@ -100,20 +104,23 @@ left join (
     -- this inner query fetches a count of messages in each status/notify_status combination
     -- grouped by the event_id
     --
-    select n.event_id, n.status, n.notify_status, count(*) as "count"
+    select n.event_id, n.message_ref, n.status, n.notify_status, count(*) as "count"
     from water.scheduled_notification n
     where n.event_id is not null
-    group by n.event_id, n.status, n.notify_status
+    group by n.event_id, n.message_ref, n.status, n.notify_status
   ) n
-  group by n.event_id
+  group by n.event_id, n.message_ref
 ) e2 on e.event_id=e2.event_id
+left join water.scheduled_notification_categories snc on e2.message_ref = any(snc.scheduled_notification_refs)
 where 
   e.type='notification'
   and e.status in ('sent', 'completed', 'sending')
-group by e.event_id, e2.recipient_count, e2.statuses
+  and (e.issuer = cast(:sender::text as varchar) or :sender::text = '')
+group by e.event_id, e2.recipient_count, e2.message_ref, e2.statuses, snc.category_value
 order by e.created desc
 limit :limit 
 offset :offset
+) as cte where cte.category_value = any(string_to_array(:categories, ',')) or :categories = ''
 `;
 
 exports.findNotificationsCount = `
@@ -124,9 +131,6 @@ where
   and e.status in ('sent', 'completed', 'sending')
 `;
 
-/**
-* findNotificationCategories return all available message_ref in water.scheduled_notification
-*/
 exports.findNotificationCategories = `
-select category_value as value, category_label as label from water.scheduled_notification_categories where is_enabled is true;
+    select category_value as value, category_label as label from water.scheduled_notification_categories where is_enabled is true;
 `;
