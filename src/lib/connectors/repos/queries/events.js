@@ -124,11 +124,43 @@ offset :offset
 `;
 
 exports.findNotificationsCount = `
-select count(e.*)
-  from water.events e
+select count(*) from (
+select e.*,
+e2.recipient_count,
+  e2.statuses,
+  e2.message_ref,
+  snc.category_value
+from water.events e
+left join (
+  --
+  -- this inner query aggregates the message counts so that there is a single row
+  -- per event ID, and the status counts are aggregated into a JSON blob
+  --
+  select 
+    n.event_id, 
+    n.message_ref,
+    sum(n.count) as recipient_count,
+    jsonb_agg(jsonb_build_object('status', n.status, 'notify_status', n.notify_status, 'count', n.count)) as statuses
+  from (
+    --
+    -- this inner query fetches a count of messages in each status/notify_status combination
+    -- grouped by the event_id
+    --
+    select n.event_id, n.message_ref, n.status, n.notify_status, count(*) as "count"
+    from water.scheduled_notification n
+    where n.event_id is not null
+    group by n.event_id, n.message_ref, n.status, n.notify_status
+  ) n
+  group by n.event_id, n.message_ref
+) e2 on e.event_id=e2.event_id
+left join water.scheduled_notification_categories snc on e2.message_ref = any(snc.scheduled_notification_refs)
 where 
   e.type='notification'
   and e.status in ('sent', 'completed', 'sending')
+  and (e.issuer = cast(:sender::text as varchar) or :sender::text = '')
+group by e.event_id, e2.recipient_count, e2.message_ref, e2.statuses, snc.category_value
+order by e.created desc
+) as cte where cte.category_value = any(string_to_array(:categories, ',')) or :categories = ''
 `;
 
 exports.findNotificationCategories = `
