@@ -9,7 +9,7 @@ const findChargeCategoryByProperties = async (source, lossFactor, volume, isRest
   const isTidal = source === 'tidal';
   // if the water source is Tidal the water availability is not restricted
   const isRestricted = isTidal ? false : isRestrictedSource;
-  return repo.findOneByProperties(isTidal, lossFactor, isRestricted, modelTier, volume);
+  return repo.findOneByProperties(isTidal, lossFactor, isRestricted, modelTier, Math.ceil(volume));
 };
 
 module.exports.findChargeCategoryByProperties = findChargeCategoryByProperties;

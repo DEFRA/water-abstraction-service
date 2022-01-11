@@ -15,7 +15,7 @@ module.exports = {
           loss: Joi.string().required().valid('low', 'medium', 'high'),
           isRestrictedSource: Joi.boolean().required(),
           waterModel: Joi.string().required().valid('no model', 'tier 1', 'tier 2'),
-          volume: Joi.number().integer().required()
+          volume: Joi.number().positive().required()
         })
       }
     }
