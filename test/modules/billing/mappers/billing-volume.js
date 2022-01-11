@@ -149,5 +149,16 @@ experiment('modules/billing/mappers/billing-volume', () => {
         expect(result.twoPartTariffReview.email).to.equal('nobody@example.com');
       });
     });
+
+    experiment('when there is a null calculated volume', () => {
+      beforeEach(async () => {
+        billingVolume.calculatedVolume = null;
+        result = billingVolumeMapper.modelToDb(billingVolume);
+      });
+
+      test('the calculated volume remains as null', async () => {
+        expect(result.calculatedVolume).to.equal(null);
+      });
+    });
   });
 });

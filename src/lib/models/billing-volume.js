@@ -191,7 +191,7 @@ class BillingVolume extends Model {
 
   /**
    * Allocates billing volume
-   * @param {Number} ML
+   * @param {Number} volume ML
    */
   allocate (volume) {
     this.assertIsNotApproved();
@@ -202,7 +202,7 @@ class BillingVolume extends Model {
 
   /**
    * De-allocate billing volume
-   * @param {Number} ML
+   * @param {Number} volume ML
    */
   deallocate (volume) {
     this.assertIsNotApproved();
@@ -220,10 +220,13 @@ class BillingVolume extends Model {
     const { calculatedVolume } = this;
 
     this.assertIsNotApproved();
+
     if (!assignBillableStatuses.includes(this.twoPartTariffStatus)) {
       this.volume = is.object(calculatedVolume) && is.directInstanceOf(calculatedVolume, Decimal)
         ? this.calculatedVolume.toDecimalPlaces(6).toNumber()
         : this.calculatedVolume;
+    } else if (calculatedVolume === null) {
+      this.calculatedVolume = this.volume;
     }
     return this;
   }
