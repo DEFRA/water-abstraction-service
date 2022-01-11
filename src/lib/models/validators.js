@@ -98,6 +98,7 @@ const assertObject = value => assert(value, VALID_OBJECT);
 const assertNullableObject = value => assert(value, VALID_OBJECT.allow(null));
 const assertArray = value => assert(value, VALID_ARRAY);
 const assertIsNullableArrayOfLicenceNumbers = value => assert(value, Joi.array().allow(null).items(VALID_LICENCE_NUMBER.optional()));
+const assertIsEmpty = value => assert(value, Joi.any().valid(null, '').optional());
 
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
@@ -144,3 +145,4 @@ exports.assertObject = assertObject;
 exports.assertNullableObject = assertNullableObject;
 exports.assertArray = assertArray;
 exports.assertIsNullableArrayOfLicenceNumbers = assertIsNullableArrayOfLicenceNumbers;
+exports.assertIsEmpty = assertIsEmpty;

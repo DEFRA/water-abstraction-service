@@ -17,7 +17,7 @@ const User = require('../../../src/lib/models/user');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
 
-class TestModel {};
+class TestModel {}
 
 experiment('lib/models/charge-version', () => {
   let chargeVersion;
@@ -293,8 +293,7 @@ experiment('lib/models/charge-version', () => {
 
     test('throws an error if set to a different model type', async () => {
       const func = () => {
-        const notChargeElements = [new TestModel()];
-        chargeVersion.chargeElements = notChargeElements;
+        chargeVersion.chargeElements = [new TestModel()];
       };
       expect(func).to.throw();
     });
@@ -314,8 +313,7 @@ experiment('lib/models/charge-version', () => {
 
     test('throws an error if set to a different model type', async () => {
       const func = () => {
-        const notChargeElements = [new TestModel()];
-        chargeVersion.chargeElements = notChargeElements;
+        chargeVersion.chargeElements = [new TestModel()];
       };
       expect(func).to.throw();
     });
@@ -358,30 +356,6 @@ experiment('lib/models/charge-version', () => {
     test('throws an error if set to any other type', async () => {
       const func = () => {
         chargeVersion.approvedBy = new TestModel();
-      };
-      expect(func).to.throw();
-    });
-  });
-
-  experiment('.chargingScheme', () => {
-    test('can be set to sroc', async () => {
-      chargeVersion.chargingScheme = 'sroc';
-      expect(chargeVersion.chargingScheme).to.equal('sroc');
-    });
-
-    test('can be set to presroc', async () => {
-      chargeVersion.chargingScheme = 'presroc';
-      expect(chargeVersion.chargingScheme).to.equal('presroc');
-    });
-
-    test('can be set to null, which will default to presroc', async () => {
-      chargeVersion.chargingScheme = null;
-      expect(chargeVersion.chargingScheme).to.equal('presroc');
-    });
-
-    test('throws an error if set to any other type', async () => {
-      const func = () => {
-        chargeVersion.chargingScheme = new TestModel();
       };
       expect(func).to.throw();
     });

@@ -2,8 +2,8 @@
 
 const { bookshelf } = require('./bookshelf.js');
 
-module.exports = bookshelf.model('ChargeElement', {
-  tableName: 'water.charge_elements',
+module.exports = bookshelf.model('ChargePurpose', {
+  tableName: 'water.charge_purposes',
 
   hasTimestamps: ['date_created', 'date_updated'],
 
@@ -17,9 +17,5 @@ module.exports = bookshelf.model('ChargeElement', {
 
   purposeUse () {
     return this.hasOne('PurposeUse', 'purpose_use_id', 'purpose_use_id');
-  },
-
-  chargePurposes () {
-    return this.hasMany('ChargePurpose', 'charge_element_id', 'charge_element_id');
   }
 });

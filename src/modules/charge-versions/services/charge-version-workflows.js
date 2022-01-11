@@ -127,6 +127,8 @@ const setOrThrowInvalidEntityError = (chargeVersionWorkflow, changes) => {
  * @param {Licence} licence
  * @param {ChargeVersion} chargeVersion
  * @param {User} user
+ * @param {String} status
+ * @param {String} licenceVersionId
  * @return {Promise<ChargeVersionWorkflow>}
  */
 const create = async (licence, chargeVersion, user, status = CHARGE_VERSION_WORKFLOW_STATUS.review, licenceVersionId = null) => {
@@ -158,7 +160,7 @@ const create = async (licence, chargeVersion, user, status = CHARGE_VERSION_WORK
  * Updates a ChargeVersionWorkflow model
  * @param {String} chargeVersionWorkflowId
  * @param {Object} changes
- * @return {Promise<ChargeVersionWorkflow} - updated service model
+ * @return {Promise<ChargeVersionWorkflow>} - updated service model
  */
 const update = async (chargeVersionWorkflowId, changes) => {
   // Load existing model
@@ -178,6 +180,7 @@ const update = async (chargeVersionWorkflowId, changes) => {
 /**
  * Deletes a charge version workflow record by ID
  * @param {ChargeVersionWorkflow} chargeVersionWorkflow
+ * @param {Boolean} isSoftDelete
  * @return {Promise}
  */
 const deleteOne = async (chargeVersionWorkflow, isSoftDelete = true) => {
@@ -194,6 +197,7 @@ const deleteOne = async (chargeVersionWorkflow, isSoftDelete = true) => {
 /**
  * Creates a charge version from the supplied charge version workflow
  * @param {ChargeVersionWorkflow} chargeVersionWorkflow
+ * @param {User} approvedBy
  * @return {Promise<ChargeVersion>}
  */
 const approve = async (chargeVersionWorkflow, approvedBy) => {
@@ -206,7 +210,6 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
   chargeVersion.fromHash({
     createdBy: chargeVersionWorkflow.createdBy,
     approvedBy,
-    chargingScheme: 'presroc',
     licence
   });
 

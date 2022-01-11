@@ -1,5 +1,6 @@
 'use strict';
 
+const config = require('../../../config');
 const validators = require('./validators');
 
 const Company = require('./company');
@@ -12,21 +13,7 @@ const Region = require('./region');
 const ChangeReason = require('./change-reason');
 const User = require('./user');
 
-const SCHEME = {
-  alcs: 'alcs',
-  sroc: 'sroc'
-};
-
-const STATUS = {
-  draft: 'draft',
-  current: 'current',
-  superseded: 'superseded'
-};
-
-const SOURCE = {
-  nald: 'nald',
-  wrls: 'wrls'
-};
+const { SCHEME, STATUS, SOURCE } = require('./constants');
 
 class ChargeVersion extends Model {
   /**
@@ -36,6 +23,11 @@ class ChargeVersion extends Model {
   constructor (id) {
     super(id);
     this._chargeElements = [];
+    if (new Date() >= config.billing.srocStartDate) {
+      this._scheme = SCHEME.sroc;
+    } else {
+      this._scheme = SCHEME.alcs;
+    }
   }
 
   get licence () {
@@ -44,7 +36,7 @@ class ChargeVersion extends Model {
 
   /**
    * Licence
-   * @param {Licence}
+   * @param {Licence} licence
    */
   set licence (licence) {
     validators.assertIsInstanceOf(licence, Licence);
@@ -57,7 +49,7 @@ class ChargeVersion extends Model {
 
   /**
    * Scheme - ALCS/SROC
-   * @param {String}
+   * @param {String} scheme
    */
   set scheme (scheme) {
     validators.assertEnum(scheme, Object.values(SCHEME));
@@ -70,7 +62,7 @@ class ChargeVersion extends Model {
 
   /**
    * Version number
-   * @param {Number}
+   * @param {Number} versionNumber
    */
   set versionNumber (versionNumber) {
     validators.assertNullablePositiveInteger(versionNumber);
@@ -83,7 +75,7 @@ class ChargeVersion extends Model {
 
   /**
    * Valid date range
-   * @param {String}
+   * @param {String} dateRange
    */
   set dateRange (dateRange) {
     validators.assertIsInstanceOf(dateRange, DateRange);
@@ -96,7 +88,7 @@ class ChargeVersion extends Model {
 
   /**
    * Status
-   * @param {String}
+   * @param {String} status
    */
   set status (status) {
     validators.assertEnum(status, Object.values(STATUS));
@@ -122,7 +114,7 @@ class ChargeVersion extends Model {
 
   /**
    * Source
-   * @param {String}
+   * @param {String} source
    */
   set source (source) {
     validators.assertEnum(source, Object.values(SOURCE));
@@ -135,7 +127,7 @@ class ChargeVersion extends Model {
 
   /**
    * Company (full data in CRM)
-   * @param {String}
+   * @param {String} company
    */
   set company (company) {
     validators.assertIsInstanceOf(company, Company);
@@ -148,7 +140,7 @@ class ChargeVersion extends Model {
 
   /**
    * Invoice account (full data in CRM)
-   * @param {String}
+   * @param {String} invoiceAccount
    */
   set invoiceAccount (invoiceAccount) {
     validators.assertIsNullableInstanceOf(invoiceAccount, InvoiceAccount);
@@ -161,7 +153,7 @@ class ChargeVersion extends Model {
 
   /**
    * Charge elements
-   * @param {Array<ChargeElement>}
+   * @param {Array<ChargeElement>} chargeElements
    */
   set chargeElements (chargeElements) {
     validators.assertIsArrayOfType(chargeElements, ChargeElement);
@@ -174,7 +166,7 @@ class ChargeVersion extends Model {
 
   /**
    * Change Reason
-   * @param {ChangeReason}
+   * @param {ChangeReason} changeReason
    */
   set changeReason (changeReason) {
     validators.assertIsNullableInstanceOf(changeReason, ChangeReason);
@@ -241,7 +233,7 @@ class ChargeVersion extends Model {
 
   /**
    * The User who has created the charge version
-   * @param {User}
+   * @param {User} createdBy
    */
   set createdBy (createdBy) {
     validators.assertIsNullableInstanceOf(createdBy, User);
@@ -259,19 +251,6 @@ class ChargeVersion extends Model {
   set approvedBy (approvedBy) {
     validators.assertIsNullableInstanceOf(approvedBy, User);
     this._approvedBy = approvedBy;
-  }
-
-  get chargingScheme () {
-    return this._chargingScheme;
-  }
-
-  set chargingScheme (chargingScheme) {
-    if (!chargingScheme) {
-      this._chargingScheme = 'presroc';
-    } else {
-      validators.assertNullableEnum(chargingScheme, ['sroc', 'presroc']);
-      this._chargingScheme = chargingScheme;
-    }
   }
 }
 

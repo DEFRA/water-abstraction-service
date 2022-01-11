@@ -2,15 +2,13 @@
 
 const { createMapper } = require('../object-mapper');
 
-const ChargeElement = require('../models/charge-element');
+const ChargePurpose = require('../models/charge-purpose');
 const DateRange = require('../models/date-range');
 const camelCaseKeys = require('../camel-case-keys');
 const purposePrimaryMapper = require('./purpose-primary');
 const purposeSecondaryMapper = require('./purpose-secondary');
 const purposeUseMapper = require('./purpose-use');
 const abstractionPeriodMapper = require('./abstraction-period');
-const chargePurposeMapper = require('./charge-purpose');
-const chargeCategoryMapper = require('./charge-category');
 const dateRangeMapper = require('./date-range');
 const helpers = require('./lib/helpers');
 
@@ -18,7 +16,7 @@ const timeLimitedDateMapper = (startDate, endDate) =>
   new DateRange(startDate, endDate);
 
 const dbToModelMapper = createMapper()
-  .map('chargeElementId').to('id')
+  .map('chargePurposeId').to('id')
   .copy(
     'source',
     'season',
@@ -26,10 +24,9 @@ const dbToModelMapper = createMapper()
     'authorisedAnnualQuantity',
     'billableAnnualQuantity',
     'description',
-    'chargeVersionId',
+    'chargeElementId',
     'isSection127AgreementEnabled'
   )
-  .map().to('abstractionPeriod', abstractionPeriodMapper.dbToModel)
   .map('factorsOverridden').to('isFactorsOverridden')
   .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.dbToModel)
   .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.dbToModel)
@@ -37,71 +34,48 @@ const dbToModelMapper = createMapper()
   .map(['timeLimitedStartDate', 'timeLimitedEndDate']).to('timeLimitedPeriod', timeLimitedDateMapper, { mapNull: false });
 
 /**
- * Creates a ChargeElement instance given a row of charge element data
- * @param {Object} row - charge element row from the charge processor
- * @return {ChargeElement}
+ * Creates a ChargePurpose instance given a row of charge purpose data
+ * @param {Object} row - charge purpose row from the charge processor
+ * @return {ChargePurpose}
  */
 const dbToModel = row =>
-  helpers.createModel(ChargeElement, camelCaseKeys(row), dbToModelMapper);
+  helpers.createModel(ChargePurpose, camelCaseKeys(row), dbToModelMapper);
 
-/**
- * common charge element factors that apply to all charging schemes
- */
 const pojoToModelMapper = createMapper()
   .copy(
     'id',
+    'externalId',
+    'authorisedAnnualQuantity',
+    'billableAnnualQuantity',
     'source',
     'season',
     'loss',
     'description',
-    'isFactorsOverridden'
-  );
+    'isSection127AgreementEnabled'
+  )
+  .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel)
+  .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.pojoToModel)
+  .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.pojoToModel)
+  .map('purposeUse').to('purposeUse', purposeUseMapper.pojoToModel)
+  .map('timeLimitedPeriod').to('timeLimitedPeriod', dateRangeMapper.pojoToModel);
 
 /**
- * Converts a plain object representation of a ChargeElement to a ChargeElement model
+ * Converts a plain object representation of a ChargePurpose to a ChargePurpose model
  * @param {Object} pojo
- * @return ChargeElement
+ * @return ChargePurpose
  */
-const pojoToModel = pojo => {
-  if (pojo.scheme === 'sroc') {
-    return helpers.createModel(ChargeElement, pojo, pojoToModelMapper
-      .copy(
-        'volume',
-        'waterModel',
-        'isRestrictedSource',
-        'scheme',
-        'eiucRegion'
-      )
-      .map('chargePurposes').to('chargePurposes', chargePurposes => chargePurposes.map(chargePurposeMapper.pojoToModel))
-      .map('chargeCategory').to('chargeCategory', chargeCategoryMapper.pojoToModel)
-    );
-  } else {
-    return helpers.createModel(ChargeElement, pojo, pojoToModelMapper
-      .copy(
-        'externalId',
-        'authorisedAnnualQuantity',
-        'billableAnnualQuantity',
-        'scheme',
-        'isSection127AgreementEnabled'
-      )
-      .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel)
-      .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.pojoToModel)
-      .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.pojoToModel)
-      .map('purposeUse').to('purposeUse', purposeUseMapper.pojoToModel)
-      .map('timeLimitedPeriod').to('timeLimitedPeriod', dateRangeMapper.pojoToModel)
-    );
-  }
-};
+const pojoToModel = pojo =>
+  helpers.createModel(ChargePurpose, pojo, pojoToModelMapper);
 
 /**
  * Maps charge element to DB fields
- * @param {ChargeElement} chargeElement
- * @param {ChargeVersion} [chargeVersion]
+ * @param {ChargePurpose} chargePurpose
+ * @param {ChargeElement} [chargeElement]
  * @return {Object}
  */
 
 const modelToDbMapper = createMapper()
-  .map('id').to('chargeElementId')
+  .map('id').to('chargePurposeId')
   .copy(
     'source',
     'season',
@@ -123,12 +97,12 @@ const modelToDbMapper = createMapper()
   .map('timeLimitedPeriod').to('timeLimitedEndDate', value => value ? value.endDate : null)
   .map('abstractionPeriod').to('seasonDerived', abstractionPeriod => abstractionPeriod.getChargeSeason());
 
-const chargeVersionMapper = createMapper()
-  .map('id').to('chargeVersionId');
+const chargeElementMapper = createMapper()
+  .map('id').to('chargeElementId');
 
-const modelToDb = (chargeElement, chargeVersion) => ({
-  ...modelToDbMapper.execute(chargeElement),
-  ...chargeVersionMapper.execute(chargeVersion)
+const modelToDb = (chargePurpose, chargeElement) => ({
+  ...modelToDbMapper.execute(chargePurpose),
+  ...chargeElementMapper.execute(chargeElement)
 });
 
 exports.dbToModel = dbToModel;

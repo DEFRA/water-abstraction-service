@@ -36,6 +36,36 @@ exports.INCLUDE_IN_SUPPLEMENTARY_BILLING = {
   no: 'no'
 };
 
+exports.VALID_SOURCES = {
+  supported: 'supported',
+  unsupported: 'unsupported',
+  tidal: 'tidal',
+  kielder: 'kielder',
+  nonTidal: 'non-tidal'
+};
+
+exports.WATER_MODEL = {
+  noModel: 'no model',
+  tier1: 'tier 1',
+  tier2: 'tier 2'
+};
+
+exports.SCHEME = {
+  alcs: 'alcs',
+  sroc: 'sroc'
+};
+
+exports.STATUS = {
+  draft: 'draft',
+  current: 'current',
+  superseded: 'superseded'
+};
+
+exports.SOURCE = {
+  nald: 'nald',
+  wrls: 'wrls'
+};
+
 exports.ROLE_NAMES = {
   licenceHolder: 'licenceHolder',
   additionalContact: 'additionalContact',
