@@ -54,7 +54,7 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
     test('the matching is aborted early and error codes assigned', async () => {
       expect(result).to.be.an.array().length(1);
       expect(result[0].volume).to.equal(0);
-      expect(result[0].calculatedVolume).to.equal(null);
+      expect(result[0].calculatedVolume.toNumber()).to.equal(0);
       expect(result[0].twoPartTariffStatus).to.equal(twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED);
     });
   });
