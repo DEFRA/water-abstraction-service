@@ -24,7 +24,6 @@ experiment('lib/services/event', () => {
   beforeEach(async () => {
     sandbox.stub(repo.events, 'findNotifications');
     sandbox.stub(repo.events, 'findNotificationsCount');
-    sandbox.stub(repo.scheduledNotifications, 'getScheduledNotificationCategories');
   });
 
   afterEach(async () => {
@@ -217,7 +216,7 @@ experiment('lib/services/event', () => {
       sandbox.restore();
     });
 
-    test('should map the object key received from the database repos layer to camelCase', async () => {
+    test('should map the object key receveived from the database repos layer to camelCase', async () => {
       const data = await eventsService.getKPIReturnsMonthly();
       expect(data[0].currentYear).to.equal(true);
     });
@@ -233,7 +232,7 @@ experiment('lib/services/event', () => {
       sandbox.restore();
     });
 
-    test('should map the object key received from the database repos layer to camelCase', async () => {
+    test('should map the object key receveived from the database repos layer to camelCase', async () => {
       const data = await eventsService.getKPILicenceNames();
       expect(data[0].currentYear).to.equal(true);
     });
@@ -242,8 +241,6 @@ experiment('lib/services/event', () => {
   experiment('.getNotificationEvents', () => {
     let result;
     const page = 3;
-    const filter = 'waa.stop';
-    const sentBy = 'test@user.eu';
 
     beforeEach(async () => {
       repo.events.findNotifications.resolves({
@@ -261,26 +258,15 @@ experiment('lib/services/event', () => {
           count: 123
         }]
       });
-
-      repo.scheduledNotifications.getScheduledNotificationCategories.resolves([{
-        categoryValue: 'waa.stop',
-        scheduledNotificationRefs: ['water_abstraction_alert_stop']
-      }]);
-
-      result = await eventsService.getNotificationEvents(page, filter, sentBy);
+      result = await eventsService.getNotificationEvents(page);
     });
 
-    test('calls repo.scheduledNotifications.getScheduledNotificationCategories to grab categories', () => {
-      expect(repo.scheduledNotifications.getScheduledNotificationCategories.called).to.be.true();
-    });
-
-    test('calls repo .findNotifications method with expected params', async () => {
+    test('calls repo .findNotifications method with expected limit/offset params', async () => {
       expect(repo.events.findNotifications.calledWith({
         limit: 50,
         offset: 100,
-        messageRef: '["water_abstraction_alert_stop"]',
-        filterLength: 1,
-        sentBy
+        categories: '',
+        sender: ''
       })).to.be.true();
     });
 
