@@ -172,7 +172,6 @@ const approveBatch = async (batch, internalCallingUser) => {
     await chargeModuleBillRunConnector.approve(batch.externalId);
     await chargeModuleBillRunConnector.send(batch.externalId);
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
-    
     await invoiceService.resetIsFlaggedForRebilling(batch.id);
 
     // if it is a supplementary batch mark all the

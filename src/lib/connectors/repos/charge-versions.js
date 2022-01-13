@@ -71,7 +71,7 @@ const create = async data => {
  *
  * @param {String} regionId
  * @param {Number} financialYearEnding
- * @param {Boolean} isSupplementaryBatch 
+ * @param {Boolean} isSupplementaryBatch
  */
 const findValidInRegionAndFinancialYear = (regionId, financialYearEnding, isSupplementaryBatch) => {
   const params = {
