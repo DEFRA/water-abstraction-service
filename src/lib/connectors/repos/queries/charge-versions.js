@@ -24,10 +24,12 @@ from (
     )
     *
     -- Charge version date range
-    daterange(
-     cv.start_date,
-     cv.end_date
-    ) 
+    CASE WHEN cv.start_date = make_date(:financialYearEnding, 3, 31)
+         THEN daterange(cv.start_date - 1, cv.end_date)
+         WHEN cv.end_date = make_date(:financialYearEnding-1, 4, 1)
+         THEN daterange(cv.start_date, cv.end_date-1)
+         ELSE daterange(cv.start_date, cv.end_date)
+    END
     *
     -- Financial year date range
     daterange(
@@ -86,10 +88,12 @@ from (
     )
     *
     -- Charge version date range
-    daterange(
-     cv.start_date,
-     cv.end_date
-    ) 
+    CASE WHEN cv.start_date = make_date(:financialYearEnding, 3, 31)
+         THEN daterange(cv.start_date - 1, cv.end_date)
+         WHEN cv.end_date = make_date(:financialYearEnding-1, 4, 1)
+         THEN daterange(cv.start_date, cv.end_date-1)
+         ELSE daterange(cv.start_date, cv.end_date)
+    END
     *
     -- Financial year date range
     daterange(
