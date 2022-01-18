@@ -27,4 +27,20 @@ alter table water.charge_elements
     drop column scheme
 ;
 
+alter type water.charge_element_source
+    rename to charge_element_source_old;
+
+create type water.charge_element_source AS ENUM ('supported', 'unsupported', 'kielder', 'tidal');
+
+alter table water.charge_elements
+    alter column source type water.charge_element_source using source::text::water.charge_element_source;
+
+alter table water.billing_transactions
+    alter column source type water.charge_element_source using source::text::water.charge_element_source;
+
+alter table water.charge_purposes
+    alter column source type water.charge_element_source using source::text::water.charge_element_source;
+
+drop type charge_element_source_old;
+
 drop type if exists water.charge_element_water_model;
