@@ -215,7 +215,8 @@ experiment('lib/mappers/charge-element', () => {
         purposeUse: new PurposeUse(uuid()),
         timeLimitedPeriod: new DateRange('2019-01-01', '2020-12-31'),
         isFactorsOverridden: false,
-        isSection127AgreementEnabled: true
+        isSection127AgreementEnabled: true,
+        scheme: 'alcs'
       });
     });
 
@@ -241,6 +242,7 @@ experiment('lib/mappers/charge-element', () => {
             purposePrimaryId: model.purposePrimary.id,
             purposeSecondaryId: model.purposeSecondary.id,
             purposeUseId: model.purposeUse.id,
+            scheme: 'alcs',
             timeLimitedStartDate: '2019-01-01',
             timeLimitedEndDate: '2020-12-31',
             seasonDerived: 'all year',
@@ -285,6 +287,7 @@ experiment('lib/mappers/charge-element', () => {
             purposePrimaryId: model.purposePrimary.id,
             purposeSecondaryId: model.purposeSecondary.id,
             purposeUseId: model.purposeUse.id,
+            scheme: 'alcs',
             timeLimitedStartDate: null,
             timeLimitedEndDate: null,
             seasonDerived: 'all year',

@@ -305,7 +305,8 @@ experiment('lib/services/charge-elements', () => {
       abstractionPeriod: new AbstractionPeriod(),
       purposePrimary: new Purpose(uuid()),
       purposeSecondary: new Purpose(uuid()),
-      purposeUse: new PurposeUse(uuid())
+      purposeUse: new PurposeUse(uuid()),
+      scheme: 'alcs'
     });
 
     beforeEach(async () => {
@@ -348,7 +349,8 @@ experiment('lib/services/charge-elements', () => {
         abstractionPeriod,
         purposePrimary: new Purpose(uuid()),
         purposeSecondary: new Purpose(uuid()),
-        purposeUse
+        purposeUse,
+        scheme: 'alcs'
       });
     });
 

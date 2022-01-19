@@ -5,6 +5,7 @@ const helpers = require('@envage/water-abstraction-helpers');
 const Model = require('./model');
 const DateRange = require('./date-range');
 const validators = require('./validators');
+const { isEmpty } = require('lodash');
 
 class AbstractionPeriod extends Model {
   static getSummer () {
@@ -34,8 +35,10 @@ class AbstractionPeriod extends Model {
   }
 
   set startDay (day) {
-    validators.assertDay(day);
-    this._startDay = parseInt(day);
+    if (!isNaN(day) || !isEmpty(day)) {
+      validators.assertDay(day);
+    }
+    this._startDay = parseInt(day) || null;
   }
 
   /**
@@ -47,8 +50,10 @@ class AbstractionPeriod extends Model {
   }
 
   set startMonth (month) {
-    validators.assertMonth(month);
-    this._startMonth = parseInt(month);
+    if (!isNaN(month) || !isEmpty(month)) {
+      validators.assertMonth(month);
+    }
+    this._startMonth = parseInt(month) || null;
   }
 
   /**
@@ -60,8 +65,10 @@ class AbstractionPeriod extends Model {
   }
 
   set endDay (day) {
-    validators.assertDay(day);
-    this._endDay = parseInt(day);
+    if (!isNaN(day) || !isEmpty(day)) {
+      validators.assertDay(day);
+    }
+    this._endDay = parseInt(day) || null;
   }
 
   /**
@@ -73,8 +80,10 @@ class AbstractionPeriod extends Model {
   }
 
   set endMonth (month) {
-    validators.assertMonth(month);
-    this._endMonth = parseInt(month);
+    if (!isNaN(month) || !isEmpty(month)) {
+      validators.assertMonth(month);
+    }
+    this._endMonth = parseInt(month) || null;
   }
 
   /**

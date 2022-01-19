@@ -27,6 +27,7 @@ const dbToModelMapper = createMapper()
     'chargeElementId',
     'isSection127AgreementEnabled'
   )
+  .map().to('abstractionPeriod', abstractionPeriodMapper.dbToModel)
   .map('factorsOverridden').to('isFactorsOverridden')
   .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.dbToModel)
   .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.dbToModel)

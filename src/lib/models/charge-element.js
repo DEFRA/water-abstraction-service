@@ -1,6 +1,6 @@
 'use strict';
 
-const { isNull, max, isEmpty } = require('lodash');
+const { isNull, max } = require('lodash');
 
 const Model = require('./model');
 const AbstractionPeriod = require('./abstraction-period');
@@ -10,7 +10,6 @@ const PurposeUse = require('./purpose-use');
 const ChargePurpose = require('./charge-purpose');
 const ChargeCategory = require('./charge-category');
 const { CHARGE_SEASON, LOSSES, VALID_SOURCES, SCHEME, WATER_MODEL } = require('./constants');
-
 const validators = require('./validators');
 
 class ChargeElement extends Model {
@@ -46,12 +45,8 @@ class ChargeElement extends Model {
   }
 
   set eiucRegion (eiucRegion) {
-    if (this._scheme === 'sroc') {
-      validators.assertNullableString(eiucRegion);
-      this._eiucRegion = eiucRegion;
-    } else {
-      this._eiucRegion = null;
-    }
+    validators.assertNullableString(eiucRegion);
+    this._eiucRegion = eiucRegion || null;
   }
 
   /**
@@ -63,7 +58,7 @@ class ChargeElement extends Model {
   }
 
   set season (season) {
-    validators.assertEnum(season, Object.values(CHARGE_SEASON));
+    validators.assertNullableEnum(season, Object.values(CHARGE_SEASON));
     this._season = season;
   }
 
@@ -89,7 +84,9 @@ class ChargeElement extends Model {
   }
 
   set abstractionPeriod (abstractionPeriod) {
-    validators.assertIsInstanceOf(abstractionPeriod, AbstractionPeriod);
+    abstractionPeriod
+      ? validators.assertIsInstanceOf(abstractionPeriod, AbstractionPeriod)
+      : validators.assertIsEmpty(abstractionPeriod);
     this._abstractionPeriod = abstractionPeriod;
   }
 
@@ -102,8 +99,7 @@ class ChargeElement extends Model {
   }
 
   set authorisedAnnualQuantity (quantity) {
-    validators.assertIsEmpty(this._volume);
-    validators.assertQuantity(quantity);
+    validators.assertNullableQuantity(quantity);
     this._authorisedAnnualQuantity = parseFloat(quantity);
   }
 
@@ -117,7 +113,6 @@ class ChargeElement extends Model {
 
   set billableAnnualQuantity (quantity) {
     validators.assertNullableQuantity(quantity);
-    validators.assertIsEmpty(this._volume);
     this._billableAnnualQuantity = isNull(quantity) ? null : parseFloat(quantity);
   }
 
@@ -135,9 +130,9 @@ class ChargeElement extends Model {
    * @return {Number}
    */
   get volume () {
-    return isEmpty(this._volume)
-      ? this._billableAnnualQuantity || this._authorisedAnnualQuantity
-      : this._volume;
+    return this._scheme === SCHEME.sroc
+      ? this._volume
+      : this._billableAnnualQuantity || this._authorisedAnnualQuantity;
   }
 
   /**
@@ -148,9 +143,7 @@ class ChargeElement extends Model {
    * @return {Number}
    */
   set volume (volume) {
-    validators.assertIsEmpty(this._billableAnnualQuantity);
-    validators.assertIsEmpty(this._authorisedAnnualQuantity);
-    validators.assertQuantity(volume);
+    validators.assertNullableQuantity(volume);
     this._volume = parseFloat(volume);
   }
 
@@ -221,7 +214,7 @@ class ChargeElement extends Model {
 
   get isFactorsOverridden () { return this._isFactorsOverridden; }
   set isFactorsOverridden (isFactorsOverridden) {
-    validators.assertIsBoolean(isFactorsOverridden);
+    validators.assertIsNullableBoolean(isFactorsOverridden);
     this._isFactorsOverridden = isFactorsOverridden;
   }
 
@@ -268,7 +261,7 @@ class ChargeElement extends Model {
   }
 
   set waterModel (waterModel) {
-    validators.assertEnum(waterModel, Object.values(WATER_MODEL));
+    validators.assertNullableEnum(waterModel, Object.values(WATER_MODEL));
     this._waterModel = waterModel;
   }
 

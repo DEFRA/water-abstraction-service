@@ -1,7 +1,6 @@
 'use strict';
 
 const { createMapper } = require('../object-mapper');
-
 const ChargeElement = require('../models/charge-element');
 const DateRange = require('../models/date-range');
 const camelCaseKeys = require('../camel-case-keys');
@@ -20,30 +19,48 @@ const timeLimitedDateMapper = (startDate, endDate) =>
 const dbToModelMapper = createMapper()
   .map('chargeElementId').to('id')
   .copy(
+    'scheme',
     'source',
     'season',
     'loss',
-    'authorisedAnnualQuantity',
-    'billableAnnualQuantity',
     'description',
-    'chargeVersionId',
-    'isSection127AgreementEnabled'
-  )
-  .map().to('abstractionPeriod', abstractionPeriodMapper.dbToModel)
-  .map('factorsOverridden').to('isFactorsOverridden')
-  .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.dbToModel)
-  .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.dbToModel)
-  .map('purposeUse').to('purposeUse', purposeUseMapper.dbToModel)
-  .map(['timeLimitedStartDate', 'timeLimitedEndDate']).to('timeLimitedPeriod', timeLimitedDateMapper, { mapNull: false });
+    'chargeVersionId'
+  );
 
 /**
  * Creates a ChargeElement instance given a row of charge element data
  * @param {Object} row - charge element row from the charge processor
  * @return {ChargeElement}
  */
-const dbToModel = row =>
-  helpers.createModel(ChargeElement, camelCaseKeys(row), dbToModelMapper);
-
+const dbToModel = row => {
+  if (row.scheme === 'sroc') {
+    return helpers.createModel(ChargeElement, camelCaseKeys(row), dbToModelMapper
+      .copy(
+        'volume',
+        'waterModel',
+        'isRestrictedSource',
+        'eiucRegion'
+      )
+      .map('chargePurposes').to('chargePurposes', chargePurposes => chargePurposes.map(chargePurposeMapper.dbToModel))
+      .map('chargeCategory').to('chargeCategory', chargeCategoryMapper.dbToModel)
+    );
+  } else {
+    return helpers.createModel(ChargeElement, camelCaseKeys(row), dbToModelMapper
+      .copy(
+        'authorisedAnnualQuantity',
+        'billableAnnualQuantity',
+        'isSection127AgreementEnabled',
+        'isSection127AgreementEnabled'
+      )
+      .map().to('abstractionPeriod', abstractionPeriodMapper.dbToModel)
+      .map('factorsOverridden').to('isFactorsOverridden')
+      .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.dbToModel)
+      .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.dbToModel)
+      .map('purposeUse').to('purposeUse', purposeUseMapper.dbToModel)
+      .map(['timeLimitedStartDate', 'timeLimitedEndDate']).to('timeLimitedPeriod', timeLimitedDateMapper, { mapNull: false })
+    );
+  }
+};
 /**
  * common charge element factors that apply to all charging schemes
  */
@@ -100,7 +117,7 @@ const pojoToModel = pojo => {
  * @return {Object}
  */
 
-const modelToDbMapper = createMapper()
+const modelToDbMapperAlcs = createMapper()
   .map('id').to('chargeElementId')
   .copy(
     'source',
@@ -109,7 +126,8 @@ const modelToDbMapper = createMapper()
     'description',
     'authorisedAnnualQuantity',
     'billableAnnualQuantity',
-    'isSection127AgreementEnabled'
+    'isSection127AgreementEnabled',
+    'scheme'
   )
   .map('abstractionPeriod.startDay').to('abstractionPeriodStartDay')
   .map('abstractionPeriod.startMonth').to('abstractionPeriodStartMonth')
@@ -123,11 +141,29 @@ const modelToDbMapper = createMapper()
   .map('timeLimitedPeriod').to('timeLimitedEndDate', value => value ? value.endDate : null)
   .map('abstractionPeriod').to('seasonDerived', abstractionPeriod => abstractionPeriod.getChargeSeason());
 
+const modelToDbMapperSroc = createMapper()
+  .map('id').to('chargeElementId')
+  .copy(
+    'source',
+    'season',
+    'loss',
+    'description',
+    'volume',
+    'isRestrictedSource',
+    'waterModel',
+    'isSection127AgreementEnabled',
+    'scheme',
+    'eiucRegion'
+  )
+  .map('chargeCategory.id').to('billingChargeCategoryId');
+
 const chargeVersionMapper = createMapper()
   .map('id').to('chargeVersionId');
 
 const modelToDb = (chargeElement, chargeVersion) => ({
-  ...modelToDbMapper.execute(chargeElement),
+  ...(chargeElement.scheme === 'alcs'
+    ? modelToDbMapperAlcs.execute(chargeElement)
+    : modelToDbMapperSroc.execute(chargeElement)),
   ...chargeVersionMapper.execute(chargeVersion)
 });
 

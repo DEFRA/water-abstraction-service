@@ -1,6 +1,10 @@
 alter table water.charge_elements
-    drop constraint "volume_authorised_annual_quantity"
-;
+    drop constraint if exists "volume_authorised_annual_quantity";
+
+-- delete all sroc charge elements because the changes below will destroy the sroc data
+-- this will fail if there are any transactions created for any sroc charge elements
+delete from water.charge_elements where scheme = 'sroc';
+delete from water.charge_versions where scheme = 'sroc';
 
 alter table water.charge_elements
     add column sroc_category varchar,
@@ -16,15 +20,28 @@ alter table water.charge_elements
     alter column abstraction_period_start_month set not null,
     drop column is_section_130_agreement_enabled,
     drop column is_section_126_agreement_enabled,
-    drop column is_winter_discount_enabled,
     drop column adjustments,
-    drop column is_public_water_supply,
     drop column additional_charges,
     drop column billing_charge_category_id,
     drop column volume,
     drop column water_model,
     drop column is_restricted_source,
-    drop column scheme
+    drop column scheme,
+    drop column eiuc_region
 ;
+alter type water.charge_element_source
+  rename to charge_element_source_old;
 
+create type water.charge_element_source AS ENUM ('supported', 'unsupported', 'kielder', 'tidal');
+
+alter table water.charge_elements
+  alter column source type water.charge_element_source using source::text::water.charge_element_source;
+
+alter table water.billing_transactions
+  alter column source type water.charge_element_source using source::text::water.charge_element_source;
+
+alter table water.charge_purposes
+  alter column source type water.charge_element_source using source::text::water.charge_element_source;
+
+drop type if exists charge_element_source_old;
 drop type if exists water.charge_element_water_model;
