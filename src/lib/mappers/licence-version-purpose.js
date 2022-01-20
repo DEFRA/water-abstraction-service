@@ -34,7 +34,8 @@ const dbToModel = row => {
     dateCreated: row.dateCreated,
     notes: row.notes,
     annualQuantity: row.annualQuantity,
-    abstractionPeriod: abstractionPeriodMapper.dbToModel(row),
+    // inject the default scheme as alcs to enable the abstraction period to be mapped
+    abstractionPeriod: abstractionPeriodMapper.dbToModel({ ...row, scheme: 'alcs' }),
     timeLimitedPeriod: getTimeLimitedPeriod(row)
   });
 };
