@@ -11,6 +11,10 @@ const isTlsConnection = (process.env.REDIS_HOST || '').includes('aws');
 const isRedisLazy = !!process.env.LAZY_REDIS;
 const isPermitsTestDatabase = process.env.DATABASE_URL.includes('permits-test');
 const isTest = process.env.NODE_ENV === 'test';
+const srocStartDate = new Date('2021-04-01');
+
+const isSrocLive = new Date() >= srocStartDate &&
+  ['local', 'dev', 'development', 'test'].includes(process.env.NODE_ENV);
 
 module.exports = {
 
@@ -32,7 +36,10 @@ module.exports = {
     naldSwitchOverDate: process.env.BILLING_GO_LIVE_DATE || '2021-06-10',
     // The grace period (in days) following the return due date during which time
     // the submitted return will be considered for billing
-    returnsGracePeriod: process.env.RETURNS_GRACE_PERIOD || 21
+    returnsGracePeriod: process.env.RETURNS_GRACE_PERIOD || 21,
+    // The date SROC goes live
+    isSrocLive,
+    srocStartDate
   },
 
   blipp: {

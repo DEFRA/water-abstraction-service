@@ -9,28 +9,28 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
+const ChargePurpose = require('../../../src/lib/models/charge-purpose');
 const ChargeElement = require('../../../src/lib/models/charge-element');
-const ChargeVersion = require('../../../src/lib/models/charge-version');
 
 const DateRange = require('../../../src/lib/models/date-range');
 const Purpose = require('../../../src/lib/models/purpose');
 const PurposeUse = require('../../../src/lib/models/purpose-use');
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
-const chargeElementsMapper = require('../../../src/lib/mappers/charge-element');
+const ChargePurposeMapper = require('../../../src/lib/mappers/charge-purpose');
 const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
 
 const data = {
-  chargeElement: {
-    chargeElementId: '90d4af8a-1717-452c-84bd-467a7d55ade4',
+  chargePurpose: {
+    chargePurposeId: '90d4af8a-1717-452c-84bd-467a7d55ade4',
     source: 'supported',
     season: CHARGE_SEASON.summer,
     loss: 'high',
-    chargeVersionId: '6d53dddd-2ab6-449b-b28c-d6d857569b94',
+    chargeElementId: '6d53dddd-2ab6-449b-b28c-d6d857569b94',
     isFactorsOverridden: true
   },
-  timeLimitedChargeElement: {
-    chargeElementId: '90d4af8a-1717-452c-84bd-467a7d55ade4',
+  timeLimitedChargePurpose: {
+    chargePurposeId: '90d4af8a-1717-452c-84bd-467a7d55ade4',
     source: 'supported',
     season: CHARGE_SEASON.summer,
     loss: 'high',
@@ -38,15 +38,15 @@ const data = {
     timeLimitedEndDate: '2020-10-31'
   },
   dbRow: {
-    charge_element_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
+    charge_purpose_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
     source: 'supported',
     season: CHARGE_SEASON.summer,
     loss: 'high',
-    charge_version_id: '6d53dddd-2ab6-449b-b28c-d6d857569b94',
+    charge_element_id: '6d53dddd-2ab6-449b-b28c-d6d857569b94',
     factors_overridden: true
   },
   dbRowWithPurposeUse: {
-    charge_element_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
+    charge_purpose_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
     source: 'supported',
     season: CHARGE_SEASON.summer,
     loss: 'high',
@@ -62,40 +62,40 @@ const data = {
   }
 };
 
-experiment('lib/mappers/charge-element', () => {
+experiment('lib/mappers/charge-purpose', () => {
   let result;
 
   experiment('.dbToModel', () => {
     beforeEach(async () => {
-      result = chargeElementsMapper.dbToModel(data.dbRow);
+      result = ChargePurposeMapper.dbToModel(data.dbRow);
     });
 
-    test('returns an instance of ChargeElement', async () => {
-      expect(result instanceof ChargeElement).to.be.true();
+    test('returns an instance of ChargePurpose', async () => {
+      expect(result instanceof ChargePurpose).to.be.true();
     });
 
     test('sets the .id property', async () => {
-      expect(result.id).to.equal(data.chargeElement.chargeElementId);
+      expect(result.id).to.equal(data.chargePurpose.chargePurposeId);
     });
 
     test('sets the .source property', async () => {
-      expect(result.source).to.equal(data.chargeElement.source);
+      expect(result.source).to.equal(data.chargePurpose.source);
     });
 
     test('sets the .season property', async () => {
-      expect(result.season).to.equal(data.chargeElement.season);
+      expect(result.season).to.equal(data.chargePurpose.season);
     });
 
     test('sets the .loss property', async () => {
-      expect(result.loss).to.equal(data.chargeElement.loss);
+      expect(result.loss).to.equal(data.chargePurpose.loss);
     });
 
-    test('sets the .chargeVersionId property', async () => {
-      expect(result.chargeVersionId).to.equal(data.chargeElement.chargeVersionId);
+    test('sets the .chargeElementId property', async () => {
+      expect(result.chargeElementId).to.equal(data.chargePurpose.chargeElementId);
     });
 
     test('sets the .isFactorsOverridden property', async () => {
-      expect(result.isFactorsOverridden).to.equal(data.chargeElement.isFactorsOverridden);
+      expect(result.isFactorsOverridden).to.equal(data.chargePurpose.isFactorsOverridden);
     });
 
     experiment('when the database row does not contain a purpose use', () => {
@@ -106,7 +106,7 @@ experiment('lib/mappers/charge-element', () => {
 
     experiment('when the database row contains a purpose use', () => {
       beforeEach(async () => {
-        result = chargeElementsMapper.dbToModel(data.dbRowWithPurposeUse);
+        result = ChargePurposeMapper.dbToModel(data.dbRowWithPurposeUse);
       });
 
       test('the purposeUse property is set', async () => {
@@ -116,13 +116,13 @@ experiment('lib/mappers/charge-element', () => {
 
     experiment('when the database row contains time-limited dates', () => {
       beforeEach(async () => {
-        result = chargeElementsMapper.dbToModel(data.timeLimitedChargeElement);
+        result = ChargePurposeMapper.dbToModel(data.timeLimitedChargePurpose);
       });
 
       test('the timeLimitedPeriod property is set', async () => {
         expect(result.timeLimitedPeriod instanceof DateRange).to.be.true();
-        expect(result.timeLimitedPeriod.startDate).to.equal(data.timeLimitedChargeElement.timeLimitedStartDate);
-        expect(result.timeLimitedPeriod.endDate).to.equal(data.timeLimitedChargeElement.timeLimitedEndDate);
+        expect(result.timeLimitedPeriod.startDate).to.equal(data.timeLimitedChargePurpose.timeLimitedStartDate);
+        expect(result.timeLimitedPeriod.endDate).to.equal(data.timeLimitedChargePurpose.timeLimitedEndDate);
       });
     });
   });
@@ -146,14 +146,14 @@ experiment('lib/mappers/charge-element', () => {
           id: uuid()
         }
       };
-      model = chargeElementsMapper.pojoToModel(data);
+      model = ChargePurposeMapper.pojoToModel(data);
     });
 
-    test('returns a ChargeElement model', async () => {
-      expect(model).to.be.an.instanceof(ChargeElement);
+    test('returns a ChargePurpose model', async () => {
+      expect(model).to.be.an.instanceof(ChargePurpose);
     });
 
-    test('maps charge element properties', async () => {
+    test('maps charge purpose properties', async () => {
       expect(model.id).to.equal(data.id);
       expect(model.source).to.equal(data.source);
       expect(model.season).to.equal(data.season);
@@ -175,22 +175,22 @@ experiment('lib/mappers/charge-element', () => {
 
     test('the abstraction period is undefined if not specified in the data', async () => {
       delete data.abstractionPeriod;
-      model = chargeElementsMapper.pojoToModel(data);
+      model = ChargePurposeMapper.pojoToModel(data);
       expect(model.abstractionPeriod).to.be.undefined();
     });
 
     test('the purpose use is undefined if not specified in the data', async () => {
       delete data.purposeUse;
-      model = chargeElementsMapper.pojoToModel(data);
+      model = ChargePurposeMapper.pojoToModel(data);
       expect(model.purposeUse).to.be.undefined();
     });
   });
 
   experiment('.modelToDb', () => {
-    let model, result, chargeVersion;
+    let model, result, chargeElement;
 
     beforeEach(async () => {
-      chargeVersion = new ChargeVersion(uuid());
+      chargeElement = new ChargeElement(uuid());
 
       const abstractionPeriod = new AbstractionPeriod();
       abstractionPeriod.fromHash({
@@ -200,13 +200,13 @@ experiment('lib/mappers/charge-element', () => {
         endMonth: 10
       });
 
-      model = new ChargeElement();
+      model = new ChargePurpose();
       model.fromHash({
         id: uuid(),
         source: 'supported',
         season: 'summer',
         loss: 'high',
-        description: 'test element',
+        description: 'test purpose',
         authorisedAnnualQuantity: 34,
         billableAnnualQuantity: 26.4,
         abstractionPeriod,
@@ -215,24 +215,23 @@ experiment('lib/mappers/charge-element', () => {
         purposeUse: new PurposeUse(uuid()),
         timeLimitedPeriod: new DateRange('2019-01-01', '2020-12-31'),
         isFactorsOverridden: false,
-        isSection127AgreementEnabled: true,
-        scheme: 'alcs'
+        isSection127AgreementEnabled: true
       });
     });
 
     experiment('when there are time-limited dates', () => {
       beforeEach(async () => {
-        result = chargeElementsMapper.modelToDb(model, chargeVersion);
+        result = ChargePurposeMapper.modelToDb(model, chargeElement);
       });
 
       test('the properties are mapped correctly to the database fields', async () => {
         expect(result).to.equal(
           {
-            chargeElementId: model.id,
+            chargePurposeId: model.id,
             source: 'supported',
             season: 'summer',
             loss: 'high',
-            description: 'test element',
+            description: 'test purpose',
             authorisedAnnualQuantity: 34,
             billableAnnualQuantity: 26.4,
             abstractionPeriodStartDay: 1,
@@ -242,11 +241,10 @@ experiment('lib/mappers/charge-element', () => {
             purposePrimaryId: model.purposePrimary.id,
             purposeSecondaryId: model.purposeSecondary.id,
             purposeUseId: model.purposeUse.id,
-            scheme: 'alcs',
             timeLimitedStartDate: '2019-01-01',
             timeLimitedEndDate: '2020-12-31',
             seasonDerived: 'all year',
-            chargeVersionId: chargeVersion.id,
+            chargeElementId: chargeElement.id,
             factorsOverridden: model.isFactorsOverridden,
             isSection127AgreementEnabled: true
           }
@@ -254,30 +252,30 @@ experiment('lib/mappers/charge-element', () => {
       });
     });
 
-    experiment('when there is no charge version supplied', () => {
+    experiment('when there is no charge element supplied', () => {
       beforeEach(async () => {
-        result = chargeElementsMapper.modelToDb(model);
+        result = ChargePurposeMapper.modelToDb(model);
       });
 
-      test('the .chargeVersionId property is not set', async () => {
-        expect(Object.keys(result)).to.not.include('chargeVersionId');
+      test('the .chargeElementId property is not set', async () => {
+        expect(Object.keys(result)).to.not.include('chargeElementId');
       });
     });
 
     experiment('when there are no time-limited dates', () => {
       beforeEach(async () => {
         model.timeLimitedPeriod = null;
-        result = chargeElementsMapper.modelToDb(model, chargeVersion);
+        result = ChargePurposeMapper.modelToDb(model, chargeElement);
       });
 
       test('the properties are mapped correctly to the database fields', async () => {
         expect(result).to.equal(
           {
-            chargeElementId: model.id,
+            chargePurposeId: model.id,
             source: 'supported',
             season: 'summer',
             loss: 'high',
-            description: 'test element',
+            description: 'test purpose',
             authorisedAnnualQuantity: 34,
             billableAnnualQuantity: 26.4,
             abstractionPeriodStartDay: 1,
@@ -287,11 +285,10 @@ experiment('lib/mappers/charge-element', () => {
             purposePrimaryId: model.purposePrimary.id,
             purposeSecondaryId: model.purposeSecondary.id,
             purposeUseId: model.purposeUse.id,
-            scheme: 'alcs',
             timeLimitedStartDate: null,
             timeLimitedEndDate: null,
             seasonDerived: 'all year',
-            chargeVersionId: chargeVersion.id,
+            chargeElementId: chargeElement.id,
             factorsOverridden: model.isFactorsOverridden,
             isSection127AgreementEnabled: true
           }

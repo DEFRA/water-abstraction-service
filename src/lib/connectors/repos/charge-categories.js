@@ -15,7 +15,7 @@ const updateByReference = async (reference, changes) => {
 
 const updateById = async (id, changes) => {
   const result = await ChargeCategory
-    .where('charge_category_id', id)
+    .where('billing_charge_category_id', id)
     .save(changes, { method: 'update', require: false });
   return result.toJSON();
 };
@@ -42,7 +42,7 @@ const findOneByProperties = async (isTidal, lossFactor, isRestrictedSource, mode
   return model && model.toJSON();
 };
 
-const findOneById = id => helpers.findOne(ChargeCategory, 'chargeCategoryId', id);
+const findOneById = id => helpers.findOne(ChargeCategory, 'billingChargeCategoryId', id);
 
 exports.create = create;
 exports.updateByReference = updateByReference;

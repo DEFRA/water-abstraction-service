@@ -27,7 +27,8 @@ const dbRow = {
   notes: 'test notes',
   annualQuantity: 23000,
   dateUpdated: '2020-01-11 00:00:00.000000',
-  dateCreated: '2020-01-11 00:00:00.000000'
+  dateCreated: '2020-01-11 00:00:00.000000',
+  scheme: 'alcs'
 };
 
 experiment('modules/billing/mappers/licence-version-purpose', () => {

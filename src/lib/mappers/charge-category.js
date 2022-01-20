@@ -2,6 +2,7 @@
 const { truncate } = require('lodash');
 
 const { createMapper } = require('../object-mapper');
+const camelCaseKeys = require('../camel-case-keys');
 const helpers = require('./lib/helpers');
 
 const ChargeCategory = require('../models/charge-category');
@@ -39,11 +40,12 @@ const csvToModel = data => {
 
 /* Humanize and copy fields */
 const dbToModelMapper = createMapper()
-  .map('charge_category_id').to('chargeCategoryId')
+  .map('billingChargeCategoryId').to('chargeCategoryId')
+  .map('billingChargeCategoryId').to('id')
   .copy(
     'chargeCategoryId',
     'description',
-    'short_description',
+    'shortDescription',
     'reference',
     'dateCreated',
     'dateUpdated',
@@ -55,7 +57,13 @@ const dbToModelMapper = createMapper()
     'isRestrictedSource'
   );
 
-const dbToModel = row => helpers.createModel(ChargeCategory, row, dbToModelMapper);
+const dbToModel = row => helpers.createModel(ChargeCategory, camelCaseKeys(row), dbToModelMapper);
 
+const pojoToModel = pojo => {
+  const model = new ChargeCategory();
+  return model.fromHash(pojo);
+};
+
+exports.pojoToModel = pojoToModel;
 exports.dbToModel = dbToModel;
 exports.csvToModel = csvToModel;

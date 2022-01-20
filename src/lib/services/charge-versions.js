@@ -164,7 +164,6 @@ const create = async chargeVersion => {
   chargeVersion.fromHash({
     source: ChargeVersion.SOURCE.wrls,
     status: ChargeVersion.STATUS.current,
-    scheme: ChargeVersion.SCHEME.alcs,
     versionNumber: getNextVersionNumber(existingChargeVersions)
   });
 

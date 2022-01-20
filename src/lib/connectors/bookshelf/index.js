@@ -9,6 +9,7 @@ exports.BillingVolume = require('./BillingVolume');
 exports.ChargeCategory = require('./ChargeCategory');
 exports.SupportedSource = require('./SupportedSource');
 exports.ChargeElement = require('./ChargeElement');
+exports.ChargePurpose = require('./ChargePurpose');
 exports.ChangeReason = require('./ChangeReason');
 exports.ChargeVersion = require('./ChargeVersion');
 exports.ChargeVersionWorkflow = require('./ChargeVersionWorkflow');

@@ -46,7 +46,8 @@ const dbToModelMapper = createMapper()
   .map('createdBy').to('createdBy', userMapper.pojoToModel)
   .map('approvedBy').to('approvedBy', userMapper.pojoToModel);
 
-const dbToModel = row => createModel(ChargeVersion, row, dbToModelMapper);
+const dbToModel = row =>
+  createModel(ChargeVersion, row, dbToModelMapper);
 
 const modelToDbMapper = createMapper()
   .map('id').to('chargeVersionId')

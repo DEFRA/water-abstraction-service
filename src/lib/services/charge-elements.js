@@ -5,12 +5,14 @@ const ChargeVersion = require('../models/charge-version');
 
 const validators = require('../models/validators');
 
-const { CHARGE_SEASON } = require('../models/constants');
+const { CHARGE_SEASON, SCHEME } = require('../models/constants');
 const AbstractionPeriod = require('../models/abstraction-period');
 const SPRAY_ANTI_FROST = '380';
 
 const chargeElementMapper = require('../mappers/charge-element');
 const chargeElementRepo = require('../connectors/repos/charge-elements');
+
+const chargePurposesService = require('./charge-purposes');
 
 const unitConversion = require('../../lib/unit-conversion');
 const toFixed = require('../../lib/to-fixed');
@@ -31,11 +33,15 @@ const calculateSeason = (purposeUse, abstractionPeriod) => {
 };
 
 const getIsFactorsOverridden = chargeElement => {
-  const { source, season, loss, purposeUse, abstractionPeriod } = chargeElement;
-  const isLossMismatch = loss !== purposeUse.lossFactor;
-  const isSeasonMismatch = season !== calculateSeason(purposeUse, abstractionPeriod);
-  const isSourceNotUnsupported = source !== ChargeElement.sources.unsupported;
-  return isLossMismatch || isSeasonMismatch || isSourceNotUnsupported;
+  if (chargeElement.scheme === 'alcs') {
+    const { source, season, loss, purposeUse, abstractionPeriod } = chargeElement;
+    const isLossMismatch = loss !== purposeUse.lossFactor;
+    const isSeasonMismatch = season !== calculateSeason(purposeUse, abstractionPeriod);
+    const isSourceNotUnsupported = source !== ChargeElement.sources.unsupported;
+    return isLossMismatch || isSeasonMismatch || isSourceNotUnsupported;
+  } else {
+    return false; // todo requires implementation for SROC if required
+  }
 };
 
 /**
@@ -80,7 +86,15 @@ const create = async (chargeVersion, chargeElement) => {
   chargeElement.isFactorsOverridden = getIsFactorsOverridden(chargeElement);
   const dbRow = chargeElementMapper.modelToDb(chargeElement, chargeVersion);
   const result = await chargeElementRepo.create(dbRow);
-  return chargeElementMapper.dbToModel(result);
+  const persistedChargeElement = chargeElementMapper.dbToModel(result);
+  // Persist charge purposes if scheme is sroc
+  if (chargeElement.scheme === SCHEME.sroc) {
+    const tasks = chargeElement.chargePurposes.map(chargePurpose =>
+      chargePurposesService.create(persistedChargeElement, chargePurpose)
+    );
+    persistedChargeElement.chargePurposes = await Promise.all(tasks);
+  }
+  return persistedChargeElement;
 };
 
 exports.getChargeElementsFromLicenceVersion = getChargeElementsFromLicenceVersion;

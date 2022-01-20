@@ -14,7 +14,8 @@ const dbRow = {
   abstractionPeriodStartDay: 1,
   abstractionPeriodStartMonth: 2,
   abstractionPeriodEndDay: 3,
-  abstractionPeriodEndMonth: 4
+  abstractionPeriodEndMonth: 4,
+  scheme: 'alcs'
 };
 
 experiment('modules/billing/mappers/abstraction-period', () => {

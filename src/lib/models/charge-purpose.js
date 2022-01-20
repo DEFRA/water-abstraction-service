@@ -7,12 +7,11 @@ const AbstractionPeriod = require('./abstraction-period');
 const DateRange = require('./date-range');
 const Purpose = require('./purpose');
 const PurposeUse = require('./purpose-use');
-const ChargePurpose = require('./charge-purpose');
-const ChargeCategory = require('./charge-category');
-const { CHARGE_SEASON, LOSSES, VALID_SOURCES, SCHEME, WATER_MODEL } = require('./constants');
+const { CHARGE_SEASON, LOSSES, VALID_SOURCES } = require('./constants');
+
 const validators = require('./validators');
 
-class ChargeElement extends Model {
+class ChargePurpose extends Model {
   constructor (...args) {
     super(...args);
     this.isSection127AgreementEnabled = true;
@@ -40,15 +39,6 @@ class ChargeElement extends Model {
     return this._source === 'tidal' ? 'tidal' : 'other';
   }
 
-  get eiucRegion () {
-    return this._eiucRegion;
-  }
-
-  set eiucRegion (eiucRegion) {
-    validators.assertNullableString(eiucRegion);
-    this._eiucRegion = eiucRegion || null;
-  }
-
   /**
    * Season
    * @return {String}
@@ -58,7 +48,7 @@ class ChargeElement extends Model {
   }
 
   set season (season) {
-    validators.assertNullableEnum(season, Object.values(CHARGE_SEASON));
+    validators.assertEnum(season, Object.values(CHARGE_SEASON));
     this._season = season;
   }
 
@@ -84,9 +74,7 @@ class ChargeElement extends Model {
   }
 
   set abstractionPeriod (abstractionPeriod) {
-    abstractionPeriod
-      ? validators.assertIsInstanceOf(abstractionPeriod, AbstractionPeriod)
-      : validators.assertIsEmpty(abstractionPeriod);
+    validators.assertIsInstanceOf(abstractionPeriod, AbstractionPeriod);
     this._abstractionPeriod = abstractionPeriod;
   }
 
@@ -99,7 +87,7 @@ class ChargeElement extends Model {
   }
 
   set authorisedAnnualQuantity (quantity) {
-    validators.assertNullableQuantity(quantity);
+    validators.assertQuantity(quantity);
     this._authorisedAnnualQuantity = parseFloat(quantity);
   }
 
@@ -125,26 +113,12 @@ class ChargeElement extends Model {
   }
 
   /**
-   * Gets billing volume to use
-   * This could should be null when authorised quantity is not null
+   * Gets billing quantity to use
+   * This could be auth, billable or actual quantity
    * @return {Number}
    */
   get volume () {
-    return this._scheme === SCHEME.sroc
-      ? this._volume
-      : this._billableAnnualQuantity || this._authorisedAnnualQuantity;
-  }
-
-  /**
-   * For SROC volume is set only when billable and
-   * authorised quantities are empty i.e.
-   * undefined, '' or null
-   * authorised quantity cannot be null so should be undefined
-   * @return {Number}
-   */
-  set volume (volume) {
-    validators.assertNullableQuantity(volume);
-    this._volume = parseFloat(volume);
+    return this._billableAnnualQuantity || this._authorisedAnnualQuantity;
   }
 
   /**
@@ -206,22 +180,22 @@ class ChargeElement extends Model {
     this._description = description;
   }
 
-  get chargeVersionId () { return this._chargeVersionId; }
-  set chargeVersionId (chargeVersionId) {
-    validators.assertId(chargeVersionId);
-    this._chargeVersionId = chargeVersionId;
+  get chargeElementId () { return this._chargeElementId; }
+  set chargeElementId (chargeElementId) {
+    validators.assertId(chargeElementId);
+    this._chargeElementId = chargeElementId;
   }
 
   get isFactorsOverridden () { return this._isFactorsOverridden; }
   set isFactorsOverridden (isFactorsOverridden) {
-    validators.assertIsNullableBoolean(isFactorsOverridden);
+    validators.assertIsBoolean(isFactorsOverridden);
     this._isFactorsOverridden = isFactorsOverridden;
   }
 
   /**
    * Default value is true, which means a licence-level S127 agreement applies to this
-   * element.  This flag can be set to false, which enables the S127 agreement to be
-   * removed from this element.
+   * purpose.  This flag can be set to false, which enables the S127 agreement to be
+   * removed from this purpose.
    *
    * @returns {Boolean}
    */
@@ -234,63 +208,6 @@ class ChargeElement extends Model {
     this._isSection127AgreementEnabled = isSection127AgreementEnabled;
   }
 
-  get chargePurposes () {
-    return this._chargePurposes;
-  }
-
-  /**
-   * Charge purposes
-   * @param {Array<ChargePurpose>} chargePurposes
-   */
-  set chargePurposes (chargePurposes) {
-    validators.assertIsArrayOfType(chargePurposes, ChargePurpose);
-    this._chargePurposes = chargePurposes;
-  }
-
-  get isRestrictedSource () {
-    return this._isRestrictedSource;
-  }
-
-  set isRestrictedSource (isRestrictedSource) {
-    validators.assertIsBoolean(isRestrictedSource);
-    this._isRestrictedSource = isRestrictedSource;
-  }
-
-  get waterModel () {
-    return this._waterModel;
-  }
-
-  set waterModel (waterModel) {
-    validators.assertNullableEnum(waterModel, Object.values(WATER_MODEL));
-    this._waterModel = waterModel;
-  }
-
-  get scheme () {
-    return this._scheme;
-  }
-
-  /**
-   * Scheme - ALCS/SROC
-   * @param {String} scheme
-   */
-  set scheme (scheme) {
-    validators.assertEnum(scheme, Object.values(SCHEME));
-    this._scheme = scheme;
-  }
-
-  get chargeCategory () {
-    return this._chargeCategory;
-  }
-
-  /**
-   * chargeCategory
-   * @param {ChargeCategory} chargeCategory
-   */
-  set chargeCategory (chargeCategory) {
-    validators.assertIsNullableInstanceOf(chargeCategory, ChargeCategory);
-    this._chargeCategory = chargeCategory;
-  }
-
   toJSON () {
     return {
       ...super.toJSON(),
@@ -300,5 +217,5 @@ class ChargeElement extends Model {
   }
 }
 
-module.exports = ChargeElement;
+module.exports = ChargePurpose;
 module.exports.sources = VALID_SOURCES;
