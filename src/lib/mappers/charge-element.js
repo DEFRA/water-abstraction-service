@@ -49,7 +49,6 @@ const dbToModel = row => {
       .copy(
         'authorisedAnnualQuantity',
         'billableAnnualQuantity',
-        'isSection127AgreementEnabled',
         'isSection127AgreementEnabled'
       )
       .map().to('abstractionPeriod', abstractionPeriodMapper.dbToModel)

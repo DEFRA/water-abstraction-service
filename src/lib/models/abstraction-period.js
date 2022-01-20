@@ -35,7 +35,7 @@ class AbstractionPeriod extends Model {
 
   set startDay (day) {
     validators.assertDay(day);
-    this._startDay = parseInt(day) || null;
+    this._startDay = parseInt(day);
   }
 
   /**
@@ -48,7 +48,7 @@ class AbstractionPeriod extends Model {
 
   set startMonth (month) {
     validators.assertMonth(month);
-    this._startMonth = parseInt(month) || null;
+    this._startMonth = parseInt(month);
   }
 
   /**
@@ -61,7 +61,7 @@ class AbstractionPeriod extends Model {
 
   set endDay (day) {
     validators.assertDay(day);
-    this._endDay = parseInt(day) || null;
+    this._endDay = parseInt(day);
   }
 
   /**
@@ -74,7 +74,7 @@ class AbstractionPeriod extends Model {
 
   set endMonth (month) {
     validators.assertMonth(month);
-    this._endMonth = parseInt(month) || null;
+    this._endMonth = parseInt(month);
   }
 
   /**

@@ -4,7 +4,9 @@ const AbstractionPeriod = require('../models/abstraction-period');
 
 const dbToModel = dbRow => {
   const abstractionPeriod = new AbstractionPeriod();
-  if (dbRow.scheme === 'alcs') {
+  // we only want to map the abstraction period for ALCS Charge Elements or
+  // when it is an SROC charge purpose.
+  if (dbRow.scheme === 'alcs' || dbRow.chargePurposeId) {
     abstractionPeriod.fromHash({
       startDay: dbRow.abstractionPeriodStartDay,
       startMonth: dbRow.abstractionPeriodStartMonth,

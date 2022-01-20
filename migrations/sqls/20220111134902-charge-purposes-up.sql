@@ -28,4 +28,10 @@ CREATE TABLE IF NOT EXISTS "water"."charge_purposes" (
     CONSTRAINT "charge_purposes_charge_element_id" FOREIGN KEY (charge_element_id)
         REFERENCES water.charge_elements (charge_element_id) MATCH SIMPLE
         ON DELETE CASCADE
-)
+);
+
+-- add foriegn key relationships pointing to the purposes tables.
+alter table "water"."charge_purposes"
+  add foreign key ("purpose_primary_id") references water.purposes_primary("purpose_primary_id"),
+  add foreign key ("purpose_secondary_id") references water.purposes_secondary("purpose_secondary_id"),
+  add foreign key ("purpose_use_id") references water.purposes_uses("purpose_use_id");
