@@ -62,6 +62,8 @@ const getScheduledNotificationsByLicenceNumber = async (licenceNumber, page = 1,
   };
 };
 
+const getNotificationCategories = repo.getScheduledNotificationCategories;
+
 exports.getScheduledNotificationById = getScheduledNotificationById;
 exports.getScheduledNotificationByNotifyId = getScheduledNotificationByNotifyId;
 exports.createScheduledNotification = createScheduledNotification;
@@ -69,3 +71,4 @@ exports.updateScheduledNotificationWithNotifyResponse = updateScheduledNotificat
 exports.updateScheduledNotificationWithNotifyCallback = updateScheduledNotificationWithNotifyCallback;
 exports.getByEventId = getByEventId;
 exports.getScheduledNotificationsByLicenceNumber = getScheduledNotificationsByLicenceNumber;
+exports.getNotificationCategories = getNotificationCategories;

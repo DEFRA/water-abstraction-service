@@ -172,7 +172,6 @@ const approveBatch = async (batch, internalCallingUser) => {
     await chargeModuleBillRunConnector.approve(batch.externalId);
     await chargeModuleBillRunConnector.send(batch.externalId);
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
-    await licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(batch.region.id, batch.dateCreated);
     await invoiceService.resetIsFlaggedForRebilling(batch.id);
 
     // if it is a supplementary batch mark all the
@@ -180,6 +179,7 @@ const approveBatch = async (batch, internalCallingUser) => {
     // for the relevant region.
     if (batch.type === BATCH_TYPE.supplementary) {
       await transactionsService.updateIsCredited(batch.region.id);
+      await licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(batch.region.id, batch.dateCreated);
     }
 
     return batch;

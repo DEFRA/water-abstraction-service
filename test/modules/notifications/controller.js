@@ -53,11 +53,9 @@ experiment('modules/notifications/controller', () => {
 
     beforeEach(async () => {
       event = createNotificationEvent();
-      const notificationCategories = [{ value: 'Water Abstraction Alert Reduce Warning', label: 'water_abstraction_alert_reduce_warning' }, { value: 'testvalue', label: 'testlabel' }];
       pagination = new Pagination().fromHash({ page: 3 });
       eventsService.getNotificationEvents.resolves({
         pagination,
-        notificationCategories,
         data: [
           event
         ]
@@ -86,10 +84,6 @@ experiment('modules/notifications/controller', () => {
     test('response contains a .pagination object', async () => {
       const { pagination } = response;
       expect(pagination).to.equal(pagination);
-    });
-    test('response contains a .notificationCategories object', async () => {
-      const { notificationCategories } = response;
-      expect(notificationCategories.length).to.equal(2);
     });
   });
 
