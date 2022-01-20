@@ -118,9 +118,9 @@ where
   and (e.issuer = cast(:sender::text as varchar) or :sender::text = '')
 group by e.event_id, e2.recipient_count, e2.message_ref, e2.statuses, snc.category_value
 order by e.created desc
+) as cte where cte.category_value = any(string_to_array(:categories, ',')) or :categories = ''
 limit :limit 
 offset :offset
-) as cte where cte.category_value = any(string_to_array(:categories, ',')) or :categories = ''
 `;
 
 exports.findNotificationsCount = `
