@@ -46,7 +46,7 @@ class SupportedSource extends Model {
   }
 
   set region (region) {
-    validators.assertStringWithLengthLimit(region, 255);
+    validators.assertNullableStringWithLengthLimit(region, 255);
     this._region = region;
   }
 }

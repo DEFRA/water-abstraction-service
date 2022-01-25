@@ -16,3 +16,4 @@ exports.licenceVersion = require('./licence-version');
 exports.licenceVersionPurpose = require('./licence-version-purpose');
 exports.purposeUse = require('./purpose-use');
 exports.region = require('./region');
+exports.supportedSource = require('./supported-source');
