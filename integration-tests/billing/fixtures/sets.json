@@ -89,6 +89,10 @@
     {
       "service": "water",
       "file": "test-billing-data.yaml"
+    },
+    {
+      "service": "water",
+      "file": "test-license-versions.yaml"
     }
   ],
   "supplementary-billing": [

@@ -22,6 +22,18 @@
     isTest: true
     regionId: $region.regionId
 
+- ref: $licenceVersion
+  model: LicenceVersion
+  fields:
+    licenceId: $licence.licenceId
+    issue : 1
+    increment: 0
+    status: 'current'
+    startDate: '2020-03-01'
+    endDate: null
+    externalId: 6:1234:1:0
+    isTest: true
+
 - ref: $twoPartTariffAgreement
   model: FinancialAgreementType
   fields:
