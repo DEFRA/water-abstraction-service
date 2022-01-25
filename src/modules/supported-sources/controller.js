@@ -5,7 +5,7 @@ const mapper = require('../../lib/mappers/supported-source');
 /**
  * Get all supported sources
  */
-const getSupportedSources = async request => {
+const getSupportedSources = async () => {
   const supportedSources = await repos.supportedSources.findAll();
   return { data: supportedSources.map(mapper.dbToModel) };
 };
