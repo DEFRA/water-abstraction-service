@@ -23,3 +23,4 @@ exports.returnVersions = require('./return-versions');
 exports.returnRequirementPurposes = require('./return-requirement-purposes');
 exports.returnRequirements = require('./return-requirements');
 exports.scheduledNotifications = require('./scheduled-notifications');
+exports.supportedSources = require('./supported-sources');
