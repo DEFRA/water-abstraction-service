@@ -1,5 +1,6 @@
 'use strict';
 const { truncate } = require('lodash');
+const camelCaseKeys = require('../camel-case-keys');
 
 const { createMapper } = require('../object-mapper');
 const helpers = require('./lib/helpers');
@@ -27,7 +28,8 @@ const csvToModel = data => {
 
 /* Humanize and copy fields */
 const dbToModelMapper = createMapper()
-  .map('supported_source_id').to('supportedSourceId')
+  .map('billingSupportedSourceId').to('supportedSourceId')
+  .map('billingSupportedSourceId').to('id')
   .copy(
     'supportedSourceId',
     'name',
@@ -38,7 +40,7 @@ const dbToModelMapper = createMapper()
     'dateUpdated'
   );
 
-const dbToModel = row => helpers.createModel(SupportedSource, row, dbToModelMapper);
+const dbToModel = row => helpers.createModel(SupportedSource, camelCaseKeys(row), dbToModelMapper);
 
 exports.dbToModel = dbToModel;
 exports.csvToModel = csvToModel;
