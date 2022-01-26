@@ -46,6 +46,7 @@ from (
     on cv.change_reason_id = cr.change_reason_id
   where l.region_id=:regionId
     and cv.status='current'
+    and cv.scheme = 'alcs'
     and (cv.change_reason_id is null or cr.type = 'new_chargeable_charge_version')
     and l.licence_id not in (
       select cvw.licence_id 
@@ -110,6 +111,7 @@ from (
     on cv.change_reason_id = cr.change_reason_id
   where l.region_id=:regionId
     and cv.status='current'
+    and cv.scheme = 'alcs'
     and l.licence_id not in (
       select cvw.licence_id 
       from water.charge_version_workflows cvw
