@@ -9,6 +9,7 @@ water.billing_invoices,
 water.billing_transactions, 
 water.billing_volumes,
 water.charge_versions,
+water.charge_purposes,
 water.charge_elements
 `;
 
