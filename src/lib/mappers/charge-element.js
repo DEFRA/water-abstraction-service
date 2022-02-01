@@ -86,7 +86,8 @@ const pojoToModel = pojo => {
         'waterModel',
         'isRestrictedSource',
         'scheme',
-        'eiucRegion'
+        'eiucRegion',
+        'additionalCharges'
       )
       .map('chargePurposes').to('chargePurposes', chargePurposes => chargePurposes.map(chargePurposeMapper.pojoToModel))
       .map('chargeCategory').to('chargeCategory', chargeCategoryMapper.pojoToModel)
