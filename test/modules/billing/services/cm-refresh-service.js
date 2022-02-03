@@ -58,7 +58,7 @@ const cmResponses = {
   batchSummary: {
     generating: {
       billRun: {
-        status: 'generating',
+        status: 'pending',
         invoices: []
       }
     },
