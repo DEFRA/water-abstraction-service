@@ -26,7 +26,7 @@ from (
     -- Charge version date range
     CASE WHEN cv.start_date = make_date(:financialYearEnding, 3, 31)
          THEN daterange(cv.start_date - 1, cv.end_date)
-         WHEN cv.end_date = make_date(:financialYearEnding-1, 4, 1)
+         WHEN cv.end_date = make_date(:financialYearEnding-1, 4, 1) AND cv.end_date <> cv.start_date
          THEN daterange(cv.start_date, cv.end_date-1)
          ELSE daterange(cv.start_date, cv.end_date)
     END
@@ -46,7 +46,6 @@ from (
     on cv.change_reason_id = cr.change_reason_id
   where l.region_id=:regionId
     and cv.status='current'
-    and cv.start_date <> cv.end_date
     and cv.scheme = 'alcs'
     and (cv.change_reason_id is null or cr.type = 'new_chargeable_charge_version')
     and l.licence_id not in (
@@ -92,7 +91,7 @@ from (
     -- Charge version date range
     CASE WHEN cv.start_date = make_date(:financialYearEnding, 3, 31)
          THEN daterange(cv.start_date - 1, cv.end_date)
-         WHEN cv.end_date = make_date(:financialYearEnding-1, 4, 1)
+         WHEN cv.end_date = make_date(:financialYearEnding-1, 4, 1) AND cv.end_date <> cv.start_date
          THEN daterange(cv.start_date, cv.end_date-1)
          ELSE daterange(cv.start_date, cv.end_date)
     END
@@ -112,7 +111,6 @@ from (
     on cv.change_reason_id = cr.change_reason_id
   where l.region_id=:regionId
     and cv.status='current'
-    and cv.start_date <> cv.end_date
     and cv.scheme = 'alcs'
     and l.licence_id not in (
       select cvw.licence_id 
