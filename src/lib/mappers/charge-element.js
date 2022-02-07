@@ -39,7 +39,9 @@ const dbToModel = row => {
         'volume',
         'waterModel',
         'isRestrictedSource',
-        'eiucRegion'
+        'eiucRegion',
+        'adjustments',
+        'additionalCharges'
       )
       .map('chargePurposes').to('chargePurposes', chargePurposes => chargePurposes.map(chargePurposeMapper.dbToModel))
       .map('chargeCategory').to('chargeCategory', chargeCategoryMapper.dbToModel)
@@ -87,7 +89,8 @@ const pojoToModel = pojo => {
         'isRestrictedSource',
         'scheme',
         'eiucRegion',
-        'additionalCharges'
+        'additionalCharges',
+        'adjustments'
       )
       .map('chargePurposes').to('chargePurposes', chargePurposes => chargePurposes.map(chargePurposeMapper.pojoToModel))
       .map('chargeCategory').to('chargeCategory', chargeCategoryMapper.pojoToModel)
@@ -153,7 +156,9 @@ const modelToDbMapperSroc = createMapper()
     'waterModel',
     'isSection127AgreementEnabled',
     'scheme',
-    'eiucRegion'
+    'eiucRegion',
+    'adjustments',
+    'additionalCharges'
   )
   .map('chargeCategory.id').to('billingChargeCategoryId');
 
