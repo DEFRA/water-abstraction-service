@@ -113,7 +113,6 @@ from (
   where l.region_id=:regionId
     and cv.status='current'
     and cv.start_date <> cv.end_date
-    and cv.start_date <> cv.end_date
     and cv.scheme = 'alcs'
     and l.licence_id not in (
       select cvw.licence_id 
