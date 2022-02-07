@@ -74,7 +74,3 @@ exports.createMessage = createMessage;
 exports.handler = handler;
 exports.hasScheduler = true;
 exports.onFailed = onFailedHandler;
-exports.workerOptions = {
-  lockDuration: 3600000,
-  lockRenewTime: 3600000 / 2
-};
