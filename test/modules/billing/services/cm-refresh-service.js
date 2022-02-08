@@ -106,11 +106,11 @@ const cmResponses = {
                   licenceNumber: licenceNumbers[0],
                   transactionReference: invoiceNumbers[0]
                 },
-                {
-                  value: 11274,
-                  licenceNumber: licenceNumbers[0],
-                  transactionReference: invoiceNumbers[0]
-                }
+                  {
+                    value: 11274,
+                    licenceNumber: licenceNumbers[0],
+                    transactionReference: invoiceNumbers[0]
+                  }
                 ]
               }
             ],
@@ -141,30 +141,30 @@ const cmResponses = {
                   licenceNumber: licenceNumbers[1],
                   transactionReference: invoiceNumbers[1]
                 },
-                {
-                  value: 10927,
-                  isCredit: true,
-                  isMinimumCharge: false,
-                  minChargeValue: 25,
-                  licenceNumber: licenceNumbers[1],
-                  transactionReference: invoiceNumbers[1]
-                },
-                {
-                  value: 3063,
-                  isCredit: false,
-                  isMinimumCharge: false,
-                  minChargeValue: 25,
-                  licenceNumber: licenceNumbers[1],
-                  transactionReference: invoiceNumbers[1]
-                },
-                {
-                  value: 1,
-                  isCredit: false,
-                  isMinimumCharge: true,
-                  minChargeValue: 25,
-                  licenceNumber: licenceNumbers[1],
-                  transactionReference: invoiceNumbers[1]
-                }]
+                  {
+                    value: 10927,
+                    isCredit: true,
+                    isMinimumCharge: false,
+                    minChargeValue: 25,
+                    licenceNumber: licenceNumbers[1],
+                    transactionReference: invoiceNumbers[1]
+                  },
+                  {
+                    value: 3063,
+                    isCredit: false,
+                    isMinimumCharge: false,
+                    minChargeValue: 25,
+                    licenceNumber: licenceNumbers[1],
+                    transactionReference: invoiceNumbers[1]
+                  },
+                  {
+                    value: 1,
+                    isCredit: false,
+                    isMinimumCharge: true,
+                    minChargeValue: 25,
+                    licenceNumber: licenceNumbers[1],
+                    transactionReference: invoiceNumbers[1]
+                  }]
               }
             ],
             netTotal: -18064
@@ -286,12 +286,6 @@ experiment('modules/billing/services/cm-refresh-service', () => {
         test('the batch is fetched from the CM on externalId', async () => {
           expect(cmBillRunsConnector.get.calledWith(externalId)).to.be.true();
         });
-
-        test('invoices are fetched for the batch from the db', async () => {
-          expect(invoiceService.getInvoicesForBatch.calledWith(
-            batch, { includeTransactions: true }
-          )).to.be.true();
-        });
       });
 
       experiment('and the invoices are rebill invoices', () => {
@@ -315,12 +309,6 @@ experiment('modules/billing/services/cm-refresh-service', () => {
 
         test('the batch is fetched from the CM on externalId', async () => {
           expect(cmBillRunsConnector.get.calledWith(externalId)).to.be.true();
-        });
-
-        test('invoices are fetched for the batch from the db', async () => {
-          expect(invoiceService.getInvoicesForBatch.calledWith(
-            batch, { includeTransactions: true }
-          )).to.be.true();
         });
       });
     });
