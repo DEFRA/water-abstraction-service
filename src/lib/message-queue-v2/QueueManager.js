@@ -57,6 +57,9 @@ class QueueManager {
     // Create queue
     const queue = new bull.Queue(jobContainer.jobName, { connection });
 
+    // Create flowProducer
+    const flowProducer = new bull.FlowProducer({ connection });
+
     // Create worker with handler
     const workerOpts = {
       ...(jobContainer.workerOptions || {}),
@@ -85,7 +88,8 @@ class QueueManager {
       jobContainer,
       queue,
       worker,
-      scheduler
+      scheduler,
+      flowProducer
     });
 
     return this;
