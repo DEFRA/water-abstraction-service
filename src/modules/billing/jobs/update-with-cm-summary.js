@@ -5,9 +5,24 @@ const batchJob = require('./lib/batch-job');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const helpers = require('./lib/helpers');
 
+const createMessage = (batchId, cmResponse) => ([
+  JOB_NAME,
+  {
+    batchId,
+    cmResponse
+  },
+  {
+    jobId: `${JOB_NAME}.${batchId}.${uuid()}`,
+    attempts: 10,
+    backoff: {
+      type: 'exponential',
+      delay: 5000
+    }
+  }
+]);
+
 const handler = async job => {
   try {
-    console.log('updating batch 3: started the handler of the cm summary job')
     const { batchId, cmResponse } = job.data;
 
     return batchService.updateWithCMSummary(batchId, cmResponse);
@@ -21,5 +36,6 @@ const onComplete = async (job, queueManager) => batchJob.logOnComplete(job);
 
 exports.jobName = JOB_NAME;
 exports.handler = handler;
+exports.createMessage = createMessage;
 exports.onComplete = onComplete;
 exports.onFailed = helpers.onFailedHandler;

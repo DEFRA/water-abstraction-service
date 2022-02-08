@@ -74,7 +74,6 @@ const getBatch = async request => request.pre.batch;
 
 const getBatches = async request => {
   const { page, perPage } = request.query;
-  console.log('fetching batches')
   return batchService.getBatches(page, perPage);
 };
 

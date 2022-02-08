@@ -1,6 +1,6 @@
 const { jobNames } = require('../../../lib/constants');
 const JOB_NAME = jobNames.updateInvoice;
-const { partial } = require('lodash');
+const { partial, difference } = require('lodash');
 const invoiceService = require('../../../lib/services/invoice-service');
 const transactionService = require('../services/transactions-service');
 
@@ -30,6 +30,7 @@ const getTransactionMap = invoice => {
   }, new Map());
 };
 
+const getCMTransactionId = cmTransaction => cmTransaction.id;
 
 const deleteTransactions = (cmTransactions, transactionMap) => {
   const validIds = cmTransactions.map(getCMTransactionId);
@@ -101,7 +102,6 @@ const handler = async job => {
     invoice.fromHash(
       invoiceMapper.cmToPojo(cmInvoiceSummary, cmTransactions)
     );
-
     // Persist invoice and transactions to DB
     await invoiceService.updateInvoiceModel(invoice);
     return updateTransactions(invoice, cmTransactions);

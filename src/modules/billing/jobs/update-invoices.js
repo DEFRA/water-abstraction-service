@@ -11,6 +11,22 @@ const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const helpers = require('./lib/helpers');
 const updateInvoiceJob = require('./update-invoice');
 
+const createMessage = (batch, cmResponse) => ([
+  JOB_NAME,
+  {
+    batch,
+    cmResponse
+  },
+  {
+    jobId: `${JOB_NAME}.${batch.id}.${uuid()}`,
+    attempts: 10,
+    backoff: {
+      type: 'exponential',
+      delay: 5000
+    }
+  }
+]);
+
 const getCustomerFinancialYearKey = (invoiceAccountNumber, financialYearEnding) =>
   `${invoiceAccountNumber}_${financialYearEnding}`;
 
@@ -21,8 +37,6 @@ const getWRLSInvoiceKey = invoice => isNull(invoice.rebillingState)
 const getCMInvoiceKey = cmInvoice => cmInvoice.rebilledType === 'O'
   ? getCustomerFinancialYearKey(cmInvoice.customerReference, cmInvoice.financialYear + 1)
   : cmInvoice.id;
-
-const updateInvoices = updateInvoiceJob.createMessage;
 
 const createMap = (items, keyMapper) => items.reduce(
   (map, item) => map.set(keyMapper(item), item),
@@ -36,15 +50,17 @@ const handler = async job => {
     const invoices = await invoiceService.getInvoicesForBatch(batch, { includeTransactions: true });
 
     // Map WRLS invoices and CM invoices by the same keys
+    // TODO fix this mapper. It's awful.
+    console.log('The problem is here vvvvvvvvvvv')
     const invoiceMaps = {
       wrls: createMap(invoices, getWRLSInvoiceKey),
       cm: createMap(cmResponse.billRun.invoices, getCMInvoiceKey)
     };
-
     // Iterate through invoices in series, to avoid overwhelming CM with too many simultaneous requests
-    return Bluebird.mapSeries(invoiceMaps.cm, async ([key, cmInvoice]) => {
+
+    return Bluebird.each(invoiceMaps.cm, async ([key, cmInvoice]) => {
         const inv = invoiceMaps.wrls.get(key);
-        inv && updateInvoices(batch, inv, cmInvoice);
+        inv && updateInvoiceJob.createMessage(batch, inv, cmInvoice)
       }
     );
   } catch (err) {
@@ -57,5 +73,12 @@ const onComplete = async (job, queueManager) => batchJob.logOnComplete(job);
 
 exports.jobName = JOB_NAME;
 exports.handler = handler;
+exports.createMessage = createMessage;
 exports.onComplete = onComplete;
 exports.onFailed = helpers.onFailedHandler;
+exports.workerOptions = {
+  maxStalledCount: 3,
+  stalledInterval: 120000,
+  lockDuration: 3600000,
+  lockRenewTime: 3600000 / 2
+};
