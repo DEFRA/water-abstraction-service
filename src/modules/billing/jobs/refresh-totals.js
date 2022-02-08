@@ -74,7 +74,7 @@ exports.createMessage = createMessage;
 exports.handler = handler;
 exports.hasScheduler = true;
 exports.onFailed = onFailedHandler;
-exports.onComplete = onComplete
+exports.onComplete = onComplete;
 exports.workerOptions = {
   maxStalledCount: 3,
   stalledInterval: 60000,

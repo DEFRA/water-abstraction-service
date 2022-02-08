@@ -110,6 +110,7 @@ const postSetupFromYaml = async (request, h) => {
 
     return h.response().code(204);
   } catch (e) {
+    console.log(e);
     throw e;
   }
 };

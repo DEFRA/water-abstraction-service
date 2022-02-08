@@ -3,6 +3,7 @@ const JOB_NAME = jobNames.updateInvoice;
 const { partial, difference } = require('lodash');
 const invoiceService = require('../../../lib/services/invoice-service');
 const transactionService = require('../services/transactions-service');
+const { logger } = require('../../../logger');
 
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 const Transaction = require('../../../lib/models/transaction');

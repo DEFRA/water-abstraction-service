@@ -239,7 +239,7 @@ module.exports = {
       db: isPermitsTestDatabase ? 4 : 2,
       lazyConnect: isRedisLazy,
       maxRetriesPerRequest: null,
-      enableReadyCheck: false,
+      enableReadyCheck: false
     }
   },
 

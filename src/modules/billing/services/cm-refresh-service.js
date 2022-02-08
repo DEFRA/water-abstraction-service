@@ -16,7 +16,6 @@ const batchService = require('./batch-service');
 
 const flowProducer = new FlowProducer({ connection: redis.connection });
 
-
 const isCMGeneratingSummary = cmResponse => ['generating', 'pending', 'deleting', 'sending'].includes(get(cmResponse, 'billRun.status'));
 
 /**
@@ -52,7 +51,7 @@ const updateBatch = async batchId => {
         data: { batch, cmResponse },
         queueName: jobNames.updateInvoices
       }
-    ],
+    ]
   });
 
   return true;

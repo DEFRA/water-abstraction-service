@@ -1,3 +1,4 @@
+const uuid = require('uuid/v4');
 const { jobNames } = require('../../../lib/constants');
 const JOB_NAME = jobNames.updateWithCMSummary;
 const batchService = require('../../billing/services/batch-service');
