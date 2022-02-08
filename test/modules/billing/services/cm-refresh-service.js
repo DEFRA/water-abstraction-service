@@ -106,11 +106,11 @@ const cmResponses = {
                   licenceNumber: licenceNumbers[0],
                   transactionReference: invoiceNumbers[0]
                 },
-                  {
-                    value: 11274,
-                    licenceNumber: licenceNumbers[0],
-                    transactionReference: invoiceNumbers[0]
-                  }
+                {
+                  value: 11274,
+                  licenceNumber: licenceNumbers[0],
+                  transactionReference: invoiceNumbers[0]
+                }
                 ]
               }
             ],
@@ -141,30 +141,30 @@ const cmResponses = {
                   licenceNumber: licenceNumbers[1],
                   transactionReference: invoiceNumbers[1]
                 },
-                  {
-                    value: 10927,
-                    isCredit: true,
-                    isMinimumCharge: false,
-                    minChargeValue: 25,
-                    licenceNumber: licenceNumbers[1],
-                    transactionReference: invoiceNumbers[1]
-                  },
-                  {
-                    value: 3063,
-                    isCredit: false,
-                    isMinimumCharge: false,
-                    minChargeValue: 25,
-                    licenceNumber: licenceNumbers[1],
-                    transactionReference: invoiceNumbers[1]
-                  },
-                  {
-                    value: 1,
-                    isCredit: false,
-                    isMinimumCharge: true,
-                    minChargeValue: 25,
-                    licenceNumber: licenceNumbers[1],
-                    transactionReference: invoiceNumbers[1]
-                  }]
+                {
+                  value: 10927,
+                  isCredit: true,
+                  isMinimumCharge: false,
+                  minChargeValue: 25,
+                  licenceNumber: licenceNumbers[1],
+                  transactionReference: invoiceNumbers[1]
+                },
+                {
+                  value: 3063,
+                  isCredit: false,
+                  isMinimumCharge: false,
+                  minChargeValue: 25,
+                  licenceNumber: licenceNumbers[1],
+                  transactionReference: invoiceNumbers[1]
+                },
+                {
+                  value: 1,
+                  isCredit: false,
+                  isMinimumCharge: true,
+                  minChargeValue: 25,
+                  licenceNumber: licenceNumbers[1],
+                  transactionReference: invoiceNumbers[1]
+                }]
               }
             ],
             netTotal: -18064
