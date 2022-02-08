@@ -50,8 +50,6 @@ const handler = async job => {
     const invoices = await invoiceService.getInvoicesForBatch(batch, { includeTransactions: true });
 
     // Map WRLS invoices and CM invoices by the same keys
-    // TODO fix this mapper. It's awful.
-    console.log('The problem is here vvvvvvvvvvv')
     const invoiceMaps = {
       wrls: createMap(invoices, getWRLSInvoiceKey),
       cm: createMap(cmResponse.billRun.invoices, getCMInvoiceKey)
