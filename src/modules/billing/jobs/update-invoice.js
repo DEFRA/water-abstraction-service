@@ -1,18 +1,26 @@
-const { jobNames } = require('../../../lib/constants');
-const JOB_NAME = jobNames.updateInvoice;
 const { partial, difference } = require('lodash');
-const invoiceService = require('../../../lib/services/invoice-service');
-const transactionService = require('../services/transactions-service');
 const { logger } = require('../../../logger');
 
-const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
-const Transaction = require('../../../lib/models/transaction');
+// Services
+const invoiceService = require('../../../lib/services/invoice-service');
+const transactionService = require('../services/transactions-service');
 
-const batchJob = require('./lib/batch-job');
-const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
-const helpers = require('./lib/helpers');
+// Mappers
 const invoiceMapper = require('../../../lib/mappers/invoice');
 const transactionMapper = require('../mappers/transaction');
+
+// Models
+const Transaction = require('../../../lib/models/transaction');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+
+// Utils
+const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
+const { jobNames } = require('../../../lib/constants');
+const batchJob = require('./lib/batch-job');
+const helpers = require('./lib/helpers');
+
+
+const JOB_NAME = jobNames.updateInvoice;
 
 const mapTransaction = (transactionMap, cmTransaction) => {
   const transaction = transactionMap.has(cmTransaction.id)

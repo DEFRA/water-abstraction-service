@@ -1,16 +1,20 @@
-const { isNull } = require('lodash');
-
-const { jobNames } = require('../../../lib/constants');
-const JOB_NAME = jobNames.updateInvoices;
 const Bluebird = require('bluebird');
 const uuid = require('uuid/v4');
+const { isNull } = require('lodash');
 
+// Services
 const invoiceService = require('../../../lib/services/invoice-service');
 
-const batchJob = require('./lib/batch-job');
+// Models
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+
+// Utils
+const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 const updateInvoiceJob = require('./update-invoice');
+const { jobNames } = require('../../../lib/constants');
+
+const JOB_NAME = jobNames.updateInvoices;
 
 const createMessage = (batch, cmResponse) => ([
   JOB_NAME,
@@ -58,9 +62,9 @@ const handler = async job => {
     // Iterate through invoices in series, to avoid overwhelming CM with too many simultaneous requests
 
     return Bluebird.each(invoiceMaps.cm, ([key, cmInvoice]) => {
-      const inv = invoiceMaps.wrls.get(key);
-      inv && updateInvoiceJob.createMessage(batch, inv, cmInvoice);
-    }
+        const inv = invoiceMaps.wrls.get(key);
+        inv && updateInvoiceJob.createMessage(batch, inv, cmInvoice);
+      }
     );
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary);
