@@ -30,6 +30,16 @@ const getTransactionMap = invoice => {
   }, new Map());
 };
 
+
+const deleteTransactions = (cmTransactions, transactionMap) => {
+  const validIds = cmTransactions.map(getCMTransactionId);
+  const deleteExternalIds = difference(Array.from(transactionMap.keys()), validIds);
+  const deleteIds = deleteExternalIds.map(
+    externalId => transactionMap.get(externalId).id
+  );
+  return transactionService.deleteById(deleteIds);
+};
+
 const updateTransactions = async (invoice, cmTransactions) => {
   // Index WRLS transactions by external ID
   const transactionMap = getTransactionMap(invoice);
