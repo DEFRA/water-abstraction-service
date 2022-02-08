@@ -33,19 +33,21 @@ const handler = async job => {
   batchJob.logHandling(job);
 
   const { batchId } = job.data;
-
+console.log('REfreshing the batch...')
   // Load batch
   const batch = await batchService.getBatchById(batchId);
-
+  console.log('Got the batch...')
   // Check batch in "processing" status
   batchStatus.assertBatchIsProcessing(batch);
-
+  console.log('Assereted the batch is done...')
   // Update batch with totals/bill run ID from charge module
   const isSuccess = await cmRefreshService.updateBatch(batchId);
+  console.log('Updated the batch...')
 
   if (!isSuccess) {
     throw new StateError(`CM bill run summary not ready for batch ${batchId}`);
   }
+  return isSuccess;
 };
 
 const onFailedHandler = async (job, err) => {
@@ -75,6 +77,8 @@ exports.handler = handler;
 exports.hasScheduler = true;
 exports.onFailed = onFailedHandler;
 exports.workerOptions = {
+  maxStalledCount: 3,
+  stalledInterval: 60000,
   lockDuration: 3600000,
   lockRenewTime: 3600000 / 2
 };

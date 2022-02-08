@@ -7,6 +7,7 @@ const helpers = require('./lib/helpers');
 
 const handler = async job => {
   try {
+    console.log('updating batch 3: started the handler of the cm summary job')
     const { batchId, cmResponse } = job.data;
 
     return batchService.updateWithCMSummary(batchId, cmResponse);

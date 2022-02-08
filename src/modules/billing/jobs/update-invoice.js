@@ -2,11 +2,66 @@ const { jobNames } = require('../../../lib/constants');
 const JOB_NAME = jobNames.updateInvoice;
 const { partial } = require('lodash');
 const invoiceService = require('../../../lib/services/invoice-service');
+const transactionService = require('../services/transactions-service');
+
+const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
+const Transaction = require('../../../lib/models/transaction');
 
 const batchJob = require('./lib/batch-job');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const helpers = require('./lib/helpers');
 const invoiceMapper = require('../../../lib/mappers/invoice');
+const transactionMapper = require('../mappers/transaction');
+
+const mapTransaction = (transactionMap, cmTransaction) => {
+  const transaction = transactionMap.has(cmTransaction.id)
+    ? transactionMap.get(cmTransaction.id)
+    : new Transaction();
+
+  return transaction.fromHash(transactionMapper.cmToPojo(cmTransaction));
+};
+
+const getTransactionMap = invoice => {
+  return invoice.invoiceLicences.reduce((map, invoiceLicence) => {
+    invoiceLicence.transactions.forEach(transaction => {
+      map.set(transaction.externalId, transaction);
+    });
+    return map;
+  }, new Map());
+};
+
+const updateTransactions = async (invoice, cmTransactions) => {
+  // Index WRLS transactions by external ID
+  const transactionMap = getTransactionMap(invoice);
+
+  // Create/update transactions
+  for (const cmTransaction of cmTransactions) {
+    const invoiceLicence = invoice.getInvoiceLicenceByLicenceNumber(cmTransaction.licenceNumber);
+    const transaction = mapTransaction(transactionMap, cmTransaction);
+
+    await transactionService.saveTransactionToDB(invoiceLicence, transaction);
+  }
+
+  // Delete transactions no longer on the CM side
+  return deleteTransactions(cmTransactions, transactionMap);
+};
+
+const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
+  try {
+    const { invoice } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, invoiceId);
+    return invoice.licences.map(lic => lic.transactions.map(transaction => {
+      return {
+        ...transactionMapper.inverseCreditNoteSign(transaction),
+        transactionReference: invoice.transactionReference,
+        isDeminimis: invoice.deminimisInvoice,
+        licenceNumber: lic.licenceNumber
+      };
+    })).flat();
+  } catch (error) {
+    logger.error(`Unable to retrieve transactions for CM invoice. Bill run ID ${cmBillRunId} and invoice ID ${invoiceId}`);
+    throw error;
+  }
+};
 
 const messageInitialiser = (batch, invoice, cmInvoiceSummary) => ([
   JOB_NAME,
@@ -25,7 +80,7 @@ const createMessage = partial(messageInitialiser);
 
 const handler = async job => {
   try {
-    const {batch, invoice, cmInvoiceSummary} = job.data;
+    const { batch, invoice, cmInvoiceSummary } = job.data;
 
     const cmTransactions = await getAllCmTransactionsForInvoice(
       batch.externalId,
@@ -39,7 +94,7 @@ const handler = async job => {
 
     // Persist invoice and transactions to DB
     await invoiceService.updateInvoiceModel(invoice);
-    return  updateTransactions(invoice, cmTransactions);
+    return updateTransactions(invoice, cmTransactions);
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary);
     throw err;
