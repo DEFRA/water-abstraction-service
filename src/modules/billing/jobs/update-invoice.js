@@ -90,7 +90,7 @@ const createMessage = (batch, invoice, cmInvoiceSummary) => ([
     cmInvoiceSummary
   },
   {
-    jobId: `${JOB_NAME}.${batch.id}.${invoice.id}`,
+    jobId: `${JOB_NAME}.${batch}.${invoice}`,
     attempts: 10,
     backoff: {
       type: 'exponential',
