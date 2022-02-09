@@ -13,6 +13,7 @@ const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 const updateInvoiceJob = require('./update-invoice');
 const { jobNames } = require('../../../lib/constants');
+const messageQueue = require('../../../lib/message-queue-v2');
 
 const JOB_NAME = jobNames.updateInvoices;
 
@@ -63,7 +64,7 @@ const handler = async job => {
 
     return Bluebird.each(invoiceMaps.cm, ([key, cmInvoice]) => {
       const inv = invoiceMaps.wrls.get(key);
-      inv && updateInvoiceJob.createMessage(batch, inv, cmInvoice);
+      inv && messageQueue.getQueueManager().add(updateInvoiceJob.jobName, { data: { batch, inv, cmInvoice } });
     }
     );
   } catch (err) {
@@ -82,6 +83,6 @@ exports.onFailed = helpers.onFailedHandler;
 exports.workerOptions = {
   maxStalledCount: 3,
   stalledInterval: 120000,
-  lockDuration: 3600000,
-  lockRenewTime: 3600000 / 2
+  lockDuration: 120000,
+  lockRenewTime: 120000 / 2
 };

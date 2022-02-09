@@ -1,4 +1,4 @@
-const { partial, difference } = require('lodash');
+const { difference } = require('lodash');
 const { logger } = require('../../../logger');
 
 // Services
@@ -82,20 +82,22 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
   }
 };
 
-const messageInitialiser = (batch, invoice, cmInvoiceSummary) => ([
+const createMessage = (batch, invoice, cmInvoiceSummary) => ([
   JOB_NAME,
   {
-    batch, invoice, cmInvoiceSummary
+    batch,
+    invoice,
+    cmInvoiceSummary
   },
   {
-    jobId: `${JOB_NAME}.${batch}.${invoice}}`,
-    retryLimit: 3,
-    retryDelay: 30,
-    retryBackoff: true
+    jobId: `${JOB_NAME}.${batch.id}.${invoice.id}`,
+    attempts: 10,
+    backoff: {
+      type: 'exponential',
+      delay: 5000
+    }
   }
 ]);
-
-const createMessage = partial(messageInitialiser);
 
 const handler = async job => {
   try {
