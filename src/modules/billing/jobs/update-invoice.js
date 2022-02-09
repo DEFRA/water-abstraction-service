@@ -19,7 +19,6 @@ const { jobNames } = require('../../../lib/constants');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 
-
 const JOB_NAME = jobNames.updateInvoice;
 
 const mapTransaction = (transactionMap, cmTransaction) => {

@@ -62,9 +62,9 @@ const handler = async job => {
     // Iterate through invoices in series, to avoid overwhelming CM with too many simultaneous requests
 
     return Bluebird.each(invoiceMaps.cm, ([key, cmInvoice]) => {
-        const inv = invoiceMaps.wrls.get(key);
-        inv && updateInvoiceJob.createMessage(batch, inv, cmInvoice);
-      }
+      const inv = invoiceMaps.wrls.get(key);
+      inv && updateInvoiceJob.createMessage(batch, inv, cmInvoice);
+    }
     );
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary);
