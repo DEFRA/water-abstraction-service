@@ -16,7 +16,6 @@ const deleteErroredBatch = require('./jobs/delete-errored-batch');
 const customerFileRefresh = require('./jobs/customer-file-refresh');
 const syncChargeCategories = require('./jobs/sync-charge-categories');
 const syncSupportedSources = require('./jobs/sync-supported-sources');
-const updateInvoice = require('./jobs/update-invoice');
 const updateInvoices = require('./jobs/update-invoices');
 const updateWithCMSummary = require('./jobs/update-with-cm-summary');
 
@@ -40,7 +39,6 @@ module.exports = {
       .register(deleteErroredBatch)
       .register(customerFileRefresh)
       .register(syncChargeCategories)
-      .register(updateInvoice)
       .register(updateInvoices)
       .register(updateWithCMSummary)
       .register(syncSupportedSources);

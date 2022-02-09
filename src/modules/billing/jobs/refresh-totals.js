@@ -11,6 +11,7 @@ const helpers = require('./lib/helpers');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
 const cmRefreshService = require('../services/cm-refresh-service');
+const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
 const { StateError } = require('../../../lib/errors');
 
@@ -34,9 +35,10 @@ const handler = async job => {
 
   const { batchId } = job.data;
   // Load batch
-  const batch = await batchService.getBatchById(batchId);
+  const wrlsBatch = await batchService.getBatchById(batchId);
+  const cmBatch = await chargeModuleBillRunConnector.getStatus(wrlsBatch.externalId);
   // Check batch in "processing" status
-  batchStatus.assertBatchIsProcessing(batch);
+  batchStatus.assertCmBatchIsGeneratedOrBilled(cmBatch);
   // Update batch with totals/bill run ID from charge module
   const isSuccess = await cmRefreshService.updateBatch(batchId);
 

@@ -1,9 +1,4 @@
-const Bluebird = require('bluebird');
 const uuid = require('uuid/v4');
-const { isNull } = require('lodash');
-
-// Services
-const invoiceService = require('../../../lib/services/invoice-service');
 
 // Models
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
@@ -11,9 +6,7 @@ const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 // Utils
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
-const updateInvoiceJob = require('./update-invoice');
 const { jobNames } = require('../../../lib/constants');
-const messageQueue = require('../../../lib/message-queue-v2');
 
 const JOB_NAME = jobNames.updateInvoices;
 
@@ -33,40 +26,13 @@ const createMessage = (batch, cmResponse) => ([
   }
 ]);
 
-const getCustomerFinancialYearKey = (invoiceAccountNumber, financialYearEnding) =>
-  `${invoiceAccountNumber}_${financialYearEnding}`;
-
-const getWRLSInvoiceKey = invoice => isNull(invoice.rebillingState)
-  ? getCustomerFinancialYearKey(invoice.invoiceAccount.accountNumber, invoice.financialYear.endYear)
-  : invoice.externalId;
-
-const getCMInvoiceKey = cmInvoice => cmInvoice.rebilledType === 'O'
-  ? getCustomerFinancialYearKey(cmInvoice.customerReference, cmInvoice.financialYear + 1)
-  : cmInvoice.id;
-
-const createMap = (items, keyMapper) => items.reduce(
-  (map, item) => map.set(keyMapper(item), item),
-  new Map()
-);
-
 const handler = async job => {
   try {
     const { batch, cmResponse } = job.data;
-
-    const invoices = await invoiceService.getInvoicesForBatch(batch, { includeTransactions: true });
-
-    // Map WRLS invoices and CM invoices by the same keys
-    const invoiceMaps = {
-      wrls: createMap(invoices, getWRLSInvoiceKey),
-      cm: createMap(cmResponse.billRun.invoices, getCMInvoiceKey)
-    };
-    // Iterate through invoices in series, to avoid overwhelming CM with too many simultaneous requests
-
-    return Bluebird.each(invoiceMaps.cm, ([key, cmInvoice]) => {
-      const inv = invoiceMaps.wrls.get(key);
-      inv && messageQueue.getQueueManager().add(updateInvoiceJob.jobName, { data: { batch, inv, cmInvoice } });
-    }
-    );
+    // Create the worker.
+    const { Worker } = require('worker_threads');
+    const worker = new Worker('./src/modules/billing/jobs/lib/update-invoices-worker.js');
+    return worker.postMessage({ cmResponse, batch });
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary);
     throw err;

@@ -1,25 +1,43 @@
-const { difference } = require('lodash');
-const { logger } = require('../../../logger');
-
-// Services
-const invoiceService = require('../../../lib/services/invoice-service');
-const transactionService = require('../services/transactions-service');
-
-// Mappers
-const invoiceMapper = require('../../../lib/mappers/invoice');
-const transactionMapper = require('../mappers/transaction');
+const Bluebird = require('bluebird');
+const { isNull, difference } = require('lodash');
+const { parentPort } = require('worker_threads');
 
 // Models
-const Transaction = require('../../../lib/models/transaction');
-const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+const Transaction = require('../../../../lib/models/transaction');
 
-// Utils
-const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
-const { jobNames } = require('../../../lib/constants');
-const batchJob = require('./lib/batch-job');
-const helpers = require('./lib/helpers');
+// Services
+const invoiceService = require('../../../../lib/services/invoice-service');
+const transactionService = require('../../services/transactions-service');
 
-const JOB_NAME = jobNames.updateInvoice;
+// Mappers
+const invoiceMapper = require('../../../../lib/mappers/invoice');
+const transactionMapper = require('../../mappers/transaction');
+
+// Connectors
+const chargeModuleBillRunConnector = require('../../../../lib/connectors/charge-module/bill-runs');
+
+const { logger } = require('../../../../logger');
+
+const getCustomerFinancialYearKey = (invoiceAccountNumber, financialYearEnding) =>
+  `${invoiceAccountNumber}_${financialYearEnding}`;
+
+const getWRLSInvoiceKey = invoice => isNull(invoice.rebillingState)
+  ? getCustomerFinancialYearKey(invoice.invoiceAccount.accountNumber, invoice.financialYear.endYear)
+  : invoice.externalId;
+
+const getCMInvoiceKey = cmInvoice => cmInvoice.rebilledType === 'O'
+  ? getCustomerFinancialYearKey(cmInvoice.customerReference, cmInvoice.financialYear + 1)
+  : cmInvoice.id;
+
+const createMap = (items, keyMapper) => items.reduce(
+  (map, item) => map.set(keyMapper(item), item),
+  new Map()
+);
+
+const invoiceMaps = (invoices, cmResponse) => ({
+  wrls: createMap(invoices, getWRLSInvoiceKey),
+  cm: createMap(cmResponse.billRun.invoices, getCMInvoiceKey)
+});
 
 const mapTransaction = (transactionMap, cmTransaction) => {
   const transaction = transactionMap.has(cmTransaction.id)
@@ -82,49 +100,25 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
   }
 };
 
-const createMessage = (batch, invoice, cmInvoiceSummary) => ([
-  JOB_NAME,
-  {
-    batch,
-    invoice,
-    cmInvoiceSummary
-  },
-  {
-    jobId: `${JOB_NAME}.${batch}.${invoice}`,
-    attempts: 10,
-    backoff: {
-      type: 'exponential',
-      delay: 5000
+parentPort.on('message', async data => {
+  const invoices = await invoiceService.getInvoicesForBatch(data.batch, { includeTransactions: true });
+  const returnableMaps = invoiceMaps(invoices, data.cmResponse);
+
+  Bluebird.each(returnableMaps.cm, async ([key, cmInvoice]) => {
+    const invoice = returnableMaps.wrls.get(key);
+    if (invoice) {
+      const cmTransactions = await getAllCmTransactionsForInvoice(
+        data.batch.externalId,
+        cmInvoice.id
+      );
+
+      // Populate invoice model with updated CM data
+      invoice.fromHash(
+        invoiceMapper.cmToPojo(cmInvoice, cmTransactions)
+      );
+      // Persist invoice and transactions to DB
+      await invoiceService.updateInvoiceModel(invoice);
+      return updateTransactions(invoice, cmTransactions);
     }
-  }
-]);
-
-const handler = async job => {
-  try {
-    const { batch, invoice, cmInvoiceSummary } = job.data;
-
-    const cmTransactions = await getAllCmTransactionsForInvoice(
-      batch.externalId,
-      cmInvoiceSummary.id
-    );
-
-    // Populate invoice model with updated CM data
-    invoice.fromHash(
-      invoiceMapper.cmToPojo(cmInvoiceSummary, cmTransactions)
-    );
-    // Persist invoice and transactions to DB
-    await invoiceService.updateInvoiceModel(invoice);
-    return updateTransactions(invoice, cmTransactions);
-  } catch (err) {
-    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary);
-    throw err;
-  }
-};
-
-const onComplete = async (job, queueManager) => batchJob.logOnComplete(job);
-
-exports.jobName = JOB_NAME;
-exports.createMessage = createMessage;
-exports.handler = handler;
-exports.onComplete = onComplete;
-exports.onFailed = helpers.onFailedHandler;
+  });
+});

@@ -50,15 +50,14 @@ class AccessTokenManager {
   isTokenValid () {
     // Token missing
     if (!this.accessToken) {
-      logger.info('no cognito token');
+      logger.info('No cognito token found');
       return false;
     }
     // Token expires
     if (moment().isSameOrAfter(this.expiresAt)) {
-      logger.info('cognito token expired');
+      logger.info('Cognito token expired');
       return false;
     }
-    logger.info('use existing cognito token');
     return true;
   }
 }

@@ -3,6 +3,7 @@
 const got = require('got');
 
 const config = require('../../../../../config.js');
+const { logger } = require('../../../../logger.js');
 
 const gotWithProxy = require('./got-with-proxy');
 const AccessTokenManager = require('./AccessTokenManager');
@@ -22,6 +23,7 @@ const accessTokenManager = new AccessTokenManager();
  */
 const beforeRequestHook = async () => {
   if (!accessTokenManager.isTokenValid()) {
+    logger.info('Fetching a new Cognito token');
     // Save for further requests
     const accessToken = await accessTokenManager.refreshAccessToken();
     instance.defaults.options.headers.Authorization = `Bearer ${accessToken}`;

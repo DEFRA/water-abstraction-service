@@ -38,7 +38,7 @@ const updateBatch = async batchId => {
     return false;
   }
 
-  await flowProducer.add({
+  return flowProducer.add({
     name: jobNames.updateWithCMSummary,
     data: {
       batchId: batch.id,
@@ -53,8 +53,6 @@ const updateBatch = async batchId => {
       }
     ]
   });
-
-  return true;
 };
 
 exports.updateBatch = updateBatch;
