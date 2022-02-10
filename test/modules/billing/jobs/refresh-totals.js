@@ -14,6 +14,7 @@ const sandbox = require('sinon').createSandbox();
 const refreshTotals = require('../../../../src/modules/billing/jobs/refresh-totals');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const cmRefreshService = require('../../../../src/modules/billing/services/cm-refresh-service');
+const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
 
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const Batch = require('../../../../src/lib/models/batch');
@@ -32,6 +33,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
 
     sandbox.stub(cmRefreshService, 'updateBatch');
     sandbox.stub(batchService, 'setErrorStatus');
+    sandbox.stub(chargeModuleBillRunConnector, 'getStatus').resolves({ status: 'generated' });
 
     batch = new Batch().fromHash({
       id: BATCH_ID,

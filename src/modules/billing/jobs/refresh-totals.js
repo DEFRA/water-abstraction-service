@@ -37,7 +37,8 @@ const handler = async job => {
   // Load batch
   const wrlsBatch = await batchService.getBatchById(batchId);
   const cmBatch = await chargeModuleBillRunConnector.getStatus(wrlsBatch.externalId);
-  // Check batch in "processing" status
+  // Check CM batch in "generated" or "billed" status
+  // This indicates that our job is done and can move onto refreshing invoices
   batchStatus.assertCmBatchIsGeneratedOrBilled(cmBatch);
   // Update batch with totals/bill run ID from charge module
   const isSuccess = await cmRefreshService.updateBatch(batchId);
