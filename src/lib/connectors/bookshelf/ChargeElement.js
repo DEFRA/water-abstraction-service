@@ -17,13 +17,5 @@ module.exports = bookshelf.model('ChargeElement', {
 
   purposeUse () {
     return this.hasOne('PurposeUse', 'purpose_use_id', 'purpose_use_id');
-  },
-
-  chargePurposes () {
-    return this.hasMany('ChargePurpose', 'charge_element_id', 'charge_element_id');
-  },
-
-  chargeCategory () {
-    return this.hasOne('ChargeCategory', 'billing_charge_category_id', 'billing_charge_category_id');
   }
 });
