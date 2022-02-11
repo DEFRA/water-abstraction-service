@@ -63,6 +63,7 @@ const saveInvoiceToDB = async (batch, invoice) => {
  * @return {Promise<Object>} updated context
  */
 const getCRMData = async context => {
+  console.time('§§§§§ TIMER getCRMData')
   const { billingInvoices, options: { includeInvoiceAccounts } } = context;
 
   if (!includeInvoiceAccounts) {
@@ -73,6 +74,7 @@ const getCRMData = async context => {
   if (ids.length > 0) {
     context.crmInvoiceAccounts = await invoiceAccountsConnector.getInvoiceAccountsByIds(ids);
   }
+  console.timeEnd('§§§§§ TIMER getCRMData')
   return context;
 };
 
@@ -82,10 +84,12 @@ const getCRMData = async context => {
  * @return {Promise<Object>} updated context
  */
 const getBatchInvoices = async context => {
+  console.time('§§§§§ TIMER getBatchInvoices')
   const { batch, options: { includeTransactions } } = context;
   const method = includeTransactions ? 'findOneWithInvoicesWithTransactions' : 'findOneWithInvoices';
   const { billingInvoices } = await repos.billingBatches[method](batch.id);
   context.billingInvoices = billingInvoices;
+  console.timeEnd('§§§§§ TIMER getBatchInvoices')
   return context;
 };
 
@@ -138,11 +142,13 @@ const mapInvoice = async (billingInvoice, context) => {
 };
 
 const mapToInvoices = async context => {
+  console.time('§§§§§ TIMER mapToInvoices')
   const invoices = [];
   for (const billingInvoice of context.billingInvoices) {
     const mappedInvoice = await mapInvoice(billingInvoice, context);
     invoices.push(mappedInvoice);
   }
+  console.timeEnd('§§§§§ TIMER mapToInvoices')
   return invoices;
 };
 
