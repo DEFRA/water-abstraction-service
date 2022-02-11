@@ -101,7 +101,9 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
 };
 
 parentPort.on('message', async data => {
+  console.log('WORKER has been started.');
   const invoices = await invoiceService.getInvoicesForBatch(data.batch, { includeTransactions: true });
+  console.log(`Processing ${invoices.length} invoices that need to be updated...`)
   const returnableMaps = invoiceMaps(invoices, data.cmResponse);
 
   Bluebird.each(returnableMaps.cm, async ([key, cmInvoice]) => {
@@ -112,6 +114,7 @@ parentPort.on('message', async data => {
         cmInvoice.id
       );
 
+      console.log(`Found ${cmTransactions.length} transactions to process from the CM for invoice ${invoice.id}`)
       // Populate invoice model with updated CM data
       invoice.fromHash(
         invoiceMapper.cmToPojo(cmInvoice, cmTransactions)
