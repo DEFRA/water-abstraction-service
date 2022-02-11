@@ -103,10 +103,13 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
 parentPort.on('message', async data => {
   try {
     console.log('WORKER has been started.');
+    console.time('§§§§§§§ TIME FOR FETCHING INVOICES FOR BATCH')
     const invoices = await invoiceService.getInvoicesForBatch(data.batch, { includeTransactions: true });
+    console.timeEnd('§§§§§§§ TIME FOR FETCHING INVOICES FOR BATCH')
     console.log(`Processing ${invoices.length} invoices that need to be updated...`);
+    console.time('§§§§§§§ TIME FOR PROCESSING MAPS')
     const returnableMaps = invoiceMaps(invoices, data.cmResponse);
-
+    console.timeEnd('§§§§§§§ TIME FOR PROCESSING MAPS')
     Bluebird.each(returnableMaps.cm, async ([key, cmInvoice]) => {
       const invoice = returnableMaps.wrls.get(key);
       if (invoice) {
