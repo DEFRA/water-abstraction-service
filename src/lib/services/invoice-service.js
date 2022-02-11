@@ -63,7 +63,6 @@ const saveInvoiceToDB = async (batch, invoice) => {
  * @return {Promise<Object>} updated context
  */
 const getCRMData = async context => {
-  console.time('§§§§§ TIMER getCRMData');
   const { billingInvoices, options: { includeInvoiceAccounts } } = context;
 
   if (!includeInvoiceAccounts) {
@@ -74,7 +73,6 @@ const getCRMData = async context => {
   if (ids.length > 0) {
     context.crmInvoiceAccounts = await invoiceAccountsConnector.getInvoiceAccountsByIds(ids);
   }
-  console.timeEnd('§§§§§ TIMER getCRMData');
   return context;
 };
 
@@ -84,12 +82,10 @@ const getCRMData = async context => {
  * @return {Promise<Object>} updated context
  */
 const getBatchInvoices = async context => {
-  console.time('§§§§§ TIMER getBatchInvoices');
   const { batch, options: { includeTransactions } } = context;
   const method = includeTransactions ? 'findOneWithInvoicesWithTransactions' : 'findOneWithInvoices';
   const { billingInvoices } = await repos.billingBatches[method](batch.id);
   context.billingInvoices = billingInvoices;
-  console.timeEnd('§§§§§ TIMER getBatchInvoices');
   return context;
 };
 
@@ -117,20 +113,14 @@ const getInvoice = async context => {
  * @param {Object} context
  */
 const decorateInvoiceWithCRMData = (invoice, context) => {
-  console.time('$$$$$$$ mapping the invoice when the account is requested');
-  console.time('$$$$$$$22222 FINDING');
   const crmInvoiceAccount = find(context.crmInvoiceAccounts, { invoiceAccountId: invoice.invoiceAccount.id });
-  console.timeEnd('$$$$$$$22222 FINDING');
-  console.time('$$$$$$$22222 MAPPING');
   const properties = mappers.invoice.crmToModel(crmInvoiceAccount).pick(
     'address',
     'invoiceAccount',
     'agentCompany',
     'contact'
   );
-  console.timeEnd('$$$$$$$22222 MAPPING');
   const account = invoice.fromHash(pickBy(properties));
-  console.timeEnd('$$$$$$$ mapping the invoice when the account is requested');
   return account;
 };
 
@@ -142,20 +132,16 @@ const decorateInvoiceWithCRMData = (invoice, context) => {
  */
 const mapInvoice = async (billingInvoice, context) => {
   const { options: { includeInvoiceAccounts } } = context;
-  console.time('$$$$$$$ mapping the invoice');
   const invoice = mappers.invoice.dbToModel(billingInvoice);
-  console.timeEnd('$$$$$$$ mapping the invoice');
   return includeInvoiceAccounts ? decorateInvoiceWithCRMData(invoice, context) : invoice;
 };
 
 const mapToInvoices = async context => {
-  console.time('§§§§§ TIMER mapToInvoices');
   const invoices = [];
   for (const billingInvoice of context.billingInvoices) {
     const mappedInvoice = await mapInvoice(billingInvoice, context);
     invoices.push(mappedInvoice);
   }
-  console.timeEnd('§§§§§ TIMER mapToInvoices');
   return invoices;
 };
 

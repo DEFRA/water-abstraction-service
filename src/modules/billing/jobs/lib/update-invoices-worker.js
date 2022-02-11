@@ -101,35 +101,25 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
 };
 
 parentPort.on('message', async data => {
-  try {
-    console.log('WORKER has been started.');
-    console.time('§§§§§§§ TIME FOR FETCHING INVOICES FOR BATCH')
-    const invoices = await invoiceService.getInvoicesForBatch(data.batch, { includeTransactions: true });
-    console.timeEnd('§§§§§§§ TIME FOR FETCHING INVOICES FOR BATCH')
-    console.log(`Processing ${invoices.length} invoices that need to be updated...`);
-    console.time('§§§§§§§ TIME FOR PROCESSING MAPS')
-    const returnableMaps = invoiceMaps(invoices, data.cmResponse);
-    console.timeEnd('§§§§§§§ TIME FOR PROCESSING MAPS')
-    Bluebird.each(returnableMaps.cm, async ([key, cmInvoice]) => {
-      const invoice = returnableMaps.wrls.get(key);
-      if (invoice) {
-        const cmTransactions = await getAllCmTransactionsForInvoice(
-          data.batch.externalId,
-          cmInvoice.id
-        );
+  const invoices = await invoiceService.getInvoicesForBatch(data.batch, { includeTransactions: true });
+  const returnableMaps = invoiceMaps(invoices, data.cmResponse);
 
-        console.log(`Found ${cmTransactions.length} transactions to process from the CM for invoice ${invoice.id}`);
-        // Populate invoice model with updated CM data
-        invoice.fromHash(
-          invoiceMapper.cmToPojo(cmInvoice, cmTransactions)
-        );
-        // Persist invoice and transactions to DB
-        await invoiceService.updateInvoiceModel(invoice);
-        return updateTransactions(invoice, cmTransactions);
-      }
-    });
-  } catch (e) {
-    console.log(e);
-    throw(e);
-  }
+  Bluebird.each(returnableMaps.cm, async ([key, cmInvoice]) => {
+    const invoice = returnableMaps.wrls.get(key);
+    if (invoice) {
+      const cmTransactions = await getAllCmTransactionsForInvoice(
+        data.batch.externalId,
+        cmInvoice.id
+      );
+
+      logger.info(`Found ${cmTransactions.length} transactions to process from the CM for invoice ${invoice.id}`);
+      // Populate invoice model with updated CM data
+      invoice.fromHash(
+        invoiceMapper.cmToPojo(cmInvoice, cmTransactions)
+      );
+      // Persist invoice and transactions to DB
+      await invoiceService.updateInvoiceModel(invoice);
+      return updateTransactions(invoice, cmTransactions);
+    }
+  });
 });
