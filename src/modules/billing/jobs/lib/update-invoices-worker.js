@@ -104,7 +104,7 @@ parentPort.on('message', async data => {
   const invoices = await invoiceService.getInvoicesForBatch(data.batch, { includeTransactions: true });
   const returnableMaps = invoiceMaps(invoices, data.cmResponse);
 
-  return Bluebird.each(returnableMaps.cm, async ([key, cmInvoice]) => {
+  Bluebird.each(returnableMaps.cm, async ([key, cmInvoice]) => {
     const invoice = returnableMaps.wrls.get(key);
     if (invoice) {
       const cmTransactions = await getAllCmTransactionsForInvoice(
@@ -119,7 +119,7 @@ parentPort.on('message', async data => {
       );
       // Persist invoice and transactions to DB
       await invoiceService.updateInvoiceModel(invoice);
-      return updateTransactions(invoice, cmTransactions);
+      await updateTransactions(invoice, cmTransactions);
     }
   });
 
