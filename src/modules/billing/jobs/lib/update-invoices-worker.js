@@ -104,7 +104,7 @@ parentPort.on('message', async data => {
   const invoices = await invoiceService.getInvoicesForBatch(data.batch, { includeTransactions: true });
   const returnableMaps = invoiceMaps(invoices, data.cmResponse);
 
-  Bluebird.each(returnableMaps.cm, async ([key, cmInvoice]) => {
+  return Bluebird.each(returnableMaps.cm, async ([key, cmInvoice]) => {
     const invoice = returnableMaps.wrls.get(key);
     if (invoice) {
       const cmTransactions = await getAllCmTransactionsForInvoice(

@@ -120,8 +120,7 @@ const decorateInvoiceWithCRMData = (invoice, context) => {
     'agentCompany',
     'contact'
   );
-  const account = invoice.fromHash(pickBy(properties));
-  return account;
+  return invoice.fromHash(pickBy(properties));
 };
 
 /**

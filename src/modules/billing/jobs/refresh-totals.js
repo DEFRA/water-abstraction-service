@@ -70,7 +70,7 @@ const onFailedHandler = async (job, err) => {
   }
 };
 
-const onComplete = async (job, queueManager) => batchJob.logOnComplete(job);
+const onComplete = async job => batchJob.logOnComplete(job);
 
 exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;

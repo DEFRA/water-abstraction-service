@@ -33,7 +33,7 @@ const handler = async job => {
   }
 };
 
-const onComplete = async (job, queueManager) => batchJob.logOnComplete(job);
+const onComplete = async job => batchJob.logOnComplete(job);
 
 exports.jobName = JOB_NAME;
 exports.handler = handler;
