@@ -122,4 +122,6 @@ parentPort.on('message', async data => {
       return updateTransactions(invoice, cmTransactions);
     }
   });
+
+  return parentPort.postMessage('OK');
 });

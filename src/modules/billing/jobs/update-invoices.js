@@ -32,7 +32,11 @@ const handler = async job => {
     // Create the worker.
     const { Worker } = require('worker_threads');
     const worker = new Worker('./src/modules/billing/jobs/lib/update-invoices-worker.js');
-    return worker.postMessage({ cmResponse, batch });
+    worker.postMessage({ cmResponse, batch });
+    return new Promise((resolve, reject) => {
+      worker.on('message', resolve);
+      worker.on('error', reject);
+    });
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary);
     throw err;
