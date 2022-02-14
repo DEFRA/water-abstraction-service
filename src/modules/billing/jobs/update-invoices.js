@@ -30,13 +30,9 @@ const handler = async job => {
   try {
     const { batch, cmResponse } = job.data;
     // Create the worker.
-    const { Worker } = require('worker_threads');
-    const worker = new Worker('./src/modules/billing/jobs/lib/update-invoices-worker.js');
-    worker.postMessage({ cmResponse, batch });
-    return new Promise((resolve, reject) => {
-      worker.on('message', resolve);
-      worker.on('error', reject);
-    });
+    const fork = require('child_process').fork
+    const child = fork('./src/modules/billing/jobs/lib/update-invoices-worker.js');
+    return child.send({ cmResponse, batch });
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary);
     throw err;
