@@ -1,6 +1,5 @@
 const Bluebird = require('bluebird');
 const { isNull, difference } = require('lodash');
-const { parentPort } = require('worker_threads');
 
 // Models
 const Transaction = require('../../../../lib/models/transaction');
@@ -100,7 +99,7 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
   }
 };
 
-parentPort.on('message', async data => {
+peocess.on('message', async data => {
   const invoices = await invoiceService.getInvoicesForBatch(data.batch, { includeTransactions: true });
   const returnableMaps = invoiceMaps(invoices, data.cmResponse);
 
@@ -123,5 +122,5 @@ parentPort.on('message', async data => {
     }
   });
 
-  return parentPort.postMessage('OK');
+  return process.send('ok');
 });
