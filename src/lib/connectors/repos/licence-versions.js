@@ -46,7 +46,11 @@ const findByLicenceId = async licenceId => {
  * Finds licence version id created on or after a timestamp
  * @param {String} dateAndTime timestamp
  */
-const findIdsByDateNotInChargeVersionWorkflows = dateAndTime => raw.multiRow(queries.getNewLicenceVersionsForChargeVersionWorkflow, { dateAndTime: dateAndTime || moment(naldSwitchOverDate).toISOString() });
+const findIdsByDateNotInChargeVersionWorkflows = dateAndTime =>
+  raw.multiRow(
+    queries.getNewLicenceVersionsForChargeVersionWorkflow,
+    { dateAndTime: dateAndTime || moment(naldSwitchOverDate).toISOString() }
+  );
 
 exports.create = data => helpers.create(LicenceVersion, data);
 
