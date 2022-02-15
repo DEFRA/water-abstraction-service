@@ -192,13 +192,76 @@
 - ref: $returnMonthlyF
   model: Return
   fields:
-    return_id: $returnDates.refId
+    return_id: $returnDates.refIdSummerFalse
     regime: water
     licence_ref : 'AT/CURR/MONTHLY/02'
     licence_type: abstraction
-    start_date: $returnDates.startDate
-    end_date: $returnDates.endDate
-    due_date:	$returnDates.dueDate
+    start_date: $returnDates.startDateSummerFalse
+    end_date: $returnDates.endDateSummerFalse
+    due_date:	$returnDates.dueDateSummerFalse
+    returns_frequency: month
+    status: due
+    source: NALD
+    metadata: >
+      {
+        "nald":{
+            "areaCode":"AREA",
+            "formatId":9999992,
+            "regionCode":6,
+            "periodEndDay":"31",
+            "periodEndMonth":"11",
+            "periodStartDay":"1",
+            "periodStartMonth":"1"
+        },
+        "points":[
+            {
+              "name":"Winter",
+              "ngr1":"TG 123 456",
+              "ngr2":null,
+              "ngr3":null,
+              "ngr4":null
+            }
+        ],
+        "isFinal":false,
+        "version":1,
+        "isSummer":false,
+        "isUpload":true,
+        "purposes":[
+            {
+              "alias":"SPRAY IRRIGATION STORAGE",
+              "primary":{
+                  "code":"A",
+                  "description":"Agriculture"
+              },
+              "secondary":{
+                  "code":"AGR",
+                  "description":"General Agriculture"
+              },
+              "tertiary":{
+                  "code":"420",
+                  "description":"Spray Irrigation - Storage"
+              }
+            }
+        ],
+        "isCurrent":true,
+        "description":"Its all about the description",
+        "isTwoPartTariff":true
+      }
+    received_date: null
+    return_requirement: '9999992'
+    under_query: false
+    is_test: true
+
+- ref: $returnMonthlyF
+  model: Return
+  fields:
+    return_id: $returnDates.refIdSummerTrue
+    regime: water
+    licence_ref : 'AT/CURR/MONTHLY/02'
+    licence_type: abstraction
+    start_date: $returnDates.startDateSummerTrue
+    end_date: $returnDates.endDateSummerTrue
+    due_date:	$returnDates.dueDateSummerTrue
     returns_frequency: month
     status: due
     source: NALD
