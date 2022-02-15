@@ -117,7 +117,7 @@ experiment('lib/connectors/repos/licence-versions', () => {
 
     test('calls knex.raw() with correct arguments', async () => {
       const [query, params] = raw.multiRow.lastCall.args;
-      expect(query).to.equal(queries.findIdsCreatedAfterDate);
+      expect(query).to.equal(queries.getNewLicenceVersionsForChargeVersionWorkflow);
       expect(params).to.equal({ dateAndTime });
     });
   });
