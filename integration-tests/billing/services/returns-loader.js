@@ -3,7 +3,7 @@
 const FixtureLoader = require('./fixture-loader/FixtureLoader');
 const AsyncAdapter = require('./fixture-loader/adapters/AsyncAdapter');
 
-const { serviceRequest } = require('@envage/water-abstraction-helpers');
+const { returns, serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../config');
 const urlJoin = require('url-join');
 const createReturnsUrl = (...parts) => urlJoin(config.services.returns, ...parts);
@@ -11,6 +11,7 @@ const moment = require('moment');
 
 // Resolve path to fixtures directory
 const path = require('path');
+const { last } = require('lodash');
 const dir = path.resolve(__dirname, '../fixtures');
 
 const createConnector = tail => async body => {
@@ -19,14 +20,16 @@ const createConnector = tail => async body => {
 };
 
 const create = () => {
+  const returnCycleDates = last(returns.date.createReturnCycles(undefined, undefined));
   // create a future date and pass it to the fixture loader as reference for use in yaml objects
   const refDates = {
     name: '$returnDates',
     obj: {
-      dueDate: moment().add(3, 'month').format('YYYY-MM-DD'),
-      endDate: moment().subtract(3, 'month').format('YYYY-MM-DD'),
-      startDate: moment().subtract(6, 'month').format('YYYY-MM-DD'),
-      refId: `v1:1:AT/CURR/MONTHLY/02:9999992:${moment().subtract(6, 'month').format('YYYY-MM-DD')}:${moment().subtract(3, 'month').format('YYYY-MM-DD')}`
+      isSummer: false,
+      dueDate: moment(returnCycleDates.dueDate).add(1, 'month').format('YYYY-MM-DD'),
+      endDate: moment(returnCycleDates.endDate).subtract(1, 'month').format('YYYY-MM-DD'),
+      startDate: moment(returnCycleDates.startDate).add(1, 'month').format('YYYY-MM-DD'),
+      refId: `v1:1:AT/CURR/MONTHLY/02:9999992:${moment(returnCycleDates.startDate).add(1, 'month').format('YYYY-MM-DD')}:${moment(returnCycleDates.endDate).subtract(1, 'month').format('YYYY-MM-DD')}`
     }
   };
 
