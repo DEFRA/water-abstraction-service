@@ -23,6 +23,7 @@ join (
     and t.source_transaction_id is null
     and b.status='sent'
     and i.is_de_minimis=false
+    and i.rebilling_state not in ('reversal', 'rebilled')
 ) t on t.licence_id=l.licence_id and t.financial_year_ending>= b.from_financial_year_ending and t.financial_year_ending<=b.to_financial_year_ending
 where b.billing_batch_id=:batchId
 and l.licence_id not in (
