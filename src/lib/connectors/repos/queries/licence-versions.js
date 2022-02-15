@@ -1,5 +1,5 @@
 
-exports.findIdsCreatedAfterDate = `select
+exports.getNewLicenceVersionsForChargeVersionWorkflow = `select
 distinct licenceVersions.licence_version_id,
   licenceVersions.licence_id
 from
