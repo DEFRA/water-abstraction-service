@@ -201,7 +201,7 @@ const updateInvoices = async (batch, cmResponse) => {
   );
 };
 
-const isCMGeneratingSummary = cmResponse => ['generating', 'pending', 'deleting', 'sending'].includes(get(cmResponse, 'billRun.status'));
+const isCMGeneratingSummary = cmStatus => ['generating', 'pending', 'deleting', 'sending'].includes(cmStatus);
 
 /**
  * Updates the batch with the given batch ID
@@ -219,7 +219,7 @@ const updateBatch = async batchId => {
   // Get CM bill run summary
   const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
 
-  if (isCMGeneratingSummary(cmResponse)) {
+  if (isCMGeneratingSummary(get(cmResponse, 'billRun.status'))) {
     return false;
   }
 

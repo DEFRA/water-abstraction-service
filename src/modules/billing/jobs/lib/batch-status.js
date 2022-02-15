@@ -15,7 +15,13 @@ const assertBatchIsStatus = (batch, statuses) => {
   }
 };
 
-const assertBatchIsProcessing = partialRight(assertBatchIsStatus, [Batch.BATCH_STATUS.processing, Batch.BATCH_STATUS.sending]);
+const assertBatchIsProcessing = (batch) => {
+  if (!([Batch.BATCH_STATUS.processing, Batch.BATCH_STATUS.sending].includes(batch.status))) {
+    throw new Error('Expected processing or sending batch status');
+  }
+  return true;
+};
+
 const assertBatchIsInReview = partialRight(assertBatchIsStatus, [Batch.BATCH_STATUS.review]);
 
 exports.assertBatchIsProcessing = assertBatchIsProcessing;
