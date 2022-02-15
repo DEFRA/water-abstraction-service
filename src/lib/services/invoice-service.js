@@ -179,7 +179,8 @@ const getInvoicesForBatch = async (batch, options = {}) => {
   };
 
   const context = { batch, options: Object.assign(defaults, options) };
-
+  console.log('context')
+console.log(batch)
   return pWaterfall([
     getBatchInvoices,
     getCRMData,

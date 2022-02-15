@@ -237,7 +237,9 @@ module.exports = {
       password: process.env.REDIS_PASSWORD || '',
       ...(isTlsConnection) && { tls: {} },
       db: isPermitsTestDatabase ? 4 : 2,
-      lazyConnect: isRedisLazy
+      lazyConnect: isRedisLazy,
+      maxRetriesPerRequest: null,
+      enableReadyCheck: false
     }
   },
 

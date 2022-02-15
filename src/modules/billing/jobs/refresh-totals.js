@@ -69,12 +69,17 @@ const onFailedHandler = async (job, err) => {
   }
 };
 
+const onComplete = async job => batchJob.logOnComplete(job);
+
 exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
 exports.handler = handler;
 exports.hasScheduler = true;
 exports.onFailed = onFailedHandler;
+exports.onComplete = onComplete;
 exports.workerOptions = {
+  maxStalledCount: 3,
+  stalledInterval: 60000,
   lockDuration: 3600000,
   lockRenewTime: 3600000 / 2
 };
