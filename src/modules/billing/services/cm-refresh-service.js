@@ -230,8 +230,6 @@ const updateBatch = async batchId => {
   // It is important to update the invoices first so that
   // for a batch containing only re-billing, there are >0 transactions
   // in the batch before calculating the new batch status
-  console.log('test)')
-  console.log(batch)
 
   messageQueue.getQueueManager().add(jobNames.updateInvoices, { batch, cmResponse });
 
