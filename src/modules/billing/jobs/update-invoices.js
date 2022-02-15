@@ -10,6 +10,8 @@ const { jobNames } = require('../../../lib/constants');
 
 const JOB_NAME = jobNames.updateInvoices;
 
+const { logger } = require('../../../logger');
+
 const createMessage = (batch, cmResponse) => ([
   JOB_NAME,
   {
@@ -32,6 +34,13 @@ const handler = async job => {
     // Create the worker.
     const fork = require('child_process').fork
     const child = fork('./src/modules/billing/jobs/lib/update-invoices-worker.js');
+    child.on('message', msg => {
+      if (msg.error) {
+        logger.error(msg.error);
+      } else {
+        logger.info('Message from child: ', msg);
+      }
+    })
     return child.send({ cmResponse, batch });
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary);

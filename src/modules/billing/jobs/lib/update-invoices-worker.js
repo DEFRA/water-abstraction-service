@@ -100,27 +100,32 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
 };
 
 process.on('message', async data => {
-  const invoices = await invoiceService.getInvoicesForBatch(data.batch, { includeTransactions: true });
-  const returnableMaps = invoiceMaps(invoices, data.cmResponse);
+  try {
+    const invoices = await invoiceService.getInvoicesForBatch(data.batch, { includeTransactions: true });
+    const returnableMaps = invoiceMaps(invoices, data.cmResponse);
 
-  Bluebird.each(returnableMaps.cm, async ([key, cmInvoice]) => {
-    const invoice = returnableMaps.wrls.get(key);
-    if (invoice) {
-      const cmTransactions = await getAllCmTransactionsForInvoice(
-        data.batch.externalId,
-        cmInvoice.id
-      );
+    Bluebird.each(returnableMaps.cm, async ([key, cmInvoice]) => {
+      const invoice = returnableMaps.wrls.get(key);
+      if (invoice) {
+        const cmTransactions = await getAllCmTransactionsForInvoice(
+          data.batch.externalId,
+          cmInvoice.id
+        );
 
-      logger.info(`Found ${cmTransactions.length} transactions to process from the CM for invoice ${invoice.id}`);
-      // Populate invoice model with updated CM data
-      invoice.fromHash(
-        invoiceMapper.cmToPojo(cmInvoice, cmTransactions)
-      );
-      // Persist invoice and transactions to DB
-      await invoiceService.updateInvoiceModel(invoice);
-      await updateTransactions(invoice, cmTransactions);
-    }
-  });
+        process.send(`Found ${cmTransactions.length} transactions to process from the CM for invoice ${invoice.id}`);
+        // Populate invoice model with updated CM data
+        invoice.fromHash(
+          invoiceMapper.cmToPojo(cmInvoice, cmTransactions)
+        );
 
-  return process.send('ok');
+        // Persist invoice and transactions to DB
+        await invoiceService.updateInvoiceModel(invoice);
+        await updateTransactions(invoice, cmTransactions);
+      }
+    });
+
+    return process.send(`Updating invoices complete for ${data.batch.id}`);
+  } catch (e) {
+    process.send({ error: e });
+  }
 });
