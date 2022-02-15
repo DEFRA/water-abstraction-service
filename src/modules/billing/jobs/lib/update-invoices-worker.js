@@ -99,7 +99,7 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
   }
 };
 
-peocess.on('message', async data => {
+process.on('message', async data => {
   const invoices = await invoiceService.getInvoicesForBatch(data.batch, { includeTransactions: true });
   const returnableMaps = invoiceMaps(invoices, data.cmResponse);
 
