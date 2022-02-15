@@ -25,11 +25,14 @@ const create = () => {
   const refDates = {
     name: '$returnDates',
     obj: {
-      isSummer: false,
-      dueDate: moment(returnCycleDates.dueDate).add(1, 'month').format('YYYY-MM-DD'),
-      endDate: moment(returnCycleDates.endDate).subtract(1, 'month').format('YYYY-MM-DD'),
-      startDate: moment(returnCycleDates.startDate).add(1, 'month').format('YYYY-MM-DD'),
-      refId: `v1:1:AT/CURR/MONTHLY/02:9999992:${moment(returnCycleDates.startDate).add(1, 'month').format('YYYY-MM-DD')}:${moment(returnCycleDates.endDate).subtract(1, 'month').format('YYYY-MM-DD')}`
+      dueDateSummerFalse: moment(returnCycleDates.dueDate).add(1, 'month').format('YYYY-MM-DD'),
+      endDateSummerFalse: moment(returnCycleDates.endDate).subtract(1, 'month').format('YYYY-MM-DD'),
+      startDateSummerFalse: moment(returnCycleDates.startDate).add(1, 'month').format('YYYY-MM-DD'),
+      refIdSummerFalse: `v1:1:AT/CURR/MONTHLY/02:9999992:${moment(returnCycleDates.startDate).add(1, 'month').format('YYYY-MM-DD')}:${moment(returnCycleDates.endDate).subtract(1, 'month').format('YYYY-MM-DD')}`,
+      dueDateSummerTrue: moment(returnCycleDates.dueDate).add(2, 'month').format('YYYY-MM-DD'),
+      endDateSummerTrue: moment(returnCycleDates.endDate).subtract(2, 'month').format('YYYY-MM-DD'),
+      startDateSummerTrue: moment(returnCycleDates.startDate).add(2, 'month').format('YYYY-MM-DD'),
+      refIdSummerTrue: `v1:1:AT/CURR/MONTHLY/02:9999992:${moment(returnCycleDates.startDate).add(2, 'month').format('YYYY-MM-DD')}:${moment(returnCycleDates.endDate).subtract(2, 'month').format('YYYY-MM-DD')}`
     }
   };
 
