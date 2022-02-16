@@ -15,14 +15,15 @@ const assertBatchIsStatus = (batch, statuses) => {
   }
 };
 
-const assertBatchIsProcessing = (batch) => {
-  if (!([Batch.BATCH_STATUS.processing, Batch.BATCH_STATUS.sending].includes(batch.status))) {
-    throw new Error('Expected processing or sending batch status');
-  }
-  return true;
-};
-
+const assertBatchIsProcessing = partialRight(assertBatchIsStatus, [Batch.BATCH_STATUS.processing, Batch.BATCH_STATUS.sending]);
 const assertBatchIsInReview = partialRight(assertBatchIsStatus, [Batch.BATCH_STATUS.review]);
+
+const assertCmBatchIsGeneratedOrBilled = cmBatch => {
+  if (!['generated', 'billed'].includes(cmBatch.status)) {
+    throw new Error(`Expected 'generated' batch status, but instead got ${cmBatch.status}`);
+  }
+};
 
 exports.assertBatchIsProcessing = assertBatchIsProcessing;
 exports.assertBatchIsInReview = assertBatchIsInReview;
+exports.assertCmBatchIsGeneratedOrBilled = assertCmBatchIsGeneratedOrBilled;

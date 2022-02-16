@@ -202,6 +202,7 @@ const updateInvoices = async (batch, cmResponse) => {
 };
 
 const isCMGeneratingSummary = cmResponse => ['generating', 'pending', 'deleting', 'sending'].includes(get(cmResponse, 'billRun.status'));
+
 /**
  * Updates the batch with the given batch ID
  * with data retrieved from the CM
