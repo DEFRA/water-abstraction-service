@@ -10,6 +10,7 @@ const batchJob = require('./lib/batch-job');
 const chargeVersionYearService = require('../services/charge-version-year');
 const billingVolumeService = require('../services/billing-volumes-service');
 const { jobName: prepareTransactionsJobName } = require('./prepare-transactions');
+const config = require('../../../../config');
 const helpers = require('./lib/helpers');
 
 const createMessage = (batchId, billingBatchChargeVersionYearId) => ([
@@ -83,6 +84,7 @@ exports.handler = handler;
 exports.onFailed = helpers.onFailedHandler;
 exports.onComplete = onComplete;
 exports.workerOptions = {
+  concurrency: config.billing.processChargeVersionYearsJobConcurrency,
   lockDuration: 3600000,
   lockRenewTime: 3600000 / 2
 };
