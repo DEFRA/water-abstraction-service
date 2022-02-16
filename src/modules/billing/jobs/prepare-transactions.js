@@ -12,6 +12,7 @@ const helpers = require('./lib/helpers');
 const { jobName: createChargeJobName } = require('./create-charge');
 const { jobName: refreshTotalsJobName } = require('./refresh-totals');
 
+const config = require('../../../../config');
 const { logger } = require('../../../logger');
 const supplementaryBillingService = require('../services/supplementary-billing-service');
 const licenceService = require('../services/licences-service');
