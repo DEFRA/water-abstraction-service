@@ -32,6 +32,7 @@ module.exports = {
     // There are 4 processes on the environments but only 1 locally
     createChargeJobConcurrency: isLocal ? 16 : 1,
     processChargeVersionYearsJobConcurrency: 1,
+    prepareTransactionsJobConcurrency: 1,
     // Some billing logic is handled differently depending on whether the
     // transaction is pre/post NALD switchover date
     naldSwitchOverDate: process.env.BILLING_GO_LIVE_DATE || '2021-06-10',
