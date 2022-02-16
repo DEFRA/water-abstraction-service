@@ -20,7 +20,7 @@ const createConnector = tail => async body => {
 };
 
 const create = () => {
-  const returnCycleDates = last(returns.date.createReturnCycles(undefined, undefined));
+  const returnCycleDates = last(returns.date.createReturnCycles());
   // create a future date and pass it to the fixture loader as reference for use in yaml objects
   const refDates = {
     name: '$returnDates',
