@@ -438,7 +438,9 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
   const { invoiceCount, creditNoteCount, invoiceValue, creditNoteValue, netTotal, status: cmStatus, transactionFileReference } = cmResponse.billRun;
   // Calculate next batch status
   const cmCompletedStatuses = ['billed', 'billing_not_required'];
-  const status = cmCompletedStatuses.includes(cmStatus) ? Batch.BATCH_STATUS.sent : Batch.BATCH_STATUS.ready;
+
+  const batch = await newRepos.billingBatches.findOne(batchId);
+  const status = cmCompletedStatuses.includes(cmStatus) && batch.status !== 'cancel' ? Batch.BATCH_STATUS.sent : Batch.BATCH_STATUS.ready;
 
   // Get transaction count in local DB
   // if 0, the batch will be set to "empty" status
@@ -457,7 +459,6 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
   // the region set before the batch creation date and set the batch status to EMPTY
   if (count === 0) {
     changes = { status: BATCH_STATUS.empty };
-    const batch = await newRepos.billingBatches.findOne(batchId);
     await licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(batch.region.regionId, batch.dateCreated);
   }
 

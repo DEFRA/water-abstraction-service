@@ -33,18 +33,22 @@ const handler = async job => {
   batchJob.logHandling(job);
   const chargeVersionYearId = get(job, 'data.billingBatchChargeVersionYearId');
   try {
-    child.on('message', msg => {
-      if (msg.error) {
-        logger.error(msg.error);
-      } else if (msg.complete === true && msg.batchId) {
-        messageQueue.getQueueManager().add(prepareTransactionsJobName, msg.batchId);
-      } else {
-        logger.info('Message from child: ', msg);
-      }
+    return new Promise((resolve, reject) => {
+      child.on('message', msg => {
+        if (msg.complete === true && msg.batchId) {
+          messageQueue.getQueueManager().add(prepareTransactionsJobName, msg.batchId);
+        } else if (msg.error) {
+          logger.error(msg.error);
+          reject(msg.error);
+        } else if (msg.jobComplete === true) {
+          resolve();
+        } else {
+          logger.info('Message from child: ', msg);
+        }
+      });
+
+      child.send(chargeVersionYearId);
     });
-
-    child.send(chargeVersionYearId);
-
   } catch (err) {
     await chargeVersionYearService.setErrorStatus(chargeVersionYearId);
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToProcessChargeVersions);

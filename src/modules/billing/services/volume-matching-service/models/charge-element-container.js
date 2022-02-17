@@ -104,6 +104,10 @@ class ChargeElementContainer {
     return this._chargeElement;
   }
 
+  get chargePeriod () {
+    return this._chargePeriod;
+  }
+
   /**
    * Sets the charge period
    * @param {DateRange} chargePeriod

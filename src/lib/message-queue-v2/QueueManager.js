@@ -26,11 +26,12 @@ class QueueManager {
   }
 
   /**
-     * Adds a job to the queue with the requested name
-     * @param {String} jobName
-     * @param  {...any} args
-     */
+   * Adds a job to the queue with the requested name
+   * @param {String} jobName
+   * @param  {...any} args
+   */
   add (jobName, ...args) {
+    logger.info(`Attempting to queue a BullMQ job: ${jobName}`);
     const queueContainer = this._queues.get(jobName);
     const { createMessage } = queueContainer.jobContainer;
     const [name, data, options] = createMessage(...args);
@@ -42,15 +43,15 @@ class QueueManager {
   }
 
   /**
-     * Registers a job container
-     * @param {Object} jobContainer
-     * @param {String} jobContainer.jobName - the job/queue name
-     * @param {Function} jobContainer.handler - the handler for the job
-     * @param {Boolean} jobContainer.hasScheduler - whether a scheduler is needed - for jobs with retry etc
-     * @param {Function} jobContainer.onComplete - on complete handler, called with (job, queueManager)
-     * @param {Function} jobContainer.onFailed - on failed handler
-     * @param {Object} [jobContainer.workerOptions] - options to pass to the worker constructor
-     */
+   * Registers a job container
+   * @param {Object} jobContainer
+   * @param {String} jobContainer.jobName - the job/queue name
+   * @param {Function} jobContainer.handler - the handler for the job
+   * @param {Boolean} jobContainer.hasScheduler - whether a scheduler is needed - for jobs with retry etc
+   * @param {Function} jobContainer.onComplete - on complete handler, called with (job, queueManager)
+   * @param {Function} jobContainer.onFailed - on failed handler
+   * @param {Object} [jobContainer.workerOptions] - options to pass to the worker constructor
+   */
   register (jobContainer) {
     const { _connection: connection } = this;
 
