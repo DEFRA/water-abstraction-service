@@ -11,12 +11,19 @@ const Batch = require('../../../../lib/models/batch');
  */
 const assertBatchIsStatus = (batch, statuses) => {
   if (!batch.statusIsOneOf(...statuses)) {
-    throw new Error(`Expected ${statuses} batch status`);
+    throw new Error(`Expected ${statuses} batch status, but got ${batch.status}`);
+  }
+};
+
+const assertCmBatchIsGeneratedOrBilled = cmBatch => {
+  if (!['generated', 'billed'].includes(cmBatch.status)) {
+    throw new Error(`Expected 'generated' batch status, but instead got ${cmBatch.status}`);
   }
 };
 
 const assertBatchIsProcessing = partialRight(assertBatchIsStatus, [Batch.BATCH_STATUS.processing, Batch.BATCH_STATUS.sending]);
 const assertBatchIsInReview = partialRight(assertBatchIsStatus, [Batch.BATCH_STATUS.review]);
 
+exports.assertCmBatchIsGeneratedOrBilled = assertCmBatchIsGeneratedOrBilled;
 exports.assertBatchIsProcessing = assertBatchIsProcessing;
 exports.assertBatchIsInReview = assertBatchIsInReview;

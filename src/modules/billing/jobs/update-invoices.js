@@ -9,6 +9,8 @@ const helpers = require('./lib/helpers');
 const { jobNames } = require('../../../lib/constants');
 
 const JOB_NAME = jobNames.updateInvoices;
+const fork = require('child_process').fork;
+const child = fork('./src/modules/billing/jobs/lib/update-invoices-worker.js');
 
 const { logger } = require('../../../logger');
 
@@ -28,8 +30,6 @@ const createMessage = data => ([
 const handler = async job => {
   try {
     // Create the worker.
-    const fork = require('child_process').fork;
-    const child = fork('./src/modules/billing/jobs/lib/update-invoices-worker.js');
     child.on('message', msg => {
       if (msg.error) {
         logger.error(msg.error);

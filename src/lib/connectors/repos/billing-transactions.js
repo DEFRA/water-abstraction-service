@@ -10,7 +10,7 @@ const withRelated = [
   'billingInvoiceLicence.licence.region',
   'billingInvoiceLicence.billingInvoice',
   'billingInvoiceLicence.billingInvoice.billingBatch',
-  'billingInvoiceLicence.billingInvoice.billingBatch.region'
+  //'billingInvoiceLicence.billingInvoice.billingBatch.region'
 ];
 
 /**
