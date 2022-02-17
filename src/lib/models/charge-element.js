@@ -233,16 +233,15 @@ class ChargeElement extends Model {
     validators.assertIsBoolean(isSection127AgreementEnabled);
     this._isSection127AgreementEnabled = isSection127AgreementEnabled;
   }
-/*
 
   get chargePurposes () {
     return this._chargePurposes;
   }
 
-  /!**
+  /**
    * Charge purposes
    * @param {Array<ChargePurpose>} chargePurposes
-   *!/
+   */
   set chargePurposes (chargePurposes) {
     validators.assertIsArrayOfType(chargePurposes, ChargePurpose);
     this._chargePurposes = chargePurposes;
@@ -270,10 +269,10 @@ class ChargeElement extends Model {
     return this._scheme;
   }
 
-  /!**
+  /**
    * Scheme - ALCS/SROC
    * @param {String} scheme
-   *!/
+   */
   set scheme (scheme) {
     validators.assertEnum(scheme, Object.values(SCHEME));
     this._scheme = scheme;
@@ -283,15 +282,14 @@ class ChargeElement extends Model {
     return this._chargeCategory;
   }
 
-  /!**
+  /**
    * chargeCategory
    * @param {ChargeCategory} chargeCategory
-   *!/
+   */
   set chargeCategory (chargeCategory) {
     validators.assertIsNullableInstanceOf(chargeCategory, ChargeCategory);
     this._chargeCategory = chargeCategory;
   }
-*/
 
   toJSON () {
     return {
