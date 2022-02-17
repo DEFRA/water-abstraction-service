@@ -28,6 +28,7 @@ process.on('message', async chargeVersionYearId => {
     }
 
     // When all charge version years are processed, add next job
+    process.send(`Processing Charge Version Years: ${ready / (processing + error + ready)}%`);
     if (processing === 0 && (batch.status === BATCH_STATUS.processing)) {
       process.send({ complete: true, batchId: batch.id });
     }
