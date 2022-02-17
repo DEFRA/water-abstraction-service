@@ -18,7 +18,7 @@ class AccessTokenManager {
    * @returns
    */
   async refreshAccessToken (refDate) {
-    logger.info('getting cognito token');
+    logger.info('Getting a new Cognito token');
     const uri = urlJoin(config.chargeModule.cognito.host, '/oauth2/token');
     const buff = Buffer.from(`${config.chargeModule.cognito.username}:${config.chargeModule.cognito.password}`);
     const options = {
@@ -37,7 +37,7 @@ class AccessTokenManager {
     // Update this instance with the access token and expiry time
     this.accessToken = accessToken;
     this.expiresAt = moment(refDate).add(expiresIn, 'second');
-    logger.info(`obtained cognito token expires at ${this.expiresAt.format()}`);
+    logger.info(`Obtained a new Cognito token. It expires at ${this.expiresAt.format()}`);
 
     return this.accessToken;
   }
