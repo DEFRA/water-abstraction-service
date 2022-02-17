@@ -21,14 +21,13 @@ process.on('message', async chargeVersionYearId => {
     if (processing === 0) {
       // Check if batch requires TPT review
       const numberOfUnapprovedBillingVolumes = await billingVolumeService.getUnapprovedVolumesForBatchCount(batch);
-      if (numberOfUnapprovedBillingVolumes > 0) {
+      if (numberOfUnapprovedBillingVolumes > 0 && batch.status === BATCH_STATUS.processing) {
         const updatedBatch = await batchService.setStatus(batch.id, BATCH_STATUS.review);
         return { processing, batch: updatedBatch };
       }
     }
 
     // When all charge version years are processed, add next job
-    process.send(`Processing Charge Version Year is complete for ${chargeVersionYearId} - Processing: ${processing} - Error: ${error} - Ready: ${ready}`);
     if (processing === 0 && (batch.status === BATCH_STATUS.processing)) {
       process.send({ complete: true, batchId: batch.id });
     }
