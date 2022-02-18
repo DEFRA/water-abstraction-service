@@ -102,8 +102,9 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
 process.on('message', async data => {
   try {
     const invoices = await invoiceService.getInvoicesForBatch(data.batch, { includeTransactions: true });
+    process.send('Started updating invoices');
     const returnableMaps = invoiceMaps(invoices, data.cmResponse);
-
+    process.send('returnableMaps are now built');
     return Bluebird.each(returnableMaps.cm, async ([key, cmInvoice]) => {
       const invoice = returnableMaps.wrls.get(key);
       if (invoice) {

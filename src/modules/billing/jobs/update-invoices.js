@@ -34,7 +34,7 @@ const handler = async job => {
       if (msg.error) {
         logger.error(msg.error);
       } else {
-        logger.info('Message from child: ', msg);
+        logger.info('Update-invoices child process: ', msg);
       }
     });
     return child.send(job.data);

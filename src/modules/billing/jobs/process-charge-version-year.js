@@ -43,7 +43,7 @@ const handler = async job => {
         } else if (msg.jobComplete === true) {
           resolve();
         } else {
-          logger.info('Message from child: ', msg);
+          logger.info('Process-charge-version-year child process: ', msg);
         }
       });
 

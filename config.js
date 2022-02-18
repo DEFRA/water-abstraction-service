@@ -31,7 +31,7 @@ module.exports = {
     supplementaryYears: isTest ? 1 : 5,
     // There are 4 processes on the environments but only 1 locally
     createChargeJobConcurrency: isLocal ? 16 : 1,
-    processChargeVersionYearsJobConcurrency: isLocal ? 8 : 4,
+    processChargeVersionYearsJobConcurrency: isLocal ? 4 : 2,
     prepareTransactionsJobConcurrency: 1,
     // Some billing logic is handled differently depending on whether the
     // transaction is pre/post NALD switchover date
