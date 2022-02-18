@@ -70,11 +70,13 @@ const filterRebillingTransactions = (batchTransactions, historicalTransactions) 
     if (transaction.rebillingState === null) {
       return true;
     } else if (transaction.rebillingState === 'rebilled') {
-      return rebillBatchTransactions.filter(trx => {
-        return !!(trx.invoiceAccountNumber === transaction.invoiceAccountNumber &&
-        trx.licenceId === transaction.licenceId &&
-        trx.chargeElementId === transaction.chargeElementId).length > 0;
-      });
+      return (rebillBatchTransactions.filter(trx => {
+        return !!(
+          trx.invoiceAccountNumber === transaction.invoiceAccountNumber &&
+          trx.licenceId === transaction.licenceId &&
+          trx.chargeElementId === transaction.chargeElementId
+        );
+      }).length > 0);
     }
     return false;
     // if the rebill status is rebilled and it is in the rebillTransactionsList then return true
@@ -92,8 +94,7 @@ const filterRebillingTransactions = (batchTransactions, historicalTransactions) 
 const getTransactions = async batchId => {
   const batchTransactions = await billingTransactionsRepo.findByBatchId(batchId);
   const historicalTransactions = await transactionService.getBatchTransactionHistory(batchId);
-  const trans = filterRebillingTransactions(batchTransactions, historicalTransactions);
-  return trans;
+  return filterRebillingTransactions(batchTransactions, historicalTransactions);
 };
 
 /**
