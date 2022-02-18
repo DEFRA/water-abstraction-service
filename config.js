@@ -11,7 +11,7 @@ const isTlsConnection = (process.env.REDIS_HOST || '').includes('aws');
 const isRedisLazy = !!process.env.LAZY_REDIS;
 const isPermitsTestDatabase = process.env.DATABASE_URL.includes('permits-test');
 const isTest = process.env.NODE_ENV === 'test';
-const srocStartDate = new Date('2021-04-01');
+const srocStartDate = new Date('2022-04-01');
 
 const isSrocLive = new Date() >= srocStartDate &&
   ['local', 'dev', 'development', 'test'].includes(process.env.NODE_ENV);
