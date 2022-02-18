@@ -14,7 +14,6 @@ const childProcess = require('child_process');
 
 const processChargeVersionYearJob = require('../../../../src/modules/billing/jobs/process-charge-version-year');
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
-const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const { logger } = require('../../../../src/logger');
 
@@ -24,7 +23,7 @@ const batchId = uuid();
 const billingBatchChargeVersionYearId = uuid();
 
 experiment('modules/billing/jobs/process-charge-version-year', () => {
-  let batch, queueManager;
+  let batch;
 
   beforeEach(async () => {
     batch = new Batch(batchId);
@@ -41,10 +40,6 @@ experiment('modules/billing/jobs/process-charge-version-year', () => {
     sandbox.stub(batchJob, 'logOnCompleteError');
 
     sandbox.stub(logger, 'info');
-
-    queueManager = {
-      add: sandbox.stub()
-    };
   });
 
   afterEach(async () => {
