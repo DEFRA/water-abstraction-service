@@ -69,3 +69,7 @@ exports.createMessage = createMessage;
 exports.handler = handler;
 exports.onComplete = onComplete;
 exports.onFailed = helpers.onFailedHandler;
+exports.workerOptions = {
+  lockDuration: 3600000,
+  lockRenewTime: 3600000 / 2
+};
