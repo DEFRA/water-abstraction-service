@@ -267,7 +267,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
             startDate: '2019-01-01',
             endDate: null
           },
-          scheme: 'sroc'
+          scheme: 'alcs'
         });
       });
 
@@ -420,7 +420,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
     test('the charging scheme of the new charge version is set', async () => {
       const [chargeVersion] = chargeVersionService.create.lastCall.args;
-      expect(chargeVersion.scheme).to.equal('sroc');
+      expect(chargeVersion.scheme).to.equal('alcs');
     });
 
     test('the workflow record is deleted', async () => {
