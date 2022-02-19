@@ -66,6 +66,8 @@ const filterRebillingTransactions = (batchTransactions, historicalTransactions) 
   const rebillBatchTransactions = batchTransactions.filter(transaction => transaction.rebillingState === 'rebill');
   if (rebillBatchTransactions.length === 0) {
     const transactions = [...batchTransactions, ...historicalTransactions];
+    // if tere are no rebill invoices in the current batch then it is
+    // not necessary to do the more complex filtering below.
     return transactions.filter(isNotRebillingTransaction);
   }
   // if the current batch includes a rebill invoice then do not filter out the rebilled invoice
