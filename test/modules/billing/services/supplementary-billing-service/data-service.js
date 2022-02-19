@@ -106,8 +106,16 @@ experiment('modules/billing/services/supplementary-billing-service/data-service'
         ],
         historical: [
           createTransaction('historical', uuid(), { rebillingState: 'rebilled', licenceId: 'licence-id-2' }),
+          createTransaction('historical', uuid(), { rebillingState: 'reversal', licenceId: 'licence-id-2' }),
+          createTransaction('historical', uuid(), { rebillingState: 'rebill', licenceId: 'licence-id-2' }),
+          createTransaction('historical', uuid(), { rebillingState: null, licenceId: 'licence-id-2' }),
+          // transaction imported from NALD
+          createTransaction('historical', uuid(), { rebillingState: 'unrebillable', licenceId: 'licence-id-2' }),
           // this is the original bill that has been rebilled by the rebill in the current batch
-          createTransaction('historical', uuid(), { rebillingState: 'rebilled' })
+          createTransaction('historical', uuid(), { rebillingState: 'rebilled' }),
+          createTransaction('historical', uuid(), { rebillingState: 'reversal' }),
+          createTransaction('historical', uuid(), { rebillingState: 'unrebillable' }),
+          createTransaction('historical', uuid(), { rebillingState: null })
         ]
       };
 
@@ -115,10 +123,17 @@ experiment('modules/billing/services/supplementary-billing-service/data-service'
       billingTransactionsRepo.findHistoryByBatchId.resolves(rebillTransactions.historical);
       result = await dataService.getTransactions(batchId);
 
-      expect(result).to.be.an.array().length(2);
+      expect(result).to.be.an.array().length(7);
       expect(result).to.equal([
         rebillTransactions.current[0],
-        rebillTransactions.historical[1]
+        // for licence 2 reversals and rebilled transactions are filtered out
+        rebillTransactions.historical[2],
+        rebillTransactions.historical[3],
+        rebillTransactions.historical[4],
+        // for licence 1 onl the revarsal is filtered out
+        rebillTransactions.historical[5],
+        rebillTransactions.historical[7],
+        rebillTransactions.historical[8]
       ]);
     });
     test('when the batch does NOT have a rebill invoice the rebilled invoice transactions are filtered out', async () => {
