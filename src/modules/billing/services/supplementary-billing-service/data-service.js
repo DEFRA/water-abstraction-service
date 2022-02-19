@@ -64,10 +64,14 @@ const isNotRebillingTransaction = transaction => !(['reversal', 'rebilled'].incl
 const filterRebillingTransactions = (batchTransactions, historicalTransactions) => {
   // find all rebill transactions in the current batch
   const rebillBatchTransactions = batchTransactions.filter(transaction => transaction.rebillingState === 'rebill');
+  if (rebillBatchTransactions.length === 0) {
+    const transactions = [...batchTransactions, ...historicalTransactions];
+    return transactions.filter(isNotRebillingTransaction);
+  }
   // if the current batch includes a rebill invoice then do not filter out the rebilled invoice
   // becasue it will not cancel out and then create another invoice for the charge version year
   const filteredHistoricTransactions = historicalTransactions.filter(transaction => {
-    if (transaction.rebillingState === null) {
+    if (['unrebillable', null].includes(transaction.rebillingState)) {
       return true;
     } else if (transaction.rebillingState === 'rebilled') {
       return (rebillBatchTransactions.filter(trx => {
@@ -79,7 +83,6 @@ const filterRebillingTransactions = (batchTransactions, historicalTransactions) 
       }).length > 0);
     }
     return false;
-    // if the rebill status is rebilled and it is in the rebillTransactionsList then return true
   });
   return [...(batchTransactions.filter(isNotRebillingTransaction)), ...filteredHistoricTransactions];
 };
