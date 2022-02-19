@@ -60,6 +60,35 @@ const getReversedTransaction = (invoiceLicence, sourceTransaction) => {
 
 // this fixes 3044 for when credits were not being created
 const isNotRebillingTransaction = transaction => !(['reversal', 'rebilled'].includes(transaction.rebillingState));
+// this fixes 3500 where the incorrect extra invoice was created in a supplementary bill run for rebilling.
+const filterRebillingTransactions = (batchTransactions, historicalTransactions) => {
+  // find all rebill transactions in the current batch
+  const rebillBatchTransactions = batchTransactions.filter(transaction => transaction.rebillingState === 'rebill');
+  if (rebillBatchTransactions.length === 0) {
+    const transactions = [...batchTransactions, ...historicalTransactions];
+    // if tere are no rebill invoices in the current batch then it is
+    // not necessary to do the more complex filtering below.
+    return transactions.filter(isNotRebillingTransaction);
+  }
+  // if the current batch includes a rebill invoice then do not filter out the rebilled invoice
+  // becasue it will not cancel out and then create another invoice for the charge version year
+  const filteredHistoricTransactions = historicalTransactions.filter(transaction => {
+    if (['unrebillable', null, 'rebill'].includes(transaction.rebillingState)) {
+      return true;
+    } else if (transaction.rebillingState === 'rebilled') {
+      return (rebillBatchTransactions.filter(trx => {
+        return !!(
+          trx.invoiceAccountNumber === transaction.invoiceAccountNumber &&
+          trx.licenceId === transaction.licenceId &&
+          trx.chargeElementId === transaction.chargeElementId
+        );
+      }).length > 0);
+    }
+    // this will filter out reversals in historic batches
+    return false;
+  });
+  return [...(batchTransactions.filter(isNotRebillingTransaction)), ...filteredHistoricTransactions];
+};
 
 /**
  * Gets a list of transactions in the current batch plus historical transactions
@@ -71,8 +100,7 @@ const isNotRebillingTransaction = transaction => !(['reversal', 'rebilled'].incl
 const getTransactions = async batchId => {
   const batchTransactions = await billingTransactionsRepo.findByBatchId(batchId);
   const historicalTransactions = await transactionService.getBatchTransactionHistory(batchId);
-  const transactions = [...batchTransactions, ...historicalTransactions];
-  return transactions.filter(isNotRebillingTransaction);
+  return filterRebillingTransactions(batchTransactions, historicalTransactions);
 };
 
 /**

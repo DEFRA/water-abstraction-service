@@ -20,7 +20,8 @@ const createConnector = tail => async body => {
 };
 
 const create = () => {
-  const returnCycleDates = last(returns.date.createReturnCycles());
+  // todo this might need to be tweaked again or the year calculated dynamically.
+  const returnCycleDates = last(returns.date.createReturnCycles('2017-11-01', '2021-11-01'));
   // create a future date and pass it to the fixture loader as reference for use in yaml objects
   const refDates = {
     name: '$returnDates',

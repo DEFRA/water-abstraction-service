@@ -14,7 +14,7 @@
     netAmount: 55020
     isCredit: false
     chargeType: standard
-    authorisedQuantity: 25
+    authorisedQuantity: 30
     billableQuantity: 25
     authorisedDays: 214
     billableDays: 214
@@ -22,7 +22,7 @@
     section127Agreement: true
     section130Agreement: null
     status: charge_created
-    description: First Part Spray Irrigation Charge CE2.
+    description: First Part Spray Irrigation Charge CE2
     volume: 25
     isNewLicence: true
     isDeMinimis: false
@@ -51,7 +51,7 @@
     netAmount: 0
     isCredit: false
     chargeType: compensation
-    authorisedQuantity: 25
+    authorisedQuantity: 30
     billableQuantity: 25
     authorisedDays: 214
     billableDays: 214
