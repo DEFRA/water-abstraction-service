@@ -31,6 +31,8 @@ module.exports = {
     supplementaryYears: isTest ? 1 : 5,
     // There are 4 processes on the environments but only 1 locally
     createChargeJobConcurrency: isLocal ? 16 : 1,
+    processChargeVersionYearsJobConcurrency: isLocal ? 4 : 2,
+    prepareTransactionsJobConcurrency: 1,
     // Some billing logic is handled differently depending on whether the
     // transaction is pre/post NALD switchover date
     naldSwitchOverDate: process.env.BILLING_GO_LIVE_DATE || '2021-06-10',
@@ -237,7 +239,9 @@ module.exports = {
       password: process.env.REDIS_PASSWORD || '',
       ...(isTlsConnection) && { tls: {} },
       db: isPermitsTestDatabase ? 4 : 2,
-      lazyConnect: isRedisLazy
+      lazyConnect: isRedisLazy,
+      maxRetriesPerRequest: null,
+      enableReadyCheck: false
     }
   },
 

@@ -60,12 +60,12 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
       const withRelated = helpers.findOne.lastCall.args[3];
       expect(withRelated).to.equal([
         'billingBatch',
-        'billingBatch.region',
+        // 'billingBatch.region',
         'chargeVersion',
-        'chargeVersion.changeReason',
+        // 'chargeVersion.changeReason',
         'chargeVersion.chargeElements',
-        'chargeVersion.chargeElements.purposePrimary',
-        'chargeVersion.chargeElements.purposeSecondary',
+        // 'chargeVersion.chargeElements.purposePrimary',
+        // 'chargeVersion.chargeElements.purposeSecondary',
         'chargeVersion.chargeElements.purposeUse',
         'chargeVersion.licence',
         'chargeVersion.licence.licenceAgreements',

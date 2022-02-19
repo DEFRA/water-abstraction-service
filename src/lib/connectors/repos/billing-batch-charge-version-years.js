@@ -11,14 +11,21 @@ const { TRANSACTION_TYPE } = require('../../models/charge-version-year');
  * @param {String} id
  */
 const findOne = async id => {
+  /*
+  The following withRelated array has some commented out lines.
+  Those are entities which are 'relevant' to BBCVY but are not useful to the underlying operations
+  which consume this findOne method at the moment.
+
+  They have been commented out to avoid unnecessary processing.
+   */
   const withRelated = [
     'billingBatch',
-    'billingBatch.region',
+    // 'billingBatch.region',
     'chargeVersion',
-    'chargeVersion.changeReason',
+    // 'chargeVersion.changeReason',
     'chargeVersion.chargeElements',
-    'chargeVersion.chargeElements.purposePrimary',
-    'chargeVersion.chargeElements.purposeSecondary',
+    // 'chargeVersion.chargeElements.purposePrimary',
+    // 'chargeVersion.chargeElements.purposeSecondary',
     'chargeVersion.chargeElements.purposeUse',
     'chargeVersion.licence',
     'chargeVersion.licence.licenceAgreements',

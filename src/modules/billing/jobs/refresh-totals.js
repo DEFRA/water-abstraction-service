@@ -11,6 +11,7 @@ const helpers = require('./lib/helpers');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
 const cmRefreshService = require('../services/cm-refresh-service');
+const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
 const { StateError } = require('../../../lib/errors');
 
@@ -36,10 +37,11 @@ const handler = async job => {
 
   // Load batch
   const batch = await batchService.getBatchById(batchId);
+  const cmBatch = await chargeModuleBillRunConnector.getStatus(batch.externalId);
 
-  // Check batch in "processing" status
-  batchStatus.assertBatchIsProcessing(batch);
-
+  // Check CM batch in "generated" or "billed" status
+  // This indicates that our job is done and can move onto refreshing invoices
+  batchStatus.assertCmBatchIsGeneratedOrBilled(cmBatch);
   // Update batch with totals/bill run ID from charge module
   const isSuccess = await cmRefreshService.updateBatch(batchId);
 
@@ -69,12 +71,17 @@ const onFailedHandler = async (job, err) => {
   }
 };
 
+const onComplete = async job => batchJob.logOnComplete(job);
+
 exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
 exports.handler = handler;
 exports.hasScheduler = true;
 exports.onFailed = onFailedHandler;
+exports.onComplete = onComplete;
 exports.workerOptions = {
+  maxStalledCount: 3,
+  stalledInterval: 60000,
   lockDuration: 3600000,
   lockRenewTime: 3600000 / 2
 };
