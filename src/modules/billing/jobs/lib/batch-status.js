@@ -16,8 +16,8 @@ const assertBatchIsStatus = (batch, statuses) => {
 };
 
 const assertCmBatchIsGeneratedOrBilled = cmBatch => {
-  if (!['generated', 'billed'].includes(cmBatch.status)) {
-    throw new Error(`Expected 'generated' or 'billed' batch status, but instead got ${cmBatch.status}`);
+  if (!['generated', 'billed', 'billing_not_required'].includes(cmBatch.status)) {
+    throw new Error(`Expected 'generated', 'billing_not_required' or 'billed' batch status, but instead got ${cmBatch.status}`);
   }
 };
 
