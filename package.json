@@ -67,7 +67,7 @@
     "bullmq": "^1.68.4",
     "camelcase": "^5.3.1",
     "commander": "^2.20.3",
-    "csv-parse": "^2.5.0",
+    "csv-parse": "^4.4.6",
     "decimal.js-light": "^2.5.0",
     "deep-map": "^1.5.0",
     "dotenv": "^4.0.0",
