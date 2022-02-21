@@ -34,7 +34,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     sandbox.stub(batchJob, 'logOnCompleteError');
 
     sandbox.stub(billingBatchesRepo, 'update').resolves();
-    sandbox.stub(billingTransactionsRepo, 'findByBatchId').resolves([{},{}]);
+    sandbox.stub(billingTransactionsRepo, 'findByBatchId').resolves([{}, {}]);
 
     sandbox.stub(cmRefreshService, 'updateBatch');
     sandbox.stub(chargeModuleBillRunConnector, 'getStatus').resolves({
