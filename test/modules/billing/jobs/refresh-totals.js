@@ -15,6 +15,8 @@ const refreshTotals = require('../../../../src/modules/billing/jobs/refresh-tota
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const cmRefreshService = require('../../../../src/modules/billing/services/cm-refresh-service');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
+const billingBatchesRepo = require('../../../../src/lib/connectors/repos/billing-batches');
+const billingTransactionsRepo = require('../../../../src/lib/connectors/repos/billing-transactions');
 
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const Batch = require('../../../../src/lib/models/batch');
@@ -30,6 +32,9 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingError');
     sandbox.stub(batchJob, 'logOnCompleteError');
+
+    sandbox.stub(billingBatchesRepo, 'update').resolves();
+    sandbox.stub(billingTransactionsRepo, 'findByBatchId').resolves([{}, {}]);
 
     sandbox.stub(cmRefreshService, 'updateBatch');
     sandbox.stub(chargeModuleBillRunConnector, 'getStatus').resolves({
