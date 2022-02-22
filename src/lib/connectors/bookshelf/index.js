@@ -21,6 +21,7 @@ exports.Licence = require('./Licence');
 exports.LicenceAgreement = require('./LicenceAgreement');
 exports.LicenceVersion = require('./LicenceVersion');
 exports.LicenceVersionPurpose = require('./LicenceVersionPurpose');
+exports.Note = require('./Note');
 exports.Region = require('./Region');
 exports.ReturnVersion = require('./ReturnVersion');
 exports.ReturnRequirement = require('./ReturnRequirement');

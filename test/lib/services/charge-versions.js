@@ -23,6 +23,7 @@ const ChargeVersion = require('../../../src/lib/models/charge-version');
 const ChargeElement = require('../../../src/lib/models/charge-element');
 const DateRange = require('../../../src/lib/models/date-range');
 const Licence = require('../../../src/lib/models/licence');
+const Note = require('../../../src/lib/models/note');
 
 // Repos
 const chargeVersionRepo = require('../../../src/lib/connectors/repos/charge-versions');
@@ -154,6 +155,7 @@ experiment('lib/services/charge-versions', () => {
       });
 
       chargeVersion = new ChargeVersion();
+
       chargeVersion.fromHash({
         dateRange: new DateRange('2020-01-01', null),
         status: 'current',
@@ -214,6 +216,23 @@ experiment('lib/services/charge-versions', () => {
 
       test('the charge version is loaded by ID and returned', async () => {
         expect(service.findOne.calledWith(chargeVersionId)).to.be.true();
+      });
+    });
+
+    experiment('when the charge version has a note', () => {
+      const NOTE_ID = uuid();
+      beforeEach(async () => {
+        service.findMany.resolves([]);
+        const note = new Note();
+        note.fromHash({ id: NOTE_ID, text: 'note text', typeId: uuid(), user: { id: 12345 } });
+        chargeVersion.note = note;
+        await chargeVersionService.create(chargeVersion);
+      });
+
+      test('the charge version is updated with the note id', async () => {
+        expect(chargeVersionRepo.update.callCount).to.equal(1);
+        const { args } = chargeVersionRepo.update.lastCall;
+        expect(args).to.equal([chargeVersionId, { noteId: NOTE_ID }]);
       });
     });
 

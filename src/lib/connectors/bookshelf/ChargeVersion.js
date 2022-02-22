@@ -17,6 +17,10 @@ module.exports = bookshelf.model('ChargeVersion', {
     return this.belongsTo('Licence', 'licence_ref', 'licence_ref');
   },
 
+  note () {
+    return this.hasOne('Note', 'note_id', 'note_id');
+  },
+
   changeReason () {
     return this.hasOne('ChangeReason', 'change_reason_id', 'change_reason_id');
   }
