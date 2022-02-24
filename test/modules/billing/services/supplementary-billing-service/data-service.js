@@ -73,6 +73,94 @@ experiment('modules/billing/services/supplementary-billing-service/data-service'
     });
   });
 
+  experiment('.getTransactions for rebilling', () => {
+    test('when the batch has a rebill invoice the rebilled invoice transactions are NOT filtered out for the same licence', async () => {
+      const rebillTransactions = {
+        current: [
+          // the new bill that has been reissued
+          createTransaction(batchId, uuid(), { rebillingState: 'rebill' }),
+          // this is the reversal of the original bill
+          createTransaction(batchId, uuid(), { rebillingState: 'reversal' })
+        ],
+        // this is the original bill that has been rebilled by the rebill in the current batch
+        historical: [createTransaction('historical', uuid(), { rebillingState: 'rebilled' })]
+      };
+
+      billingTransactionsRepo.findByBatchId.resolves(rebillTransactions.current);
+      billingTransactionsRepo.findHistoryByBatchId.resolves(rebillTransactions.historical);
+      result = await dataService.getTransactions(batchId);
+
+      expect(result).to.be.an.array().length(2);
+      expect(result).to.equal([
+        rebillTransactions.current[0],
+        rebillTransactions.historical[0]
+      ]);
+    });
+    test('when the batch has a rebill invoice the rebilled invoice transactions are filtered out if it is not the same licence', async () => {
+      const rebillTransactions = {
+        current: [
+          // the new bill that has been reissued
+          createTransaction(batchId, uuid(), { rebillingState: 'rebill' }),
+          // this is the reversal of the original bill
+          createTransaction(batchId, uuid(), { rebillingState: 'reversal' })
+        ],
+        historical: [
+          createTransaction('historical', uuid(), { rebillingState: 'rebilled', licenceId: 'licence-id-2' }),
+          createTransaction('historical', uuid(), { rebillingState: 'reversal', licenceId: 'licence-id-2' }),
+          createTransaction('historical', uuid(), { rebillingState: 'rebill', licenceId: 'licence-id-2' }),
+          createTransaction('historical', uuid(), { rebillingState: null, licenceId: 'licence-id-2' }),
+          // transaction imported from NALD
+          createTransaction('historical', uuid(), { rebillingState: 'unrebillable', licenceId: 'licence-id-2' }),
+          // this is the original bill that has been rebilled by the rebill in the current batch
+          createTransaction('historical', uuid(), { rebillingState: 'rebilled' }),
+          createTransaction('historical', uuid(), { rebillingState: 'reversal' }),
+          createTransaction('historical', uuid(), { rebillingState: 'unrebillable' }),
+          createTransaction('historical', uuid(), { rebillingState: null })
+        ]
+      };
+
+      billingTransactionsRepo.findByBatchId.resolves(rebillTransactions.current);
+      billingTransactionsRepo.findHistoryByBatchId.resolves(rebillTransactions.historical);
+      result = await dataService.getTransactions(batchId);
+
+      expect(result).to.be.an.array().length(7);
+      expect(result).to.equal([
+        rebillTransactions.current[0],
+        // for licence 2 reversals and rebilled transactions are filtered out
+        rebillTransactions.historical[2],
+        rebillTransactions.historical[3],
+        rebillTransactions.historical[4],
+        // for licence 1 onl the revarsal is filtered out
+        rebillTransactions.historical[5],
+        rebillTransactions.historical[7],
+        rebillTransactions.historical[8]
+      ]);
+    });
+    test('when the batch does NOT have a rebill invoice the rebilled invoice transactions are filtered out', async () => {
+      const transactions = {
+        current: [
+          createTransaction(batchId, uuid())
+        ],
+        // this is the original bill that has been rebilled by the rebill in the current batch
+        historical: [
+          createTransaction('historical', uuid(), { rebillingState: 'rebilled' }),
+          createTransaction('historical', uuid(), { rebillingState: 'reversal' }),
+          createTransaction('historical', uuid())
+        ]
+      };
+
+      billingTransactionsRepo.findByBatchId.resolves(transactions.current);
+      billingTransactionsRepo.findHistoryByBatchId.resolves(transactions.historical);
+      result = await dataService.getTransactions(batchId);
+
+      expect(result).to.be.an.array().length(2);
+      expect(result).to.equal([
+        transactions.current[0],
+        transactions.historical[2]
+      ]);
+    });
+  });
+
   experiment('.persistChanges', () => {
     experiment('when passed an empty transactions array', () => {
       beforeEach(async () => {

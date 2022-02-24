@@ -286,12 +286,6 @@ experiment('modules/billing/services/cm-refresh-service', () => {
         test('the batch is fetched from the CM on externalId', async () => {
           expect(cmBillRunsConnector.get.calledWith(externalId)).to.be.true();
         });
-
-        test('invoices are fetched for the batch from the db', async () => {
-          expect(invoiceService.getInvoicesForBatch.calledWith(
-            batch, { includeTransactions: true }
-          )).to.be.true();
-        });
       });
 
       experiment('and the invoices are rebill invoices', () => {
@@ -315,12 +309,6 @@ experiment('modules/billing/services/cm-refresh-service', () => {
 
         test('the batch is fetched from the CM on externalId', async () => {
           expect(cmBillRunsConnector.get.calledWith(externalId)).to.be.true();
-        });
-
-        test('invoices are fetched for the batch from the db', async () => {
-          expect(invoiceService.getInvoicesForBatch.calledWith(
-            batch, { includeTransactions: true }
-          )).to.be.true();
         });
       });
     });

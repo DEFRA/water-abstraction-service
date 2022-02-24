@@ -11,6 +11,10 @@ const helpers = require('./lib/helpers');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
 const cmRefreshService = require('../services/cm-refresh-service');
+const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
+const billingBatchesRepo = require('../../../lib/connectors/repos/billing-batches');
+const billingTransactionsRepo = require('../../../lib/connectors/repos/billing-transactions');
+const { BATCH_STATUS } = require('../../../lib/models/batch');
 
 const { StateError } = require('../../../lib/errors');
 
@@ -36,15 +40,23 @@ const handler = async job => {
 
   // Load batch
   const batch = await batchService.getBatchById(batchId);
+  const cmBatch = await chargeModuleBillRunConnector.getStatus(batch.externalId);
 
-  // Check batch in "processing" status
-  batchStatus.assertBatchIsProcessing(batch);
+  // Check the batch isn't empty
+  const numberOfTransactionsInBatch = await billingTransactionsRepo.findByBatchId(batchId);
+  if (numberOfTransactionsInBatch.length === 0) {
+    logger.info(`Batch ${batchId} is empty - WRLS will mark is as Empty, and will not ask the Charging module to generate it.`);
+    await billingBatchesRepo.update(batchId, { status: BATCH_STATUS.empty });
+  } else {
+    // Check CM batch in "generated" or "billed" status
+    // This indicates that our job is done and can move onto refreshing invoices
+    batchStatus.assertCmBatchIsGeneratedOrBilled(cmBatch);
+    // Update batch with totals/bill run ID from charge module
+    const isSuccess = await cmRefreshService.updateBatch(batchId);
 
-  // Update batch with totals/bill run ID from charge module
-  const isSuccess = await cmRefreshService.updateBatch(batchId);
-
-  if (!isSuccess) {
-    throw new StateError(`CM bill run summary not ready for batch ${batchId}`);
+    if (!isSuccess) {
+      throw new StateError(`CM bill run summary not ready for batch ${batchId}`);
+    }
   }
 };
 
@@ -69,12 +81,17 @@ const onFailedHandler = async (job, err) => {
   }
 };
 
+const onComplete = async job => batchJob.logOnComplete(job);
+
 exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
 exports.handler = handler;
 exports.hasScheduler = true;
 exports.onFailed = onFailedHandler;
+exports.onComplete = onComplete;
 exports.workerOptions = {
+  maxStalledCount: 3,
+  stalledInterval: 60000,
   lockDuration: 3600000,
   lockRenewTime: 3600000 / 2
 };

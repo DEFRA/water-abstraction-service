@@ -11,7 +11,7 @@ const isTlsConnection = (process.env.REDIS_HOST || '').includes('aws');
 const isRedisLazy = !!process.env.LAZY_REDIS;
 const isPermitsTestDatabase = process.env.DATABASE_URL.includes('permits-test');
 const isTest = process.env.NODE_ENV === 'test';
-const srocStartDate = new Date('2021-04-01');
+const srocStartDate = new Date('2022-04-01');
 
 const isSrocLive = new Date() >= srocStartDate &&
   ['local', 'dev', 'development', 'test'].includes(process.env.NODE_ENV);
@@ -31,6 +31,8 @@ module.exports = {
     supplementaryYears: isTest ? 1 : 5,
     // There are 4 processes on the environments but only 1 locally
     createChargeJobConcurrency: isLocal ? 16 : 1,
+    processChargeVersionYearsJobConcurrency: isLocal ? 4 : 2,
+    prepareTransactionsJobConcurrency: 1,
     // Some billing logic is handled differently depending on whether the
     // transaction is pre/post NALD switchover date
     naldSwitchOverDate: process.env.BILLING_GO_LIVE_DATE || '2021-06-10',
@@ -237,7 +239,9 @@ module.exports = {
       password: process.env.REDIS_PASSWORD || '',
       ...(isTlsConnection) && { tls: {} },
       db: isPermitsTestDatabase ? 4 : 2,
-      lazyConnect: isRedisLazy
+      lazyConnect: isRedisLazy,
+      maxRetriesPerRequest: null,
+      enableReadyCheck: false
     }
   },
 
