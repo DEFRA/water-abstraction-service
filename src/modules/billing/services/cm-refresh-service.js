@@ -15,7 +15,7 @@ const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-mod
 // Services
 const batchService = require('./batch-service');
 
-const isCMGeneratingSummary = cmResponse => ['generating', 'pending', 'deleting', 'sending'].includes(get(cmResponse, 'billRun.status'));
+const isCMGeneratingSummary = cmResponse => ['pending', 'sending'].includes(get(cmResponse, 'billRun.status'));
 
 /**
  * Updates the batch with the given batch ID
