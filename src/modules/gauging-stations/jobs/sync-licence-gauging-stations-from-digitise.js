@@ -82,8 +82,7 @@ const handler = async () => {
             }
 
             const licenceVersionPurposeConditionURI = get(eachArSegment, 'content.nald_condition.id', null);
-            if(licenceVersionPurposeConditionURI){
-
+            if (licenceVersionPurposeConditionURI) {
               const parts = licenceVersionPurposeConditionURI.split('/');
               const licenceVersionPurposeConditionLegacyId = `${parts[parts.length - 1]}:${parts[parts.length - 2]}`;
               const { licenceVersionPurposeConditionId } = await licenceVersionPurposeConditionsService.getLicenceVersionConditionByPartialExternalId(licenceVersionPurposeConditionLegacyId);
