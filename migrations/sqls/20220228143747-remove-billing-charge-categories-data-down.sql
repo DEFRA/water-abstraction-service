@@ -1,0 +1,1 @@
+DELETE FROM water.billing_charge_categories;
