@@ -21,7 +21,7 @@ const createMessage = () => ([
   {
     jobId: `${JOB_NAME}.${moment().format('YYYYMMDD')}`,
     repeat: {
-      every: config.import.digitiseToLVPCSyncFrequencyInMS
+      cron: config.import.digitiseToLVPCSyncCronExp
     }
   }
 ]);

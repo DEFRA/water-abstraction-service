@@ -34,7 +34,7 @@ experiment('.createMessage', () => {
     expect(message[2]).to.equal({
       jobId: `gauging-stations.copy-lvpc-from-digitise.${moment().format('YYYYMMDD')}`,
       repeat: {
-        every: config.import.digitiseToLVPCSyncFrequencyInMS
+        cron: config.import.digitiseToLVPCSyncCronExp
       }
     });
   });

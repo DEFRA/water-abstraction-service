@@ -22,7 +22,7 @@ const createMessage = () => ([
   {
     jobId: `${JOB_NAME}.${moment().format('YYYYMMDD')}`,
     repeat: {
-      every: config.import.digitiseToLVPCSyncFrequencyInMS
+      cron: config.import.digitiseToLicenceGaugingStationsCronExp
     }
   }
 ]);
@@ -82,48 +82,50 @@ const handler = async () => {
             }
 
             const licenceVersionPurposeConditionURI = get(eachArSegment, 'content.nald_condition.id', null);
-            const parts = licenceVersionPurposeConditionURI.split('/');
-            const licenceVersionPurposeConditionLegacyId = `${parts[parts.length - 1]}:${parts[parts.length - 2]}`;
-            const { licenceVersionPurposeConditionId } = await licenceVersionPurposeConditionsService.getLicenceVersionConditionByPartialExternalId(licenceVersionPurposeConditionLegacyId);
-            const thresholdUnit = (get(eachArSegment, 'content.unit', null) || get(eachArSegment, 'content.max_rate_unit', '')).replace('³', '3');
-            const thresholdValue = get(eachArSegment, 'content.max_rate', null) || get(eachArSegment, 'content.hol_rate_level', null);
-            const flowUnits = ['Ml/d', 'm3/s', 'm3/d', 'l/s'];
-            const restrictionType = flowUnits.includes(thresholdUnit) ? 'flow' : 'level';
-            const gaugingStationId = get(eachArSegment, 'content.gauging_station.id', null);
-            const source = 'digitise';
-            if (thresholdUnit && thresholdValue && gaugingStationId && eachLicence.licence_ref && licenceVersionPurposeConditionId) {
-              const licenceRecord = await licencesService.getLicenceByLicenceRef(eachLicence.licence_ref);
-              const existingLinkage = await licenceGaugingStationsService.findLicenceGaugingStationsByFilter({
-                licence_id: licenceRecord.id,
-                gauging_station_id: gaugingStationId,
-                restriction_type: restrictionType,
-                threshold_unit: thresholdUnit,
-                threshold_value: thresholdValue
-              });
-
-              if (existingLinkage.length > 0) {
-                logger.info(`Linkage already exists between ${eachLicence.licence_ref} and ${gaugingStationId} at ${thresholdValue} ${thresholdUnit} - Skipping.`);
-              } else {
-                logger.info(`New linkage detected between ${eachLicence.licence_ref} and ${gaugingStationId} at ${thresholdValue} ${thresholdUnit} - Copying to water.licence_gauging_stations.`);
-                await licenceGaugingStationsService.createNewLicenceLink(gaugingStationId, licenceRecord.id, {
-                  licenceVersionPurposeConditionId,
-                  thresholdUnit,
-                  thresholdValue,
-                  restrictionType,
-                  alertType,
-                  source
+            if (licenceVersionPurposeConditionURI) {
+              const parts = licenceVersionPurposeConditionURI.split('/');
+              const licenceVersionPurposeConditionLegacyId = `${parts[parts.length - 1]}:${parts[parts.length - 2]}`;
+              const { licenceVersionPurposeConditionId } = await licenceVersionPurposeConditionsService.getLicenceVersionConditionByPartialExternalId(licenceVersionPurposeConditionLegacyId);
+              const thresholdUnit = (get(eachArSegment, 'content.unit', null) || get(eachArSegment, 'content.max_rate_unit', '')).replace('³', '3');
+              const thresholdValue = get(eachArSegment, 'content.max_rate', null) || get(eachArSegment, 'content.hol_rate_level', null);
+              const flowUnits = ['Ml/d', 'm3/s', 'm3/d', 'l/s'];
+              const restrictionType = flowUnits.includes(thresholdUnit) ? 'flow' : 'level';
+              const gaugingStationId = get(eachArSegment, 'content.gauging_station.id', null);
+              const source = 'digitise';
+              if (thresholdUnit && thresholdValue && gaugingStationId && eachLicence.licence_ref && licenceVersionPurposeConditionId) {
+                const licenceRecord = await licencesService.getLicenceByLicenceRef(eachLicence.licence_ref);
+                const existingLinkage = await licenceGaugingStationsService.findLicenceGaugingStationsByFilter({
+                  licence_id: licenceRecord.id,
+                  gauging_station_id: gaugingStationId,
+                  restriction_type: restrictionType,
+                  threshold_unit: thresholdUnit,
+                  threshold_value: thresholdValue
                 });
-                logger.info(`New linkage created between ${eachLicence.licence_ref} and ${gaugingStationId} at ${thresholdValue} ${thresholdUnit}`);
+
+                if (existingLinkage.length > 0) {
+                  logger.info(`Linkage already exists between ${eachLicence.licence_ref} and ${gaugingStationId} at ${thresholdValue} ${thresholdUnit} - Skipping.`);
+                } else {
+                  logger.info(`New linkage detected between ${eachLicence.licence_ref} and ${gaugingStationId} at ${thresholdValue} ${thresholdUnit} - Copying to water.licence_gauging_stations.`);
+                  await licenceGaugingStationsService.createNewLicenceLink(gaugingStationId, licenceRecord.id, {
+                    licenceVersionPurposeConditionId,
+                    thresholdUnit,
+                    thresholdValue,
+                    restrictionType,
+                    alertType,
+                    source
+                  });
+                  logger.info(`New linkage created between ${eachLicence.licence_ref} and ${gaugingStationId} at ${thresholdValue} ${thresholdUnit}`);
+                }
+              } else {
+                logger.info(`Attempted to copy Digitise record relating to ${eachLicence.licence_ref}. This operation failed due to incomplete data.`);
               }
-            } else {
-              logger.info(`Attempted to copy Digitise record relating to ${eachLicence.licence_ref}. This operation failed due to incomplete data.`);
+              // For the successful records,
+              // mark them as processed by updating the datestamp
+              // in permit.licence.date_licence_version_purpose_conditions_last_copied
+              await permitConnector.licences.updateOne(eachLicence.licence_id, {
+                date_gauging_station_links_last_copied: new Date()
+              });
             }
-            // For the successful records,
-            // mark them as processed by updating the datestamp
-            // in permit.licence.date_licence_version_purpose_conditions_last_copied
-            await permitConnector.licences.updateOne(eachLicence.licence_id, {
-              date_gauging_station_links_last_copied: new Date()
-            });
           });
         }
       }
