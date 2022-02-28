@@ -26,7 +26,7 @@ class ChargePurpose extends Model {
   }
 
   set source (source) {
-    validators.assertEnum(source, Object.values(VALID_SOURCES));
+    validators.assertNullableEnum(source, Object.values(VALID_SOURCES));
     this._source = source;
   }
 
@@ -48,7 +48,7 @@ class ChargePurpose extends Model {
   }
 
   set season (season) {
-    validators.assertEnum(season, Object.values(CHARGE_SEASON));
+    validators.assertNullableEnum(season, Object.values(CHARGE_SEASON));
     this._season = season;
   }
 
