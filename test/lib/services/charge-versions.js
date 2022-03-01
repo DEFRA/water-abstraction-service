@@ -27,14 +27,19 @@ const Note = require('../../../src/lib/models/note');
 
 // Repos
 const chargeVersionRepo = require('../../../src/lib/connectors/repos/charge-versions');
+const notesRepo = require('../../../src/lib/connectors/repos/notes');
 
 // Mappers
 const chargeVersionMapper = require('../../../src/lib/mappers/charge-version');
+
+// Constants
+const NOTE_ID = uuid();
 
 experiment('lib/services/charge-versions', () => {
   beforeEach(async () => {
     sandbox.stub(service, 'findOne').resolves('test');
     sandbox.stub(service, 'findMany').resolves('test');
+    sandbox.stub(notesRepo, 'create').resolves({ noteId: NOTE_ID });
     sandbox.stub(chargeVersionRepo, 'create').resolves({});
     sandbox.stub(chargeVersionRepo, 'update');
     sandbox.stub(chargeVersionRepo, 'findMany');
@@ -220,7 +225,6 @@ experiment('lib/services/charge-versions', () => {
     });
 
     experiment('when the charge version has a note', () => {
-      const NOTE_ID = uuid();
       beforeEach(async () => {
         service.findMany.resolves([]);
         const note = new Note();
