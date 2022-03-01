@@ -12,6 +12,7 @@ const Model = require('./model');
 const Region = require('./region');
 const ChangeReason = require('./change-reason');
 const User = require('./user');
+const Note = require('./note');
 
 const { SCHEME, STATUS, SOURCE } = require('./constants');
 
@@ -145,6 +146,19 @@ class ChargeVersion extends Model {
   set invoiceAccount (invoiceAccount) {
     validators.assertIsNullableInstanceOf(invoiceAccount, InvoiceAccount);
     this._invoiceAccount = invoiceAccount;
+  }
+
+  get note () {
+    return this._note;
+  }
+
+  /**
+   * Note
+   * @param {Note} note
+   */
+  set note (note) {
+    validators.assertIsNullableInstanceOf(note, Note);
+    this._note = note;
   }
 
   get chargeElements () {
