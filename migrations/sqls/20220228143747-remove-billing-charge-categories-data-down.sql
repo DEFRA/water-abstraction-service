@@ -1,1 +1,1 @@
-DELETE FROM water.billing_charge_categories;
+/* Replace with your SQL commands */

@@ -1,1 +1,1 @@
-DELETE FROM water.billing_charge_categories;
+DELETE FROM water.billing_charge_categories WHERE reference ILIKE '2%';
