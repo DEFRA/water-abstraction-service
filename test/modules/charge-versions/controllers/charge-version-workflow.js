@@ -32,8 +32,14 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
     sandbox.stub(licencesService, 'flagForSupplementaryBilling').resolves();
 
     sandbox.stub(licenceVersions, 'findByLicenceId').resolves({ licenceId: 'test-lv-id', version: 100, increment: 1 });
-    sandbox.stub(chargeVersionWorkflowService, 'getAllWithLicenceHolderWithPaging').resolves({ status: 'changes_requested', data: [{ licence: { startDate: '2002-05-03' } }, { licence: { startDate: '2000-09-30' } }] });
-    sandbox.stub(chargeVersionWorkflowService, 'getAllWithLicenceHolder').resolves({ status: 'changes_requested', licence: { startDate: '2002-05-03' } }, { licence: { startDate: '2000-09-30' } });
+    sandbox.stub(chargeVersionWorkflowService, 'getAllWithLicenceHolderWithPaging').resolves({
+      status: 'changes_requested',
+      data: [{ licence: { startDate: '2002-05-03' } }, { licence: { startDate: '2000-09-30' } }]
+    });
+    sandbox.stub(chargeVersionWorkflowService, 'getAllWithLicenceHolder').resolves({
+      status: 'changes_requested',
+      licence: { startDate: '2002-05-03' }
+    }, { licence: { startDate: '2000-09-30' } });
     sandbox.stub(chargeVersionWorkflowService, 'create');
     sandbox.stub(chargeVersionWorkflowService, 'update');
     sandbox.stub(chargeVersionWorkflowService, 'delete');
@@ -203,26 +209,54 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
     });
 
     experiment('when there are no errors', () => {
-      beforeEach(async () => {
-        chargeVersionWorkflowService.update.resolves(
-          new ChargeVersionWorkflow()
-        );
-        response = await cvWorkflowsController.patchChargeVersionWorkflow(request);
+      experiment('and the status is "review"', () => {
+        beforeEach(async () => {
+          chargeVersionWorkflowService.update.resolves(
+            new ChargeVersionWorkflow()
+          );
+          response = await cvWorkflowsController.patchChargeVersionWorkflow(request);
+        });
+
+        test('the service update() method is called with the correct ID and params', async () => {
+          expect(chargeVersionWorkflowService.update.calledWith(
+            request.params.chargeVersionWorkflowId,
+            {
+              status: 'review',
+              approverComments: 'Pull your socks up',
+              chargeVersion: request.pre.chargeVersion
+            }
+          )).to.be.true();
+        });
+
+        test('resolves with the ChargeVersionWorkflow model', async () => {
+          expect(response).to.be.an.instanceof(ChargeVersionWorkflow);
+        });
       });
 
-      test('the service update() method is called with the correct ID and params', async () => {
-        expect(chargeVersionWorkflowService.update.calledWith(
-          request.params.chargeVersionWorkflowId,
-          {
-            status: 'review',
-            approverComments: 'Pull your socks up',
-            chargeVersion: request.pre.chargeVersion
-          }
-        )).to.be.true();
-      });
+      experiment('and the status is "changes_requested"', () => {
+        beforeEach(async () => {
+          request.payload = { key: 'value', status: 'changes_requested' };
+          chargeVersionWorkflowService.update.resolves(
+            new ChargeVersionWorkflow()
+          );
+          response = await cvWorkflowsController.patchChargeVersionWorkflow(request);
+        });
 
-      test('resolves with the ChargeVersionWorkflow model', async () => {
-        expect(response).to.be.an.instanceof(ChargeVersionWorkflow);
+        test('the service update() method is called with the correct ID and params', async () => {
+          expect(chargeVersionWorkflowService.update.calledWith(
+            request.params.chargeVersionWorkflowId,
+            {
+              key: 'value',
+              status: 'changes_requested',
+              chargeVersion: request.pre.chargeVersion,
+              approverComments: undefined
+            }
+          )).to.be.true();
+        });
+
+        test('resolves with the ChargeVersionWorkflow model', async () => {
+          expect(response).to.be.an.instanceof(ChargeVersionWorkflow);
+        });
       });
     });
 
