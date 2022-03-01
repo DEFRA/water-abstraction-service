@@ -19,7 +19,8 @@ const sharedRelations = [
   'licence.region',
   'licence.licenceAgreements',
   'licence.licenceAgreements.financialAgreementType',
-  'changeReason'
+  'changeReason',
+  'note'
 ];
 
 const findOne = async chargeVersionId => {

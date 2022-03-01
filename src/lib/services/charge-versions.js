@@ -4,8 +4,12 @@ const { sortBy } = require('lodash');
 const moment = require('moment');
 const DATE_FORMAT = 'YYYY-MM-DD';
 
+// Repos
 const chargeVersionRepo = require('../connectors/repos/charge-versions');
 const chargeVersionMapper = require('../mappers/charge-version');
+
+const noteRepo = require('../connectors/repos/notes');
+const noteMapper = require('../mappers/note');
 
 // Services
 const service = require('./service');
@@ -79,6 +83,17 @@ const persist = async chargeVersion => {
   const dbRow = chargeVersionMapper.modelToDb(chargeVersion);
   const result = await chargeVersionRepo.create(dbRow);
   const persistedChargeVersion = chargeVersionMapper.dbToModel(result);
+
+  // Persist note
+  const { note } = chargeVersion;
+  if (note) {
+    note.typeId = persistedChargeVersion.id;
+    const noteDbRow = await noteRepo.create(noteMapper.modelToDb(note));
+    persistedChargeVersion.note = noteMapper.dbToModel(noteDbRow);
+
+    // Update the charge version with the note id
+    await chargeVersionRepo.update(persistedChargeVersion.id, { noteId: persistedChargeVersion.note.id });
+  }
 
   // Persist charge elements
   const tasks = chargeVersion.chargeElements.map(chargeElement =>

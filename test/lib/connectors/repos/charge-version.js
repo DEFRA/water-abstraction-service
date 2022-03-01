@@ -34,7 +34,8 @@ experiment('lib/connectors/repos/charge-versions', () => {
     'licence.region',
     'licence.licenceAgreements',
     'licence.licenceAgreements.financialAgreementType',
-    'changeReason'
+    'changeReason',
+    'note'
   ];
 
   beforeEach(async () => {

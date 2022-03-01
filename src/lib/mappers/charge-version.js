@@ -13,6 +13,7 @@ const chargeElementMapper = require('./charge-element');
 const licenceMapper = require('./licence');
 const invoiceAccountMapper = require('./invoice-account');
 const userMapper = require('./user');
+const noteMapper = require('./note');
 const dateRangeMapper = require('./date-range');
 
 const { createModel } = require('./lib/helpers');
@@ -42,6 +43,7 @@ const dbToModelMapper = createMapper()
   .map('invoiceAccountId').to('invoiceAccount', mapInvoiceAccountId)
   .map('changeReason').to('changeReason', changeReasonMapper.dbToModel)
   .map('chargeElements').to('chargeElements', chargeElements => chargeElements.map(chargeElementMapper.dbToModel))
+  .map('note').to('note', noteMapper.dbToModel)
   .map('licence').to('licence', licenceMapper.dbToModel)
   .map('createdBy').to('createdBy', userMapper.pojoToModel)
   .map('approvedBy').to('approvedBy', userMapper.pojoToModel);
@@ -84,6 +86,7 @@ const pojoToModelMapper = createMapper()
     'versionNumber',
     'status'
   )
+  .map('note').to('note', noteMapper.pojoToModel)
   .map('dateRange').to('dateRange', dateRangeMapper.pojoToModel)
   .map('changeReason').to('changeReason', changeReasonMapper.pojoToModel)
   .map('chargeElements').to('chargeElements', chargeElements => chargeElements.map(chargeElementMapper.pojoToModel))
