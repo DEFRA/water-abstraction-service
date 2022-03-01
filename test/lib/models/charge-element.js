@@ -53,21 +53,21 @@ experiment('lib/models/charge-element', () => {
 
   experiment('.eiucSource', () => {
     test('if the source is tidal it returns "tidal"', () => {
-      chargeElement.source = 'tidal'
-      expect(chargeElement.eiucSource).to.equal('tidal')
-    })
+      chargeElement.source = 'tidal';
+      expect(chargeElement.eiucSource).to.equal('tidal');
+    });
 
     test('if the source is anything else it returns "other"', () => {
-      chargeElement.source = 'kielder'
-      expect(chargeElement.eiucSource).to.equal('other')
-    })
+      chargeElement.source = 'kielder';
+      expect(chargeElement.eiucSource).to.equal('other');
+    });
   });
 
   experiment('.eiucRegion', () => {
     test('if the eiucRegion is set it returns the given value', () => {
-      chargeElement.eiucRegion = 'cupcakes'
-      expect(chargeElement.eiucRegion).to.equal('cupcakes')
-    })
+      chargeElement.eiucRegion = 'cupcakes';
+      expect(chargeElement.eiucRegion).to.equal('cupcakes');
+    });
 
     test('throws an error if set to an invalid value', async () => {
       const func = () => {
