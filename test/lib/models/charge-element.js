@@ -51,6 +51,32 @@ experiment('lib/models/charge-element', () => {
     });
   });
 
+  experiment('.eiucSource', () => {
+    test('if the source is tidal it returns "tidal"', () => {
+      chargeElement.source = 'tidal'
+      expect(chargeElement.eiucSource).to.equal('tidal')
+    })
+
+    test('if the source is anything else it returns "other"', () => {
+      chargeElement.source = 'kielder'
+      expect(chargeElement.eiucSource).to.equal('other')
+    })
+  });
+
+  experiment('.eiucRegion', () => {
+    test('if the eiucRegion is set it returns the given value', () => {
+      chargeElement.eiucRegion = 'cupcakes'
+      expect(chargeElement.eiucRegion).to.equal('cupcakes')
+    })
+
+    test('throws an error if set to an invalid value', async () => {
+      const func = () => {
+        chargeElement.eiucRegion = new TestModel();
+      };
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.season', () => {
     [CHARGE_SEASON.summer, CHARGE_SEASON.winter, CHARGE_SEASON.allYear].forEach(season => {
       test(`can be set to ${season}`, async () => {
