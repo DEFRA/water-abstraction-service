@@ -7,6 +7,8 @@ const ChargeElement = require('../../../src/lib/models/charge-element');
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
 const PurposeUse = require('../../../src/lib/models/purpose-use');
+const ChargePurpose = require('../../../src/lib/models/charge-purpose');
+const ChargeCategory = require('../../../src/lib/models/charge-category');
 const Purpose = require('../../../src/lib/models/purpose');
 const DateRange = require('../../../src/lib/models/date-range');
 
@@ -46,6 +48,32 @@ experiment('lib/models/charge-element', () => {
     test('throws an error if set to an invalid source', async () => {
       const func = () => {
         chargeElement.source = 'muddy puddle';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.eiucSource', () => {
+    test('if the source is tidal it returns "tidal"', () => {
+      chargeElement.source = 'tidal';
+      expect(chargeElement.eiucSource).to.equal('tidal');
+    });
+
+    test('if the source is anything else it returns "other"', () => {
+      chargeElement.source = 'kielder';
+      expect(chargeElement.eiucSource).to.equal('other');
+    });
+  });
+
+  experiment('.eiucRegion', () => {
+    test('if the eiucRegion is set it returns the given value', () => {
+      chargeElement.eiucRegion = 'cupcakes';
+      expect(chargeElement.eiucRegion).to.equal('cupcakes');
+    });
+
+    test('throws an error if set to an invalid value', async () => {
+      const func = () => {
+        chargeElement.eiucRegion = new TestModel();
       };
       expect(func).to.throw();
     });
@@ -122,7 +150,9 @@ experiment('lib/models/charge-element', () => {
     });
 
     test('throws an error if set to a non-numeric value', () => {
-      const func = () => { chargeElement.authorisedAnnualQuantity = 'hello'; };
+      const func = () => {
+        chargeElement.authorisedAnnualQuantity = 'hello';
+      };
       expect(func).to.throw();
     });
   });
@@ -144,7 +174,9 @@ experiment('lib/models/charge-element', () => {
     });
 
     test('throws an error if set to a non-numeric value', () => {
-      const func = () => { chargeElement.billableAnnualQuantity = 'hello'; };
+      const func = () => {
+        chargeElement.billableAnnualQuantity = 'hello';
+      };
       expect(func).to.throw();
     });
   });
@@ -190,7 +222,9 @@ experiment('lib/models/charge-element', () => {
 
     test('throws an error if setting to an instance of another model', async () => {
       const period = new AbstractionPeriod();
-      const func = () => { chargeElement.purposeUse = period; };
+      const func = () => {
+        chargeElement.purposeUse = period;
+      };
       expect(func).to.throw();
     });
   });
@@ -209,7 +243,9 @@ experiment('lib/models/charge-element', () => {
 
     test('throws an error if setting to an instance of another model', async () => {
       const period = new AbstractionPeriod();
-      const func = () => { chargeElement.timeLimitedPeriod = period; };
+      const func = () => {
+        chargeElement.timeLimitedPeriod = period;
+      };
       expect(func).to.throw();
     });
   });
@@ -246,7 +282,9 @@ experiment('lib/models/charge-element', () => {
     });
 
     test('throws an error if set to a number', async () => {
-      const func = () => { chargeElement.description = 123; };
+      const func = () => {
+        chargeElement.description = 123;
+      };
       expect(func).to.throw();
     });
   });
@@ -274,7 +312,9 @@ experiment('lib/models/charge-element', () => {
 
     test('throws an error if setting to an instance of another model', async () => {
       const period = new AbstractionPeriod();
-      const func = () => { chargeElement.purposePrimary = period; };
+      const func = () => {
+        chargeElement.purposePrimary = period;
+      };
       expect(func).to.throw();
     });
   });
@@ -288,7 +328,9 @@ experiment('lib/models/charge-element', () => {
 
     test('throws an error if setting to an instance of another model', async () => {
       const period = new AbstractionPeriod();
-      const func = () => { chargeElement.purposeSecondary = period; };
+      const func = () => {
+        chargeElement.purposeSecondary = period;
+      };
       expect(func).to.throw();
     });
   });
@@ -330,6 +372,57 @@ experiment('lib/models/charge-element', () => {
     test('throws an error if set to null', async () => {
       const func = () => {
         chargeElement.isSection127AgreementEnabled = null;
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.chargePurposes', () => {
+    test('can be set to a ChargePurpose instance', async () => {
+      const aChargePurpose = new ChargePurpose();
+      chargeElement.chargePurposes = [aChargePurpose];
+      expect(chargeElement.chargePurposes).to.equal([aChargePurpose]);
+    });
+
+    test('throws an error if setting to an instance of another model', async () => {
+      const purpose = new AbstractionPeriod();
+      const func = () => {
+        chargeElement.chargePurposes = purpose;
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.chargeCategory', () => {
+    test('can be set to a ChargeCategory instance', async () => {
+      const chargeCategory = new ChargeCategory();
+      chargeElement.chargeCategory = chargeCategory;
+      expect(chargeElement.chargeCategory).to.equal(chargeCategory);
+    });
+
+    test('throws an error if setting to an instance of another model', async () => {
+      const chargeCategory = new AbstractionPeriod();
+      const func = () => {
+        chargeElement.chargeCategory = chargeCategory;
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.isRestrictedSource', () => {
+    test('can be set to a boolean true', async () => {
+      chargeElement.isRestrictedSource = true;
+      expect(chargeElement.isRestrictedSource).to.equal(true);
+    });
+
+    test('can be set to a boolean false', async () => {
+      chargeElement.isRestrictedSource = false;
+      expect(chargeElement.isRestrictedSource).to.equal(false);
+    });
+
+    test('throws an error if set to a non-boolean', async () => {
+      const func = () => {
+        chargeElement.isRestrictedSource = 'left flange';
       };
       expect(func).to.throw();
     });

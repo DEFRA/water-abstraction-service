@@ -5,34 +5,12 @@ const ChargePurpose = require('../models/charge-purpose');
 
 const validators = require('../models/validators');
 
-const { CHARGE_SEASON } = require('../models/constants');
-const AbstractionPeriod = require('../models/abstraction-period');
-const SPRAY_ANTI_FROST = '380';
-
 const chargePurposeMapper = require('../mappers/charge-purpose');
 const chargePurposeRepo = require('../connectors/repos/charge-purposes');
 
-const calculateSeason = (purposeUse, abstractionPeriod) => {
-  if (purposeUse.isTwoPartTariff) {
-    if (purposeUse.code === SPRAY_ANTI_FROST) {
-      return CHARGE_SEASON.allYear;
-    }
-
-    const winter = AbstractionPeriod.getWinter();
-    return abstractionPeriod.isWithinAbstractionPeriod(winter)
-      ? CHARGE_SEASON.winter
-      : CHARGE_SEASON.summer;
-  }
-
-  return abstractionPeriod.getChargeSeason();
-};
-
 const getIsFactorsOverridden = chargePurpose => {
-  const { source, season, loss, purposeUse, abstractionPeriod } = chargePurpose;
-  const isLossMismatch = loss !== purposeUse.lossFactor;
-  const isSeasonMismatch = season !== calculateSeason(purposeUse, abstractionPeriod);
-  const isSourceNotUnsupported = source !== ChargeElement.sources.unsupported;
-  return isLossMismatch || isSeasonMismatch || isSourceNotUnsupported;
+  const { loss, purposeUse } = chargePurpose;
+  return loss !== purposeUse.lossFactor;
 };
 
 /**

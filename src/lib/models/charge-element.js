@@ -27,7 +27,7 @@ class ChargeElement extends Model {
   }
 
   set source (source) {
-    validators.assertEnum(source, Object.values(VALID_SOURCES));
+    validators.assertNullableEnum(source, Object.values(VALID_SOURCES));
     this._source = source;
   }
 
