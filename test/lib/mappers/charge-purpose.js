@@ -15,7 +15,6 @@ const ChargeElement = require('../../../src/lib/models/charge-element');
 const DateRange = require('../../../src/lib/models/date-range');
 const Purpose = require('../../../src/lib/models/purpose');
 const PurposeUse = require('../../../src/lib/models/purpose-use');
-const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
 const ChargePurposeMapper = require('../../../src/lib/mappers/charge-purpose');
 const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
@@ -23,32 +22,24 @@ const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
 const data = {
   chargePurpose: {
     chargePurposeId: '90d4af8a-1717-452c-84bd-467a7d55ade4',
-    source: 'supported',
-    season: CHARGE_SEASON.summer,
     loss: 'high',
     chargeElementId: '6d53dddd-2ab6-449b-b28c-d6d857569b94',
     isFactorsOverridden: true
   },
   timeLimitedChargePurpose: {
     chargePurposeId: '90d4af8a-1717-452c-84bd-467a7d55ade4',
-    source: 'supported',
-    season: CHARGE_SEASON.summer,
     loss: 'high',
     timeLimitedStartDate: '2012-03-01',
     timeLimitedEndDate: '2020-10-31'
   },
   dbRow: {
     charge_purpose_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
-    source: 'supported',
-    season: CHARGE_SEASON.summer,
     loss: 'high',
     charge_element_id: '6d53dddd-2ab6-449b-b28c-d6d857569b94',
     factors_overridden: true
   },
   dbRowWithPurposeUse: {
     charge_purpose_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
-    source: 'supported',
-    season: CHARGE_SEASON.summer,
     loss: 'high',
     purposeUse: {
       legacy_id: 'A',
@@ -76,14 +67,6 @@ experiment('lib/mappers/charge-purpose', () => {
 
     test('sets the .id property', async () => {
       expect(result.id).to.equal(data.chargePurpose.chargePurposeId);
-    });
-
-    test('sets the .source property', async () => {
-      expect(result.source).to.equal(data.chargePurpose.source);
-    });
-
-    test('sets the .season property', async () => {
-      expect(result.season).to.equal(data.chargePurpose.season);
     });
 
     test('sets the .loss property', async () => {
@@ -132,10 +115,7 @@ experiment('lib/mappers/charge-purpose', () => {
     beforeEach(async () => {
       data = {
         id: uuid(),
-        source: 'supported',
         loss: 'low',
-        season: 'summer',
-        eiucSource: 'other',
         abstractionPeriod: {
           startDay: 1,
           startMonth: 1,
@@ -155,8 +135,6 @@ experiment('lib/mappers/charge-purpose', () => {
 
     test('maps charge purpose properties', async () => {
       expect(model.id).to.equal(data.id);
-      expect(model.source).to.equal(data.source);
-      expect(model.season).to.equal(data.season);
       expect(model.loss).to.equal(data.loss);
     });
 
@@ -203,8 +181,6 @@ experiment('lib/mappers/charge-purpose', () => {
       model = new ChargePurpose();
       model.fromHash({
         id: uuid(),
-        source: 'supported',
-        season: 'summer',
         loss: 'high',
         description: 'test purpose',
         authorisedAnnualQuantity: 34,
@@ -228,8 +204,6 @@ experiment('lib/mappers/charge-purpose', () => {
         expect(result).to.equal(
           {
             chargePurposeId: model.id,
-            source: 'supported',
-            season: 'summer',
             loss: 'high',
             description: 'test purpose',
             authorisedAnnualQuantity: 34,
@@ -243,7 +217,6 @@ experiment('lib/mappers/charge-purpose', () => {
             purposeUseId: model.purposeUse.id,
             timeLimitedStartDate: '2019-01-01',
             timeLimitedEndDate: '2020-12-31',
-            seasonDerived: 'all year',
             chargeElementId: chargeElement.id,
             factorsOverridden: model.isFactorsOverridden,
             isSection127AgreementEnabled: true
@@ -272,8 +245,6 @@ experiment('lib/mappers/charge-purpose', () => {
         expect(result).to.equal(
           {
             chargePurposeId: model.id,
-            source: 'supported',
-            season: 'summer',
             loss: 'high',
             description: 'test purpose',
             authorisedAnnualQuantity: 34,
@@ -287,7 +258,6 @@ experiment('lib/mappers/charge-purpose', () => {
             purposeUseId: model.purposeUse.id,
             timeLimitedStartDate: null,
             timeLimitedEndDate: null,
-            seasonDerived: 'all year',
             chargeElementId: chargeElement.id,
             factorsOverridden: model.isFactorsOverridden,
             isSection127AgreementEnabled: true

@@ -18,8 +18,6 @@ const timeLimitedDateMapper = (startDate, endDate) =>
 const dbToModelMapper = createMapper()
   .map('chargePurposeId').to('id')
   .copy(
-    'source',
-    'season',
     'loss',
     'authorisedAnnualQuantity',
     'billableAnnualQuantity',
@@ -48,8 +46,6 @@ const pojoToModelMapper = createMapper()
     'externalId',
     'authorisedAnnualQuantity',
     'billableAnnualQuantity',
-    'source',
-    'season',
     'loss',
     'description',
     'isSection127AgreementEnabled'
@@ -78,8 +74,6 @@ const pojoToModel = pojo =>
 const modelToDbMapper = createMapper()
   .map('id').to('chargePurposeId')
   .copy(
-    'source',
-    'season',
     'loss',
     'description',
     'authorisedAnnualQuantity',
@@ -96,7 +90,6 @@ const modelToDbMapper = createMapper()
   .map('purposeUse.id').to('purposeUseId')
   .map('timeLimitedPeriod').to('timeLimitedStartDate', value => value ? value.startDate : null)
   .map('timeLimitedPeriod').to('timeLimitedEndDate', value => value ? value.endDate : null)
-  .map('abstractionPeriod').to('seasonDerived', abstractionPeriod => abstractionPeriod.getChargeSeason());
 
 const chargeElementMapper = createMapper()
   .map('id').to('chargeElementId');
