@@ -89,7 +89,7 @@ const modelToDbMapper = createMapper()
   .map('purposeSecondary.id').to('purposeSecondaryId')
   .map('purposeUse.id').to('purposeUseId')
   .map('timeLimitedPeriod').to('timeLimitedStartDate', value => value ? value.startDate : null)
-  .map('timeLimitedPeriod').to('timeLimitedEndDate', value => value ? value.endDate : null)
+  .map('timeLimitedPeriod').to('timeLimitedEndDate', value => value ? value.endDate : null);
 
 const chargeElementMapper = createMapper()
   .map('id').to('chargeElementId');
