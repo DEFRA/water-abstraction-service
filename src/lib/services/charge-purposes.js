@@ -28,11 +28,8 @@ const calculateSeason = (purposeUse, abstractionPeriod) => {
 };
 
 const getIsFactorsOverridden = chargePurpose => {
-  const { source, season, loss, purposeUse, abstractionPeriod } = chargePurpose;
-  const isLossMismatch = loss !== purposeUse.lossFactor;
-  const isSeasonMismatch = season !== calculateSeason(purposeUse, abstractionPeriod);
-  const isSourceNotUnsupported = source !== ChargeElement.sources.unsupported;
-  return isLossMismatch || isSeasonMismatch || isSourceNotUnsupported;
+  const { loss, purposeUse } = chargePurpose;
+  return loss !== purposeUse.lossFactor;
 };
 
 /**
