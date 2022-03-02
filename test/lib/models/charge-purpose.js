@@ -4,7 +4,6 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 const { expect } = require('@hapi/code');
 
 const ChargePurpose = require('../../../src/lib/models/charge-purpose');
-const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
 const PurposeUse = require('../../../src/lib/models/purpose-use');
 const Purpose = require('../../../src/lib/models/purpose');
@@ -30,38 +29,6 @@ experiment('lib/models/charge-purpose', () => {
     test('throws an error if set to a non-guid string', async () => {
       const func = () => {
         chargePurpose.id = 'hey';
-      };
-      expect(func).to.throw();
-    });
-  });
-
-  experiment('.source', () => {
-    ['supported', 'unsupported', 'tidal', 'kielder'].forEach(source => {
-      test(`can be set to ${source}`, async () => {
-        chargePurpose.source = source;
-        expect(chargePurpose.source).to.equal(source);
-      });
-    });
-
-    test('throws an error if set to an invalid source', async () => {
-      const func = () => {
-        chargePurpose.source = 'muddy puddle';
-      };
-      expect(func).to.throw();
-    });
-  });
-
-  experiment('.season', () => {
-    [CHARGE_SEASON.summer, CHARGE_SEASON.winter, CHARGE_SEASON.allYear].forEach(season => {
-      test(`can be set to ${season}`, async () => {
-        chargePurpose.season = season;
-        expect(chargePurpose.season).to.equal(season);
-      });
-    });
-
-    test('throws an error if set to an invalid season', async () => {
-      const func = () => {
-        chargePurpose.season = 'yule';
       };
       expect(func).to.throw();
     });
@@ -95,18 +62,6 @@ experiment('lib/models/charge-purpose', () => {
         chargePurpose.abstractionPeriod = new TestModel();
       };
       expect(func).to.throw();
-    });
-  });
-
-  experiment('.eiucSource', () => {
-    test('is "tidal" when source is "tidal"', async () => {
-      chargePurpose.source = 'tidal';
-      expect(chargePurpose.eiucSource).to.equal('tidal');
-    });
-
-    test('is "other" when source is not "tidal"', async () => {
-      chargePurpose.source = 'supported';
-      expect(chargePurpose.eiucSource).to.equal('other');
     });
   });
 
@@ -218,12 +173,6 @@ experiment('lib/models/charge-purpose', () => {
     test('result is an object', async () => {
       const result = chargePurpose.toJSON();
       expect(result).to.be.an.object();
-    });
-
-    test('the eiucSource property is included', async () => {
-      chargePurpose.source = 'tidal';
-      const result = chargePurpose.toJSON();
-      expect(result.eiucSource).to.equal('tidal');
     });
 
     test('the maxAnnualQuantity property is included', async () => {

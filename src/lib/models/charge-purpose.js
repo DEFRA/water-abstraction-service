@@ -7,7 +7,7 @@ const AbstractionPeriod = require('./abstraction-period');
 const DateRange = require('./date-range');
 const Purpose = require('./purpose');
 const PurposeUse = require('./purpose-use');
-const { CHARGE_SEASON, LOSSES, VALID_SOURCES } = require('./constants');
+const { LOSSES, VALID_SOURCES } = require('./constants');
 
 const validators = require('./validators');
 
@@ -15,41 +15,6 @@ class ChargePurpose extends Model {
   constructor (...args) {
     super(...args);
     this.isSection127AgreementEnabled = true;
-  }
-
-  /**
-   * Source
-   * @return {String}
-   */
-  get source () {
-    return this._source;
-  }
-
-  set source (source) {
-    validators.assertNullableEnum(source, Object.values(VALID_SOURCES));
-    this._source = source;
-  }
-
-  /**
-   * EIUC source is derived from source
-   * and is either tidal|other
-   * @return {String}
-   */
-  get eiucSource () {
-    return this._source === 'tidal' ? 'tidal' : 'other';
-  }
-
-  /**
-   * Season
-   * @return {String}
-   */
-  get season () {
-    return this._season;
-  }
-
-  set season (season) {
-    validators.assertNullableEnum(season, Object.values(CHARGE_SEASON));
-    this._season = season;
   }
 
   /**
