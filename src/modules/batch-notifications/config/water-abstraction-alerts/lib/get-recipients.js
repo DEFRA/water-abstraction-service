@@ -30,21 +30,14 @@ const getRecipients = async eventData => {
         const emailContactsArray = document.companyId && await crmV2Connector.companies.getCompanyWAAEmailContacts(document.companyId);
         const format = emailContactsArray && emailContactsArray.length > 0 ? 'email' : 'letter';
 
-        if (format === 'email') {
-
-        }
-
         const licenceHolderAddress = document.addressId && await crmV2Connector.addresses.getAddress(document.addressId);
         const licenceHolderCompany = document.companyId && await crmV2Connector.companies.getCompany(document.companyId);
         const licenceContact = document.contactId && await crmV2Connector.contacts.getContact(document.contactId);
 
         const gaugingStation = await gaugingStationConnector.findOneByLinkageId(linkage.licenceGaugingStationId);
-
         const source = gaugingStation.riverName;
-
         const licenceGaugingStationRecord = await licenceGaugingStationConnector.findOneById(linkage.licenceGaugingStationId);
         const condition = await lvpcConnector.findOneById(licenceGaugingStationRecord.licenceVersionPurposeConditionId);
-
         const conditionText = condition && condition.notes;
 
         const notification = new ScheduledNotification();
