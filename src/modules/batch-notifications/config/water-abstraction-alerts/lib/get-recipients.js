@@ -65,7 +65,7 @@ const getRecipients = async eventData => {
             company: companyMapper.pojoToModel(licenceHolderCompany),
             address: addressMapper.pojoToModel(licenceHolderAddress),
             contact: contactMapper.pojoToModel(licenceContact)
-          }),
+          })
         };
 
         // Set the template type
@@ -98,10 +98,8 @@ const getRecipients = async eventData => {
           notification.messageRef = notification.messageRef + '_email';
           emailContactsArray.forEach(async thisContact => {
             notification.recipient = thisContact.email;
-
             await scheduledNotificationService.createScheduledNotification(notification);
           });
-
         } else {
           await scheduledNotificationService.createScheduledNotification(notification);
           recipientCount++;
