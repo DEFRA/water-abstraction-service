@@ -64,6 +64,7 @@ experiment('getRecipients', () => {
       country: 'britain'
     });
     sandbox.stub(crmV2Connector.companies, 'getCompany').resolves();
+    sandbox.stub(crmV2Connector.companies, 'getCompanyWAAEmailContacts').resolves([]);
     sandbox.stub(crmV2Connector.contacts, 'getContact').resolves();
     sandbox.stub(gaugingStationConnector, 'findOneByLinkageId').resolves({
       riverName: 'Avon',
