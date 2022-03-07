@@ -102,6 +102,9 @@ const getInvoiceAccountsByCompanyId = async companyId => serviceRequest.get(getU
 
 const getCompanyLicences = async companyId => serviceRequest.get(getUri(`${companyId}/licences`));
 
+const getCompanyWAAEmailContacts = async companyId =>
+  serviceRequest.get(getUri(`${companyId}/contacts/water-abstraction-alert-email-recipients`));
+
 exports.createCompany = createCompany;
 exports.getCompany = getCompany;
 exports.deleteCompany = deleteCompany;
@@ -116,3 +119,4 @@ exports.postCompanyContact = postCompanyContact;
 exports.getInvoiceAccountsByCompanyId = getInvoiceAccountsByCompanyId;
 exports.searchCompaniesByName = searchCompaniesByName;
 exports.getCompanyLicences = getCompanyLicences;
+exports.getCompanyWAAEmailContacts = getCompanyWAAEmailContacts;

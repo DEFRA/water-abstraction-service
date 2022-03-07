@@ -27,24 +27,18 @@ const getRecipients = async eventData => {
     for (const linkage of linkagesGroup) {
       try {
         const document = await crmV2Connector.documents.getDocumentByRefAndDate(linkage.licenceRef, new Date());
-        // For now, we will only ever send letters because we haven't yet built the Email management part of WAA.
-        // This should be changed as part of implementing WATER-3192
-        // noinspection JSMismatchedCollectionQueryUpdate
-        const emailContactsArray = [];
+        const emailContactsArray = document.companyId && await crmV2Connector.companies.getCompanyWAAEmailContacts(document.companyId);
+        const format = emailContactsArray && emailContactsArray.length > 0 ? 'email' : 'letter';
+
         const licenceHolderAddress = document.addressId && await crmV2Connector.addresses.getAddress(document.addressId);
         const licenceHolderCompany = document.companyId && await crmV2Connector.companies.getCompany(document.companyId);
         const licenceContact = document.contactId && await crmV2Connector.contacts.getContact(document.contactId);
 
         const gaugingStation = await gaugingStationConnector.findOneByLinkageId(linkage.licenceGaugingStationId);
-
         const source = gaugingStation.riverName;
-
         const licenceGaugingStationRecord = await licenceGaugingStationConnector.findOneById(linkage.licenceGaugingStationId);
         const condition = await lvpcConnector.findOneById(licenceGaugingStationRecord.licenceVersionPurposeConditionId);
-
         const conditionText = condition && condition.notes;
-
-        const format = emailContactsArray.length > 0 ? 'email' : 'letter';
 
         const notification = new ScheduledNotification();
 
@@ -91,9 +85,19 @@ const getRecipients = async eventData => {
         notification.messageType = format;
         notification.eventId = event.id;
         notification.licences = [linkage.licenceRef];
-        await scheduledNotificationService.createScheduledNotification(notification);
 
-        recipientCount++;
+        if (format === 'email') {
+          recipientCount = recipientCount + emailContactsArray.length;
+          notification.messageRef = notification.messageRef + '_email';
+          emailContactsArray.forEach(async thisContact => {
+            notification.recipient = thisContact.email;
+            await scheduledNotificationService.createScheduledNotification(notification);
+          });
+        } else {
+          await scheduledNotificationService.createScheduledNotification(notification);
+          recipientCount++;
+        }
+
         licenceNumbers.push(linkage.licenceRef);
       } catch (e) {
         logger.error(e);

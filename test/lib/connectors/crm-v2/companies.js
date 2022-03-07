@@ -274,4 +274,17 @@ experiment('lib/connectors/crm-v2/companies', () => {
       expect(url).to.equal('http://test.defra/companies/test-company-id/licences');
     });
   });
+
+  experiment('.getCompanyWAAEmailContacts', () => {
+    beforeEach(async () => {
+      serviceRequest.get.resolves([]);
+
+      await companyConnector.getCompanyWAAEmailContacts('test-company-id');
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url] = serviceRequest.get.lastCall.args;
+      expect(url).to.equal('http://test.defra/companies/test-company-id/contacts/water-abstraction-alert-email-recipients');
+    });
+  });
 });

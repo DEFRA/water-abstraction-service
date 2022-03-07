@@ -134,6 +134,14 @@ module.exports = {
       water_abstraction_alert_stop: 'c2635893-0dd7-4fff-a152-774707e2175e',
       water_abstraction_alert_resume: 'ba6b11ad-41fc-4054-87eb-7e9a168ceec2',
 
+      water_abstraction_alert_reduce_warning_email: '6ec7265d-8ebb-4217-a62b-9bf0216f8c9f',
+      water_abstraction_alert_reduce_or_stop_warning_email: 'bf32327a-f170-4854-8abb-3068aee9cdec',
+      water_abstraction_alert_stop_warning_email: 'a51ace39-3224-4c18-bbb8-c803a6da9a21',
+      water_abstraction_alert_reduce_email: 'd94bf110-b173-4f77-8e9a-cf7b4f95dc00',
+      water_abstraction_alert_reduce_or_stop_email: '4ebf29e1-f819-4d88-b7e4-ee47df302b9a',
+      water_abstraction_alert_stop_email: 'd7468ba1-ac65-42c4-9785-8998f9c34e01',
+      water_abstraction_alert_resume_email: '5eae5e5b-4f9a-4e2e-8d1e-c8d083533fbf',
+
       // currently not in use
       returns_invitation_primary_user_email: 'b18195f7-7b83-4251-a6eb-22124f1dff87',
       returns_invitation_returns_agent_email: '24dade05-e020-4a85-a73f-64ccd0c4b9d8',
