@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - CI/multiple-jobs-pipeline
+      - develop
   pull_request:
     types: [ opened, synchronize, reopened ]
 
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [ 12.x, 14.x, 16.x ]
+        node-version: [ 12.x, 14.x ]
     name: Test  - Node.js ${{ matrix.node-version }}
     env:
       # These need to be duplicated in services section for postgres. Unfortunately, there is not a way to reuse them
