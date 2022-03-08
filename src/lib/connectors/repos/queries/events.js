@@ -95,7 +95,7 @@ left join (
   -- per event ID, and the status counts are aggregated into a JSON blob
   --
   select 
-    n.event_id, 
+    distinct on(n.event_id) event_id,
     n.message_ref,
     sum(n.count) as recipient_count,
     jsonb_agg(jsonb_build_object('status', n.status, 'notify_status', n.notify_status, 'count', n.count)) as statuses
@@ -137,7 +137,7 @@ left join (
   -- per event ID, and the status counts are aggregated into a JSON blob
   --
   select 
-    n.event_id, 
+    distinct on(n.event_id) event_id, 
     n.message_ref,
     sum(n.count) as recipient_count,
     jsonb_agg(jsonb_build_object('status', n.status, 'notify_status', n.notify_status, 'count', n.count)) as statuses
