@@ -33,6 +33,9 @@ const createNotificationEvent = () => new NotificationEvent(eventId).fromHash({
   created: '2021-01-01',
   referenceCode: 'ABC123',
   metadata: {
+    options: {
+      something: 'something else'
+    },
     recipients: 4,
     name: 'Test name'
   }
@@ -79,6 +82,7 @@ experiment('modules/notifications/controller', () => {
       expect(data[0]).to.equal({
         ...pick(event, 'id', 'issuer', 'type', 'subtype', 'errorCount', 'created', 'referenceCode'),
         name: event.metadata.name,
+        options: event.metadata.options,
         recipientCount: 4
       });
     });
@@ -106,6 +110,7 @@ experiment('modules/notifications/controller', () => {
       expect(response).to.equal({
         ...pick(event, 'id', 'issuer', 'type', 'subtype', 'errorCount', 'created', 'referenceCode'),
         name: event.metadata.name,
+        options: event.metadata.options,
         recipientCount: event.metadata.recipients
       });
     });
