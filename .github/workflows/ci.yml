@@ -95,3 +95,17 @@ jobs:
           REDIS_PORT: 6379
         run: |
           npm run test:ci
+
+  regression-test:
+    runs-on: ubuntu-latest
+    name: Regression Test
+    steps:
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 12
+          cache: 'npm'
+      - name: Orchestrate
+        run: |
+          git clone git@github.com:DEFRA/water-abstraction-orchestration.git
+          cd water-abstraction-orchestration
+          sh ./helpers/clone-repos.sh
