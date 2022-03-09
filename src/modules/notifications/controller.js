@@ -63,6 +63,7 @@ async function postSend (request, reply) {
 const mapNotificationEvent = notification => ({
   ...pick(notification, 'id', 'issuer', 'type', 'subtype', 'errorCount', 'created', 'referenceCode'),
   name: get(notification, 'metadata.name'),
+  options: get(notification, 'metadata.options', {}),
   recipientCount: get(notification, 'metadata.recipients')
 });
 
