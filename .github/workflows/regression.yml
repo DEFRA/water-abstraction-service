@@ -1,0 +1,35 @@
+name: Regression tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  regression-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 12.x]
+    name: Regression Test - Node  v${{ matrix.node-version }}
+    steps:
+      - name: Checkout water-abstraction-orchestration
+        uses: actions/checkout@v2
+        with:
+          repository: DEFRA/water-abstraction-orchestration
+          path: 'water-abstraction-orchestration'
+      - name: Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - name: Orchestrate
+        run: |
+          bash ./water-abstraction-orchestration/helpers/clone-repos.sh
+          echo "List of repositories"
+          ls
+          sh helpers/setup.sh
+      - name: Install node modules
+        run: |
+          sh helpers/setup.sh
+          
