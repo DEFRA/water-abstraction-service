@@ -175,6 +175,18 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
     test('returns the result of the helpers function', async () => {
       expect(result).to.equal({ bar: 'baz' });
     });
+
+    test('passes the correct with related array when include related is false', async () => {
+      await repos.billingBatchChargeVersionYears.findByBatchId(billingBatchId, false);
+      const [,, withRelated] = helpers.findMany.lastCall.args;
+      expect(withRelated).to.equal([]);
+    });
+
+    test('passes the correct with related array when include related is true', async () => {
+      await repos.billingBatchChargeVersionYears.findByBatchId(billingBatchId, true);
+      const [,, withRelated] = helpers.findMany.lastCall.args;
+      expect(withRelated).to.equal(['chargeVersion', 'chargeVersion.chargeElements']);
+    });
   });
 
   experiment('.findTwoPartTariffByBatchId', () => {
