@@ -1,111 +1,97 @@
-name: CI
-
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - develop
-  pull_request:
-    types: [ opened, synchronize, reopened ]
-
-jobs:
-  base-node-pipeline: 
-    uses: DEFRA/water-abstraction-orchestration/.github/workflows/base-node-pipeline.yml@develop
-    with:
-      serviceName: DEFRA_water-abstraction-service
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [ 12.x, 14.x ]
-    name: Test  - Node.js ${{ matrix.node-version }}
-    env:
-      # These need to be duplicated in services section for postgres. Unfortunately, there is not a way to reuse them
-      PGUSER: water
-      PGHOST: localhost
-      PGPASSWORD: water
-      PGPORT: 5432
-      PGDATABASE: water
-      ENVIRONMENT: dev
-      DATABASE_URL: postgres://water:water@localhost:5432/water
-      JWT_SECRET: secret
-      JWT_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTIzNH0.MOREC6-Kszb9bDFw0O1UKywpnkcP-c5cPjASMpjk8Po
-      NOTIFY_KEY: somerealnotifykey-00000000-0000-0000-0000-000000000000-00000000-0000-0000-0000-000000000000
-      TEST_NOTIFY_KEY: ${{ secrets.TEST_NOTIFY_KEY }}
-      WHITELIST_NOTIFY_KEY: ${{ secrets.WHITELIST_NOTIFY_KEY }}
-      LIVE_NOTIFY_KEY: somerealnotifykey-00000000-0000-0000-0000-000000000000-00000000-0000-0000-0000-000000000000
-      TEST_MODE: 1
-      NODE_ENV: test
-      CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-      WATER_URI: http://127.0.0.1:8001/water/1.0
-      WATER_URI_INTERNAL: http://127.0.0.1:8001/water/1.0
-      PERMIT_URI: http://127.0.0.1:8004/API/1.0/
-      ADMIN_URI: http://127.0.0.1:8005/API/1.0/
-      CRM_URI: http://127.0.0.1:8002/crm/1.0
-      RETURNS_URI: http://127.0.0.1:8006/returns/1.0
-      NALD_SERVICE_MAILBOX: some@mailbox.com
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD:
-        # Service containers to run with `runner-job`
-    services:
-      # Label used to access the service container
-      postgres:
-        # Docker Hub image
-        image: postgres:10-alpine
-        # Provide the password for postgres
-        env:
-          POSTGRES_USER: water
-          POSTGRES_HOST: localhost
-          POSTGRES_PASSWORD: water
-          POSTGRES_PORT: 5432
-          POSTGRES_DB: water
-        # Maps tcp port 5432 on service container to the host
-        ports:
-          - 5432:5432
-        # Set health checks to wait until postgres has started. You must have this so the runner knows to wait till
-        # postgres is up and running before proceeding
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      redis:
-        # Docker Hub image
-        image: redis
-        ports:
-          # Maps port 6379 on service container to the host
-          - 6379:6379
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - name: Install node modules
-        run: |
-          npm ci
-      - name: Create database
-        run: |
-          PGPASSWORD=water psql -U water -tc "SELECT 'CREATE DATABASE water' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'water')"
-      - name: Run database migrations
-        run: |
-          npm run migrate
-      - name: Run tests
-        env:
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-        run: |
-          npm run test:ci
-
-  regression-test:
-    runs-on: ubuntu-latest
-    name: Regression Test
-    steps:
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 12
-          cache: 'npm'
-      - name: Orchestrate
-        run: |
-          git clone git@github.com:DEFRA/water-abstraction-orchestration.git
-          cd water-abstraction-orchestration
-          sh ./helpers/clone-repos.sh
+#name: CI
+#
+##on:
+##  workflow_dispatch:
+##  push:
+##    branches:
+##      - develop
+##  pull_request:
+##    types: [ opened, synchronize, reopened ]
+#
+#jobs:
+#  base-node-pipeline:
+#    uses: DEFRA/water-abstraction-orchestration/.github/workflows/base-node-pipeline.yml@develop
+#    with:
+#      serviceName: DEFRA_water-abstraction-service
+#    secrets:
+#      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#  test:
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        node-version: [ 12.x, 14.x ]
+#    name: Test  - Node.js ${{ matrix.node-version }}
+#    env:
+#      # These need to be duplicated in services section for postgres. Unfortunately, there is not a way to reuse them
+#      PGUSER: water
+#      PGHOST: localhost
+#      PGPASSWORD: water
+#      PGPORT: 5432
+#      PGDATABASE: water
+#      ENVIRONMENT: dev
+#      DATABASE_URL: postgres://water:water@localhost:5432/water
+#      JWT_SECRET: secret
+#      JWT_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTIzNH0.MOREC6-Kszb9bDFw0O1UKywpnkcP-c5cPjASMpjk8Po
+#      NOTIFY_KEY: somerealnotifykey-00000000-0000-0000-0000-000000000000-00000000-0000-0000-0000-000000000000
+#      TEST_NOTIFY_KEY: ${{ secrets.TEST_NOTIFY_KEY }}
+#      WHITELIST_NOTIFY_KEY: ${{ secrets.WHITELIST_NOTIFY_KEY }}
+#      LIVE_NOTIFY_KEY: somerealnotifykey-00000000-0000-0000-0000-000000000000-00000000-0000-0000-0000-000000000000
+#      TEST_MODE: 1
+#      NODE_ENV: test
+#      CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+#      WATER_URI: http://127.0.0.1:8001/water/1.0
+#      WATER_URI_INTERNAL: http://127.0.0.1:8001/water/1.0
+#      PERMIT_URI: http://127.0.0.1:8004/API/1.0/
+#      ADMIN_URI: http://127.0.0.1:8005/API/1.0/
+#      CRM_URI: http://127.0.0.1:8002/crm/1.0
+#      RETURNS_URI: http://127.0.0.1:8006/returns/1.0
+#      NALD_SERVICE_MAILBOX: some@mailbox.com
+#      REDIS_HOST: redis
+#      REDIS_PORT: 6379
+#      REDIS_PASSWORD:
+#        # Service containers to run with `runner-job`
+#    services:
+#      # Label used to access the service container
+#      postgres:
+#        # Docker Hub image
+#        image: postgres:10-alpine
+#        # Provide the password for postgres
+#        env:
+#          POSTGRES_USER: water
+#          POSTGRES_HOST: localhost
+#          POSTGRES_PASSWORD: water
+#          POSTGRES_PORT: 5432
+#          POSTGRES_DB: water
+#        # Maps tcp port 5432 on service container to the host
+#        ports:
+#          - 5432:5432
+#        # Set health checks to wait until postgres has started. You must have this so the runner knows to wait till
+#        # postgres is up and running before proceeding
+#        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+#      redis:
+#        # Docker Hub image
+#        image: redis
+#        ports:
+#          # Maps port 6379 on service container to the host
+#          - 6379:6379
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: actions/setup-node@v2
+#        with:
+#          node-version: ${{ matrix.node-version }}
+#          cache: 'npm'
+#      - name: Install node modules
+#        run: |
+#          npm ci
+#      - name: Create database
+#        run: |
+#          PGPASSWORD=water psql -U water -tc "SELECT 'CREATE DATABASE water' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'water')"
+#      - name: Run database migrations
+#        run: |
+#          npm run migrate
+#      - name: Run tests
+#        env:
+#          REDIS_HOST: localhost
+#          REDIS_PORT: 6379
+#        run: |
+#          npm run test:ci
