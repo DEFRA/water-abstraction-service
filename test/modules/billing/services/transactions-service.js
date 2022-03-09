@@ -174,7 +174,7 @@ experiment('modules/billing/services/transactions-service', () => {
     const secondPartTrx = { licenceId, description: 'Second Part Spray', financialYearEnding: 2020, isTwoPartSecondPartCharge: true, chargeElementId: 'test-element-id' };
     const firstPartTrx = { licenceId, description: 'First Part Spray', financialYearEnding: 2020 };
     const normalTrx = { licenceId, description: 'Evaporating Cooling', financialYearEnding: 2020 };
-    chargeVersionYear = { chargeVersion: { licenceId, chargeElements: [{ id: 'test-element-id' }] }, financialYearEnding: 2019, isChargeable: true };
+    chargeVersionYear = { chargeVersion: { licenceId, chargeElements: [{ chargeElementId: 'test-element-id' }] }, financialYearEnding: 2019, isChargeable: true };
 
     experiment('when there are no matching 2PT charge version years', () => {
       beforeEach(async () => {
@@ -210,7 +210,7 @@ experiment('modules/billing/services/transactions-service', () => {
         expect(testResult.includes(secondPartTrx)).to.be.true();
       });
       test('the second part transactions are not filtered out annual transaction types where there is no agreement', async () => {
-        chargeVersionYear = { chargeVersion: { licenceId, chargeElements: [{ id: 'test-element-id' }] }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
+        chargeVersionYear = { chargeVersion: { licenceId, chargeElements: [{ chargeElementId: 'test-element-id' }] }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
         repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
         const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
         expect(testResult.includes(secondPartTrx)).to.be.true();

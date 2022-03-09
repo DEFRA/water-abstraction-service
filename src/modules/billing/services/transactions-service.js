@@ -91,10 +91,9 @@ const getInvoiceTransactions = invoice =>
 const getBatchTransactions = batch => flatMap(batch.invoices.map(getInvoiceTransactions));
 
 const getTransactionId = transaction => transaction.id;
-
 // checks to see if the transaction charge element id is linked to the charge version year charge version
 const isTheSameChargeElement = (chargeVersionYear, transaction) =>
-  chargeVersionYear.chargeVersion.chargeElements.some(element => element.id === transaction.chargeElementId);
+  chargeVersionYear.chargeVersion.chargeElements.some(element => element.chargeElementId === transaction.chargeElementId);
 
 const getBatchTransactionHistory = async batchId => {
   const historicTransactions = await newRepos.billingTransactions.findHistoryByBatchId(batchId);
