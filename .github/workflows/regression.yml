@@ -18,18 +18,18 @@ jobs:
         with:
           repository: DEFRA/water-abstraction-orchestration
           path: 'water-abstraction-orchestration'
-      - name: Node
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
       - name: Orchestrate
         run: |
           bash ./water-abstraction-orchestration/helpers/clone-repos.sh
           echo "List of repositories"
           ls
-          sh helpers/setup.sh
+      - name: Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
       - name: Install node modules
         run: |
-          sh helpers/setup.sh
+          bash ./water-abstraction-orchestration/helpers/setup.sh
           
