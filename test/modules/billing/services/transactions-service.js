@@ -216,6 +216,20 @@ experiment('modules/billing/services/transactions-service', () => {
         console.log(testResult);
         expect(testResult.includes(secondPartTrx)).to.be.true();
       });
+      test('the 2nd part are not filtered out - charge version year transaction types = annual, no agreement, charge version end date is null', async () => {
+        chargeVersionYear = { chargeVersion: { licenceId, startDate: '2019-04-01', endDate: null }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
+        repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
+        const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
+        console.log(testResult);
+        expect(testResult.includes(secondPartTrx)).to.be.true();
+      });
+      test('the 2nd part are not filtered out - charge version year transaction types = annual, no agreement, charge version end date is null', async () => {
+        chargeVersionYear = { chargeVersion: { licenceId, startDate: '2016-04-01', endDate: undefined }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
+        repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
+        const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
+        console.log(testResult);
+        expect(testResult.includes(secondPartTrx)).to.be.true();
+      });
       test('the 2nd part are filtered out - charge version year transaction types = annual, no agreement, transaction dates does not overlap with charge version', async () => {
         chargeVersionYear = { chargeVersion: { licenceId, startDate: '2020-02-01', endDate: '2021-05-31' }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
         repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
