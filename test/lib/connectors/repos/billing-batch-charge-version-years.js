@@ -185,7 +185,7 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
     test('passes the correct with related array when include related is true', async () => {
       await repos.billingBatchChargeVersionYears.findByBatchId(billingBatchId, true);
       const [,, withRelated] = helpers.findMany.lastCall.args;
-      expect(withRelated).to.equal(['chargeVersion', 'chargeVersion.chargeElements']);
+      expect(withRelated).to.equal(['chargeVersion']);
     });
   });
 
