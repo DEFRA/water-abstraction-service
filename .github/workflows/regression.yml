@@ -6,7 +6,44 @@ on:
     types: [ opened, synchronize, reopened ]
 
 env:
-  S3_KEY: "FAKE_KEY"
+  # Charge Module config
+  AIRBRAKE_HOST: ${{ secrets.AIRBRAKE_HOST }}
+  AIRBRAKE_KEY: ${{ secrets.AIRBRAKE_KEY }}
+  ADMIN_CLIENT_ID: ${{ secrets.ADMIN_CLIENT_ID }}
+  SYSTEM_CLIENT_ID: ${{ secrets.SYSTEM_CLIENT_ID }}
+  RULES_SERVICE_URL: ${{ secrets.RULES_SERVICE_URL }}
+  RULES_SERVICE_USER: ${{ secrets.RULES_SERVICE_USER }}
+  RULES_SERVICE_PASSWORD: ${{ secrets.RULES_SERVICE_PASSWORD }}
+  DECISION_SERVICE_URL: ${{ secrets.DECISION_SERVICE_URL }}
+  DECISION_SERVICE_USER: ${{ secrets.DECISION_SERVICE_USER }}
+  DECISION_SERVICE_PASSWORD: ${{ secrets.AIRBRAKE_HOST }}
+  # JWT
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  JWT_TOKEN: ${{ secrets.JWT_TOKEN }}
+  # Notify
+  TEST_NOTIFY_KEY: ${{ secrets.TEST_NOTIFY_KEY }}
+  WHITELIST_NOTIFY_KEY: ${{ secrets.WHITELIST_NOTIFY_KEY }}
+  LIVE_NOTIFY_KEY: ${{ secrets.LIVE_NOTIFY_KEY }}
+  NOTIFY_CALLBACK_TOKEN: ${{ secrets.NOTIFY_CALLBACK_TOKEN }}
+  # AWS
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  S3_KEY: ${{ secrets.S3_KEY }}
+  S3_SECRET: ${{ secrets.S3_SECRET }}
+  S3_BUCKET: ${{ secrets.S3_BUCKET }}
+  COGNITO_HOST: ${{ secrets.COGNITO_HOST }}
+  COGNITO_USERNAME: ${{ secrets.COGNITO_USERNAME }}
+  COGNITO_PASSWORD: ${{ secrets.COGNITO_PASSWORD }}
+  # ERRBIT
+  ERRBIT_KEY: ${{ secrets.ERRBIT_KEY }}
+  ERRBIT_SERVER: ${{ secrets.ERRBIT_SERVER }}
+  # NALD
+  NALD_ZIP_PASSWORD: ${{ secrets.NALD_ZIP_PASSWORD }}
+  NALD_SERVICE_MAILBOX: ${{ secrets.NALD_SERVICE_MAILBOX }}
+  # Misc
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
+  COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
+  SLACK_HOOK: ${{ secrets.SLACK_HOOK }}
 
 jobs:
   regression-test:
@@ -39,4 +76,18 @@ jobs:
       - name: Install node modules
         run: |
           bash ./water-abstraction-orchestration/helpers/setup.sh
+      - name: Start Services
+        run: |
+          bash ./water-abstraction-orchestration/pm2/start.sh
+          pm2 ls
+          sleep 30
+      - name: Test services
+        run: |
+          echo "Curl to see redirect"
+          curl "http://localhost:8008"
+          echo "Path from redirect response"
+          curl "http://localhost:8008/signin"
+      - name: Cypress test
+        run: |
+          npx cypress run --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
           
