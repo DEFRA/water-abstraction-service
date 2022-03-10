@@ -87,7 +87,77 @@ jobs:
           curl "http://localhost:8008"
           echo "Path from redirect response"
           curl "http://localhost:8008/signin"
+      - name: Migrate Charge Module
+        run: |
+          bash ./water-abstraction-orchestration/docker/cm-migrate.sh
+      - name: Seed Charge Module
+        run: |
+          bash ./water-abstraction-orchestration/docker/cm-seed.sh
+      - name: Migrate services
+        run: |
+          bash ./water-abstraction-orchestration/helpers/migrate.sh
       - name: Cypress test
         run: |
-          npx cypress run --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
+          cd water-abstraction-ui
+          WATER_URI="http://localhost:8001/water/1.0" WATER_URI_INTERNAL="http://localhost:8001/water/1.0" npx cypress run --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js" 
           
+  cypress-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 12.x]
+    name: Cypress Test - Node  v${{ matrix.node-version }}
+    steps:
+      - name: Checkout water-abstraction-orchestration
+        uses: actions/checkout@v2
+        with:
+          repository: DEFRA/water-abstraction-orchestration
+          path: 'water-abstraction-orchestration'
+      - name: Orchestrate
+        run: |
+          bash ./water-abstraction-orchestration/helpers/clone-repos.sh
+          echo "List of repositories"
+          ls
+      - name: Setup run time dependecies
+        run: |
+          bash ./water-abstraction-orchestration/docker/start.sh
+          docker ps
+      - name: Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      - name: Install node modules
+        run: |
+          bash ./water-abstraction-orchestration/helpers/setup.sh
+      - name: Start Services
+        run: |
+          bash ./water-abstraction-orchestration/pm2/start.sh
+          pm2 ls
+          sleep 30
+      - name: Test services
+        run: |
+          echo "Curl to see redirect"
+          curl "http://localhost:8008"
+          echo "Path from redirect response"
+          curl "http://localhost:8008/signin"
+      - name: Migrate Charge Module
+        run: |
+          bash ./water-abstraction-orchestration/docker/cm-migrate.sh
+      - name: Seed Charge Module
+        run: |
+          bash ./water-abstraction-orchestration/docker/cm-seed.sh
+      - name: Migrate services
+        run: |
+          bash ./water-abstraction-orchestration/helpers/migrate.sh
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+        with:
+          install: false
+          working-directory: water-abstraction-ui
+          start: npx cypress run --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
+        env:
+          WATER_URI: "http://localhost:8001/water/1.0"
+          WATER_URI_INTERNAL: "http://localhost:8001/water/1.0"
+
