@@ -32,4 +32,8 @@ jobs:
       - name: Install node modules
         run: |
           bash ./water-abstraction-orchestration/helpers/setup.sh
+      - name: Setup run time dependecies
+        run: |
+          bash ./water-abstraction-orchestration/docker/start.sh
+          docker ps
           
