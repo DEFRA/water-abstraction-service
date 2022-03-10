@@ -76,7 +76,7 @@ const findByBatchId = async (billingBatchId, includeRelated = false) => {
     billing_batch_id: billingBatchId
   };
 
-  const withRelated = includeRelated ? ['chargeVersion', 'chargeVersion.chargeElements'] : [];
+  const withRelated = includeRelated ? ['chargeVersion'] : [];
 
   return helpers.findMany(BillingBatchChargeVersionYear, conditions, withRelated);
 };

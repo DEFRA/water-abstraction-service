@@ -6,7 +6,7 @@ const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const { get, flatMap } = require('lodash');
 const { TRANSACTION_TYPE } = require('../../../lib/models/charge-version-year');
-
+const moment = require('moment');
 /**
  * Saves a row to water.billing_transactions for the given Transaction
  * instance
@@ -91,10 +91,11 @@ const getInvoiceTransactions = invoice =>
 const getBatchTransactions = batch => flatMap(batch.invoices.map(getInvoiceTransactions));
 
 const getTransactionId = transaction => transaction.id;
-// checks to see if the transaction charge element id is linked to the charge version year charge version
-const isTheSameChargeElement = (chargeVersionYear, transaction) =>
-  chargeVersionYear.chargeVersion.chargeElements.some(element => element.chargeElementId === transaction.chargeElementId);
-
+// checks to see if the transaction overlaps with the charge version start date
+const isTransactionForTheSamePeriod = (chargeVersionYear, transaction) => {
+  const val = moment(chargeVersionYear.chargeVersion.startDate).isBetween(transaction.startDate, transaction.endDate, null, '[]');
+  return val;
+};
 const getBatchTransactionHistory = async batchId => {
   const historicTransactions = await newRepos.billingTransactions.findHistoryByBatchId(batchId);
 
@@ -107,7 +108,7 @@ const getBatchTransactionHistory = async batchId => {
       ? twoPartTariffChargeVersionYears.some(cvy =>
         trx.licenceId === cvy.chargeVersion.licenceId &&
         trx.financialYearEnding === cvy.financialYearEnding &&
-        (cvy.transactionType === TRANSACTION_TYPE.twoPartTariff || (!cvy.hasTwoPartAgreement && isTheSameChargeElement(cvy, trx)) || !cvy.isChargeable))
+        (cvy.transactionType === TRANSACTION_TYPE.twoPartTariff || (!cvy.hasTwoPartAgreement && isTransactionForTheSamePeriod(cvy, trx)) || !cvy.isChargeable))
       : true);
 };
 

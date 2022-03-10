@@ -171,10 +171,10 @@ experiment('modules/billing/services/transactions-service', () => {
   experiment('.getBatchTransactionHistory', () => {
     let batch, result, chargeVersionYear;
     const licenceId = uuid();
-    const secondPartTrx = { licenceId, description: 'Second Part Spray', financialYearEnding: 2020, isTwoPartSecondPartCharge: true, chargeElementId: 'test-element-id' };
+    const secondPartTrx = { licenceId, description: 'Second Part Spray', financialYearEnding: 2020, isTwoPartSecondPartCharge: true, startDate: '2019-04-01', endDate: '2020-03-31' };
     const firstPartTrx = { licenceId, description: 'First Part Spray', financialYearEnding: 2020 };
     const normalTrx = { licenceId, description: 'Evaporating Cooling', financialYearEnding: 2020 };
-    chargeVersionYear = { chargeVersion: { licenceId, chargeElements: [{ chargeElementId: 'test-element-id' }] }, financialYearEnding: 2019, isChargeable: true };
+    chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2019, isChargeable: true };
 
     experiment('when there are no matching 2PT charge version years', () => {
       beforeEach(async () => {
@@ -210,7 +210,7 @@ experiment('modules/billing/services/transactions-service', () => {
         expect(testResult.includes(secondPartTrx)).to.be.true();
       });
       test('the second part transactions are not filtered out annual transaction types where there is no agreement', async () => {
-        chargeVersionYear = { chargeVersion: { licenceId, chargeElements: [{ chargeElementId: 'test-element-id' }] }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
+        chargeVersionYear = { chargeVersion: { licenceId, startDate: '2019-04-01', endDate: '2021-03-31' }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
         repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
         const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
         expect(testResult.includes(secondPartTrx)).to.be.true();
