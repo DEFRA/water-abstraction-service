@@ -47,22 +47,23 @@ env:
   SLACK_HOOK: ${{ secrets.SLACK_HOOK }}
 
 jobs:
-  cypress-test:
+  regression-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [ 12.x]
-    name: Cypress Test - Node  v${{ matrix.node-version }}
+    name: Regression Test - Node  v${{ matrix.node-version }}
     steps:
       - name: Checkout water-abstraction-orchestration
         uses: actions/checkout@v2
         with:
           repository: DEFRA/water-abstraction-orchestration
           path: 'water-abstraction-orchestration'
-      - name: Install PostgreSQL client
+      - name: Install Ubuntu packages
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client p7zip-full
+          sudo apt-get install libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
       - name: Orchestrate
         run: |
           bash ./water-abstraction-orchestration/helpers/clone-repos.sh
@@ -101,17 +102,38 @@ jobs:
           curl "http://localhost:8008"
           echo "Path from redirect response"
           curl "http://localhost:8008/signin"
-      - name: Cypress TEST WITH ACTION
+      - name: Cypress Action
+        continue-on-error: true
         uses: cypress-io/github-action@v2
         with:
-          install: false
-          working-directory: water-abstraction-ui
-          start: npx cypress run --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
+          install: true
+          working-directory: "./water-abstraction-ui"
+          browser: chrome
+          headless: true
+          spec: "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
         env:
           WATER_URI: "http://127.0.0.1:8001/water/1.0"
       - name: Cypress test
+        continue-on-error: true
         run: |
+          ls
           cd water-abstraction-ui
-          WATER_URI="http://127.0.0.1:8001/water/1.0"  npx cypress run --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js" 
+          ls
+          WATER_URI="http://127.0.0.1:8001/water/1.0" node_modules/.bin/cypress run --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
+      - name: Cypress test - specfic version
+        continue-on-error: true
+        run: |
+          echo "List files in current dir"
+          ls
+          echo "cd into water-abstraction-ui "
+          cd water-abstraction-ui
+          echo "List files in current dir"
+          ls
+          echo "downgrade cypress version"
+          npm install --save-dev cypress@8.3.0
+          WATER_URI="http://127.0.0.1:8001/water/1.0" node_modules/.bin/cypress run --browser chrome --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
+
+
+
 
 
