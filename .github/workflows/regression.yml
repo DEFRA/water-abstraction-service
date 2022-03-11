@@ -69,6 +69,9 @@ jobs:
           bash ./water-abstraction-orchestration/helpers/clone-repos.sh
           echo "List of repositories"
           ls
+      - name: Checkout feature branch or default to main
+        run: |
+          bash ./water-abstraction-orchestration/helpers/checkout-feature-branch.sh
       - name: Setup run time dependecies
         run: |
           bash ./water-abstraction-orchestration/docker/start.sh
@@ -132,7 +135,12 @@ jobs:
           echo "downgrade cypress version"
           npm install --save-dev cypress@8.3.0
           WATER_URI="http://127.0.0.1:8001/water/1.0" node_modules/.bin/cypress run --browser chrome --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
-
+     - name: Upload Artifact
+       uses: actions/upload-artifact@v2
+       continue-on-error: true
+       with:
+        name: PM2-Logs
+        path: ~/.pm2/logs/
 
 
 
