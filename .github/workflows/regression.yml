@@ -7,7 +7,7 @@ on:
     types: [ opened, synchronize, reopened ]
 
 env:
-  BRANCH: ${GITHUB_REF##*/}
+  BRANCH: ${{ github.head_ref }}
   # Charge Module config
   AIRBRAKE_HOST: ${{ secrets.AIRBRAKE_HOST }}
   AIRBRAKE_KEY: ${{ secrets.AIRBRAKE_KEY }}
@@ -72,7 +72,8 @@ jobs:
           ls
       - name: Checkout feature branch or default to main
         run: |
-          bash ./water-abstraction-orchestration/helpers/checkout-feature-branch.sh  ${{ env.BRANCH }}
+          echo "Branch: ${{ env.BRANCH }}"
+          bash ./water-abstraction-orchestration/helpers/checkout-feature-branch.sh ${{ env.BRANCH }}
       - name: Setup run time dependecies
         run: |
           bash ./water-abstraction-orchestration/docker/start.sh
@@ -133,17 +134,12 @@ jobs:
       - name: Cypress test - orc - specfic version
         continue-on-error: true
         run: |
-          echo "List files in current dir"
-          ls
-          echo "cd into water-abstraction-ui "
           cd water-abstraction-ui
-          echo "List files in current dir"
-          ls
           echo "downgrade cypress version"
           npm install --save-dev cypress@8.3.0
-          ADMIN_URI='http://localhost:8008/'
-          USER_URI='http://localhost:8000/'
-          WATER_URI="http://localhost:8001/water/1.0" 
+          export ADMIN_URI='http://localhost:8008/'
+          export USER_URI='http://localhost:8000/'
+          export WATER_URI="http://localhost:8001/water/1.0" 
           node_modules/.bin/cypress run --browser chrome --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
