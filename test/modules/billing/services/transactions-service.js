@@ -171,7 +171,7 @@ experiment('modules/billing/services/transactions-service', () => {
   experiment('.getBatchTransactionHistory', () => {
     let batch, result, chargeVersionYear;
     const licenceId = uuid();
-    const secondPartTrx = { licenceId, description: 'Second Part Spray', financialYearEnding: 2020, isTwoPartSecondPartCharge: true };
+    const secondPartTrx = { licenceId, description: 'Second Part Spray', financialYearEnding: 2020, isTwoPartSecondPartCharge: true, startDate: '2019-03-01', endDate: '2020-01-31' };
     const firstPartTrx = { licenceId, description: 'First Part Spray', financialYearEnding: 2020 };
     const normalTrx = { licenceId, description: 'Evaporating Cooling', financialYearEnding: 2020 };
     chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2019, isChargeable: true };
@@ -209,11 +209,32 @@ experiment('modules/billing/services/transactions-service', () => {
         const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
         expect(testResult.includes(secondPartTrx)).to.be.true();
       });
-      test('the second part transactions are not filtered out annual transaction types where there is no agreement', async () => {
-        chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
+      test('the 2nd part are not filtered out - charge version year transaction types = annual, no agreement, transaction dates overlaps with charge version', async () => {
+        chargeVersionYear = { chargeVersion: { licenceId, startDate: '2019-04-01', endDate: '2020-03-31' }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
         repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
         const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
+        console.log(testResult);
         expect(testResult.includes(secondPartTrx)).to.be.true();
+      });
+      test('the 2nd part are not filtered out - charge version year transaction types = annual, no agreement, charge version end date is null', async () => {
+        chargeVersionYear = { chargeVersion: { licenceId, startDate: '2019-04-01', endDate: null }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
+        repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
+        const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
+        console.log(testResult);
+        expect(testResult.includes(secondPartTrx)).to.be.true();
+      });
+      test('the 2nd part are not filtered out - charge version year transaction types = annual, no agreement, charge version end date is null', async () => {
+        chargeVersionYear = { chargeVersion: { licenceId, startDate: '2016-04-01', endDate: undefined }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
+        repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
+        const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
+        console.log(testResult);
+        expect(testResult.includes(secondPartTrx)).to.be.true();
+      });
+      test('the 2nd part are filtered out - charge version year transaction types = annual, no agreement, transaction dates does not overlap with charge version', async () => {
+        chargeVersionYear = { chargeVersion: { licenceId, startDate: '2020-02-01', endDate: '2021-05-31' }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
+        repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
+        const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
+        expect(testResult.includes(secondPartTrx)).to.be.false();
       });
       test('the second part transactions are filtered out if it is an annual transaction type that has a two part agreement', async () => {
         chargeVersionYear = { chargeVersion: { licenceId }, financialYearEnding: 2020, hasTwoPartAgreement: true, transactionType: 'annual', isChargeable: true };
