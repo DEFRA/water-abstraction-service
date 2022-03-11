@@ -7,6 +7,7 @@ on:
     types: [ opened, synchronize, reopened ]
 
 env:
+  BRANCH: ${GITHUB_REF##*/}
   # Charge Module config
   AIRBRAKE_HOST: ${{ secrets.AIRBRAKE_HOST }}
   AIRBRAKE_KEY: ${{ secrets.AIRBRAKE_KEY }}
@@ -71,7 +72,7 @@ jobs:
           ls
       - name: Checkout feature branch or default to main
         run: |
-          bash ./water-abstraction-orchestration/helpers/checkout-feature-branch.sh
+          bash ./water-abstraction-orchestration/helpers/checkout-feature-branch.sh  ${{ env.BRANCH }}
       - name: Setup run time dependecies
         run: |
           bash ./water-abstraction-orchestration/docker/start.sh
@@ -85,6 +86,19 @@ jobs:
       - name: Install node modules
         run: |
           bash ./water-abstraction-orchestration/helpers/setup.sh
+      - name: Create schema for DB
+        run: | 
+          docker ps
+          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE EXTENSION pgcrypto;"
+          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "SELECT 'CREATE DATABASE water' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'water')"
+          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS idm"
+          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS crm"
+          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS crm_v2"
+          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS import"
+          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS permit"
+          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS returns"
+          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS water"
+          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS water_import"
       - name: Migrate Charge Module
         run: |
           bash ./water-abstraction-orchestration/docker/cm-migrate.sh
@@ -116,14 +130,7 @@ jobs:
           spec: "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
         env:
           WATER_URI: "http://127.0.0.1:8001/water/1.0"
-      - name: Cypress test
-        continue-on-error: true
-        run: |
-          ls
-          cd water-abstraction-ui
-          ls
-          WATER_URI="http://127.0.0.1:8001/water/1.0" node_modules/.bin/cypress run --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
-      - name: Cypress test - specfic version
+      - name: Cypress test - orc - specfic version
         continue-on-error: true
         run: |
           echo "List files in current dir"
@@ -134,7 +141,10 @@ jobs:
           ls
           echo "downgrade cypress version"
           npm install --save-dev cypress@8.3.0
-          WATER_URI="http://127.0.0.1:8001/water/1.0" node_modules/.bin/cypress run --browser chrome --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
+          ADMIN_URI='http://localhost:8008/'
+          USER_URI='http://localhost:8000/'
+          WATER_URI="http://localhost:8001/water/1.0" 
+          node_modules/.bin/cypress run --browser chrome --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         continue-on-error: true
