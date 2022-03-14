@@ -120,7 +120,18 @@ jobs:
           curl "http://localhost:8008"
           echo "Path from redirect response"
           curl "http://localhost:8008/signin"
-      - name: Cypress Action
+          curl --location --request GET 'http://127.0.0.1:8001/status'
+          curl --location --request GET 'http://127.0.0.1:8002/status'
+          curl --location --request GET 'http://127.0.0.1:8003/status'
+          curl --location --request GET 'http://127.0.0.1:8004/status'
+          curl --location --request GET 'http://127.0.0.1:8006/status'
+          curl --location --request GET 'http://127.0.0.1:8007/status'
+          curl --location --request GET 'http://127.0.0.1:8008'
+          curl --location --request GET 'http://localhost:8008'
+          curl --location --request GET 'http://127.0.0.1:8000'
+          curl --location --request GET 'http://localhost:8000'
+          curl --location --request GET 'http://localhost:8001/water/1.0/service-status'
+      - name: Cypress Test - Action
         continue-on-error: true
         uses: cypress-io/github-action@v2
         with:
@@ -129,18 +140,34 @@ jobs:
           browser: chrome
           headless: true
           spec: "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
+          config: pageLoadTimeout=100000,baseUrl=http://127.0.0.1:8008
         env:
           WATER_URI: "http://127.0.0.1:8001/water/1.0"
-      - name: Cypress test - orc - specfic version
+          ADMIN_URI: 'http://127.0.0.1:8008/'
+          USER_URI: 'http://127.0.0.1:8000/'
+          BASE_URL: 'http://127.0.0.1:8008'
+      - name: Cypress test - local host - with host network
         continue-on-error: true
         run: |
           cd water-abstraction-ui
-          echo "downgrade cypress version"
-          npm install --save-dev cypress@8.3.0
+          export WATER_URI="http://localhost:8001/water/1.0"
           export ADMIN_URI='http://localhost:8008/'
           export USER_URI='http://localhost:8000/'
-          export WATER_URI="http://localhost:8001/water/1.0" 
-          node_modules/.bin/cypress run --browser chrome --spec "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
+          export BASE_URL='http://localhost:8008'
+          DOCKER_BUILDKIT=0 docker build -f cypress.Dockerfile -t cypress:1 .  
+          docker run \
+          --env DISPLAY \
+          --net=host \
+          -w /e2e \
+          --env JWT_TOKEN=$JWT_TOKEN \
+          --env NOTIFY_CALLBACK_TOKEN=$NOTIFY_CALLBACK_TOKEN \
+          --env WATER_URI=$WATER_URI \
+          --env ADMIN_URI=$ADMIN_URI \
+          --env USER_URI=$USER_URI \
+          -p 8001:8001 \
+          cypress:1 \
+          "node_modules/.bin/cypress run --spec \"cypress/integration/internal/remove-individual-licence-from-bill.spec.js\" --config baseUrl=${BASE_URL}"
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         continue-on-error: true
