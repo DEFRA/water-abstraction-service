@@ -2,7 +2,6 @@ name: Regression tests
 
 
 on:
-  workflow_dispatch:
   pull_request:
     types: [ opened, synchronize, reopened ]
 
@@ -46,25 +45,41 @@ env:
   COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
   COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
   SLACK_HOOK: ${{ secrets.SLACK_HOOK }}
+  #
+  PGUSER: water_user
+  PGHOST: localhost
+  PGPASSWORD: password
+  PGPORT: 5432
+  PGDATABASE: permits
+  ENVIRONMENT: dev
+  DATABASE_URL: postgres://water_user:password@localhost:5432/permits
 
 jobs:
   regression-test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [ 12.x]
-    name: Regression Test - Node  v${{ matrix.node-version }}
+    name: Regression Test
+    services:
+      postgres:
+        image: postgres:10-alpine
+        env:
+          POSTGRES_USER: water_user
+          POSTGRES_HOST: localhost
+          POSTGRES_PASSWORD: password
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: permits
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
     steps:
       - name: Checkout water-abstraction-orchestration
         uses: actions/checkout@v2
         with:
           repository: DEFRA/water-abstraction-orchestration
           path: 'water-abstraction-orchestration'
-      - name: Install Ubuntu packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client p7zip-full
-          sudo apt-get install libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
       - name: Orchestrate
         run: |
           bash ./water-abstraction-orchestration/helpers/clone-repos.sh
@@ -74,10 +89,6 @@ jobs:
         run: |
           echo "Branch: ${{ env.BRANCH }}"
           bash ./water-abstraction-orchestration/helpers/checkout-feature-branch.sh ${{ env.BRANCH }}
-      - name: Setup run time dependecies
-        run: |
-          bash ./water-abstraction-orchestration/docker/start.sh
-          docker ps
       - name: Node
         uses: actions/setup-node@v2
         with:
@@ -87,28 +98,23 @@ jobs:
       - name: Install node modules
         run: |
           bash ./water-abstraction-orchestration/helpers/setup.sh
-      - name: Create schema for DB
-        run: | 
-          docker ps
-          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE EXTENSION pgcrypto;"
-          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "SELECT 'CREATE DATABASE water' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'water')"
-          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS idm"
-          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS crm"
-          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS crm_v2"
-          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS import"
-          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS permit"
-          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS returns"
-          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS water"
-          docker exec  water-orchestration_wrls-db_1 psql -U water -tc "CREATE SCHEMA IF NOT EXISTS water_import"
-      - name: Migrate Charge Module
+      - name: Create database
         run: |
-          bash ./water-abstraction-orchestration/docker/cm-migrate.sh
-      - name: Seed Charge Module
-        run: |
-          bash ./water-abstraction-orchestration/docker/cm-seed.sh
+          PGPASSWORD=password psql -U water_user -tc "SELECT 'CREATE DATABASE permits' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'permits')"
+          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS permits AUTHORIZATION water_user;"
+          PGPASSWORD=password psql -U water_user -tc "CREATE EXTENSION pgcrypto;"
+          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS idm"
+          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS crm"
+          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS crm_v2"
+          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS import"
+          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS permit"
+          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS returns"
+          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water"
+          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water_import"
       - name: Migrate services
         run: |
           bash ./water-abstraction-orchestration/helpers/migrate.sh
+          sleep 2m
       - name: Start Services
         run: |
           bash ./water-abstraction-orchestration/pm2/start.sh
@@ -120,18 +126,23 @@ jobs:
           curl "http://localhost:8008"
           echo "Path from redirect response"
           curl "http://localhost:8008/signin"
-          curl --location --request GET 'http://127.0.0.1:8001/status'
-          curl --location --request GET 'http://127.0.0.1:8002/status'
-          curl --location --request GET 'http://127.0.0.1:8003/status'
-          curl --location --request GET 'http://127.0.0.1:8004/status'
-          curl --location --request GET 'http://127.0.0.1:8006/status'
-          curl --location --request GET 'http://127.0.0.1:8007/status'
-          curl --location --request GET 'http://127.0.0.1:8008'
-          curl --location --request GET 'http://localhost:8008'
-          curl --location --request GET 'http://127.0.0.1:8000'
-          curl --location --request GET 'http://localhost:8000'
-          curl --location --request GET 'http://localhost:8001/water/1.0/service-status'
-      - name: Cypress Test - Action
+#      - name: Curl teardown
+#        continue-on-error: true
+#        run: |
+#          echo "Service"
+#          curl -H "Accept: application/json"  "http://localhost:8001/status"
+#          echo "Permit"
+#          curl -H "Accept: application/json"  "http://localhost:8004/status"
+#          echo "RETURNS"
+#          curl -H "Accept: application/json"  "http://localhost:8006/status"
+#          echo "CRM"
+#          curl -H "Accept: application/json"  "http://localhost:8002/status"
+#          echo "IDM"
+#          curl -H "Accept: application/json"  "http://localhost:8003/status"
+#          sleep 15
+#          curl --retry 1 --max-time 30 --location --request POST 'http://localhost:8001/water/1.0/acceptance-tests/tear-down' \
+#          --header "Authorization: Bearer ${JWT_TOKEN}"
+      - name: Cypress Test
         continue-on-error: true
         uses: cypress-io/github-action@v2
         with:
@@ -140,34 +151,21 @@ jobs:
           browser: chrome
           headless: true
           spec: "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
-          config: pageLoadTimeout=100000,baseUrl=http://127.0.0.1:8008
+          config: pageLoadTimeout=100000,baseUrl=http://localhost:8008
         env:
-          WATER_URI: "http://127.0.0.1:8001/water/1.0"
-          ADMIN_URI: 'http://127.0.0.1:8008/'
-          USER_URI: 'http://127.0.0.1:8000/'
-          BASE_URL: 'http://127.0.0.1:8008'
-      - name: Cypress test - local host - with host network
-        continue-on-error: true
+          WATER_URI: "http://localhost:8001/water/1.0"
+          ADMIN_URI: 'http://localhost:8008/'
+          USER_URI: 'http://localhost:8000/'
+          BASE_URL: 'http://localhost:8008'
+      - name: Sleep
         run: |
-          cd water-abstraction-ui
-          export WATER_URI="http://localhost:8001/water/1.0"
-          export ADMIN_URI='http://localhost:8008/'
-          export USER_URI='http://localhost:8000/'
-          export BASE_URL='http://localhost:8008'
-          DOCKER_BUILDKIT=0 docker build -f cypress.Dockerfile -t cypress:1 .  
-          docker run \
-          --env DISPLAY \
-          --net=host \
-          -w /e2e \
-          --env JWT_TOKEN=$JWT_TOKEN \
-          --env NOTIFY_CALLBACK_TOKEN=$NOTIFY_CALLBACK_TOKEN \
-          --env WATER_URI=$WATER_URI \
-          --env ADMIN_URI=$ADMIN_URI \
-          --env USER_URI=$USER_URI \
-          -p 8001:8001 \
-          cypress:1 \
-          "node_modules/.bin/cypress run --spec \"cypress/integration/internal/remove-individual-licence-from-bill.spec.js\" --config baseUrl=${BASE_URL}"
-
+          sleep 30s
+      - name: Upload Cypress Artifact
+        continue-on-error: true
+        uses: actions/upload-artifact@v2
+        with:
+          name: cypress
+          path: ./water-abstraction-ui/cypress/
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         continue-on-error: true
