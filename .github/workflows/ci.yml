@@ -1,7 +1,6 @@
 name: CI
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - develop
@@ -89,9 +88,12 @@ jobs:
       - name: Run database migrations
         run: |
           npm run migrate
-      - name: Run tests
+      - name: Test & publish code coverage
+        uses: paambaati/codeclimate-action@v2.7.4
         env:
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
           REDIS_HOST: localhost
           REDIS_PORT: 6379
-        run: |
-          npm run test:ci
+        with:
+          coverageCommand: npm run test:ci
+          debug: true
