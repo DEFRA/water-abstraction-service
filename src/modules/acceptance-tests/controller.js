@@ -122,7 +122,7 @@ const postSetupFromYaml = async (request, h) => {
 // };
 
 const postTearDown = async (request) => {
-  request.log('info', 'HAPI LOG ------------------------ ');
+  request.log('HAPI LOG ------------------------ ');
   console.log('TRY ----------------')
   try{
     console.log('Tearing down data');
@@ -138,3 +138,5 @@ const postTearDown = async (request) => {
 
 exports.postSetupFromYaml = postSetupFromYaml;
 exports.postTearDown = postTearDown;
+
+

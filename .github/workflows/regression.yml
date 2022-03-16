@@ -1,11 +1,14 @@
 name: Regression tests
 
 on:
+  push:
+    branches:
+      - '**'
   pull_request:
     types: [ opened, synchronize, reopened ]
 
 env:
-  BRANCH: ${{ github.head_ref }}
+  BRANCH: "feat/pipeline-regression-tests"
   # Charge Module config
   AIRBRAKE_HOST: ${{ secrets.AIRBRAKE_HOST }}
   AIRBRAKE_KEY: ${{ secrets.AIRBRAKE_KEY }}
@@ -133,12 +136,18 @@ jobs:
           curl -H "Accept: application/json"  "http://localhost:8002/status"
           echo "IDM"
           curl -H "Accept: application/json"  "http://localhost:8003/status"
+      - name: Check Code
+        run: |
+          cd water-abstraction-service
+          git status
+          cat src/modules/acceptance-tests/controller.js
       - name: Teardown
         continue-on-error: true
         run: |
-          echo $NODE_ENV
+          pm2 log &
           curl --retry 1 --max-time 30 --location --request POST 'http://localhost:8001/water/1.0/acceptance-tests/tear-down' \
-          --header "Authorization: Bearer ${JWT_TOKEN}"
+          --header "Authorization: Bearer ${JWT_TOKEN}" &
+
 #      - name: Cypress Test
 #        continue-on-error: true
 #        uses: cypress-io/github-action@v2
@@ -156,7 +165,7 @@ jobs:
 #          BASE_URL: 'http://localhost:8008'
 #      - name: Sleep & Log
 #        run: |
-#          pm2 logs 'water-api' --lines 100
+#          pm2 logs 'water-api' --lines 200
 #      - name: Upload Cypress Artifact
 #        continue-on-error: true
 #        uses: actions/upload-artifact@v2
