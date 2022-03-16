@@ -121,50 +121,48 @@ jobs:
           sleep 30
       - name: Test services
         run: |
-          echo "Curl to see redirect"
-          curl "http://localhost:8008"
-          echo "Path from redirect response"
+          echo "UI"
           curl "http://localhost:8008/signin"
-#      - name: Curl teardown
-#        continue-on-error: true
-#        run: |
-#          echo "Service"
-#          curl -H "Accept: application/json"  "http://localhost:8001/status"
-#          echo "Permit"
-#          curl -H "Accept: application/json"  "http://localhost:8004/status"
-#          echo "RETURNS"
-#          curl -H "Accept: application/json"  "http://localhost:8006/status"
-#          echo "CRM"
-#          curl -H "Accept: application/json"  "http://localhost:8002/status"
-#          echo "IDM"
-#          curl -H "Accept: application/json"  "http://localhost:8003/status"
-#          sleep 15
-#          curl --retry 1 --max-time 30 --location --request POST 'http://localhost:8001/water/1.0/acceptance-tests/tear-down' \
-#          --header "Authorization: Bearer ${JWT_TOKEN}"
-      - name: Cypress Test
+          echo "Service"
+          curl -H "Accept: application/json"  "http://localhost:8001/status"
+          echo "Permit"
+          curl -H "Accept: application/json"  "http://localhost:8004/status"
+          echo "RETURNS"
+          curl -H "Accept: application/json"  "http://localhost:8006/status"
+          echo "CRM"
+          curl -H "Accept: application/json"  "http://localhost:8002/status"
+          echo "IDM"
+          curl -H "Accept: application/json"  "http://localhost:8003/status"
+      - name: Teardown
         continue-on-error: true
-        uses: cypress-io/github-action@v2
-        with:
-          install: true
-          working-directory: "./water-abstraction-ui"
-          browser: chrome
-          headless: true
-          spec: "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
-          config: pageLoadTimeout=100000,baseUrl=http://localhost:8008
-        env:
-          WATER_URI: "http://localhost:8001/water/1.0"
-          ADMIN_URI: 'http://localhost:8008/'
-          USER_URI: 'http://localhost:8000/'
-          BASE_URL: 'http://localhost:8008'
-      - name: Sleep
         run: |
-          sleep 30s
-      - name: Upload Cypress Artifact
-        continue-on-error: true
-        uses: actions/upload-artifact@v2
-        with:
-          name: cypress
-          path: ./water-abstraction-ui/cypress/
+          echo $NODE_ENV
+          curl --retry 1 --max-time 30 --location --request POST 'http://localhost:8001/water/1.0/acceptance-tests/tear-down' \
+          --header "Authorization: Bearer ${JWT_TOKEN}"
+#      - name: Cypress Test
+#        continue-on-error: true
+#        uses: cypress-io/github-action@v2
+#        with:
+#          install: true
+#          working-directory: "./water-abstraction-ui"
+#          browser: chrome
+#          headless: true
+#          spec: "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
+#          config: pageLoadTimeout=100000,baseUrl=http://localhost:8008
+#        env:
+#          WATER_URI: "http://localhost:8001/water/1.0"
+#          ADMIN_URI: 'http://localhost:8008/'
+#          USER_URI: 'http://localhost:8000/'
+#          BASE_URL: 'http://localhost:8008'
+#      - name: Sleep & Log
+#        run: |
+#          pm2 logs 'water-api' --lines 100
+#      - name: Upload Cypress Artifact
+#        continue-on-error: true
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: cypress
+#          path: ./water-abstraction-ui/cypress/
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         continue-on-error: true
