@@ -1,9 +1,10 @@
 name: Regression tests
 
+
 on:
-  push:
-    branches:
-      - '**'
+#  push:
+#    branches:
+#      - '**'
   pull_request:
     types: [ opened, synchronize, reopened ]
 
@@ -136,17 +137,21 @@ jobs:
           curl -H "Accept: application/json"  "http://localhost:8002/status"
           echo "IDM"
           curl -H "Accept: application/json"  "http://localhost:8003/status"
-      - name: Check Code
-        run: |
-          cd water-abstraction-service
-          git status
-          cat src/modules/acceptance-tests/controller.js
-      - name: Teardown
+#      - name: Check Code
+#        run: |
+#          cd water-abstraction-service
+#          git status
+#          cat src/modules/acceptance-tests/controller.js
+#      - name: Scratch
+#        continue-on-error: true
+#        run: |
+#           ls
+#           bash water-abstraction-service/scratch.sh
+      - name: Curl - teardown
         continue-on-error: true
         run: |
-          pm2 log &
-          curl --retry 1 --max-time 30 --location --request POST 'http://localhost:8001/water/1.0/acceptance-tests/tear-down' \
-          --header "Authorization: Bearer ${JWT_TOKEN}" &
+          curl --retry 2 --max-time 45 --location --request POST 'http://localhost:8001/water/1.0/acceptance-tests/tear-down' \
+          --header "Authorization: Bearer ${JWT_TOKEN}"
 
 #      - name: Cypress Test
 #        continue-on-error: true
