@@ -1,10 +1,9 @@
 name: Regression tests
 
-
 on:
-#  push:
-#    branches:
-#      - '**'
+  push:
+    branches:
+      - '**'
   pull_request:
     types: [ opened, synchronize, reopened ]
 
@@ -147,27 +146,44 @@ jobs:
 #        run: |
 #           ls
 #           bash water-abstraction-service/scratch.sh
-      - name: Curl - teardown
+#      - name: Curl - teardown
+#        continue-on-error: true
+#        run: |
+#          curl --retry 2 --max-time 45 --location --request POST 'http://localhost:8001/water/1.0/acceptance-tests/tear-down' \
+#          --header "Authorization: Bearer ${JWT_TOKEN}"
+      - name: Docker test
         continue-on-error: true
         run: |
-          curl --retry 2 --max-time 45 --location --request POST 'http://localhost:8001/water/1.0/acceptance-tests/tear-down' \
-          --header "Authorization: Bearer ${JWT_TOKEN}"
-
-#      - name: Cypress Test
-#        continue-on-error: true
-#        uses: cypress-io/github-action@v2
-#        with:
-#          install: true
-#          working-directory: "./water-abstraction-ui"
-#          browser: chrome
-#          headless: true
-#          spec: "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
-#          config: pageLoadTimeout=100000,baseUrl=http://localhost:8008
-#        env:
-#          WATER_URI: "http://localhost:8001/water/1.0"
-#          ADMIN_URI: 'http://localhost:8008/'
-#          USER_URI: 'http://localhost:8000/'
-#          BASE_URL: 'http://localhost:8008'
+          echo "Stop water api in pm2"
+          pm2 stop water-api
+          ls
+          bash water-abstraction-service/run.sh
+      - name: Cypress Test
+        continue-on-error: true
+        uses: cypress-io/github-action@v2
+        with:
+          install: true
+          working-directory: "./water-abstraction-ui"
+          browser: chrome
+          headless: true
+          spec: "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
+          config: pageLoadTimeout=100000,baseUrl=http://localhost:8008
+        env:
+          WATER_URI: "http://localhost:8001/water/1.0"
+          ADMIN_URI: 'http://localhost:8008/'
+          USER_URI: 'http://localhost:8000/'
+          BASE_URL: 'http://localhost:8008'
+          JWT_TOKEN: ${{ env.JWT_TOKEN }}
+          NOTIFY_CALLBACK_TOKEN: ${{ env.NOTIFY_CALLBACK_TOKEN }}
+      - name: Docker log after test
+        run: |
+          docker logs service-api
+      - name: Local test - docker
+        run: |
+          bash water-abstraction-ui/test.sh
+      - name: Docker log after test
+        run: |
+          docker logs service-api
 #      - name: Sleep & Log
 #        run: |
 #          pm2 logs 'water-api' --lines 200
