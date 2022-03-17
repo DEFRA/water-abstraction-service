@@ -1,5 +1,7 @@
 'use strict';
 
+const config = require('../../../config');
+
 const { NotFoundError, ConflictingDataError } = require('../errors');
 
 // Mappers
@@ -76,7 +78,7 @@ const deleteLicenceAgreementById = async (licenceAgreementId, issuer) => {
   // Log event and flag licence for supplementary billing
   return Promise.all([
     createEvent(EVENT_TYPES.delete, licenceAgreement, issuer),
-    licencesService.flagForSupplementaryBilling(licence.id)
+    new Date(licenceAgreement.dateRange.startDate) < new Date(config.billing.srocStartDate) && licencesService.flagForSupplementaryBilling(licence.id)
   ]);
 };
 
@@ -129,7 +131,7 @@ const createLicenceAgreement = async (licence, data, issuer) => {
     // Log event and flag licence for supplementary billing
     await Promise.all([
       createEvent(EVENT_TYPES.create, licenceAgreement, issuer),
-      licencesService.flagForSupplementaryBilling(licence.id)
+      new Date(licenceAgreement.dateRange.startDate) < new Date(config.billing.srocStartDate) && licencesService.flagForSupplementaryBilling(licence.id)
     ]);
 
     // Return the updated model
@@ -160,7 +162,7 @@ const patchLicenceAgreement = async (licenceAgreementId, data, issuer) => {
   // Log event and flag licence for supplementary billing
   return Promise.all([
     createEvent(EVENT_TYPES.update, licenceAgreement, issuer),
-    licencesService.flagForSupplementaryBilling(response.licence.licenceId)
+    new Date(licenceAgreement.dateRange.startDate) < new Date(config.billing.srocStartDate) && licencesService.flagForSupplementaryBilling(response.licence.licenceId)
   ]);
 };
 
