@@ -5,6 +5,4 @@ exports.deleteChargeElements = `DELETE FROM water.charge_elements where charge_v
 exports.deleteChargeVersions = `DELETE FROM water.charge_versions WHERE licence_ref IN 
     (select licence_ref from water.licences WHERE is_test = true);`;
 
-exports.deleteChargeVerionWorkflows = `
-DELETE from water.charge_version_workflows where licence_id IN 
-  (SELECT licence_id from water.licences where is_test = true)`;
+exports.deleteChargeVerionWorkflows = 'DELETE from water.charge_version_workflows';
