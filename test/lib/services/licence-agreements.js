@@ -28,6 +28,7 @@ const licenceAgreementRepo = require('../../../src/lib/connectors/repos/licence-
 
 // Models
 const User = require('../../../src/lib/models/user');
+const DateRange = require('../../../src/lib/models/date-range');
 const Licence = require('../../../src/lib/models/licence');
 const LicenceAgreement = require('../../../src/lib/models/licence-agreement');
 const Agreement = require('../../../src/lib/models/agreement');
@@ -36,9 +37,13 @@ const createTestUser = () => new User(123, 'joan.doe@example.com');
 const createTestLicence = () => new Licence(uuid()).fromHash({
   licenceNumber: '01/123/ABC'
 });
-const createTestLicenceAgreement = () => new LicenceAgreement(licenceAgreementId).fromHash({
-  licenceNumber: '01/123/ABC'
-});
+const createTestLicenceAgreement = (startDate = '2020-01-01') => {
+  const dateRange = new DateRange(startDate);
+  return new LicenceAgreement(licenceAgreementId).fromHash({
+    licenceNumber: '01/123/ABC',
+    dateRange
+  });
+};
 const createTestAgreement = () => new Agreement(uuid()).fromHash({
   code: 'S127'
 });
@@ -103,12 +108,12 @@ experiment('src/lib/services/licence-agreements', () => {
       });
     });
 
-    experiment('when the licence agreement is found', () => {
+    experiment('when the licence agreement is found and the licence agreement is pre-SROC', () => {
       const tempLicenceId = uuid();
       let licenceAgreement, user, licence;
 
       beforeEach(async () => {
-        licenceAgreement = createTestLicenceAgreement();
+        licenceAgreement = createTestLicenceAgreement('2020-01-01');
         service.findOne.resolves(licenceAgreement);
         licenceAgreementRepo.update.returns({ licence: { licenceId: tempLicenceId } });
         user = createTestUser();
