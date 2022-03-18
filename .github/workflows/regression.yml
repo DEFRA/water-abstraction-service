@@ -1,13 +1,12 @@
 name: Regression tests
 
+
 on:
-#  push:
-#    branches:
-#      - '**'
   pull_request:
     types: [ opened, synchronize, reopened ]
 
 env:
+  # Put back to auto pick from GitHub
   BRANCH: "feat/pipeline-regression-tests"
   # Charge Module config
   AIRBRAKE_HOST: ${{ secrets.AIRBRAKE_HOST }}
@@ -72,17 +71,16 @@ jobs:
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      redis:
-        image: redis
-        ports:
-          - 6379:6379
     steps:
       - name: Checkout water-abstraction-orchestration
         uses: actions/checkout@v2
         with:
           repository: DEFRA/water-abstraction-orchestration
           path: 'water-abstraction-orchestration'
-      - name: Orchestrate
+      - name: Start Redis
+        run: |
+          docker run --name redis -p 6379:6379 -d redis
+      - name: Clone all repos for orchestration
         run: |
           bash ./water-abstraction-orchestration/helpers/clone-repos.sh
           echo "List of repositories"
@@ -125,13 +123,6 @@ jobs:
           PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS returns"
           PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water"
           PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water_import"
-
-#      - name: Check Postgres can use pgcrypto / gen_random_uuid
-#        continue-on-error: true
-#        run: |
-#          PGPASSWORD=password psql -U water_user -tc "SELECT gen_random_uuid()"
-#          PGPASSWORD=password psql -U water_user -tc "SELECT public.gen_random_uuid()"
-
       - name: Migrate services
         run: |
           bash ./water-abstraction-orchestration/helpers/migrate.sh
@@ -163,8 +154,7 @@ jobs:
           ls
           bash water-abstraction-service/run.sh
           sleep 45
-      - name: Cypress Test
-        continue-on-error: true
+      - name: Run tests - Cypress
         uses: cypress-io/github-action@v2
         with:
           install: true
@@ -180,6 +170,7 @@ jobs:
           BASE_URL: 'http://localhost:8008'
           JWT_TOKEN: ${{ env.JWT_TOKEN }}
           NOTIFY_CALLBACK_TOKEN: ${{ env.NOTIFY_CALLBACK_TOKEN }}
+#       Debug steps
       - name: Docker log after test
         run: |
           docker logs service-api
@@ -195,7 +186,4 @@ jobs:
         with:
           name: PM2-Logs
           path: ~/.pm2/logs/
-
-
-
 
