@@ -1,9 +1,9 @@
 name: Regression tests
 
 on:
-  push:
-    branches:
-      - '**'
+#  push:
+#    branches:
+#      - '**'
   pull_request:
     types: [ opened, synchronize, reopened ]
 
@@ -100,11 +100,12 @@ jobs:
       - name: Install node modules
         run: |
           bash ./water-abstraction-orchestration/helpers/setup.sh
-      - name: Create database
+      - name: Set user
         run: |
           PGPASSWORD=password psql -U water_user -tc "SELECT 'CREATE DATABASE permits' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'permits')"
           PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS permits AUTHORIZATION water_user;"
-          PGPASSWORD=password psql -U water_user -tc "CREATE EXTENSION pgcrypto;"
+      - name: Create Schema if not exists
+        run: |
           PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS idm"
           PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS crm"
           PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS crm_v2"
@@ -113,6 +114,19 @@ jobs:
           PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS returns"
           PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water"
           PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water_import"
+
+      - name: Configure PostGres
+        run: |
+          PGPASSWORD=password psql -U water_user -tc "CREATE EXTENSION pgcrypto;"
+          PGPASSWORD=password psql -U water_user -tc "GRANT USAGE ON SCHEMA public TO water_user;"
+          PGPASSWORD=password psql -U water_user -tc "set search_path = public, water, idm;"
+
+#      - name: Check Postgres can use pgcrypto / gen_random_uuid
+#        continue-on-error: true
+#        run: |
+#          PGPASSWORD=password psql -U water_user -tc "SELECT gen_random_uuid()"
+#          PGPASSWORD=password psql -U water_user -tc "SELECT public.gen_random_uuid()"
+
       - name: Migrate services
         run: |
           bash ./water-abstraction-orchestration/helpers/migrate.sh
@@ -136,22 +150,7 @@ jobs:
           curl -H "Accept: application/json"  "http://localhost:8002/status"
           echo "IDM"
           curl -H "Accept: application/json"  "http://localhost:8003/status"
-#      - name: Check Code
-#        run: |
-#          cd water-abstraction-service
-#          git status
-#          cat src/modules/acceptance-tests/controller.js
-#      - name: Scratch
-#        continue-on-error: true
-#        run: |
-#           ls
-#           bash water-abstraction-service/scratch.sh
-#      - name: Curl - teardown
-#        continue-on-error: true
-#        run: |
-#          curl --retry 2 --max-time 45 --location --request POST 'http://localhost:8001/water/1.0/acceptance-tests/tear-down' \
-#          --header "Authorization: Bearer ${JWT_TOKEN}"
-      - name: Docker test
+      - name: Docker test - stand up containerise water service
         continue-on-error: true
         run: |
           echo "Stop water api in pm2"
@@ -175,12 +174,6 @@ jobs:
           BASE_URL: 'http://localhost:8008'
           JWT_TOKEN: ${{ env.JWT_TOKEN }}
           NOTIFY_CALLBACK_TOKEN: ${{ env.NOTIFY_CALLBACK_TOKEN }}
-      - name: Docker log after test
-        run: |
-          docker logs service-api
-      - name: Local test - docker
-        run: |
-          bash water-abstraction-ui/test.sh
       - name: Docker log after test
         run: |
           docker logs service-api
