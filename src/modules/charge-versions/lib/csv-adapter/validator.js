@@ -6,7 +6,7 @@ const moment = require('moment');
 const csvParser = require('./csv-parser');
 const licencesService = require('../../../../lib/services/licences');
 const repos = require('../../../../lib/connectors/repos');
-const { chargeInformationUpload } = require('../../../../../config');
+const { billing } = require('../../../../../config');
 
 const cache = {};
 
@@ -71,7 +71,7 @@ const testMaxDigits = maxDigits => async (field, val) => val.length > maxDigits 
 
 const testValidLicence = async (field, _licenceNumber, licence) => {
   const { expiredDate, lapsedDate, revokedDate } = licence || {};
-  if (licence && [expiredDate, lapsedDate, revokedDate].every(date => !date || new Date(date) >= chargeInformationUpload.srocStartDate)) {
+  if (licence && [expiredDate, lapsedDate, revokedDate].every(date => !date || new Date(date) >= billing.srocStartDate)) {
     return '';
   } else {
     return `${field} is not valid`;
@@ -116,7 +116,7 @@ const testDateAfterLicenceDate = (fieldName, fieldTitle) => async (field, date, 
 
 const testDateBeforeSrocStartDate = async (field, date = '') => {
   const formattedDate = formatDate(date);
-  const { srocStartDate } = chargeInformationUpload;
+  const { srocStartDate } = billing;
   if (date && formattedDate < srocStartDate) {
     return `${field} is before ${moment(srocStartDate).format('D MMMM YYYY')}`;
   } else {

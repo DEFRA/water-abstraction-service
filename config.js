@@ -118,10 +118,6 @@ module.exports = {
     waterRegime: '0434dc31-a34e-7158-5775-4694af7a60cf'
   },
 
-  chargeInformationUpload: {
-    srocStartDate
-  },
-
   notify: {
     templates: {
       returns_invitation_letter: 'd31d05d3-66fe-4203-8626-22e63f9bccd6',

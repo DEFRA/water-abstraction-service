@@ -11,7 +11,7 @@ const sandbox = require('sinon').createSandbox();
 
 const licenceService = require('../../../../../src/lib/services/licences');
 const repos = require('../../../../../src/lib/connectors/repos');
-const { chargeInformationUpload } = require('../../../../../config');
+const { billing } = require('../../../../../config');
 const { validate } = require('../../../../../src/modules/charge-versions/lib/csv-adapter/validator');
 const { snakeCase } = require('lodash');
 
@@ -65,7 +65,7 @@ experiment('validator', () => {
     sandbox.stub(licenceService, 'getLicenceByLicenceRef');
     sandbox.stub(repos.supportedSources, 'findAll');
     sandbox.stub(repos.purposeUses, 'findAll');
-    sandbox.stub(chargeInformationUpload, 'srocStartDate');
+    sandbox.stub(billing, 'srocStartDate');
   });
 
   afterEach(async () => {
@@ -74,7 +74,7 @@ experiment('validator', () => {
 
   experiment('.validate', () => {
     beforeEach(() => {
-      chargeInformationUpload.srocStartDate = new Date('2022-04-01');
+      billing.srocStartDate = new Date('2022-04-01');
       repos.supportedSources.findAll.resolves([
         { name: SUPPORTED_SOURCE_NAME }
       ]);
