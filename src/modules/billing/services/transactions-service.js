@@ -91,10 +91,11 @@ const getInvoiceTransactions = invoice =>
 const getBatchTransactions = batch => flatMap(batch.invoices.map(getInvoiceTransactions));
 
 const getTransactionId = transaction => transaction.id;
-// checks to see if the transaction overlaps with the charge version start date
+
+// checks to see if the transaction overlaps with the charge version
 const isTransactionForTheSamePeriod = (chargeVersionYear, transaction) =>
-  moment(chargeVersionYear.chargeVersion.startDate).isBetween(transaction.startDate, transaction.endDate, null, '[]') ||
-  (chargeVersionYear.chargeVersion.endDate ? moment(chargeVersionYear.chargeVersion.endDate).isBetween(transaction.startDate, transaction.endDate, null, '[]') : true);
+  moment(chargeVersionYear.chargeVersion.startDate).isSameOrBefore(transaction.endDate) &&
+  (chargeVersionYear.chargeVersion.endDate ? moment(chargeVersionYear.chargeVersion.endDate).isSameOrAfter(transaction.startDate) : true);
 
 const getBatchTransactionHistory = async batchId => {
   const historicTransactions = await newRepos.billingTransactions.findHistoryByBatchId(batchId);
