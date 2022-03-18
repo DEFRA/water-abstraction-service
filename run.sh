@@ -59,15 +59,15 @@ docker run \
   -d \
   service-api
 
-  echo "Logs"
-  docker logs service-api
-
-  sleep 20
-
-  curl --retry 2 --max-time 30 --location --request POST 'http://localhost:8001/water/1.0/acceptance-tests/tear-down' \
-  --header "Authorization: Bearer ${JWT_TOKEN}"
-
-  echo "Logs after curl"
-  docker logs service-api
+#  echo "Logs"
+#  docker logs service-api
+#
+#  sleep 20
+#
+#  curl --retry 2 --max-time 30 --location --request POST 'http://localhost:8001/water/1.0/acceptance-tests/tear-down' \
+#  --header "Authorization: Bearer ${JWT_TOKEN}"
+#
+#  echo "Logs after curl"
+#  docker logs service-api
 
 

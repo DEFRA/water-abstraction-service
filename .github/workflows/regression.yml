@@ -62,7 +62,7 @@ jobs:
     name: Regression Test
     services:
       postgres:
-        image: postgres:10-alpine
+        image: postgres
         env:
           POSTGRES_USER: water_user
           POSTGRES_HOST: localhost
@@ -100,6 +100,17 @@ jobs:
       - name: Install node modules
         run: |
           bash ./water-abstraction-orchestration/helpers/setup.sh
+      - name: Install UI assets
+        run: |
+          cd water-abstraction-ui
+          npm run install-assets
+          cd ..
+      - name: Configure PostGres
+        run: |
+          PGPASSWORD=password psql -U water_user -tc "CREATE EXTENSION pgcrypto;"
+          PGPASSWORD=password psql -U water_user -tc "CREATE ROLE root WITH SUPERUSER CREATEDB CREATEROLE LOGIN;"
+          PGPASSWORD=password psql -U water_user -tc "GRANT USAGE ON SCHEMA public TO water_user;"
+          PGPASSWORD=password psql -U water_user -tc "set search_path = public, water, idm;"
       - name: Set user
         run: |
           PGPASSWORD=password psql -U water_user -tc "SELECT 'CREATE DATABASE permits' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'permits')"
@@ -114,12 +125,6 @@ jobs:
           PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS returns"
           PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water"
           PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water_import"
-
-      - name: Configure PostGres
-        run: |
-          PGPASSWORD=password psql -U water_user -tc "CREATE EXTENSION pgcrypto;"
-          PGPASSWORD=password psql -U water_user -tc "GRANT USAGE ON SCHEMA public TO water_user;"
-          PGPASSWORD=password psql -U water_user -tc "set search_path = public, water, idm;"
 
 #      - name: Check Postgres can use pgcrypto / gen_random_uuid
 #        continue-on-error: true
@@ -157,6 +162,7 @@ jobs:
           pm2 stop water-api
           ls
           bash water-abstraction-service/run.sh
+          sleep 45
       - name: Cypress Test
         continue-on-error: true
         uses: cypress-io/github-action@v2
@@ -165,7 +171,7 @@ jobs:
           working-directory: "./water-abstraction-ui"
           browser: chrome
           headless: true
-          spec: "cypress/integration/internal/remove-individual-licence-from-bill.spec.js"
+          spec: "cypress/integration/internal/gauging-stations-and-water-abstraction-alerts.js"
           config: pageLoadTimeout=100000,baseUrl=http://localhost:8008
         env:
           WATER_URI: "http://localhost:8001/water/1.0"
@@ -177,15 +183,12 @@ jobs:
       - name: Docker log after test
         run: |
           docker logs service-api
-#      - name: Sleep & Log
-#        run: |
-#          pm2 logs 'water-api' --lines 200
-#      - name: Upload Cypress Artifact
-#        continue-on-error: true
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: cypress
-#          path: ./water-abstraction-ui/cypress/
+      - name: Upload Cypress Artifact
+        continue-on-error: true
+        uses: actions/upload-artifact@v2
+        with:
+          name: cypress
+          path: ./water-abstraction-ui/cypress/
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         continue-on-error: true
