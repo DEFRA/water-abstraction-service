@@ -13,6 +13,15 @@ const mapErrorResponse = require('../../../lib/map-error-response');
 const userMapper = require('../../../lib/mappers/user');
 
 const { logger } = require('../../../logger');
+const eventFactory = require('../lib/event-factory');
+const eventsService = require('../../../lib/services/events');
+const { getUploadFilename, uploadStatus } = require('../lib/charge-information-upload');
+const s3 = require('../../../lib/services/s3');
+const startUploadJob = require('../jobs/start-upload');
+const errorEvent = require('../lib/error-event');
+const chargeInformationUpload = require('../lib/charge-information-upload');
+
+const getEventStatusLink = eventId => `/water/1.0/event/${eventId}`;
 
 /**
  * Gets a charge version complete with its elements and agreements
@@ -74,8 +83,61 @@ const postCreateFromWorkflow = async request => {
   }
 };
 
+/**
+ * An API endpoint to upload the charge information file.
+ *  Kicks off job to upload submitted data.
+ * @param {String} request.params.filename - filename
+ * @return {Promise} resolves with return data { error : null, data : {} }
+ */
+const postUpload = async (request, h) => {
+  const { userName, fileData, filename } = request.payload;
+
+  let event = eventFactory.createChargeInformationUploadEvent(userName, filename);
+
+  try {
+    // Create event
+    event = await eventsService.create(event);
+
+    // Upload user data to S3 bucket
+    const uploadFilename = getUploadFilename(event);
+    await s3.upload(uploadFilename, fileData);
+
+    // Format and add BullMQ message
+    const jobId = await request.queueManager.add(startUploadJob.jobName, event);
+
+    return h.response({
+      data: {
+        eventId: event.id,
+        statusLink: getEventStatusLink(event.id),
+        jobId
+      },
+      error: null
+    }).code(202);
+  } catch (error) {
+    logger.error('Failed to upload charge information', error);
+    if (event.id) {
+      event.status = uploadStatus.ERROR;
+      await eventsService.update(event);
+    }
+
+    return h.response({ data: null, error }).code(500);
+  }
+};
+
+const getDownloadErrorFile = async (request, h) => {
+  const { eventId } = request.params || {};
+  const event = await eventsService.findOne(eventId);
+  if (!event) {
+    return errorEvent.throwEventNotFoundError(eventId);
+  }
+  const s3Object = await chargeInformationUpload.getChargeInformationErrorsS3Object(event);
+  return h.response(s3Object.Body).type('text/csv');
+};
+
 exports.getChargeVersion = getChargeVersion;
 exports.getChargeVersionsByDocumentId = getChargeVersionsByDocumentId;
 exports.getDefaultChargesForLicenceVersion = getDefaultChargesForLicenceVersion;
 exports.postCreateFromWorkflow = postCreateFromWorkflow;
 exports.getChargeVersionsByLicenceId = getChargeVersionsByLicenceId;
+exports.postUpload = postUpload;
+exports.getDownloadErrorFile = getDownloadErrorFile;
