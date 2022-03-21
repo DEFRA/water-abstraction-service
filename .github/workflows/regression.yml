@@ -69,26 +69,11 @@ jobs:
         run: |
           bash ./water-abstraction-orchestration/dependencies/start.sh
           sleep 30
-      - name: PostGres - Configure
+      - name: WRLS Database Setup
         run: |
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE EXTENSION pgcrypto;"
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE ROLE root WITH SUPERUSER CREATEDB CREATEROLE LOGIN;"
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "GRANT USAGE ON SCHEMA public TO water_user;"
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "set search_path = public, water, idm;"
-      - name: PostGres - Set user
-        run: |
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "SELECT 'CREATE DATABASE permits' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'permits')"
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS permits AUTHORIZATION water_user;"
-      - name: PostGres - Create Schema if not exists
-        run: |
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS idm"
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS crm"
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS crm_v2"
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS import"
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS permit"
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS returns"
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water"
-          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water_import"
+          bash ./water-abstraction-orchestration/dependencies/database/configure-psql.sh
+          bash ./water-abstraction-orchestration/dependencies/database/setup-user.sh
+          bash ./water-abstraction-orchestration/dependencies/database/create-schema.sh
       - name: Clone all repos for orchestration
         run: |
           bash ./water-abstraction-orchestration/helpers/clone-repos.sh
