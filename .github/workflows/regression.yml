@@ -68,6 +68,7 @@ jobs:
       - name: Compose - dependencies
         run: |
           bash ./water-abstraction-orchestration/dependencies/start.sh
+          sleep 30
 #      - name: Redis - Start
 #        run: |
 #          docker run --name redis -p 6379:6379 -d redis
