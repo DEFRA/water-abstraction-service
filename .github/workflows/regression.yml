@@ -69,20 +69,6 @@ jobs:
         run: |
           bash ./water-abstraction-orchestration/dependencies/start.sh
           sleep 30
-#      - name: Redis - Start
-#        run: |
-#          docker run --name redis -p 6379:6379 -d redis
-#      - name: PostGres - Start
-#        run: |
-#          docker run --name postgres \
-#          -e POSTGRES_USER=water_user \
-#          -e POSTGRES_PASSWORD=password \
-#          -e POSTGRES_DB=permits \
-#          -p 5432:5432 \
-#          -d \
-#          postgres
-#          sleep 30
-#          docker ps
       - name: PostGres - Configure
         run: |
           PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE EXTENSION pgcrypto;"
@@ -159,6 +145,7 @@ jobs:
           sleep 45
       - name: Run tests - Cypress
         uses: cypress-io/github-action@v2
+        continue-on-error: true
         with:
           install: true
           working-directory: "./water-abstraction-ui"
