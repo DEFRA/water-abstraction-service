@@ -89,6 +89,7 @@ jobs:
           -p 5432:5432 \
           -d \
           postgres
+          sleep 30
       - name: PostGres - Configure
         run: |
           docker exec postgres psql -U water_user -tc "CREATE EXTENSION pgcrypto;"
