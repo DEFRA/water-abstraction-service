@@ -89,6 +89,8 @@ jobs:
           -p 5432:5432 \
           -d \
           postgres
+          sleep 30
+          docker ps
       - name: PostGres - Configure
         run: |
           PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE EXTENSION pgcrypto;"
