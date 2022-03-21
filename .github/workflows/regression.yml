@@ -111,90 +111,90 @@ jobs:
           PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS returns"
           PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water"
           PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water_import"
-#      - name: Clone all repos for orchestration
-#        run: |
-#          bash ./water-abstraction-orchestration/helpers/clone-repos.sh
-#          echo "List of repositories"
-#          ls
-#      - name: Checkout feature branch or default to main
-#        run: |
-#          echo "Branch: ${{ env.BRANCH }}"
-#          bash ./water-abstraction-orchestration/helpers/checkout-feature-branch.sh ${{ env.BRANCH }}
-#      - name: Node
-#        uses: actions/setup-node@v2
-#        with:
-#          node-version: ${{ matrix.node-version }}
-#          cache: 'npm'
-#          cache-dependency-path: '**/package-lock.json'
-#      - name: Install node modules
-#        run: |
-#          bash ./water-abstraction-orchestration/helpers/setup.sh
-#      - name: Install UI assets
-#        run: |
-#          cd water-abstraction-ui
-#          npm run install-assets
-#          cd ..
-#      - name: Migrate services
-#        run: |
-#          bash ./water-abstraction-orchestration/helpers/migrate.sh
-#          sleep 2m
-#      - name: Start Services
-#        run: |
-#          bash ./water-abstraction-orchestration/pm2/start.sh
-#          pm2 ls
-#          sleep 30
-#      - name: Test services
-#        run: |
-#          echo "UI"
-#          curl "http://localhost:8008/signin"
-#          echo "Service"
-#          curl -H "Accept: application/json"  "http://localhost:8001/status"
-#          echo "Permit"
-#          curl -H "Accept: application/json"  "http://localhost:8004/status"
-#          echo "RETURNS"
-#          curl -H "Accept: application/json"  "http://localhost:8006/status"
-#          echo "CRM"
-#          curl -H "Accept: application/json"  "http://localhost:8002/status"
-#          echo "IDM"
-#          curl -H "Accept: application/json"  "http://localhost:8003/status"
-#      - name: Docker test - stand up containerise water service
-#        continue-on-error: true
-#        run: |
-#          echo "Stop water api in pm2"
-#          pm2 stop water-api
-#          ls
-#          bash water-abstraction-service/run.sh
-#          sleep 45
-#      - name: Run tests - Cypress
-#        uses: cypress-io/github-action@v2
-#        with:
-#          install: true
-#          working-directory: "./water-abstraction-ui"
-#          browser: chrome
-#          headless: true
-#          spec: "cypress/integration/internal/gauging-stations-and-water-abstraction-alerts.js"
-#          config: pageLoadTimeout=100000,baseUrl=http://localhost:8008
-#        env:
-#          WATER_URI: "http://localhost:8001/water/1.0"
-#          ADMIN_URI: 'http://localhost:8008/'
-#          USER_URI: 'http://localhost:8000/'
-#          BASE_URL: 'http://localhost:8008'
-#          JWT_TOKEN: ${{ env.JWT_TOKEN }}
-#          NOTIFY_CALLBACK_TOKEN: ${{ env.NOTIFY_CALLBACK_TOKEN }}
-##       Debug steps
-#      - name: Docker log after test
-#        run: |
-#          docker logs service-api
-#      - name: Upload Cypress Artifact
-#        continue-on-error: true
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: cypress
-#          path: ./water-abstraction-ui/cypress/
-#      - name: Upload Artifact
-#        uses: actions/upload-artifact@v2
-#        continue-on-error: true
-#        with:
-#          name: PM2-Logs
-#          path: ~/.pm2/logs/
+      - name: Clone all repos for orchestration
+        run: |
+          bash ./water-abstraction-orchestration/helpers/clone-repos.sh
+          echo "List of repositories"
+          ls
+      - name: Checkout feature branch or default to main
+        run: |
+          echo "Branch: ${{ env.BRANCH }}"
+          bash ./water-abstraction-orchestration/helpers/checkout-feature-branch.sh ${{ env.BRANCH }}
+      - name: Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      - name: Install node modules
+        run: |
+          bash ./water-abstraction-orchestration/helpers/setup.sh
+      - name: Install UI assets
+        run: |
+          cd water-abstraction-ui
+          npm run install-assets
+          cd ..
+      - name: Migrate services
+        run: |
+          bash ./water-abstraction-orchestration/helpers/migrate.sh
+          sleep 2m
+      - name: Start Services
+        run: |
+          bash ./water-abstraction-orchestration/pm2/start.sh
+          pm2 ls
+          sleep 30
+      - name: Test services
+        run: |
+          echo "UI"
+          curl "http://localhost:8008/signin"
+          echo "Service"
+          curl -H "Accept: application/json"  "http://localhost:8001/status"
+          echo "Permit"
+          curl -H "Accept: application/json"  "http://localhost:8004/status"
+          echo "RETURNS"
+          curl -H "Accept: application/json"  "http://localhost:8006/status"
+          echo "CRM"
+          curl -H "Accept: application/json"  "http://localhost:8002/status"
+          echo "IDM"
+          curl -H "Accept: application/json"  "http://localhost:8003/status"
+      - name: Docker test - stand up containerise water service
+        continue-on-error: true
+        run: |
+          echo "Stop water api in pm2"
+          pm2 stop water-api
+          ls
+          bash water-abstraction-service/run.sh
+          sleep 45
+      - name: Run tests - Cypress
+        uses: cypress-io/github-action@v2
+        with:
+          install: true
+          working-directory: "./water-abstraction-ui"
+          browser: chrome
+          headless: true
+          spec: "cypress/integration/internal/gauging-stations-and-water-abstraction-alerts.js"
+          config: pageLoadTimeout=100000,baseUrl=http://localhost:8008
+        env:
+          WATER_URI: "http://localhost:8001/water/1.0"
+          ADMIN_URI: 'http://localhost:8008/'
+          USER_URI: 'http://localhost:8000/'
+          BASE_URL: 'http://localhost:8008'
+          JWT_TOKEN: ${{ env.JWT_TOKEN }}
+          NOTIFY_CALLBACK_TOKEN: ${{ env.NOTIFY_CALLBACK_TOKEN }}
+#       Debug steps
+      - name: Docker log after test
+        run: |
+          docker logs service-api
+      - name: Upload Cypress Artifact
+        continue-on-error: true
+        uses: actions/upload-artifact@v2
+        with:
+          name: cypress
+          path: ./water-abstraction-ui/cypress/
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        continue-on-error: true
+        with:
+          name: PM2-Logs
+          path: ~/.pm2/logs/
 
