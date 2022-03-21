@@ -77,9 +77,9 @@ jobs:
         with:
           repository: DEFRA/water-abstraction-orchestration
           path: 'water-abstraction-orchestration'
-#      - name: Redis - Start
-#        run: |
-#          docker run --name redis -p 6379:6379 -d redis
+      - name: Redis - Start
+        run: |
+          docker run --name redis -p 6379:6379 -d redis
       - name: PostGres - Start
         run: |
           docker run --name postgres \
@@ -89,27 +89,26 @@ jobs:
           -p 5432:5432 \
           -d \
           postgres
-          sleep 30
       - name: PostGres - Configure
         run: |
-          docker exec postgres psql -U water_user -tc "CREATE EXTENSION pgcrypto;"
-          docker exec postgres psql -U water_user -tc "CREATE ROLE root WITH SUPERUSER CREATEDB CREATEROLE LOGIN;"
-          docker exec postgres psql -U water_user -tc "GRANT USAGE ON SCHEMA public TO water_user;"
-          docker exec postgres psql -U water_user -tc "set search_path = public, water, idm;"
-#      - name: PostGres - Set user
-#        run: |
-#          PGPASSWORD=password psql -U water_user -tc "SELECT 'CREATE DATABASE permits' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'permits')"
-#          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS permits AUTHORIZATION water_user;"
-#      - name: PostGres - Create Schema if not exists
-#        run: |
-#          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS idm"
-#          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS crm"
-#          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS crm_v2"
-#          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS import"
-#          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS permit"
-#          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS returns"
-#          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water"
-#          PGPASSWORD=password psql -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water_import"
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE EXTENSION pgcrypto;"
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE ROLE root WITH SUPERUSER CREATEDB CREATEROLE LOGIN;"
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "GRANT USAGE ON SCHEMA public TO water_user;"
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "set search_path = public, water, idm;"
+      - name: PostGres - Set user
+        run: |
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "SELECT 'CREATE DATABASE permits' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'permits')"
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS permits AUTHORIZATION water_user;"
+      - name: PostGres - Create Schema if not exists
+        run: |
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS idm"
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS crm"
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS crm_v2"
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS import"
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS permit"
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS returns"
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water"
+          PGPASSWORD=password psql -h localhost -p 5432 -U water_user -tc "CREATE SCHEMA IF NOT EXISTS water_import"
 #      - name: Clone all repos for orchestration
 #        run: |
 #          bash ./water-abstraction-orchestration/helpers/clone-repos.sh
@@ -196,4 +195,4 @@ jobs:
 #        with:
 #          name: PM2-Logs
 #          path: ~/.pm2/logs/
-#
+
