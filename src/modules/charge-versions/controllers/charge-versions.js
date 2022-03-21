@@ -13,13 +13,13 @@ const mapErrorResponse = require('../../../lib/map-error-response');
 const userMapper = require('../../../lib/mappers/user');
 
 const { logger } = require('../../../logger');
-const eventFactory = require('../lib/event-factory');
+const eventFactory = require('../../charge-versions-upload/lib/event-factory');
 const eventsService = require('../../../lib/services/events');
-const { getUploadFilename, uploadStatus } = require('../lib/charge-information-upload');
+const { getUploadFilename, uploadStatus } = require('../../charge-versions-upload/lib/charge-information-upload');
 const s3 = require('../../../lib/services/s3');
-const startUploadJob = require('../jobs/start-upload');
-const errorEvent = require('../lib/error-event');
-const chargeInformationUpload = require('../lib/charge-information-upload');
+const startUploadJob = require('../../charge-versions-upload/jobs/update-charge-information-start');
+const errorEvent = require('../../charge-versions-upload/lib/error-event');
+const chargeInformationUpload = require('../../charge-versions-upload/lib/charge-information-upload');
 
 const getEventStatusLink = eventId => `/water/1.0/event/${eventId}`;
 

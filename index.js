@@ -45,7 +45,7 @@ const plugins = [
   require('./src/modules/billing/register-subscribers'),
   require('./src/modules/batch-notifications/register-subscribers'),
   require('./src/modules/gauging-stations/register-subscribers'),
-  require('./src/modules/charge-versions/register-subscribers'),
+  require('./src/modules/charge-versions-upload/register-subscribers'),
   require('./src/modules/charge-versions/plugin').plugin
 ];
 

@@ -12,7 +12,8 @@ const sandbox = require('sinon').createSandbox();
 
 const logger = require('../../../../src/logger');
 const eventsService = require('../../../../src/lib/services/events');
-const mapToJsonJob = require('../../../../src/modules/charge-versions/jobs/map-to-json');
+const mapToJsonJob = require('../../../../src/modules/charge-versions-upload/jobs/update-charge-information-to-json');
+const csvAdapter = require('../../../../src/modules/charge-versions-upload/lib/csv-adapter');
 const uuid = require('uuid/v4');
 const Event = require('../../../../src/lib/models/event');
 const { usersClient } = require('../../../../src/lib/connectors/idm');
@@ -22,7 +23,7 @@ const eventId = uuid();
 const filename = 'test-file.csv';
 const jobName = 'charge-information-upload-to-json';
 
-experiment('modules/charge-versions/jobs/map-to-json', () => {
+experiment('modules/charge-versions/jobs/update-charge-information-to-json', () => {
   let event, json;
 
   beforeEach(async () => {
@@ -50,6 +51,8 @@ experiment('modules/charge-versions/jobs/map-to-json', () => {
 
     sandbox.stub(s3, 'getObject').resolves({ Body: 'header1, header2\ncol1, col2\ncol1, col2' });
     sandbox.stub(s3, 'upload').resolves({});
+
+    sandbox.stub(csvAdapter, 'mapper').resolves(json);
   });
 
   afterEach(async () => {
@@ -90,7 +93,7 @@ experiment('modules/charge-versions/jobs/map-to-json', () => {
 
     test('result contains metadata', async () => {
       const result = await mapToJsonJob.handler(job);
-      expect(result.metadata).to.equal({ filename, rows: 2 });
+      expect(result.metadata).to.equal({ filename });
     });
   });
 });
