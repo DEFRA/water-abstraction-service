@@ -69,7 +69,7 @@ jobs:
           bash ./water-abstraction-orchestration/dependencies/start.sh
       - name: nap
         run: |
-          sleep 60
+          sleep 30
       - name: WRLS Database Setup
         run: |
           bash ./water-abstraction-orchestration/dependencies/database/configure-psql.sh
@@ -77,22 +77,20 @@ jobs:
           bash ./water-abstraction-orchestration/dependencies/database/create-schema.sh
       - name: Clone all repos for orchestration
         run: |
-          bash ./water-abstraction-orchestration/helpers/clone-repos.sh
-          echo "List of repositories"
-          ls
+          bash ./water-abstraction-orchestration/tools/git/clone-repos.sh
       - name: Checkout feature branch or default to main
         run: |
           echo "Branch: ${{ env.BRANCH }}"
-          bash ./water-abstraction-orchestration/helpers/checkout-feature-branch.sh ${{ env.BRANCH }}
+          bash ./water-abstraction-orchestration/tools/git/checkout-feature-branch.sh ${{ env.BRANCH }}
       - name: Node
         uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 12
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
       - name: Install node modules
         run: |
-          bash ./water-abstraction-orchestration/helpers/setup.sh
+          bash ./water-abstraction-orchestration/services/install-node-modules.sh
       - name: Install UI assets
         run: |
           cd water-abstraction-ui
@@ -100,31 +98,12 @@ jobs:
           cd ..
       - name: Migrate services
         run: |
-          bash ./water-abstraction-orchestration/helpers/migrate.sh
+          bash ./water-abstraction-orchestration/services/node-migrate.sh
           sleep 2m
       - name: Start Services
         run: |
-          bash ./water-abstraction-orchestration/pm2/start.sh
-          pm2 ls
-      - name: nap
-        run: |
-          sleep 30
-      - name: Test services
-        run: |
-          echo "UI"
-          curl "http://localhost:8008/signin"
-          echo "Service"
-          curl -H "Accept: application/json"  "http://localhost:8001/status"
-          echo "Permit"
-          curl -H "Accept: application/json"  "http://localhost:8004/status"
-          echo "RETURNS"
-          curl -H "Accept: application/json"  "http://localhost:8006/status"
-          echo "CRM"
-          curl -H "Accept: application/json"  "http://localhost:8002/status"
-          echo "IDM"
-          curl -H "Accept: application/json"  "http://localhost:8003/status"
+          bash ./water-abstraction-orchestration/services/pm2/start.sh
       - name: Docker - stand up containerise water service
-        continue-on-error: true
         run: |
           echo "Stop water api in pm2"
           pm2 stop water-api
