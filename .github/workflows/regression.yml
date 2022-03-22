@@ -75,99 +75,85 @@ jobs:
         with:
           repository: DEFRA/water-abstraction-orchestration
           path: 'water-abstraction-orchestration'
-      - name: get TAG
-        run: |
-          docker manifest inspect "ghcr.io/defra/water-abstraction-service:feat-pipeline-regression-tests"
       - name: Compose - dependencies
         run: |
           bash ./water-abstraction-orchestration/dependencies/start.sh
+      - name: nap
+        run: |
+          sleep 30
+      - name: nap
+        run: |
+          sleep 30
+      - name: WRLS Database Setup
+        run: |
+          bash ./water-abstraction-orchestration/dependencies/database/configure-psql.sh
+          bash ./water-abstraction-orchestration/dependencies/database/setup-user.sh
+          bash ./water-abstraction-orchestration/dependencies/database/create-schema.sh
+      - name: Clone all repos for orchestration
+        run: |
+          bash ./water-abstraction-orchestration/tools/git/clone-repos.sh
+      - name: Checkout feature branch or default to main
+        run: |
+          echo "Branch: ${{ env.BRANCH }}"
+          bash ./water-abstraction-orchestration/tools/git/checkout-feature-branch.sh ${{ env.BRANCH }}
+      - name: Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 12
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      - name: Install node modules
+        run: |
+          bash ./water-abstraction-orchestration/services/install-node-modules.sh
+      - name: Install UI assets
+        run: |
+          cd water-abstraction-ui
+          npm run install-assets
+          cd ..
+      - name: Migrate services
+        run: |
+          bash ./water-abstraction-orchestration/services/node-migrate.sh
+          sleep 2m
+      - name: Start Services
+        run: |
+          bash ./water-abstraction-orchestration/services/pm2/start.sh
+      - name: Stop PM2 Services to switch to docker
+        run: |
+          echo "Stop water api in pm2"
+          pm2 stop water-api
       - name: Compose - services
         run: |
           bash ./water-abstraction-orchestration/services/docker/start.sh ${{ env.BRANCH }}
       - name: nap
         run: |
-          sleep 30
-      - name: Test
-        run: |
-          docker ps
-          echo "Service"
-          curl -H "Accept: application/json"  "http://localhost:8001/status"
-
-#      - name: nap
-#        run: |
-#          sleep 30
-#      - name: WRLS Database Setup
-#        run: |
-#          bash ./water-abstraction-orchestration/dependencies/database/configure-psql.sh
-#          bash ./water-abstraction-orchestration/dependencies/database/setup-user.sh
-#          bash ./water-abstraction-orchestration/dependencies/database/create-schema.sh
-#      - name: Clone all repos for orchestration
-#        run: |
-#          bash ./water-abstraction-orchestration/tools/git/clone-repos.sh
-#      - name: Checkout feature branch or default to main
-#        run: |
-#          echo "Branch: ${{ env.BRANCH }}"
-#          bash ./water-abstraction-orchestration/tools/git/checkout-feature-branch.sh ${{ env.BRANCH }}
-#      - name: Node
-#        uses: actions/setup-node@v2
-#        with:
-#          node-version: 12
-#          cache: 'npm'
-#          cache-dependency-path: '**/package-lock.json'
-#      - name: Install node modules
-#        run: |
-#          bash ./water-abstraction-orchestration/services/install-node-modules.sh
-#      - name: Install UI assets
-#        run: |
-#          cd water-abstraction-ui
-#          npm run install-assets
-#          cd ..
-#      - name: Migrate services
-#        run: |
-#          bash ./water-abstraction-orchestration/services/node-migrate.sh
-#          sleep 2m
-#      - name: Start Services
-#        run: |
-#          bash ./water-abstraction-orchestration/services/pm2/start.sh
-#      - name: Docker - stand up containerise water service
-#        run: |
-#          echo "Stop water api in pm2"
-#          pm2 stop water-api
-#          ls
-#          bash water-abstraction-service/run.sh
-#      - name: nap
-#        run: |
-#          sleep 60
-#      - name: Run tests - Cypress
-#        uses: cypress-io/github-action@v2
-#        with:
-#          install: true
-#          working-directory: "./water-abstraction-ui"
-#          browser: chrome
-#          headless: true
-#          spec: "cypress/integration/internal/gauging-stations-and-water-abstraction-alerts.js"
-#          config: pageLoadTimeout=100000,baseUrl=http://localhost:8008
-#        env:
-#          WATER_URI: "http://localhost:8001/water/1.0"
-#          ADMIN_URI: 'http://localhost:8008/'
-#          USER_URI: 'http://localhost:8000/'
-#          BASE_URL: 'http://localhost:8008'
-#          JWT_TOKEN: ${{ env.JWT_TOKEN }}
-#          NOTIFY_CALLBACK_TOKEN: ${{ env.NOTIFY_CALLBACK_TOKEN }}
-##       Debug steps
-#      - name: Docker log after test
-#        run: |
-#          docker logs service-api
-#      - name: Upload Cypress Artifact
-#        continue-on-error: true
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: cypress
-#          path: ./water-abstraction-ui/cypress/
-#      - name: Upload Artifact
-#        uses: actions/upload-artifact@v2
-#        continue-on-error: true
-#        with:
-#          name: PM2-Logs
-#          path: ~/.pm2/logs/
+          sleep 60
+      - name: Run tests - Cypress
+        uses: cypress-io/github-action@v2
+        with:
+          install: true
+          working-directory: "./water-abstraction-ui"
+          browser: chrome
+          headless: true
+          spec: "cypress/integration/internal/gauging-stations-and-water-abstraction-alerts.js"
+          config: pageLoadTimeout=100000,baseUrl=http://localhost:8008
+        env:
+          WATER_URI: "http://localhost:8001/water/1.0"
+          ADMIN_URI: 'http://localhost:8008/'
+          USER_URI: 'http://localhost:8000/'
+          BASE_URL: 'http://localhost:8008'
+          JWT_TOKEN: ${{ env.JWT_TOKEN }}
+          NOTIFY_CALLBACK_TOKEN: ${{ env.NOTIFY_CALLBACK_TOKEN }}
+#       Debug steps
+      - name: Upload Cypress Artifact
+        continue-on-error: true
+        uses: actions/upload-artifact@v2
+        with:
+          name: cypress
+          path: ./water-abstraction-ui/cypress/
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        continue-on-error: true
+        with:
+          name: PM2-Logs
+          path: ~/.pm2/logs/
 
