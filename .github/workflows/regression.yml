@@ -62,14 +62,10 @@ jobs:
     name: Regression Test
     permissions:
       contents: read
-      packages: write
+      packages: read
     steps:
-      - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to registry
+        run: echo "${{ secrets.DEFRA_DIGITAL_CI }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Checkout water-abstraction-orchestration
         uses: actions/checkout@v2
         with:
@@ -80,10 +76,7 @@ jobs:
           bash ./water-abstraction-orchestration/dependencies/start.sh
       - name: nap
         run: |
-          sleep 30
-      - name: nap
-        run: |
-          sleep 30
+          sleep 60
       - name: WRLS Database Setup
         run: |
           bash ./water-abstraction-orchestration/dependencies/database/configure-psql.sh
@@ -105,11 +98,11 @@ jobs:
       - name: Install node modules
         run: |
           bash ./water-abstraction-orchestration/services/install-node-modules.sh
-      - name: Install UI assets
-        run: |
-          cd water-abstraction-ui
-          npm run install-assets
-          cd ..
+#      - name: Install UI assets
+#        run: |
+#          cd water-abstraction-ui
+#          npm run install-assets
+#          cd ..
       - name: Migrate services
         run: |
           bash ./water-abstraction-orchestration/services/node-migrate.sh
@@ -121,9 +114,12 @@ jobs:
         run: |
           echo "Stop water api in pm2"
           pm2 stop water-api
+          pm2 stop ui
+          pm2 stop ui-internal
       - name: Compose - services
         run: |
           bash ./water-abstraction-orchestration/services/docker/start.sh ${{ env.BRANCH }}
+          docker ps
       - name: nap
         run: |
           sleep 60
