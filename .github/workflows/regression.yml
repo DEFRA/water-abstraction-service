@@ -67,7 +67,9 @@ jobs:
       - name: Compose - dependencies
         run: |
           bash ./water-abstraction-orchestration/dependencies/start.sh
-          sleep 30
+      - name: nap
+        run: |
+          sleep 60
       - name: WRLS Database Setup
         run: |
           bash ./water-abstraction-orchestration/dependencies/database/configure-psql.sh
@@ -104,6 +106,8 @@ jobs:
         run: |
           bash ./water-abstraction-orchestration/pm2/start.sh
           pm2 ls
+      - name: nap
+        run: |
           sleep 30
       - name: Test services
         run: |
@@ -126,7 +130,9 @@ jobs:
           pm2 stop water-api
           ls
           bash water-abstraction-service/run.sh
-          sleep 45
+      - name: nap
+        run: |
+          sleep 60
       - name: Run tests - Cypress
         uses: cypress-io/github-action@v2
         with:
