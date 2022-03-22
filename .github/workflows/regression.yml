@@ -53,29 +53,45 @@ env:
   PGDATABASE: permits
   ENVIRONMENT: dev
   DATABASE_URL: postgres://water_user:password@localhost:5432/permits
+  # GitHub registry
+  REGISTRY: ghcr.io
 
 jobs:
   regression-test:
     runs-on: ubuntu-latest
     name: Regression Test
+    permissions:
+      contents: read
+      packages: write
     steps:
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout water-abstraction-orchestration
         uses: actions/checkout@v2
         with:
           repository: DEFRA/water-abstraction-orchestration
           path: 'water-abstraction-orchestration'
-#      - name: Compose - dependencies
-#        run: |
-#          bash ./water-abstraction-orchestration/dependencies/start.sh
+      - name: get TAG
+        run: |
+          docker manifest inspect "ghcr.io/defra/water-abstraction-service:feat-pipeline-regression-tests"
+      - name: Compose - dependencies
+        run: |
+          bash ./water-abstraction-orchestration/dependencies/start.sh
       - name: Compose - services
         run: |
           bash ./water-abstraction-orchestration/services/docker/start.sh ${{ env.BRANCH }}
+      - name: nap
+        run: |
+          sleep 30
       - name: Test
         run: |
           docker ps
           echo "Service"
           curl -H "Accept: application/json"  "http://localhost:8001/status"
-
 
 #      - name: nap
 #        run: |
