@@ -1,6 +1,5 @@
 name: Regression tests
 
-
 on:
   pull_request:
     types: [ opened, synchronize, reopened ]
@@ -83,6 +82,10 @@ jobs:
           bash ./water-abstraction-orchestration/dependencies/database/configure-psql.sh
           bash ./water-abstraction-orchestration/dependencies/database/setup-user.sh
           bash ./water-abstraction-orchestration/dependencies/database/create-schema.sh
+      - name: Charge Module - Migrate & Seed
+        run: |
+          bash ./water-abstraction-orchestration/dependencies/charge-module/migrate.sh
+          bash ./water-abstraction-orchestration/dependencies/charge-module/seed.sh
       - name: Clone all repos for orchestration
         run: |
           bash ./water-abstraction-orchestration/tools/git/clone-repos.sh
@@ -99,11 +102,6 @@ jobs:
       - name: Install node modules
         run: |
           bash ./water-abstraction-orchestration/services/install-node-modules.sh
-#      - name: Install UI assets
-#        run: |
-#          cd water-abstraction-ui
-#          npm run install-assets
-#          cd ..
       - name: Migrate services
         run: |
           bash ./water-abstraction-orchestration/services/node-migrate.sh
@@ -126,12 +124,15 @@ jobs:
           sleep 60
       - name: Run tests - Cypress
         uses: cypress-io/github-action@v2
+        continue-on-error: true
         with:
           install: true
           working-directory: "./water-abstraction-ui"
           browser: chrome
           headless: true
-          spec: "cypress/integration/internal/gauging-stations-and-water-abstraction-alerts.js"
+          spec: |
+            cypress/integration/internal/gauging-stations-and-water-abstraction-alerts.js
+            cypress/integration/internal/remove-individual-licence-from-bill.spec.js
           config: pageLoadTimeout=100000,baseUrl=http://localhost:8008
         env:
           WATER_URI: "http://localhost:8001/water/1.0"
@@ -141,6 +142,15 @@ jobs:
           JWT_TOKEN: ${{ env.JWT_TOKEN }}
           NOTIFY_CALLBACK_TOKEN: ${{ env.NOTIFY_CALLBACK_TOKEN }}
 #       Debug steps
+      - name: docker logs water-abstraction-internal-ui
+        run: |
+          docker logs water-abstraction-internal-ui
+      - name: docker logs water-abstraction-external-ui
+        run: |
+          docker logs water-abstraction-external-ui
+      - name: docker logs water-abstraction-service-api
+        run: |
+          docker logs water-abstraction-service-api
       - name: Upload Cypress Artifact
         continue-on-error: true
         uses: actions/upload-artifact@v2
