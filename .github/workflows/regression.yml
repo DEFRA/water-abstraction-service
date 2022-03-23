@@ -124,7 +124,6 @@ jobs:
           sleep 60
       - name: Run tests - Cypress
         uses: cypress-io/github-action@v2
-        continue-on-error: true
         with:
           install: true
           working-directory: "./water-abstraction-ui"
@@ -142,25 +141,25 @@ jobs:
           JWT_TOKEN: ${{ env.JWT_TOKEN }}
           NOTIFY_CALLBACK_TOKEN: ${{ env.NOTIFY_CALLBACK_TOKEN }}
 #       Debug steps
-      - name: docker logs water-abstraction-internal-ui
-        run: |
-          docker logs water-abstraction-internal-ui
-      - name: docker logs water-abstraction-external-ui
-        run: |
-          docker logs water-abstraction-external-ui
-      - name: docker logs water-abstraction-service-api
-        run: |
-          docker logs water-abstraction-service-api
-      - name: Upload Cypress Artifact
-        continue-on-error: true
-        uses: actions/upload-artifact@v2
-        with:
-          name: cypress
-          path: ./water-abstraction-ui/cypress/
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v2
-        continue-on-error: true
-        with:
-          name: PM2-Logs
-          path: ~/.pm2/logs/
+#      - name: docker logs water-abstraction-internal-ui
+#        run: |
+#          docker logs water-abstraction-internal-ui
+#      - name: docker logs water-abstraction-external-ui
+#        run: |
+#          docker logs water-abstraction-external-ui
+#      - name: docker logs water-abstraction-service-api
+#        run: |
+#          docker logs water-abstraction-service-api
+#      - name: Upload Cypress Artifact
+#        continue-on-error: true
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: cypress
+#          path: ./water-abstraction-ui/cypress/
+#      - name: Upload Artifact
+#        uses: actions/upload-artifact@v2
+#        continue-on-error: true
+#        with:
+#          name: PM2-Logs
+#          path: ~/.pm2/logs/
 
