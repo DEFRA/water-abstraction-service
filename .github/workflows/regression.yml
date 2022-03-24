@@ -129,6 +129,7 @@ jobs:
           working-directory: "./water-abstraction-ui"
           browser: chrome
           headless: true
+          record: false
           command: |
             npm run test:cypress-silently
 #          spec: |
