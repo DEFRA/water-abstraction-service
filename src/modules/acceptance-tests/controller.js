@@ -115,28 +115,11 @@ const postSetupFromYaml = async (request, h) => {
   }
 };
 
-// const postTearDown = async () => {
-//   console.log('Tearing down data');
-//   await tearDownService.tearDown();
-//   return 'Tear down complete';
-// };
-
-const postTearDown = async (request) => {
-  request.log('HAPI LOG ------------------------ ');
-  console.log('TRY ----------------')
-  try{
-    console.log('Tearing down data');
-    await tearDownService.tearDown();
-    return 'Tear down complete';
-  } catch(e){
-    console.log('TRY Catch Error Added')
-    console.log(e)
-    request.log('error', `Event error: ${e}`);
-    throw e
-  }
+const postTearDown = async () => {
+  console.log('Tearing down data');
+  await tearDownService.tearDown();
+  return 'Tear down complete';
 };
 
 exports.postSetupFromYaml = postSetupFromYaml;
 exports.postTearDown = postTearDown;
-
-
