@@ -3,9 +3,9 @@ name: CI
 on:
   push:
     branches:
-      - develop
-  pull_request:
-    types: [ opened, synchronize, reopened ]
+      - '**'
+#  pull_request:
+#    types: [ opened, synchronize, reopened ]
 
 env:
   REGISTRY: ghcr.io
