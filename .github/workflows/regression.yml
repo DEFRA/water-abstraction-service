@@ -1,8 +1,9 @@
 name: Regression tests
 
 on:
-  pull_request:
-    types: [ opened, synchronize, reopened ]
+  push:
+    branches:
+      - '**'
 
 env:
   # Put back to auto pick from GitHub
