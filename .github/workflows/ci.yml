@@ -40,7 +40,9 @@ jobs:
       - name: Github branch name
         run: |
           echo "REF name : ${{ github.GITHUB_REF_NAME }}"
-          echo "ref: ${{ github.GITHUB_REF }}"
+          echo "ref: ${{ GITHUB_REF }}"
+          echo "thing: ${{ GITHUB_REF##*/ }}"
+          echo "head ref: ${{ github.head_ref }}"
           echo "Steps: ${{ steps.meta.outputs.tags }}"
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
