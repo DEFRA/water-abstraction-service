@@ -61,6 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Regression Test
     strategy:
+      fail-fast: false
       matrix:
         cypressTests: [ 'internal', 'external' ]
     permissions:
