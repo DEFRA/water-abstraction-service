@@ -7,6 +7,10 @@ on:
   pull_request:
     types: [ opened, synchronize, reopened ]
 
+env:
+# Put back to auto pick from GitHub
+BRANCH: "feat/pipeline-regression-tests"
+
 jobs:
   base-node-pipeline:
     uses: DEFRA/water-abstraction-orchestration/.github/workflows/base-node-pipeline.yml@develop
@@ -16,6 +20,8 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   docker-build-and-push-image:
     uses: DEFRA/water-abstraction-orchestration/.github/workflows/docker.yml@develop
+    with:
+      branch: ${{ env.BRANCH }}
   test:
     runs-on: ubuntu-latest
     strategy:
