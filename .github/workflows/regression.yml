@@ -60,6 +60,9 @@ jobs:
   regression-test:
     runs-on: ubuntu-latest
     name: Regression Test
+    strategy:
+      matrix:
+        cypressTests: [ 'internal', 'external' ]
     permissions:
       contents: read
       packages: read
@@ -122,20 +125,20 @@ jobs:
       - name: nap
         run: |
           sleep 60
-      - name: Run tests - Cypress
+      - name: Cypress test - ${{ matrix.cypressTests }}
         uses: cypress-io/github-action@v2
         with:
           install: true
           working-directory: "./water-abstraction-ui"
           browser: chrome
           headless: true
-          record: false
           command: |
             npm run test:cypress-silently
-#          spec: |
+          spec: |
+            cypress/integration/${{ matrix.cypressTests }}/**
 #            cypress/integration/internal/gauging-stations-and-water-abstraction-alerts.js
 #            cypress/integration/internal/remove-individual-licence-from-bill.spec.js
-          config: pageLoadTimeout=100000,baseUrl=http://localhost:8008
+          config: pageLoadTimeout=100000,baseUrl=http://localhost:8008,videoUploadOnPasses=false
         env:
           WATER_URI: "http://localhost:8001/water/1.0"
           ADMIN_URI: 'http://localhost:8008/'
