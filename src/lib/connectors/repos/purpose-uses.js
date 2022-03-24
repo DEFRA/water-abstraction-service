@@ -17,4 +17,5 @@ const findByCodes = async codes => {
 
 exports.findOneByLegacyId = id => helpers.findOne(PurposeUse, 'legacyId', id);
 exports.create = data => helpers.create(PurposeUse, data);
+exports.findAll = () => helpers.findMany(PurposeUse);
 exports.findByCodes = findByCodes;
