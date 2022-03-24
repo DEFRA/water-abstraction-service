@@ -20,8 +20,6 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   docker-build-and-push-image:
     uses: DEFRA/water-abstraction-orchestration/.github/workflows/docker.yml@develop
-    with:
-      branch: ${{ env.BRANCH }}
   test:
     runs-on: ubuntu-latest
     strategy:
