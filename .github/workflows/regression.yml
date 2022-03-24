@@ -129,9 +129,8 @@ jobs:
           working-directory: "./water-abstraction-ui"
           browser: chrome
           headless: true
-          with:
-            start: |
-              npm run test:cypress-silently
+          start: |
+            npm run test:cypress-silently
 #          spec: |
 #            cypress/integration/internal/gauging-stations-and-water-abstraction-alerts.js
 #            cypress/integration/internal/remove-individual-licence-from-bill.spec.js
