@@ -14,7 +14,7 @@ const isTest = process.env.NODE_ENV === 'test';
 const srocStartDate = new Date('2022-04-01');
 
 const isSrocLive = new Date() >= srocStartDate &&
-  ['local', 'dev', 'development', 'qa', 'preprod'].includes(process.env.NODE_ENV);
+  ['local', 'dev', 'development', 'qa', 'test', 'preprod'].includes(process.env.NODE_ENV);
 
 module.exports = {
 
