@@ -343,7 +343,7 @@ experiment('modules/billing/services/invoiceService', () => {
     });
   });
 
-  experiment.only('.getInvoicesForBatchDownload', () => {
+  experiment('.getInvoicesForBatchDownload', () => {
     let invoices;
 
     beforeEach(async () => {
