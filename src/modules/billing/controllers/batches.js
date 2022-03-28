@@ -9,6 +9,7 @@ const { createBatchEvent } = require('../lib/batch-event');
 const controller = require('../../../lib/controller');
 const mapErrorResponse = require('../../../lib/map-error-response');
 const mappers = require('../mappers');
+const { mapBillingAccountNameToInvoices } = require('../../../lib/services/invoice-service');
 const { logger } = require('../../../logger');
 
 // Services
@@ -155,10 +156,12 @@ const getBatchDownloadData = async request => {
   const invoices = await invoiceService.getInvoicesForBatch(batch, {
     includeTransactions: true,
     includeInvoiceAccounts: true
-  });
+  },
+  mapBillingAccountNameToInvoices);
+
   const chargeVersionIds = uniq(flatMap(invoices.map(invoice => {
-    return flatMap(invoice.invoiceLicences.map(invoiceLicence =>
-      invoiceLicence.transactions
+    return flatMap(invoice.billingInvoiceLicences.map(invoiceLicence =>
+      invoiceLicence.billingTransactions
         .filter(transaction => !!transaction.chargeElement)
         .map(transaction => transaction.chargeElement.chargeVersionId)
     ));

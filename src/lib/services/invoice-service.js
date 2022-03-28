@@ -146,6 +146,15 @@ const mapToInvoices = async context => {
   return invoices;
 };
 
+const mapBillingAccountNameToInvoices = async context => {
+  const invoices = [];
+  for (const billingInvoice of context.billingInvoices) {
+    const crmInvoiceAccount = find(context.crmInvoiceAccounts, { invoiceAccountId: billingInvoice.invoiceAccountId });
+    invoices.push({ ...billingInvoice, invoiceAccount: crmInvoiceAccount });
+  }
+  return invoices;
+};
+
 /**
  * Loads a single invoice by ID in the specified batch
  * @param {Batch} batch
@@ -172,7 +181,7 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
  * @param {Boolean} options.includeInvoiceAccounts - whether to load invoice data from CRM
  * @return {Promise<Invoice>}
  */
-const getInvoicesForBatch = async (batch, options = {}) => {
+const getInvoicesForBatch = async (batch, options = {}, mapper = mapToInvoices) => {
   const defaults = {
     includeTransactions: false,
     includeInvoiceAccounts: false
@@ -183,7 +192,7 @@ const getInvoicesForBatch = async (batch, options = {}) => {
   return pWaterfall([
     getBatchInvoices,
     getCRMData,
-    mapToInvoices
+    mapper
   ], context);
 };
 
@@ -288,7 +297,7 @@ const setIsFlaggedForRebilling = async (invoiceId, isFlaggedForRebilling) => {
     isFlaggedForRebilling
   });
 };
-
+exports.mapBillingAccountNameToInvoices = mapBillingAccountNameToInvoices;
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
