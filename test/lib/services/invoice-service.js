@@ -343,6 +343,36 @@ experiment('modules/billing/services/invoiceService', () => {
     });
   });
 
+  experiment.only('.getInvoicesForBatchDownload', () => {
+    let invoices;
+
+    beforeEach(async () => {
+      invoices = await invoiceService.getInvoicesForBatchDownload(batch);
+    });
+
+    test('gets batch with correct ID', async () => {
+      expect(
+        repos.billingBatches.findOneWithInvoicesWithTransactions.calledWith(IDS.batch)
+      ).to.be.true();
+    });
+
+    test('there is an invoice for each customer and financial year combination', async () => {
+      expect(invoices.length).to.equal(3);
+    });
+
+    test('has the correct CRM company, agent and contact', async () => {
+      expect(invoices[0].invoiceAccount.company.name).to.equal('Test Company 1');
+      expect(invoices[0].agentCompany).to.be.undefined();
+      expect(invoices[0].contact).to.be.undefined();
+    });
+
+    test('has a correct financial summary', async () => {
+      expect(invoices[0].creditNoteValue).to.equal(0);
+      expect(invoices[0].invoiceValue).to.equal(12345);
+      expect(invoices[0].netAmount).to.equal(12345);
+    });
+  });
+
   experiment('.getInvoicesTransactionsForBatch', () => {
     let invoices;
 

@@ -175,10 +175,7 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
 
 /**
  * Gets batch invoices for csv download
- * @param {Batch} batch
- * @param {Object} options
- * @param {Boolean} options.includeTransactions
- * @param {Boolean} options.includeInvoiceAccounts - whether to load invoice data from CRM
+ * @param {Batch} batch billing batch
  * @return {Promise<Invoice>}
  */
 const getInvoicesForBatchDownload = async batch => {
