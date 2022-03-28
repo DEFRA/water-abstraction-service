@@ -1,4 +1,3 @@
-const moment = require('moment');
 const s3 = require('../../../lib/services/s3');
 
 const uploadStatus = {
@@ -22,10 +21,9 @@ const getUploadFilename = (event, type) => {
   if (type) {
     filename = `${filename.split('.')[0]}.${type}`;
   }
-  const timestamp = moment(event.created).format('YYYY-MM-DD-HH-mm-ss');
 
   const folder = 'charge-version-upload';
-  return `${folder}/${timestamp}/${filename}`;
+  return `${folder}/${event.id}/${filename}`;
 };
 
 /**
