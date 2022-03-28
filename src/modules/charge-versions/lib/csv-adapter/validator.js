@@ -78,7 +78,7 @@ const testValidLicence = async (field, _licenceNumber, licence) => {
   }
 };
 
-const testValidDate = async (field, date = '') => formatDate(date) ? '' : `${field} has an incorrect format`;
+const testValidDate = async (field, date = '') => formatDate(date) ? '' : `"${field} has an incorrect format, expected DD/MM/YYYY"`;
 
 const testDateBeforeLicenceDate = (fieldName, fieldTitle) => async (field, date, licence) => {
   let valid;
@@ -164,7 +164,7 @@ const testDateRange = async (field, dateRange) => {
     const [endDateDD, endDateMM] = endDate.split('/');
     valid = validDate(startDateDD, startDateMM) && validDate(endDateDD, endDateMM);
   } catch (_e) {}
-  return valid ? '' : `${field} is an incorrect format`;
+  return valid ? '' : `"${field} is an incorrect format, expected DD/MM-DD/MM"`;
 };
 
 const testNumber = async (field, number) => {
