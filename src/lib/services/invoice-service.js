@@ -181,7 +181,7 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
  * @param {Boolean} options.includeInvoiceAccounts - whether to load invoice data from CRM
  * @return {Promise<Invoice>}
  */
-const getInvoicesForBatchDownload = async (batch) => {
+const getInvoicesForBatchDownload = async batch => {
   const context = {
     batch,
     options: {
