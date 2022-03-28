@@ -174,6 +174,30 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
 };
 
 /**
+ * Gets batch invoices for csv download
+ * @param {Batch} batch
+ * @param {Object} options
+ * @param {Boolean} options.includeTransactions
+ * @param {Boolean} options.includeInvoiceAccounts - whether to load invoice data from CRM
+ * @return {Promise<Invoice>}
+ */
+const getInvoicesForBatchDownload = async (batch) => {
+  const context = {
+    batch,
+    options: {
+      includeTransactions: true,
+      includeInvoiceAccounts: true
+    }
+  };
+
+  return pWaterfall([
+    getBatchInvoices,
+    getCRMData,
+    mapBillingAccountNameToInvoices
+  ], context);
+};
+
+/**
  * Loads all invoices in batch
  * @param {Batch} batch
  * @param {Object} options
@@ -181,7 +205,7 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
  * @param {Boolean} options.includeInvoiceAccounts - whether to load invoice data from CRM
  * @return {Promise<Invoice>}
  */
-const getInvoicesForBatch = async (batch, options = {}, mapper = mapToInvoices) => {
+const getInvoicesForBatch = async (batch, options = {}) => {
   const defaults = {
     includeTransactions: false,
     includeInvoiceAccounts: false
@@ -192,7 +216,7 @@ const getInvoicesForBatch = async (batch, options = {}, mapper = mapToInvoices) 
   return pWaterfall([
     getBatchInvoices,
     getCRMData,
-    mapper
+    mapToInvoices
   ], context);
 };
 
@@ -297,7 +321,7 @@ const setIsFlaggedForRebilling = async (invoiceId, isFlaggedForRebilling) => {
     isFlaggedForRebilling
   });
 };
-exports.mapBillingAccountNameToInvoices = mapBillingAccountNameToInvoices;
+exports.getInvoicesForBatchDownload = getInvoicesForBatchDownload;
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
