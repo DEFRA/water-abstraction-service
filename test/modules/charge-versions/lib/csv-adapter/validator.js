@@ -135,7 +135,7 @@ experiment('validator', () => {
 
         test('has an incorrect date format', async () => {
           const data = { ...testData, chargeInformationStartDate: 'INVALID' };
-          expect(await testValidate(data)).to.equal(rowErrors(['Row 2, charge_information_start_date has an incorrect format']));
+          expect(await testValidate(data)).to.equal(rowErrors(['Row 2, "charge_information_start_date has an incorrect format, expected DD/MM/YYYY"']));
         });
 
         test('is before the licence start date', async () => {
@@ -168,7 +168,7 @@ experiment('validator', () => {
 
       test('when the charge element abstraction period has an incorrect date format', async () => {
         const data = { ...testData, chargeElementAbstractionPeriod: 'INVALID' };
-        expect(await testValidate(data)).to.equal(rowErrors(['Row 2, charge_element_abstraction_period is an incorrect format']));
+        expect(await testValidate(data)).to.equal(rowErrors(['Row 2, "charge_element_abstraction_period is an incorrect format, expected DD/MM-DD/MM"']));
       });
 
       experiment('when the charge element authorised quantity', () => {
@@ -186,7 +186,7 @@ experiment('validator', () => {
       experiment('when the charge element time limit start', () => {
         test('has an incorrect date format', async () => {
           const data = { ...testData, chargeElementTimeLimitStart: 'INVALID' };
-          expect(await testValidate(data)).to.equal(rowErrors(['Row 2, charge_element_time_limit_start has an incorrect format']));
+          expect(await testValidate(data)).to.equal(rowErrors(['Row 2, "charge_element_time_limit_start has an incorrect format, expected DD/MM/YYYY"']));
         });
 
         test('is before the charge information start date', async () => {
@@ -198,7 +198,7 @@ experiment('validator', () => {
       experiment('when the charge element time limit end', () => {
         test('has an incorrect date format', async () => {
           const data = { ...testData, chargeElementTimeLimitEnd: 'INVALID' };
-          expect(await testValidate(data)).to.equal(rowErrors(['Row 2, charge_element_time_limit_end has an incorrect format']));
+          expect(await testValidate(data)).to.equal(rowErrors(['Row 2, "charge_element_time_limit_end has an incorrect format, expected DD/MM/YYYY"']));
         });
 
         test('is before the time limit start', async () => {
