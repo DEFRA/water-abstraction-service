@@ -152,13 +152,11 @@ const getInvoiceLicenceWithTransactions = async request => {
 
 const getBatchDownloadData = async request => {
   const { batch } = request.pre;
-  const invoices = await invoiceService.getInvoicesForBatch(batch, {
-    includeTransactions: true,
-    includeInvoiceAccounts: true
-  });
+  const invoices = await invoiceService.getInvoicesForBatchDownload(batch);
+
   const chargeVersionIds = uniq(flatMap(invoices.map(invoice => {
-    return flatMap(invoice.invoiceLicences.map(invoiceLicence =>
-      invoiceLicence.transactions
+    return flatMap(invoice.billingInvoiceLicences.map(invoiceLicence =>
+      invoiceLicence.billingTransactions
         .filter(transaction => !!transaction.chargeElement)
         .map(transaction => transaction.chargeElement.chargeVersionId)
     ));

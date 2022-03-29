@@ -13,9 +13,6 @@ const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
 const Invoice = require('../../../../src/lib/models/invoice');
-const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
-const Transaction = require('../../../../src/lib/models/transaction');
-const ChargeElement = require('../../../../src/lib/models/charge-element');
 const Batch = require('../../../../src/lib/models/batch');
 const { BATCH_STATUS, BATCH_TYPE } = Batch;
 
@@ -36,6 +33,362 @@ const { createBatch, createTransaction, createInvoice, createInvoiceLicence, cre
 
 const { NotFoundError } = require('../../../../src/lib/errors');
 const { BatchStatusError } = require('../../../../src/modules/billing/lib/errors');
+
+const chargeElement = {
+  chargeVersionId: 'test-charge-version-id',
+  externalId: '8:1234566',
+  abstractionPeriodStartDay: 1,
+  abstractionPeriodStartMonth: 4,
+  abstractionPeriodEndDay: 31,
+  abstractionPeriodEndMonth: 3,
+  authorisedAnnualQuantity: '28',
+  season: 'all year',
+  seasonDerived: 'all year',
+  source: 'unsupported',
+  loss: 'medium',
+  factorsOverridden: false,
+  billableAnnualQuantity: '9.33',
+  timeLimitedStartDate: null,
+  timeLimitedEndDate: null,
+  description: 'Farm, Farmshire',
+  isSection127AgreementEnabled: true,
+  volume: null,
+  isSection126AgreementEnabled: false,
+  isSection130AgreementEnabled: false,
+  eiucRegion: null,
+  purposeUse: {
+    legacyId: '50',
+    description: 'Drinking, Cooking, Sanitary, Washing, (Small Garden) - Household',
+    lossFactor: 'medium',
+    isTwoPartTariff: false
+  }
+};
+
+const getInvoices = () => [
+  {
+    address: {
+    },
+    invoiceAccountNumber: 'W88888888A',
+    netAmount: '2646.00',
+    isCredit: false,
+    billingBatchId: '00efa162-7d2b-42aa-8a24-774c45f4a20c',
+    financialYearEnding: 2021,
+    invoiceNumber: 'WAI123456789',
+    legacyId: '8:1234567',
+    creditNoteValue: null,
+    invoiceValue: null,
+    isDeMinimis: false,
+    externalId: null,
+    billingInvoiceLicences: [
+      {
+        licenceRef: '19/55/12/0856/R01',
+        licence: {
+          licenceRef: '11/22/33/4444',
+          isWaterUndertaker: false,
+          regions: {
+            historicalAreaCode: 'SE',
+            regionalChargeArea: 'Wales',
+            standardUnitChargeCode: 'SUC',
+            localEnvironmentAgencyPlanCode: 'WYLPE'
+          },
+          startDate: '2015-05-05',
+          expiredDate: '2027-03-31',
+          includeInSupplementaryBilling: 'no',
+          region: {
+            chargeRegionId: 'W',
+            name: 'EA Wales',
+            displayName: 'Wales'
+          }
+        },
+        billingTransactions: [
+          {
+            startDate: '2021-02-23',
+            endDate: '2021-03-31',
+            abstractionPeriod: {
+              endDay: 31,
+              endMonth: 3,
+              startDay: 1,
+              startMonth: 4
+            },
+            source: 'unsupported',
+            season: 'all year',
+            loss: 'medium',
+            netAmount: '882.00',
+            isCredit: false,
+            chargeType: 'standard',
+            authorisedQuantity: '28',
+            billableQuantity: '9.33',
+            authorisedDays: 365,
+            billableDays: 37,
+            status: 'charge_created',
+            description: 'Farm, Farmshire',
+            externalId: null,
+            volume: '9.33',
+            section126Factor: null,
+            section127Agreement: false,
+            section130Agreement: null,
+            isNewLicence: true,
+            isDeMinimis: false,
+            legacyId: '8:1234567',
+            sourceTransactionId: null,
+            calcSourceFactor: '1',
+            calcSeasonFactor: '1',
+            calcLossFactor: '0.6',
+            calcSucFactor: '15.54',
+            calcS126Factor: null,
+            calcS127Factor: null,
+            calcEiucFactor: '0',
+            calcEiucSourceFactor: '0',
+            isCreditedBack: false,
+            isTwoPartSecondPartCharge: false,
+            chargeElement,
+            billingVolume: [
+            ]
+          },
+          {
+            startDate: '2021-02-23',
+            endDate: '2021-03-31',
+            abstractionPeriod: {
+              endDay: 31,
+              endMonth: 3,
+              startDay: 1,
+              startMonth: 4
+            },
+            source: 'unsupported',
+            season: 'all year',
+            loss: 'medium',
+            netAmount: '0',
+            isCredit: false,
+            chargeType: 'compensation',
+            authorisedQuantity: '28',
+            billableQuantity: '9.33',
+            authorisedDays: 365,
+            billableDays: 37,
+            status: 'charge_created',
+            description: 'Compensation Charge',
+            externalId: null,
+            volume: '9.33',
+            section126Factor: null,
+            section127Agreement: false,
+            section130Agreement: null,
+            isNewLicence: true,
+            isDeMinimis: false,
+            legacyId: 'legacy-id',
+            sourceTransactionId: null,
+            calcSourceFactor: '0',
+            calcSeasonFactor: '1',
+            calcLossFactor: '0.6',
+            calcSucFactor: '0',
+            calcS126Factor: null,
+            calcS127Factor: null,
+            calcEiucFactor: '0',
+            calcEiucSourceFactor: '1',
+            isCreditedBack: false,
+            isTwoPartSecondPartCharge: false,
+            chargeElement,
+            billingVolume: [
+            ]
+          }
+        ]
+      }
+    ],
+    invoiceAccount: {
+      invoiceAccountNumber: 'W88888888A',
+      startDate: '2021-03-05',
+      endDate: null,
+      lastTransactionFileReference: null,
+      dateLastTransactionFileReferenceUpdated: null,
+      company: {
+        name: 'Farm.co',
+        type: 'organisation',
+        companyNumber: null,
+        organisationType: null
+      },
+      invoiceAccountAddresses: [
+        {
+          startDate: '2021-03-05',
+          endDate: null,
+          contactId: null,
+          address: {
+            address1: 'c/o Test Person',
+            address2: 'Farm',
+            address3: 'Little Bush',
+            address4: null,
+            town: 'Farm Town',
+            county: 'Somethingshire',
+            postcode: 'SM1 2LB',
+            country: null
+          }
+        }
+      ]
+    }
+  },
+  {
+    billingInvoiceId: '3aaa80be-f95f-4eda-a442-29dac25c1716',
+    invoiceAccountId: '27a91d9f-f037-4132-bb41-49add68e1a2a',
+    address: {
+    },
+    invoiceAccountNumber: 'W88898922A',
+    netAmount: '1401.00',
+    isCredit: false,
+    billingBatchId: '00efa162-7d2b-42aa-8a24-774c45f4a20c',
+    financialYearEnding: 2021,
+    invoiceNumber: 'WAI0303965',
+    legacyId: '8:1053734',
+    metadata: {},
+    creditNoteValue: null,
+    invoiceValue: null,
+    isDeMinimis: false,
+    externalId: null,
+    isFlaggedForRebilling: false,
+    originalBillingInvoiceId: null,
+    rebillingState: 'unrebillable',
+    billingInvoiceLicences: [
+      {
+        licenceRef: '19/55/12/0811',
+        licence: {
+          licenceRef: '19/55/12/0811',
+          isWaterUndertaker: false,
+          regions: {
+            historicalAreaCode: 'SE',
+            regionalChargeArea: 'Wales',
+            standardUnitChargeCode: 'SUC',
+            localEnvironmentAgencyPlanCode: 'WYLPE'
+          },
+          startDate: '1997-06-06',
+          region: {
+            chargeRegionId: 'W',
+            naldRegionId: 8,
+            name: 'EA Wales',
+            displayName: 'Wales'
+          }
+        },
+        billingTransactions: [
+          {
+            startDate: '2021-02-23',
+            endDate: '2021-03-31',
+            abstractionPeriod: {
+              endDay: 31,
+              endMonth: 3,
+              startDay: 1,
+              startMonth: 11
+            },
+            source: 'unsupported',
+            season: 'winter',
+            loss: 'high',
+            netAmount: '1401.00',
+            isCredit: false,
+            chargeType: 'standard',
+            authorisedQuantity: '23',
+            billableQuantity: null,
+            authorisedDays: 151,
+            billableDays: 37,
+            status: 'charge_created',
+            description: 'Abstraction to fill a storage pond for subsequent spray irrigation',
+            externalId: null,
+            volume: '23',
+            section126Factor: null,
+            section127Agreement: false,
+            section130Agreement: null,
+            isNewLicence: true,
+            isDeMinimis: false,
+            legacyId: '8:1325607:S',
+            sourceTransactionId: null,
+            calcSourceFactor: '1',
+            calcSeasonFactor: '0.16',
+            calcLossFactor: '1',
+            calcSucFactor: '15.54',
+            calcS126Factor: null,
+            calcS127Factor: null,
+            calcEiucFactor: '0',
+            calcEiucSourceFactor: '0',
+            isCreditedBack: false,
+            isTwoPartSecondPartCharge: false,
+            chargeElement,
+            billingVolume: [
+            ]
+          },
+          {
+            startDate: '2021-02-23',
+            endDate: '2021-03-31',
+            abstractionPeriod: {
+              endDay: 31,
+              endMonth: 3,
+              startDay: 1,
+              startMonth: 11
+            },
+            source: 'unsupported',
+            season: 'winter',
+            loss: 'high',
+            netAmount: '0',
+            isCredit: false,
+            chargeType: 'compensation',
+            authorisedQuantity: '23',
+            billableQuantity: null,
+            authorisedDays: 151,
+            billableDays: 37,
+            status: 'charge_created',
+            description: 'Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element',
+            externalId: null,
+            volume: '23',
+            section126Factor: null,
+            section127Agreement: false,
+            section130Agreement: null,
+            isNewLicence: true,
+            isDeMinimis: false,
+            legacyId: '8:1325607:C',
+            sourceTransactionId: null,
+            calcSourceFactor: '0',
+            calcSeasonFactor: '0.16',
+            calcLossFactor: '1',
+            calcSucFactor: '0',
+            calcS126Factor: null,
+            calcS127Factor: null,
+            calcEiucFactor: '0',
+            calcEiucSourceFactor: '1',
+            isCreditedBack: false,
+            isTwoPartSecondPartCharge: false,
+            chargeElement,
+            billingVolume: [
+            ]
+          }
+        ]
+      }
+    ],
+    invoiceAccount: {
+      invoiceAccountNumber: 'W88898922A',
+      startDate: '2021-03-05',
+      endDate: null,
+      lastTransactionFileReference: null,
+      dateLastTransactionFileReferenceUpdated: null,
+      company: {
+        name: 'Farm, Farmshire',
+        type: 'organisation',
+        companyNumber: null,
+        externalId: '8:10028205',
+        organisationType: null
+      },
+      invoiceAccountAddresses: [
+        {
+          startDate: '2021-03-05',
+          endDate: null,
+          agentCompanyId: null,
+          contactId: null,
+          address: {
+            address1: 'c/o Test Person',
+            address2: 'The cFarm',
+            address3: 'Little Bush',
+            address4: null,
+            town: 'City',
+            county: 'Somethingshire',
+            postcode: 'SM1 3BE',
+            country: null
+          }
+        }
+      ]
+    }
+  }
+];
 
 experiment('modules/billing/controller', () => {
   let h, hapiResponseStub, batch, tptBatch, transaction, billingVolume, processingBatch;
@@ -87,6 +440,7 @@ experiment('modules/billing/controller', () => {
 
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
+    sandbox.stub(invoiceService, 'getInvoicesForBatchDownload').resolves();
     sandbox.stub(invoiceService, 'getInvoicesTransactionsForBatch').resolves();
 
     sandbox.stub(invoiceLicenceService, 'getInvoiceLicenceWithTransactions').resolves();
@@ -591,54 +945,25 @@ experiment('modules/billing/controller', () => {
   });
 
   experiment('.getBatchDownloadData', () => {
-    let request, cvIds, invoices, result;
-
-    const getTransactionWithChargeElement = cvId => {
-      const chargeElement = new ChargeElement();
-      chargeElement.chargeVersionId = cvId;
-      const transaction = new Transaction();
-      transaction.chargeElement = chargeElement;
-
-      return transaction;
-    };
-
-    const setUpInvoiceLicenceWithTransactions = cvIds => {
-      const invoiceLicence = new InvoiceLicence();
-      invoiceLicence.transactions = cvIds.map(getTransactionWithChargeElement);
-      return invoiceLicence;
-    };
-
+    let request, invoices, result;
     beforeEach(async () => {
       request = {
         pre: { batch: { id: 'test-batch-id' } }
       };
+      invoices = getInvoices();
 
-      cvIds = [uuid(), uuid(), uuid()];
-
-      const firstInvoice = new Invoice();
-      firstInvoice.invoiceLicences = [setUpInvoiceLicenceWithTransactions([cvIds[0], cvIds[0]])];
-      const secondInvoice = new Invoice();
-      secondInvoice.invoiceLicences = [setUpInvoiceLicenceWithTransactions([cvIds[1], cvIds[2]])];
-      invoices = [firstInvoice, secondInvoice];
-
-      invoiceService.getInvoicesForBatch.resolves(invoices);
+      invoiceService.getInvoicesForBatchDownload.resolves(invoices);
       chargeVersionService.getManyByChargeVersionIds.resolves([{ foo: 'bar' }]);
       result = await controller.getBatchDownloadData(request, h);
     });
 
     test('calls the invoice service with expected params', () => {
-      expect(invoiceService.getInvoicesForBatch.calledWith(
-        request.pre.batch,
-        {
-          includeTransactions: true,
-          includeInvoiceAccounts: true
-        }
-      )).to.be.true();
+      expect(invoiceService.getInvoicesForBatchDownload.calledWith(request.pre.batch)).to.be.true();
     });
 
     test('calls the charge version service with unique list of charge version ids', () => {
       expect(chargeVersionService.getManyByChargeVersionIds.calledWith(
-        cvIds
+        ['test-charge-version-id']
       )).to.be.true();
     });
 
