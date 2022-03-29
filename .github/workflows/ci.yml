@@ -2,10 +2,9 @@ name: CI
 
 on:
   push:
-    branches-ignore:
-      - 'dependabot/**'
     branches:
       - '**'
+      - '!dependabot/**'
 
 jobs:
   base-node-pipeline:
