@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - '**'
+      - '!dependabot/**'
 
 jobs:
   base-node-pipeline:
