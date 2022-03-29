@@ -3,9 +3,8 @@ name: CI
 on:
   push:
     branches:
-      - develop
-  pull_request:
-    types: [ opened, synchronize, reopened ]
+      - '**'
+      - '!dependabot/**'
 
 jobs:
   base-node-pipeline:
@@ -14,6 +13,8 @@ jobs:
       serviceName: DEFRA_water-abstraction-service
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  docker-build-and-push-image:
+    uses: DEFRA/water-abstraction-orchestration/.github/workflows/docker.yml@develop
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -97,3 +98,4 @@ jobs:
         with:
           coverageCommand: npm run test:ci
           debug: true
+
