@@ -36,12 +36,12 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = gotCM.post.lastCall.args;
-      expect(path).to.equal('v2/wrls/bill-runs');
+      expect(path).to.equal('v3/wrls/bill-runs');
     });
 
     test('the region is included in the payload', async () => {
       const [, options] = gotCM.post.lastCall.args;
-      expect(options).to.equal({ json: { region: 'A' } });
+      expect(options).to.equal({ json: { region: 'A', ruleset: 'presroc' } });
     });
   });
 
@@ -56,7 +56,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = gotCM.post.lastCall.args;
-      expect(path).to.equal('v2/wrls/bill-runs/test-id/transactions');
+      expect(path).to.equal('v3/wrls/bill-runs/test-id/transactions');
     });
 
     test('the transaction is included in the option with 0 retries', async () => {
@@ -76,7 +76,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = gotCM.patch.lastCall.args;
-      expect(path).to.equal('v2/wrls/bill-runs/test-id/approve');
+      expect(path).to.equal('v3/wrls/bill-runs/test-id/approve');
     });
   });
 
@@ -91,7 +91,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = gotCM.patch.lastCall.args;
-      expect(path).to.equal('v2/wrls/bill-runs/test-id/send');
+      expect(path).to.equal('v3/wrls/bill-runs/test-id/send');
     });
   });
 
@@ -106,7 +106,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = gotCM.delete.lastCall.args;
-      expect(path).to.equal('v2/wrls/bill-runs/test-id/invoices/test-other-id');
+      expect(path).to.equal('v3/wrls/bill-runs/test-id/invoices/test-other-id');
     });
   });
 
@@ -121,7 +121,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = gotCM.delete.lastCall.args;
-      expect(path).to.equal('v2/wrls/bill-runs/test-id');
+      expect(path).to.equal('v3/wrls/bill-runs/test-id');
     });
   });
 
@@ -136,7 +136,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = gotCM.get.lastCall.args;
-      expect(path).to.equal('v2/wrls/bill-runs/test-id');
+      expect(path).to.equal('v3/wrls/bill-runs/test-id');
     });
   });
 
@@ -147,7 +147,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', () => {
       const [path] = gotCM.get.lastCall.args;
-      expect(path).to.equal('v2/wrls/bill-runs/test-id/invoices/test-invoice-id');
+      expect(path).to.equal('v3/wrls/bill-runs/test-id/invoices/test-invoice-id');
     });
   });
 
@@ -158,7 +158,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = gotCM.delete.lastCall.args;
-      expect(path).to.equal('v2/wrls/bill-runs/test-id/licences/test-licence-id');
+      expect(path).to.equal('v3/wrls/bill-runs/test-id/licences/test-licence-id');
     });
   });
   experiment('.rebillInvoice', () => {
@@ -171,7 +171,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct patch endpoint is called', async () => {
       const [path] = gotCM.patch.lastCall.args;
-      expect(path).to.equal(`v2/wrls/bill-runs/${batchId}/invoices/${invoiceId}/rebill`);
+      expect(path).to.equal(`v3/wrls/bill-runs/${batchId}/invoices/${invoiceId}/rebill`);
     });
   });
 
@@ -184,7 +184,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct get endpoint is called', async () => {
       const [path] = gotCM.get.lastCall.args;
-      expect(path).to.equal(`v2/wrls/bill-runs/${batchId}/status`);
+      expect(path).to.equal(`v3/wrls/bill-runs/${batchId}/status`);
     });
   });
 });

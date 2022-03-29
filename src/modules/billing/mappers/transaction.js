@@ -244,6 +244,7 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
   const periodEnd = mapChargeModuleDate(transaction.chargePeriod.endDate);
 
   return {
+    ruleset: 'presroc',
     clientId: transaction.id,
     periodStart,
     periodEnd,
