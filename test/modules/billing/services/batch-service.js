@@ -968,14 +968,16 @@ experiment('modules/billing/services/batch-service', () => {
         });
 
         test('a batch is created processing 1 financial year', async () => {
-          expect(newRepos.billingBatches.create.calledWith({
+          const args = newRepos.billingBatches.create.lastCall.args[0];
+          expect(args).to.equal({
             status: 'processing',
             regionId,
             batchType: 'annual',
             fromFinancialYearEnding: 2019,
             toFinancialYearEnding: 2019,
-            isSummer: false
-          }));
+            isSummer: 'all-year',
+            scheme: 'alcs'
+          });
         });
 
         test('the result is a batch', async () => {

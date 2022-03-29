@@ -9,6 +9,8 @@ const DateRange = require('../../../lib/models/date-range');
 const Transaction = require('../../../lib/models/transaction');
 const Agreement = require('../../../lib/models/agreement');
 
+const { SCHEME } = require('../../../lib/models/constants');
+
 const chargeElementMapper = require('../../../lib/mappers/charge-element');
 const billingVolumeMapper = require('./billing-volume');
 const abstractionPeriodMapper = require('../../../lib/mappers/abstraction-period');
@@ -244,7 +246,7 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
   const periodEnd = mapChargeModuleDate(transaction.chargePeriod.endDate);
 
   return {
-    ruleset: 'presroc',
+    ruleset: batch.scheme === SCHEME.alcs ? 'presroc' : SCHEME.sroc,
     clientId: transaction.id,
     periodStart,
     periodEnd,
