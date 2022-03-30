@@ -268,15 +268,6 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
     ? toFinancialYearEnding - config.billing.supplementaryYears
     : toFinancialYearEnding;
 
-  let scheme;
-  if (batchType === 'supplementary') {
-    scheme = SCHEME.alcs;
-  } else {
-    scheme = new Date() >= config.billing.srocStartDate
-      ? SCHEME.sroc
-      : SCHEME.alcs;
-  }
-
   const { billingBatchId } = await newRepos.billingBatches.create({
     status: Batch.BATCH_STATUS.processing,
     regionId,
@@ -284,7 +275,7 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
     fromFinancialYearEnding,
     toFinancialYearEnding,
     isSummer,
-    scheme
+    scheme: 'alcs'
   });
 
   return getBatchById(billingBatchId);

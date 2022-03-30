@@ -962,7 +962,7 @@ experiment('modules/billing/services/batch-service', () => {
         sandbox.stub(config.billing, 'supplementaryYears').value(5);
       });
 
-      experiment('and the batch type is annual', () => {
+      experiment('and the batch type is annual with scheme alcs', () => {
         beforeEach(async () => {
           result = await batchService.create(regionId, 'annual', 2019, 'all-year');
         });
@@ -991,14 +991,16 @@ experiment('modules/billing/services/batch-service', () => {
         });
 
         test('a batch is created processing the number of years specified in config.billing.supplementaryYears', async () => {
-          expect(newRepos.billingBatches.create.calledWith({
+          const args = newRepos.billingBatches.create.lastCall.args[0];
+          expect(args).to.equal({
             status: 'processing',
             regionId,
             batchType: 'supplementary',
-            fromFinancialYearEnding: 2013,
+            fromFinancialYearEnding: 2014,
             toFinancialYearEnding: 2019,
-            isSummer: false
-          }));
+            isSummer: 'all-year',
+            scheme: 'alcs'
+          });
         });
 
         test('the result is a batch', async () => {
