@@ -13,6 +13,8 @@ const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
 const Batch = require('../../../../src/lib/models/batch');
+const { SCHEME } = require('../../../../src/lib/models/constants');
+const Region = require('../../../../src/lib/models/region');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const Invoice = require('../../../../src/lib/models/invoice');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
@@ -1032,7 +1034,7 @@ experiment('modules/billing/services/batch-service', () => {
   });
 
   experiment('.createChargeModuleBillRun', () => {
-    let result;
+    let result, batch, batchId, testRegion;
     const cmResponse = {
       billRun: {
         id: uuid(),
@@ -1041,7 +1043,14 @@ experiment('modules/billing/services/batch-service', () => {
     };
 
     beforeEach(async () => {
+      batchId = uuid();
+      testRegion = new Region();
+      testRegion.fromHash(region);
+      batch = new Batch(batchId);
+      batch.region = testRegion;
+      batch.scheme = 'alcs';
       chargeModuleBillRunConnector.create.resolves(cmResponse);
+      newRepos.billingBatches.findOne.resolves(batch);
       newRepos.billingBatches.update.resolves({
         externalId: cmResponse.billRun.id,
         billRunNumber: cmResponse.billRun.billRunNumber
@@ -1050,11 +1059,14 @@ experiment('modules/billing/services/batch-service', () => {
     });
 
     test('the correct batch is loaded from the DB', async () => {
-      expect(newRepos.billingBatches.findOne.calledWith(BATCH_ID)).to.be.true();
+      const batchId = newRepos.billingBatches.findOne.lastCall.args[0];
+      expect(batchId).to.equal(BATCH_ID);
     });
 
     test('a batch is created in the charge module with the correct region', async () => {
-      expect(chargeModuleBillRunConnector.create.calledWith(REGION_ID));
+      const [region, ruleset] = chargeModuleBillRunConnector.create.lastCall.args;
+      expect(region).to.equal(testRegion.chargeRegionId);
+      expect(ruleset).to.equal('presroc');
     });
 
     test('the batch is updated with the values from the CM', async () => {
@@ -1068,9 +1080,16 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('the updated batch is returned', async () => {
       expect(result instanceof Batch).to.be.true();
-      expect(result.id).to.equal(BATCH_ID);
       expect(result.externalId).to.equal(cmResponse.billRun.id);
       expect(result.billRunNumber).to.equal(cmResponse.billRun.billRunNumber);
+    });
+
+    test('the updated batch is returned', async () => {
+      batch.scheme = SCHEME.sroc;
+      await batchService.createChargeModuleBillRun(BATCH_ID);
+      const [region, ruleset] = chargeModuleBillRunConnector.create.lastCall.args;
+      expect(region).to.equal(testRegion.chargeRegionId);
+      expect(ruleset).to.equal('sroc');
     });
   });
 

@@ -285,7 +285,7 @@ const createChargeModuleBillRun = async batchId => {
   const batch = await getBatchById(batchId);
 
   // Create CM batch
-  const { billRun: cmBillRun } = await chargeModuleBillRunConnector.create(batch.region.code, batch.scheme === 'alcs' ? 'presroc' : batch.scheme);
+  const { billRun: cmBillRun } = await chargeModuleBillRunConnector.create(batch.region.code, batch.scheme === SCHEME.alcs ? 'presroc' : batch.scheme);
 
   // Update DB row
   const row = await newRepos.billingBatches.update(batch.id, {
