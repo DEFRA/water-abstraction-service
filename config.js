@@ -41,7 +41,8 @@ module.exports = {
     returnsGracePeriod: process.env.RETURNS_GRACE_PERIOD || 21,
     // The date SROC goes live
     isSrocLive,
-    srocStartDate
+    srocStartDate,
+    alcsEndYear: 2022
   },
 
   blipp: {

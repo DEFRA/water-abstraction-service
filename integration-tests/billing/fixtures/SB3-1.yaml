@@ -108,8 +108,8 @@
     abstractionPeriodStartMonth : 4
     abstractionPeriodEndDay : 31
     abstractionPeriodEndMonth : 3
-    authorisedAnnualQuantity : 50
-    billableAnnualQuantity : 25
+    authorisedAnnualQuantity : 150
+    billableAnnualQuantity : 125
     season : all year
     seasonDerived: all year
     source : unsupported
@@ -128,8 +128,8 @@
     abstractionPeriodStartMonth : 4
     abstractionPeriodEndDay : 31
     abstractionPeriodEndMonth : 3
-    authorisedAnnualQuantity : 50
-    billableAnnualQuantity : 25
+    authorisedAnnualQuantity : 150
+    billableAnnualQuantity : 125
     season : all year
     seasonDerived: all year
     source : unsupported

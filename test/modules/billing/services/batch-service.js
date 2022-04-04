@@ -926,25 +926,25 @@ experiment('modules/billing/services/batch-service', () => {
         newRepos.billingBatches.findByRegionId.resolves([{
           billingBatchId: existingBatchId,
           batchType: 'annual',
-          toFinancialYearEnding: 2019,
+          toFinancialYearEnding: 2022,
           isSummer: false,
           status: 'sent'
         }]);
       });
 
       test('the function rejects', async () => {
-        const func = () => batchService.create(regionId, 'annual', 2019, false);
+        const func = () => batchService.create(regionId, 'annual', 2022, false);
         expect(func()).to.reject();
       });
 
       test('a Boom Conflict error is thrown with expected message and batch', async () => {
         try {
-          await batchService.create(regionId, 'annual', 2019, false);
+          await batchService.create(regionId, 'annual', 2022, false);
           fail();
         } catch (err) {
           expect(err.isBoom).to.be.true();
           expect(err.output.statusCode).to.equal(409);
-          expect(err.message).to.equal(`Annual batch already sent for: region ${regionId}, financial year 2019, isSummer false`);
+          expect(err.message).to.equal(`Annual batch already sent for: region ${regionId}, financial year 2022, isSummer false`);
           expect(err.output.payload.batch.id).to.equal(existingBatchId);
         }
       });

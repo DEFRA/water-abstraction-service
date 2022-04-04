@@ -21,7 +21,7 @@ const createConnector = tail => async body => {
 
 const create = () => {
   // todo this might need to be tweaked again or the year calculated dynamically.
-  const returnCycleDates = last(returns.date.createReturnCycles('2017-11-01', '2021-11-01'));
+  const returnCycleDates = last(returns.date.createReturnCycles());
   // create a future date and pass it to the fixture loader as reference for use in yaml objects
   const refDates = {
     name: '$returnDates',
@@ -29,7 +29,7 @@ const create = () => {
       dueDate: moment().add(3, 'month').format('YYYY-MM-DD'),
       endDate: moment(returnCycleDates.endDate).subtract(3, 'month').format('YYYY-MM-DD'),
       startDate: moment(returnCycleDates.startDate).add(1, 'month').format('YYYY-MM-DD'),
-      refId: `v1:1:AT/CURR/MONTHLY/02:9999992:${moment(returnCycleDates.startDate).subtract(6, 'month').format('YYYY-MM-DD')}:${moment(returnCycleDates.endDate).subtract(3, 'month').format('YYYY-MM-DD')}`
+      refId: `v1:1:AT/CURR/MONTHLY/02:9999992:${moment(returnCycleDates.startDate).add(1, 'month').format('YYYY-MM-DD')}:${moment(returnCycleDates.endDate).subtract(3, 'month').format('YYYY-MM-DD')}`
     }
   };
 
