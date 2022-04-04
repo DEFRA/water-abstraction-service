@@ -253,15 +253,13 @@ const getErrMsgForBatchErr = (batch, regionId) =>
  * @param {Boolean} isSummer - Is this a summer season two part tariff run
  * @return {Promise<Batch>} resolves with Batch service model
  */
-const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
-  let fromFinancialYearEnding, scheme;
+const create = async (regionId, batchType, toFinancialYearEnding, isSummer, scheme = 'alcs') => {
+  let fromFinancialYearEnding;
   if (batchType === 'supplementary') {
     fromFinancialYearEnding = config.billing.alcsEndYear - (config.billing.supplementaryYears - (toFinancialYearEnding - config.billing.alcsEndYear));
-    scheme = 'alcs';
   } else {
     // this is to temporary block 2023 annual billing until SROC has been implemented.
     fromFinancialYearEnding = config.billing.alcsEndYear;
-    scheme = 'alcs';
   }
 
   const batch = await getExistingOrDuplicateSentBatch(regionId, batchType, toFinancialYearEnding, isSummer);
