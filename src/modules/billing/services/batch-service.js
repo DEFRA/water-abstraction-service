@@ -254,18 +254,7 @@ const getErrMsgForBatchErr = (batch, regionId) =>
  * @return {Promise<Batch>} resolves with Batch service model
  */
 const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
-  // this is to temporary block 2023 annual billing until SROC has been implemented.
-  toFinancialYearEnding = config.billing.alcsEndYear;
-
-  const batch = await getExistingOrDuplicateSentBatch(regionId, batchType, toFinancialYearEnding, isSummer);
   let fromFinancialYearEnding, scheme;
-  if (batch) {
-    const err = Boom.conflict(getErrMsgForBatchErr(batch, regionId));
-    err.reformat();
-    err.output.payload.batch = batch;
-    throw err;
-  }
-
   if (batchType === 'supplementary') {
     fromFinancialYearEnding = config.billing.alcsEndYear - (config.billing.supplementaryYears - (toFinancialYearEnding - config.billing.alcsEndYear));
     scheme = 'alcs';
@@ -273,6 +262,15 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
     // this is to temporary block 2023 annual billing until SROC has been implemented.
     fromFinancialYearEnding = config.billing.alcsEndYear;
     scheme = 'alcs';
+  }
+
+  const batch = await getExistingOrDuplicateSentBatch(regionId, batchType, toFinancialYearEnding, isSummer);
+
+  if (batch) {
+    const err = Boom.conflict(getErrMsgForBatchErr(batch, regionId));
+    err.reformat();
+    err.output.payload.batch = batch;
+    throw err;
   }
 
   const { billingBatchId } = await newRepos.billingBatches.create({
