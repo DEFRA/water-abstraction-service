@@ -255,9 +255,12 @@ const getErrMsgForBatchErr = (batch, regionId) =>
  */
 const create = async (regionId, batchType, toFinancialYearEnding, isSummer, scheme = 'alcs') => {
   let fromFinancialYearEnding;
+  // this is to temporary block 2023 annual billing until SROC has been implemented.
   if (batchType === 'supplementary') {
-    fromFinancialYearEnding = config.billing.alcsEndYear - (config.billing.supplementaryYears - (toFinancialYearEnding - config.billing.alcsEndYear));
+    fromFinancialYearEnding = config.billing.alcsEndYear - (config.billing.supplementaryYears + (config.billing.alcsEndYear - toFinancialYearEnding));
+    toFinancialYearEnding = config.billing.alcsEndYear;
   } else {
+    toFinancialYearEnding = config.billing.alcsEndYear;
     // this is to temporary block 2023 annual billing until SROC has been implemented.
     fromFinancialYearEnding = config.billing.alcsEndYear;
   }
