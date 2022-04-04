@@ -253,7 +253,18 @@ const getErrMsgForBatchErr = (batch, regionId) =>
  * @param {Boolean} isSummer - Is this a summer season two part tariff run
  * @return {Promise<Batch>} resolves with Batch service model
  */
-const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
+const create = async (regionId, batchType, toFinancialYearEnding, isSummer, scheme = 'alcs') => {
+  let fromFinancialYearEnding;
+  // this is to temporary block 2023 annual billing until SROC has been implemented.
+  if (batchType === 'supplementary') {
+    fromFinancialYearEnding = config.billing.alcsEndYear - (config.billing.supplementaryYears + (config.billing.alcsEndYear - toFinancialYearEnding));
+    toFinancialYearEnding = config.billing.alcsEndYear;
+  } else {
+    toFinancialYearEnding = config.billing.alcsEndYear;
+    // this is to temporary block 2023 annual billing until SROC has been implemented.
+    fromFinancialYearEnding = config.billing.alcsEndYear;
+  }
+
   const batch = await getExistingOrDuplicateSentBatch(regionId, batchType, toFinancialYearEnding, isSummer);
 
   if (batch) {
@@ -263,17 +274,14 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
     throw err;
   }
 
-  const fromFinancialYearEnding = batchType === 'supplementary'
-    ? toFinancialYearEnding - config.billing.supplementaryYears
-    : toFinancialYearEnding;
-
   const { billingBatchId } = await newRepos.billingBatches.create({
     status: Batch.BATCH_STATUS.processing,
     regionId,
     batchType,
     fromFinancialYearEnding,
     toFinancialYearEnding,
-    isSummer
+    isSummer,
+    scheme
   });
 
   return getBatchById(billingBatchId);
