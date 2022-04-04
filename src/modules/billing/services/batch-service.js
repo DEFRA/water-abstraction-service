@@ -278,7 +278,7 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
     regionId,
     batchType,
     fromFinancialYearEnding,
-    toFinancialYearEnding: 2022,
+    toFinancialYearEnding,
     isSummer,
     scheme
   });
