@@ -39,7 +39,7 @@ const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeV
  */
 const getAllWithPaging = async (tabFilter, page, perPage) => {
   const result = await chargeVersionWorkflowsRepo.findAllWithPaging(tabFilter, page, perPage);
-  return { data: result.data.map(chargeVersionWorkflowMapper.dbToModel), pagination: result.pagination };
+  return { data: result.data, pagination: result.pagination };
 };
 
 /**
@@ -50,16 +50,24 @@ const getAllWithPaging = async (tabFilter, page, perPage) => {
  * @return {Promise<Role>}
  */
 const getLicenceHolderRole = async chargeVersionWorkflow => {
-  const { licenceNumber } = chargeVersionWorkflow.licence;
+  let isDataMapped = true;
+  let startDateKey = 'chargeVersion.dateRange.startDate';
+
+  let { licenceNumber } = chargeVersionWorkflow.licence;
+  if (!licenceNumber) {
+    licenceNumber = chargeVersionWorkflow.licence.licenceRef;
+    isDataMapped = false;
+    startDateKey = 'data.chargeVersion.dateRange.startDate';
+  }
   const startDate = chargeVersionWorkflow.status === 'to_setup'
     ? chargeVersionWorkflow.licenceVersion.startDate
-    : get(chargeVersionWorkflow, 'chargeVersion.dateRange.startDate', null);
+    : get(chargeVersionWorkflow, startDateKey, null);
 
   const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate);
   const role = doc ? doc.getRoleOnDate(Role.ROLE_NAMES.licenceHolder, startDate) : {};
 
   return {
-    ...chargeVersionWorkflow.toJSON(),
+    ...(isDataMapped ? chargeVersionWorkflow.toJSON() : chargeVersionWorkflow),
     licenceHolderRole: role
   };
 };
