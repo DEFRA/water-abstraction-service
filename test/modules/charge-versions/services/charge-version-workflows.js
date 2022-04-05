@@ -431,6 +431,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     experiment('when no document is found for the licence and start date', () => {
       const chargeVersionObject = new ChargeVersion(uuid());
       const licenceObject = new Licence(uuid());
+      licenceObject.licenceNumber = '01/123/123';
       beforeEach(async () => {
         chargeVersionWorkflow = new ChargeVersionWorkflow(uuid());
         chargeVersionWorkflow.fromHash({
