@@ -53,12 +53,13 @@ const getLicenceHolderRole = async chargeVersionWorkflow => {
   let isDataMapped = true;
   let startDateKey = 'chargeVersion.dateRange.startDate';
 
-  let { licenceNumber } = chargeVersionWorkflow.licence;
+  let { licenceNumber, licenceRef } = chargeVersionWorkflow.licence;
   if (!licenceNumber) {
-    licenceNumber = chargeVersionWorkflow.licence.licenceRef;
+    licenceNumber = licenceRef;
     isDataMapped = false;
     startDateKey = 'data.chargeVersion.dateRange.startDate';
   }
+
   const startDate = chargeVersionWorkflow.status === 'to_setup'
     ? chargeVersionWorkflow.licenceVersion.startDate
     : get(chargeVersionWorkflow, startDateKey, null);
