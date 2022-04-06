@@ -224,7 +224,7 @@
         ],
         "isFinal":false,
         "version":1,
-        "isSummer":true,
+        "isSummer":false,
         "isUpload":true,
         "purposes":[
             {

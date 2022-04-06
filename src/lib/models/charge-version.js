@@ -1,6 +1,5 @@
 'use strict';
 
-const config = require('../../../config');
 const validators = require('./validators');
 
 const Company = require('./company');
@@ -24,11 +23,7 @@ class ChargeVersion extends Model {
   constructor (id) {
     super(id);
     this._chargeElements = [];
-    if (new Date() >= config.billing.srocStartDate) {
-      this._scheme = SCHEME.sroc;
-    } else {
-      this._scheme = SCHEME.alcs;
-    }
+    this._scheme = SCHEME.alcs;
   }
 
   get licence () {

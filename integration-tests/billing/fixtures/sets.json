@@ -36,6 +36,10 @@
     },
     {
       "service": "water",
+      "file": "test-charge-versions.yaml"
+    },
+    {
+      "service": "water",
       "file": "test-gauging-stations.yaml"
     },
     {
