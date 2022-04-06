@@ -975,8 +975,8 @@ experiment('modules/billing/services/batch-service', () => {
             status: 'processing',
             regionId,
             batchType: 'annual',
-            fromFinancialYearEnding: 2019,
-            toFinancialYearEnding: 2019,
+            fromFinancialYearEnding: 2022,
+            toFinancialYearEnding: 2022,
             isSummer: 'all-year',
             scheme: 'alcs'
           });
@@ -999,7 +999,7 @@ experiment('modules/billing/services/batch-service', () => {
             regionId,
             batchType: 'supplementary',
             fromFinancialYearEnding: 2014,
-            toFinancialYearEnding: 2019,
+            toFinancialYearEnding: 2022,
             isSummer: 'all-year',
             scheme: 'alcs'
           });
