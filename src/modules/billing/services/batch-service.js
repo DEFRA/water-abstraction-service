@@ -12,6 +12,7 @@ const messageQueue = require('../../../lib/message-queue-v2');
 const { BatchStatusError } = require('../lib/errors');
 const { NotFoundError } = require('../../../lib/errors');
 const { BATCH_STATUS, BATCH_TYPE } = require('../../../lib/models/batch');
+const { SCHEME } = require('../../../lib/models/constants');
 const config = require('../../../../config');
 
 // Services
@@ -276,6 +277,7 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
 
   const { billingBatchId } = await newRepos.billingBatches.create({
     status: Batch.BATCH_STATUS.processing,
+    scheme: 'alcs',
     regionId,
     batchType,
     fromFinancialYearEnding,
@@ -290,7 +292,7 @@ const createChargeModuleBillRun = async batchId => {
   const batch = await getBatchById(batchId);
 
   // Create CM batch
-  const { billRun: cmBillRun } = await chargeModuleBillRunConnector.create(batch.region.code);
+  const { billRun: cmBillRun } = await chargeModuleBillRunConnector.create(batch.region.code, batch.scheme === SCHEME.alcs ? 'presroc' : batch.scheme);
 
   // Update DB row
   const row = await newRepos.billingBatches.update(batch.id, {

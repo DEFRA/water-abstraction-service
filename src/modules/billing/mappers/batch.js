@@ -23,7 +23,8 @@ const dbToModelMapper = createMapper({ mapNull: false })
     'netTotal',
     'invoiceValue',
     'source',
-    'transactionFileReference'
+    'transactionFileReference',
+    'scheme'
   )
   .map('creditNoteValue').to('creditNoteValue', value => -Math.abs(value))
   .map('billingBatchId').to('id')

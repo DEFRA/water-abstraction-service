@@ -6,6 +6,7 @@ const Region = require('./region');
 const Totals = require('./totals');
 const { assert } = require('@hapi/hoek');
 const { isArray } = require('lodash');
+const config = require('../../../config');
 
 const validators = require('./validators');
 
@@ -50,10 +51,16 @@ const BATCH_SOURCE = {
   wrls: 'wrls'
 };
 
+const { SCHEME } = require('./constants');
 class Batch extends Totals {
   constructor (id) {
     super(id);
     this._invoices = [];
+    if (new Date() >= config.billing.srocStartDate) {
+      this._scheme = SCHEME.sroc;
+    } else {
+      this._scheme = SCHEME.alcs;
+    }
   }
 
   /**
@@ -179,6 +186,19 @@ class Batch extends Totals {
 
   get dateUpdated () {
     return this._dateUpdated;
+  }
+
+  get scheme () {
+    return this._scheme;
+  }
+
+  /**
+   * Scheme - ALCS/SROC
+   * @param {String} scheme
+   */
+  set scheme (scheme) {
+    validators.assertEnum(scheme, Object.values(SCHEME));
+    this._scheme = scheme;
   }
 
   /**
@@ -346,7 +366,7 @@ class Batch extends Totals {
     return this._transactionFileReference;
   }
 }
-
+module.exports.SCHEME = SCHEME;
 module.exports = Batch;
 module.exports.BATCH_TYPE = BATCH_TYPE;
 module.exports.BATCH_STATUS = BATCH_STATUS;
