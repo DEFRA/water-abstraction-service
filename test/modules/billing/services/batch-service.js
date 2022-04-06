@@ -13,6 +13,8 @@ const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
 const Batch = require('../../../../src/lib/models/batch');
+const { SCHEME } = require('../../../../src/lib/models/constants');
+const Region = require('../../../../src/lib/models/region');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const Invoice = require('../../../../src/lib/models/invoice');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
@@ -962,20 +964,22 @@ experiment('modules/billing/services/batch-service', () => {
         sandbox.stub(config.billing, 'supplementaryYears').value(5);
       });
 
-      experiment('and the batch type is annual', () => {
+      experiment('and the batch type is annual with scheme alcs', () => {
         beforeEach(async () => {
           result = await batchService.create(regionId, 'annual', 2019, 'all-year');
         });
 
         test('a batch is created processing 1 financial year', async () => {
-          expect(newRepos.billingBatches.create.calledWith({
+          const args = newRepos.billingBatches.create.lastCall.args[0];
+          expect(args).to.equal({
             status: 'processing',
             regionId,
             batchType: 'annual',
             fromFinancialYearEnding: 2019,
             toFinancialYearEnding: 2019,
-            isSummer: false
-          }));
+            isSummer: 'all-year',
+            scheme: 'alcs'
+          });
         });
 
         test('the result is a batch', async () => {
@@ -989,14 +993,16 @@ experiment('modules/billing/services/batch-service', () => {
         });
 
         test('a batch is created processing the number of years specified in config.billing.supplementaryYears', async () => {
-          expect(newRepos.billingBatches.create.calledWith({
+          const args = newRepos.billingBatches.create.lastCall.args[0];
+          expect(args).to.equal({
             status: 'processing',
             regionId,
             batchType: 'supplementary',
-            fromFinancialYearEnding: 2013,
+            fromFinancialYearEnding: 2014,
             toFinancialYearEnding: 2019,
-            isSummer: false
-          }));
+            isSummer: 'all-year',
+            scheme: 'alcs'
+          });
         });
 
         test('the result is a batch', async () => {
@@ -1028,7 +1034,7 @@ experiment('modules/billing/services/batch-service', () => {
   });
 
   experiment('.createChargeModuleBillRun', () => {
-    let result;
+    let result, batch, batchId, testRegion;
     const cmResponse = {
       billRun: {
         id: uuid(),
@@ -1037,7 +1043,14 @@ experiment('modules/billing/services/batch-service', () => {
     };
 
     beforeEach(async () => {
+      batchId = uuid();
+      testRegion = new Region();
+      testRegion.fromHash(region);
+      batch = new Batch(batchId);
+      batch.region = testRegion;
+      batch.scheme = 'alcs';
       chargeModuleBillRunConnector.create.resolves(cmResponse);
+      newRepos.billingBatches.findOne.resolves(batch);
       newRepos.billingBatches.update.resolves({
         externalId: cmResponse.billRun.id,
         billRunNumber: cmResponse.billRun.billRunNumber
@@ -1046,11 +1059,14 @@ experiment('modules/billing/services/batch-service', () => {
     });
 
     test('the correct batch is loaded from the DB', async () => {
-      expect(newRepos.billingBatches.findOne.calledWith(BATCH_ID)).to.be.true();
+      const batchId = newRepos.billingBatches.findOne.lastCall.args[0];
+      expect(batchId).to.equal(BATCH_ID);
     });
 
     test('a batch is created in the charge module with the correct region', async () => {
-      expect(chargeModuleBillRunConnector.create.calledWith(REGION_ID));
+      const [region, ruleset] = chargeModuleBillRunConnector.create.lastCall.args;
+      expect(region).to.equal(testRegion.chargeRegionId);
+      expect(ruleset).to.equal('presroc');
     });
 
     test('the batch is updated with the values from the CM', async () => {
@@ -1064,9 +1080,16 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('the updated batch is returned', async () => {
       expect(result instanceof Batch).to.be.true();
-      expect(result.id).to.equal(BATCH_ID);
       expect(result.externalId).to.equal(cmResponse.billRun.id);
       expect(result.billRunNumber).to.equal(cmResponse.billRun.billRunNumber);
+    });
+
+    test('the updated batch is returned', async () => {
+      batch.scheme = SCHEME.sroc;
+      await batchService.createChargeModuleBillRun(BATCH_ID);
+      const [region, ruleset] = chargeModuleBillRunConnector.create.lastCall.args;
+      expect(region).to.equal(testRegion.chargeRegionId);
+      expect(ruleset).to.equal('sroc');
     });
   });
 

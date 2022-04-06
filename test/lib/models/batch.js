@@ -633,4 +633,22 @@ experiment('lib/models/batch', () => {
       expect(batch.transactionFileReference).to.equal(null);
     });
   });
+
+  experiment('.scheme', () => {
+    test('can be set to "sroc"', async () => {
+      batch.scheme = 'sroc';
+      expect(batch.scheme).to.equal('sroc');
+    });
+    test('can be set to "alcs"', async () => {
+      batch.scheme = 'alcs';
+      expect(batch.scheme).to.equal('alcs');
+    });
+
+    test('cannot be set to an invalid scheme', async () => {
+      const func = () => {
+        batch.scheme = 'invalid_scheme';
+      };
+      expect(func).to.throw();
+    });
+  });
 });

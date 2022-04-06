@@ -23,6 +23,7 @@ const Transaction = require('../../../../src/lib/models/transaction');
 
 const data = {
   batch: {
+    scheme: 'alcs',
     billingBatchId: uuid(),
     batchType: 'supplementary',
     isSummer: true,
@@ -74,6 +75,7 @@ experiment('modules/billing/mappers/batch', () => {
         expect(batch.status).to.equal(data.batch.status);
         expect(batch.dateCreated.format()).to.equal(data.batch.dateCreated);
         expect(batch.dateUpdated.format()).to.equal(data.batch.dateUpdated);
+        expect(batch.scheme).to.equal(data.batch.scheme);
       });
 
       test('the start year is a FinancialYear instance', async () => {
