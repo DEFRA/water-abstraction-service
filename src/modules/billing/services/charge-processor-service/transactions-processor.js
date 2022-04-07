@@ -99,12 +99,12 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
   //   aggregate: 0.5
   // };
 
-  const absPeriod = chargeElement.abstractionPeriod.toJSON();
+  const absPeriod = chargeElement.chargePurposes[0].abstractionPeriod.toJSON();
   return {
+    abstractionPeriod: absPeriod,
     chargeElementId: chargeElement.id,
     startDate: chargePeriod.startDate,
     endDate: chargePeriod.endDate,
-    abstractionPeriod: absPeriod,
     loss: chargeElement.loss,
     chargeType: flags.isCompensationCharge ? 'compensation' : 'standard',
     authorisedQuantity: chargeElement.authorisedQuantity,
@@ -118,6 +118,8 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
     section130Agreement: chargeElement.adjustments.s130,
     isWinterOnly: !!chargeElement.adjustments.winter,
     scheme: 'sroc',
+    season: 'all year',
+    source: chargeElement.additionalCharges.supportedSource ? 'supported' : 'unsupported',
     aggregateProportion: chargeElement.adjustments.aggregate, // todo what about the adjustment factor?
     chargeCategoryCode: chargeElement.chargeCategory.reference,
     chargeCategoryDescription: chargeElement.chargeCategory.shortDescription,
@@ -125,7 +127,6 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
     supportedSourceName: chargeElement.additionalCharges.supportedSource ? chargeElement.additionalCharges.supportedSourceName : '',
     isWaterCompanyCharge: chargeElement.additionalCharges.isSupplyPublicWater,
     isTwoPartSecondPartCharge: flags.isTwoPartSecondPartCharge || false,
-    isCompensationCharge: flags.isCompensationCharge || false,
     isNewLicence: flags.isMinimumCharge || false
   };
 };
@@ -242,10 +243,10 @@ const createAnnualAndCompensationTransactions = (elementChargePeriod, chargeElem
       transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true, isMinimumCharge }));
     }
   } else {
-    transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isMinimumCharge }));
+    transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, { isMinimumCharge }));
 
     if (isCompensationChargesNeeded(chargeVersion)) {
-      transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true, isMinimumCharge }));
+      transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, { isCompensationCharge: true, isMinimumCharge }));
     }
   }
 

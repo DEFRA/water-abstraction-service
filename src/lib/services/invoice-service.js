@@ -50,12 +50,10 @@ const getOrCreateInvoice = async (batchId, invoiceAccountId, financialYearEnding
  * @return {Promise<Object>} row data inserted (camel case)
  */
 const saveInvoiceToDB = async (batch, invoice) => {
-  const data = batch.scheme === 'alcs'
-    ? {
-      ...mappers.invoice.modelToDb(invoice),
-      billingBatchId: batch.id
-    }
-    : invoice;
+  const data = {
+    ...mappers.invoice.modelToDb(invoice, batch.scheme),
+    billingBatchId: batch.id
+  };
   return repos.billingInvoices.upsert(data);
 };
 

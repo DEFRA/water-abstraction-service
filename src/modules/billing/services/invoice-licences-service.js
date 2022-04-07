@@ -23,14 +23,9 @@ const batchService = require('./batch-service');
  * @return {Promise<Object>} row data inserted
  */
 const saveInvoiceLicenceToDB = async (invoice, invoiceLicence, scheme) => {
-  if (scheme === 'alcs') {
-    const data = mappers.invoiceLicence.modelToDB(invoice, invoiceLicence);
-    const dbRow = await newRepos.billingInvoiceLicences.upsert(data);
-    return mappers.invoiceLicence.dbToModel(dbRow);
-  } else {
-    const dbRow = await newRepos.billingInvoiceLicences.upsert(invoice);
-    return dbRow;
-  }
+  const data = mappers.invoiceLicence.modelToDB(invoice, invoiceLicence);
+  const dbRow = await newRepos.billingInvoiceLicences.upsert(data);
+  return mappers.invoiceLicence.dbToModel(dbRow);
 };
 
 const getInvoiceLicenceWithTransactions = async invoiceLicenceId => {

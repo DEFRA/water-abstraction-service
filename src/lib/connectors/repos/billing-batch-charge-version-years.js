@@ -20,12 +20,10 @@ const findOne = async id => {
    */
   const withRelated = [
     'billingBatch',
-    // 'billingBatch.region',
     'chargeVersion',
-    // 'chargeVersion.changeReason',
     'chargeVersion.chargeElements',
-    // 'chargeVersion.chargeElements.purposePrimary',
-    // 'chargeVersion.chargeElements.purposeSecondary',
+    'chargeVersion.chargeElements.chargeCategory',
+    'chargeVersion.chargeElements.chargePurposes',
     'chargeVersion.chargeElements.purposeUse',
     'chargeVersion.licence',
     'chargeVersion.licence.licenceAgreements',
