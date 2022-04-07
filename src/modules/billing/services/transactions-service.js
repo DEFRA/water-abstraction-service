@@ -15,7 +15,9 @@ const moment = require('moment');
  * @return {Promise}
  */
 const saveTransactionToDB = (invoiceLicence, transaction) => {
-  const data = mappers.transaction.modelToDb(invoiceLicence, transaction);
+  const data = transaction.scheme === 'acls'
+    ? mappers.transaction.modelToDb(invoiceLicence, transaction)
+    : transaction;
   return transaction.id
     ? newRepos.billingTransactions.update(transaction.id, data)
     : newRepos.billingTransactions.create(data);

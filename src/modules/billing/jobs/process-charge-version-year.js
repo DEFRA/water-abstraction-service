@@ -16,7 +16,7 @@ const config = require('../../../../config');
 const helpers = require('./lib/helpers');
 
 const fork = require('child_process').fork;
-const child = fork('./src/modules/billing/jobs/lib/process-charge-version-year-worker.js');
+const createTransactions = fork('./src/modules/billing/jobs/lib/process-charge-version-year-worker.js');
 
 const createMessage = (batchId, billingBatchChargeVersionYearId) => ([
   JOB_NAME,
@@ -34,7 +34,7 @@ const handler = async job => {
   const chargeVersionYearId = get(job, 'data.billingBatchChargeVersionYearId');
   try {
     return new Promise((resolve, reject) => {
-      child.on('message', msg => {
+      createTransactions.on('message', msg => {
         if (msg.complete === true && msg.batchId) {
           messageQueue.getQueueManager().add(prepareTransactionsJobName, msg.batchId);
         } else if (msg.error) {
@@ -47,7 +47,7 @@ const handler = async job => {
         }
       });
 
-      child.send(chargeVersionYearId);
+      createTransactions.send(chargeVersionYearId);
     });
   } catch (err) {
     await chargeVersionYearService.setErrorStatus(chargeVersionYearId);

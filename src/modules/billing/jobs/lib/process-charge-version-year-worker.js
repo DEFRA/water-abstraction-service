@@ -11,6 +11,7 @@ process.on('message', async chargeVersionYearId => {
     const batch = await chargeVersionYearService.processChargeVersionYear(chargeVersionYear);
 
     // Persist data
+    // for SROC the invoice, invoice licences and transactions are raw pojo's i.e. not mapped
     await batchService.saveInvoicesToDB(batch);
 
     // Update status in water.billing_batch_charge_version_year

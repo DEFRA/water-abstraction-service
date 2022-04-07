@@ -161,7 +161,7 @@ const processFinancialYear = async (batch, financialYear) => {
 
   // Get charge versions in financial year
   const chargeVersions = await repos.chargeVersions.findValidInRegionAndFinancialYear(
-    batch.region.id, financialYear.endYear, batch.type === BATCH_TYPE.supplementary
+    batch.region.id, financialYear.endYear, batch.type === BATCH_TYPE.supplementary, batch.scheme
   );
 
   const chargeVersionYears = await bluebird.mapSeries(

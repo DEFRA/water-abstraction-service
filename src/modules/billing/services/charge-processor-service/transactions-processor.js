@@ -71,6 +71,66 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
 };
 
 /**
+ * Creates a Transaction model
+ * @param {DateRange} chargePeriod - charge period for this charge element - taking time-limits into account
+ * @param {ChargeElement} chargeElement
+ * @param {FinancialYear} financialYear
+ * @param {Object} flags
+ * @param {Boolean} flags.isCompensationCharge
+ * @param {Boolean} flags.isTwoPartSecondPartCharge
+ * @param {Boolean} flags.isMinimumCharge
+ * @return {Transaction}
+ */
+const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags = {}) => {
+  // const chargeElement.additionalCharges = {
+  //   supportedSource: {
+  //     id: 'dc6bc727-777d-44bc-8fe3-f992cbdaee63',
+  //     name: 'Earl Soham - Deben'
+  //   },
+  //   isSupplyPublicWater: true
+  // };
+
+  // const chargeElement.adjustments = {
+  //   s126: 0.5,
+  //   s127: true,
+  //   s130: true,
+  //   charge: 0.5,
+  //   winter: true,
+  //   aggregate: 0.5
+  // };
+
+  const absPeriod = chargeElement.abstractionPeriod.toJSON();
+  return {
+    chargeElementId: chargeElement.id,
+    startDate: chargePeriod.startDate,
+    endDate: chargePeriod.endDate,
+    abstractionPeriod: absPeriod,
+    loss: chargeElement.loss,
+    chargeType: flags.isCompensationCharge ? 'compensation' : 'standard',
+    authorisedQuantity: chargeElement.authorisedQuantity,
+    authorisedDays: getBillableDays(absPeriod, financialYear.start.format(DATE_FORMAT), financialYear.end.format(DATE_FORMAT), flags.isTwoPartSecondPartCharge),
+    billableDays: getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate, flags.isTwoPartSecondPartCharge),
+    status: 'candidate',
+    description: chargeElement.description,
+    volume: 0, // 2PT acutal reported volume and reviewed in 1PTT review process
+    section126Factor: chargeElement.adjustments.s126 || 1,
+    section127Agreement: chargeElement.adjustments.s127,
+    section130Agreement: chargeElement.adjustments.s130,
+    isWinterOnly: !!chargeElement.adjustments.winter,
+    scheme: 'sroc',
+    aggregateProportion: chargeElement.adjustments.aggregate, // todo what about the adjustment factor?
+    chargeCategoryCode: chargeElement.chargeCategory.reference,
+    chargeCategoryDescription: chargeElement.chargeCategory.shortDescription,
+    isSupportedSource: !!chargeElement.additionalCharges.supportedSource,
+    supportedSourceName: chargeElement.additionalCharges.supportedSource ? chargeElement.additionalCharges.supportedSourceName : '',
+    isWaterCompanyCharge: chargeElement.additionalCharges.isSupplyPublicWater,
+    isTwoPartSecondPartCharge: flags.isTwoPartSecondPartCharge || false,
+    isCompensationCharge: flags.isCompensationCharge || false,
+    isNewLicence: flags.isMinimumCharge || false
+  };
+};
+
+/**
  * Predicate to check whether compensation charges are needed
  * @param {ChargeVersion} chargeVersion
  * @return {Boolean}
@@ -174,10 +234,19 @@ const createAnnualAndCompensationTransactions = (elementChargePeriod, chargeElem
   const { chargeVersion } = additionalData;
   const isMinimumCharge = doesMinimumChargeApply(elementChargePeriod, chargeVersion);
 
-  const transactions = [createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isMinimumCharge })];
+  const transactions = [];
+  if (chargeVersion.scheme === 'alcs') {
+    transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isMinimumCharge }));
 
-  if (isCompensationChargesNeeded(chargeVersion)) {
-    transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true, isMinimumCharge }));
+    if (isCompensationChargesNeeded(chargeVersion)) {
+      transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true, isMinimumCharge }));
+    }
+  } else {
+    transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isMinimumCharge }));
+
+    if (isCompensationChargesNeeded(chargeVersion)) {
+      transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true, isMinimumCharge }));
+    }
   }
 
   // Filter any transactions with 0 billable days

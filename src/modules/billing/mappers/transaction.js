@@ -241,12 +241,12 @@ const mapLicenceToChargeElementTransaction = licence => ({
  * @param {Transaction} transaction
  * @return {Object}
  */
-const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
+const modelToChargeModuleAlcs = (batch, invoice, invoiceLicence, transaction) => {
   const periodStart = mapChargeModuleDate(transaction.chargePeriod.startDate);
   const periodEnd = mapChargeModuleDate(transaction.chargePeriod.endDate);
 
   return {
-    ruleset: batch.scheme === SCHEME.alcs ? 'presroc' : SCHEME.sroc,
+    ruleset: 'presroc',
     clientId: transaction.id,
     periodStart,
     periodEnd,
@@ -264,6 +264,54 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     ...mapChargeElementToChargeModuleTransaction(transaction.chargeElement),
     ...mapLicenceToChargeElementTransaction(invoiceLicence.licence),
     subjectToMinimumCharge: !transaction.isTwoPartSecondPartCharge
+  };
+};
+
+/**
+ * Maps service models to Charge Module transaction data that
+ * can be used to generate a charge
+ * @param {Batch} batch
+ * @param {Invoice} invoice
+ * @param {InvoiceLicence} invoiceLicence
+ * @param {Transaction} transaction
+ * @return {Object}
+ */
+const modelToChargeModuleSroc = (batch, invoice, invoiceLicence, transaction) => {
+  const periodStart = mapChargeModuleDate(transaction.chargePeriod.startDate);
+  const periodEnd = mapChargeModuleDate(transaction.chargePeriod.endDate);
+  const licence = invoiceLicence.licence;
+  return {
+    periodStart,
+    periodEnd,
+    scheme: SCHEME.sroc,
+    credit: transaction.isCredit,
+    abatementFactor: transaction.calcS126Factor,
+    actualVolume: transaction.volume,
+    aggregateProportion: transaction.aggregateProportion,
+    areaCode: licence.historicalArea.code,
+    authorisedDays: transaction.authorisedDays,
+    authrorisedVolume: transaction.authrorisedVolume,
+    batchNumber: batch.id,
+    billableDays: transaction.billableDays,
+    chargeCategoryCode: transaction.chargeCategoryCode,
+    chargeCategoryDescription: transaction.chargeCategoryDescription,
+    chargePeriod: `${periodStart} - ${periodEnd}`,
+    clientId: transaction.id,
+    compensationCharge: transaction.isCompensationCharge,
+    customerReference: invoice.invoiceAccount.accountNumber,
+    licenceNumber: licence.licenceNumber,
+    lineDescription: transaction.description,
+    loss: transaction.loss,
+    region: licence.region.code,
+    regionalChargingArea: licence.regionalChargeArea.name,
+    section127Agreement: transaction.section127Agreement,
+    section130Agreement: transaction.section130Agreement,
+    supportedSource: transaction.supportedSource,
+    supportedSourceName: transaction.supportedSourceName,
+    twoPartTariff: transaction.isTwoPartSecondPartCharge,
+    waterCompanyCharge: transaction.waterCompanyCharge,
+    waterUndertaker: licence.isWaterUndertaker,
+    winterOnly: transaction.winterOnly
   };
 };
 
@@ -322,7 +370,8 @@ const inverseCreditNoteSign = transaction => {
 
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
-exports.modelToChargeModule = modelToChargeModule;
+exports.modelToChargeModule = modelToChargeModuleAlcs;
+exports.modelToChargeModuleSroc = modelToChargeModuleSroc;
 exports.cmToModel = cmToModel;
 exports.cmToPojo = cmToPojo;
 exports.cmToDb = cmToDb;

@@ -66,20 +66,21 @@ const getExistingBatch = batches => {
   return mapBatch(existingBatch);
 };
 
-const getDuplicateSentBatch = (batches, batchType, toFinancialYearEnding, isSummer) => {
+const getDuplicateSentBatch = (batches, batchType, toFinancialYearEnding, isSummer, scheme) => {
   const duplicateSentBatch = batches.find(b =>
     b.status === BATCH_STATUS.sent &&
       b.batchType === batchType &&
       b.toFinancialYearEnding === toFinancialYearEnding &&
-      b.isSummer === isSummer);
+      b.isSummer === isSummer &&
+      b.scheme === scheme);
   return mapBatch(duplicateSentBatch);
 };
 
-const getExistingAndDuplicateBatchesForRegion = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
+const getExistingAndDuplicateBatchesForRegion = async (regionId, batchType, toFinancialYearEnding, isSummer, scheme) => {
   const batches = await newRepos.billingBatches.findByRegionId(regionId);
   return {
     existingBatch: getExistingBatch(batches),
-    duplicateSentBatch: getDuplicateSentBatch(batches, batchType, toFinancialYearEnding, isSummer)
+    duplicateSentBatch: getDuplicateSentBatch(batches, batchType, toFinancialYearEnding, isSummer, scheme)
   };
 };
 
@@ -93,8 +94,8 @@ const getExistingAndDuplicateBatchesForRegion = async (regionId, batchType, toFi
  * @param {Boolean} isSummer
  * @return {Batch|null} if batch exists
  */
-const getExistingOrDuplicateSentBatch = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
-  const { existingBatch, duplicateSentBatch } = await getExistingAndDuplicateBatchesForRegion(regionId, batchType, toFinancialYearEnding, isSummer);
+const getExistingOrDuplicateSentBatch = async (regionId, batchType, toFinancialYearEnding, isSummer, scheme) => {
+  const { existingBatch, duplicateSentBatch } = await getExistingAndDuplicateBatchesForRegion(regionId, batchType, toFinancialYearEnding, isSummer, scheme);
 
   // supplementary batches can be run multiple times for the same region, year and season
   if (batchType === BATCH_TYPE.supplementary) return existingBatch;
@@ -202,7 +203,7 @@ const saveInvoiceLicenceTransactions = async invoiceLicence => {
 
 const saveInvoiceLicences = async (batch, invoice) => {
   for (const invoiceLicence of invoice.invoiceLicences) {
-    const { id } = await invoiceLicenceService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
+    const { id } = await invoiceLicenceService.saveInvoiceLicenceToDB(invoice, invoiceLicence, batch.scheme);
     invoiceLicence.id = id;
     await saveInvoiceLicenceTransactions(invoiceLicence);
   }
@@ -255,20 +256,21 @@ const getErrMsgForBatchErr = (batch, regionId) =>
  * @return {Promise<Batch>} resolves with Batch service model
  */
 const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
-  let fromFinancialYearEnding;
-  // this is to temporary block 2023 annual billing until SROC has been implemented.
-  if (batchType === 'supplementary') {
-    fromFinancialYearEnding = config.billing.alcsEndYear - (config.billing.supplementaryYears + (config.billing.alcsEndYear - toFinancialYearEnding));
+  let fromFinancialYearEnding, scheme;
+  if (batchType !== 'annual') {
+    scheme = 'alcs';
     toFinancialYearEnding = config.billing.alcsEndYear;
-  } else if (batchType === 'two_part_tariff') {
-    fromFinancialYearEnding = toFinancialYearEnding;
+    if (batchType === 'supplementary') {
+      fromFinancialYearEnding = config.billing.alcsEndYear - (config.billing.supplementaryYears + (config.billing.alcsEndYear - toFinancialYearEnding));
+    } else {
+      fromFinancialYearEnding = toFinancialYearEnding;
+    }
   } else {
-    toFinancialYearEnding = config.billing.alcsEndYear;
-    // this is to temporary block 2023 annual billing until SROC has been implemented.
-    fromFinancialYearEnding = config.billing.alcsEndYear;
+    scheme = 'sroc';
+    fromFinancialYearEnding = toFinancialYearEnding;
   }
 
-  const batch = await getExistingOrDuplicateSentBatch(regionId, batchType, toFinancialYearEnding, isSummer);
+  const batch = await getExistingOrDuplicateSentBatch(regionId, batchType, toFinancialYearEnding, isSummer, scheme);
 
   if (batch) {
     const err = Boom.conflict(getErrMsgForBatchErr(batch, regionId));
@@ -279,12 +281,12 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
 
   const { billingBatchId } = await newRepos.billingBatches.create({
     status: Batch.BATCH_STATUS.processing,
-    scheme: 'alcs',
     regionId,
     batchType,
     fromFinancialYearEnding,
     toFinancialYearEnding,
-    isSummer
+    isSummer,
+    scheme
   });
 
   return getBatchById(billingBatchId);

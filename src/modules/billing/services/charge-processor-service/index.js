@@ -69,10 +69,14 @@ const processChargeVersionYear = async (chargeVersionYear) => {
   const invoice = mappers.invoice.crmToModel(invoiceAccount);
   invoice.financialYear = financialYear;
   const invoiceLicence = createInvoiceLicence(chargeVersion);
-  invoiceLicence.transactions = await createTransactions(chargeVersionYear);
-  invoice.invoiceLicences = [invoiceLicence];
-
-  return invoice;
+  if (chargeVersionYear.batch.scheme === 'acls') {
+    invoiceLicence.transactions = await createTransactions(chargeVersionYear);
+    invoice.invoiceLicences = [invoiceLicence];
+    return invoice;
+  } else {
+    const transactions = await createTransactions(chargeVersionYear);
+    return { ...invoice.toJSON(), invoiceLicence: invoiceLicence.toJSON(), transactions };
+  }
 };
 
 exports.processChargeVersionYear = processChargeVersionYear;
