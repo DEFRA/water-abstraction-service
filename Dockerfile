@@ -1,14 +1,11 @@
-FROM node:14.19.1-alpine
+FROM node:12
 
 WORKDIR /app
 
-RUN apk update && apk add cmake
+RUN apt-get update && apt-get -y install cmake
 
 COPY package*.json ./
 COPY . .
-
 RUN npm ci
 
 CMD [ "node", "." ]
-
-
