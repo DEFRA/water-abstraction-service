@@ -15,7 +15,7 @@ const moment = require('moment');
  * @return {Promise}
  */
 const saveTransactionToDB = (invoiceLicence, transaction) => {
-  const data = transaction.scheme === 'alcs'
+  const data = transaction.scheme === 'alcs' || transaction instanceof Transaction
     ? mappers.transaction.modelToDb(invoiceLicence, transaction)
     : { ...transaction, billingInvoiceLicenceId: invoiceLicence.id };
   return transaction.id

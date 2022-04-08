@@ -103,13 +103,43 @@ const dbToModelMapper = createMapper()
     (billingVolume, endDate, season) => billingVolume ? getBillingVolumeForTransaction({ billingVolume, endDate, season }) : null)
   .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel);
 
+const dbToModelMapperSroc = createMapper()
+  .copy(
+    'status',
+    'isCredit',
+    'authorisedDays',
+    'billableDays',
+    'description',
+    'externalId',
+    'isTwoPartSecondPartCharge',
+    'isDeMinimis',
+    'isNewLicence',
+    'isCreditedBack',
+    'isWaterCompanyCharge'
+
+  )
+  .map('calcS126Factor').to('calcS126FactorValue')
+  .map('calcS127Factor').to('calcS127FactorValue')
+  .map('netAmount').to('value')
+  .map('billingTransactionId').to('id')
+  .map('batchType').to('type')
+  .map(['startDate', 'endDate']).to('chargePeriod', (startDate, endDate) => new DateRange(startDate, endDate))
+  .map('chargeType').to('isCompensationCharge', isValueEqualTo('compensation'))
+  .map('chargeType').to('isMinimumCharge', isValueEqualTo('minimum_charge'))
+  .map('chargeElement').to('chargeElement', chargeElementMapper.dbToModel)
+  .map('volume').to('volume', volume => isNull(volume) ? null : parseFloat(volume))
+  .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel);
+
 /**
  * Converts DB representation to a Transaction service model
  * @param {Object} row
  * @return {Transaction}
  */
-const dbToModel = row =>
-  createModel(Transaction, row, dbToModelMapper);
+const dbToModel = row => {
+  return row.scheme === 'alcs'
+    ? createModel(Transaction, row, dbToModelMapper)
+    : createModel(Transaction, row, dbToModelMapperSroc);
+};
 
 const mapChargeType = (isCompensationCharge, isMinimumCharge) => {
   if (isCompensationCharge) {
@@ -280,38 +310,52 @@ const modelToChargeModuleSroc = (batch, invoice, invoiceLicence, transaction) =>
   const periodStart = mapChargeModuleDate(transaction.chargePeriod.startDate);
   const periodEnd = mapChargeModuleDate(transaction.chargePeriod.endDate);
   const licence = invoiceLicence.licence;
+  // const chargeElement.additionalCharges = {
+  //   isSupplyPublicWater: true todo
+  // };
+
+  // const chargeElement.adjustments = {
+  //   charge: 0.5 todo
+  // };
+
+  // {
+  //   authrorisedVolume: undefined,
+  //   chargeCategoryCode: undefined,
+  //   chargeCategoryDescription: undefined,
+  //   waterCompanyCharge: undefined
+  // }
   return {
     periodStart,
     periodEnd,
-    scheme: SCHEME.sroc,
-    credit: transaction.isCredit,
-    abatementFactor: transaction.calcS126Factor,
-    actualVolume: transaction.volume,
-    aggregateProportion: transaction.aggregateProportion,
+    ruleset: SCHEME.sroc,
+    credit: !!transaction.isCredit,
+    abatementFactor: parseFloat(transaction.chargeElement.adjustments.s126),
+    actualVolume: transaction.chargeElement.volume,
+    aggregateProportion: transaction.chargeElement.adjustments.aggregate | 1,
     areaCode: licence.historicalArea.code,
     authorisedDays: transaction.authorisedDays,
-    authrorisedVolume: transaction.authrorisedVolume,
+    authorisedVolume: transaction.chargeElement.volume,
     batchNumber: batch.id,
     billableDays: transaction.billableDays,
-    chargeCategoryCode: transaction.chargeCategoryCode,
-    chargeCategoryDescription: transaction.chargeCategoryDescription,
+    chargeCategoryCode: transaction.chargeElement.chargeCategory.reference,
+    chargeCategoryDescription: transaction.chargeElement.chargeCategory.shortDescription,
     chargePeriod: `${periodStart} - ${periodEnd}`,
     clientId: transaction.id,
     compensationCharge: transaction.isCompensationCharge,
     customerReference: invoice.invoiceAccount.accountNumber,
     licenceNumber: licence.licenceNumber,
     lineDescription: transaction.description,
-    loss: transaction.loss,
+    loss: transaction.chargeElement.loss,
     region: licence.region.code,
     regionalChargingArea: licence.regionalChargeArea.name,
-    section127Agreement: transaction.section127Agreement,
-    section130Agreement: transaction.section130Agreement,
-    supportedSource: transaction.supportedSource,
-    supportedSourceName: transaction.supportedSourceName,
-    twoPartTariff: transaction.isTwoPartSecondPartCharge,
-    waterCompanyCharge: transaction.waterCompanyCharge,
-    waterUndertaker: licence.isWaterUndertaker,
-    winterOnly: transaction.winterOnly
+    section127Agreement: transaction.chargeElement.adjustments.s127,
+    section130Agreement: transaction.chargeElement.adjustments.s130,
+    supportedSource: !!transaction.chargeElement.additionalCharges.supportedSource.name,
+    supportedSourceName: transaction.chargeElement.additionalCharges.supportedSource.name,
+    twoPartTariff: false, // todo
+    waterCompanyCharge: transaction.isWaterCompanyCharge,
+    waterUndertaker: transaction.chargeElement.additionalCharges.isSupplyPublicWater,
+    winterOnly: !!transaction.chargeElement.adjustments.winter
   };
 };
 

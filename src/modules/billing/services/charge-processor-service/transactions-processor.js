@@ -82,23 +82,6 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
  * @return {Transaction}
  */
 const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags = {}) => {
-  // const chargeElement.additionalCharges = {
-  //   supportedSource: {
-  //     id: 'dc6bc727-777d-44bc-8fe3-f992cbdaee63',
-  //     name: 'Earl Soham - Deben'
-  //   },
-  //   isSupplyPublicWater: true
-  // };
-
-  // const chargeElement.adjustments = {
-  //   s126: 0.5,
-  //   s127: true,
-  //   s130: true,
-  //   charge: 0.5,
-  //   winter: true,
-  //   aggregate: 0.5
-  // };
-
   const absPeriod = chargeElement.chargePurposes[0].abstractionPeriod.toJSON();
   return {
     abstractionPeriod: absPeriod,
@@ -107,7 +90,7 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
     endDate: chargePeriod.endDate,
     loss: chargeElement.loss,
     chargeType: flags.isCompensationCharge ? 'compensation' : 'standard',
-    authorisedQuantity: chargeElement.authorisedQuantity,
+    authorisedQuantity: chargeElement.volume,
     authorisedDays: getBillableDays(absPeriod, financialYear.start.format(DATE_FORMAT), financialYear.end.format(DATE_FORMAT), flags.isTwoPartSecondPartCharge),
     billableDays: getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate, flags.isTwoPartSecondPartCharge),
     status: 'candidate',
@@ -119,12 +102,12 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
     isWinterOnly: !!chargeElement.adjustments.winter,
     scheme: 'sroc',
     season: 'all year',
-    source: chargeElement.additionalCharges.supportedSource ? 'supported' : 'unsupported',
-    aggregateProportion: chargeElement.adjustments.aggregate, // todo what about the adjustment factor?
+    source: chargeElement.source ? 'supported' : 'unsupported',
+    aggregateFactor: chargeElement.adjustments.aggregate || 1, // todo what about the adjustment factor?
     chargeCategoryCode: chargeElement.chargeCategory.reference,
     chargeCategoryDescription: chargeElement.chargeCategory.shortDescription,
     isSupportedSource: !!chargeElement.additionalCharges.supportedSource,
-    supportedSourceName: chargeElement.additionalCharges.supportedSource ? chargeElement.additionalCharges.supportedSourceName : '',
+    supportedSourceName: chargeElement.additionalCharges.supportedSource ? chargeElement.additionalCharges.supportedSource.name : '',
     isWaterCompanyCharge: chargeElement.additionalCharges.isSupplyPublicWater,
     isTwoPartSecondPartCharge: flags.isTwoPartSecondPartCharge || false,
     isNewLicence: flags.isMinimumCharge || false

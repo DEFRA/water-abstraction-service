@@ -50,7 +50,9 @@ const modelToChargeModule = batch => {
   return batch.invoices.reduce((acc, invoice) => {
     invoice.invoiceLicences.forEach(invoiceLicence => {
       invoiceLicence.transactions.forEach(transaction => {
-        acc.push(transactionMapper.modelToChargeModule(batch, invoice, invoiceLicence, transaction));
+        acc.push(batch.scheme === 'alcs'
+          ? transactionMapper.modelToChargeModule(batch, invoice, invoiceLicence, transaction)
+          : transactionMapper.modelToChargeModuleSroc(batch, invoice, invoiceLicence, transaction));
       });
     });
     return acc;

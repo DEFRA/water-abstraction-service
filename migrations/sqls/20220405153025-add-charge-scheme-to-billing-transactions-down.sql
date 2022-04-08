@@ -1,6 +1,6 @@
 alter table water.billing_transactions
     drop column scheme,
-    drop column aggregate_proportion,
+    drop column aggregate_factor,
     drop column charge_category_code,
     drop column charge_category_description,
     drop column is_supported_source,
