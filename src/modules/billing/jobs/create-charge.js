@@ -139,38 +139,3 @@ exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
 exports.workerOptions = workerOptions;
 exports.hasScheduler = true;
-
-
-// const some = {
-//   periodStart: "01-APR-2022",
-//   periodEnd: "31-MAR-2023",
-//   scheme: "sroc",
-//   credit: false,
-//   abatementFactor: "0.5",
-//   actualVolume: 123,
-//   aggregateFactor: 1,
-//   areaCode: "KAEA",
-//   authorisedDays: 214,
-//   authrorisedVolume: 123,
-//   batchNumber: "4ffaff0a-f34c-49ed-aa65-ec7553817847",
-//   billableDays: 214,
-//   chargeCategoryCode: "4.5.17",
-//   chargeCategoryDescription: "Medium loss, non-tidal, restricted water, greater than 83 up to and including 142 ML/yr, Tier 1 model",
-//   chargePeriod: "01-APR-2022 - 31-MAR-2023",
-//   clientId: "97807dfa-a090-4483-a80a-15f6832ca41d",
-//   compensationCharge: false,
-//   customerReference: "S88899155A",
-//   licenceNumber: "01/115",
-//   lineDescription: "test category ref",
-//   loss: "medium",
-//   region: "S",
-//   regionalChargingArea: "Southern",
-//   section127Agreement: true,
-//   section130Agreement: true,
-//   supportedSource: true,
-//   supportedSourceName: "Glen Groundwater",
-//   twoPartTariff: true,
-//   waterCompanyCharge: true,
-//   waterUndertaker: true,
-//   winterOnly: true,
-// };
