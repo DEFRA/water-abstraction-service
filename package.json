@@ -83,7 +83,7 @@
     "libxmljs": "^0.19.7",
     "lodash": "^4.17.20",
     "map-factory": "^3.8.3",
-    "moment": "^2.27.0",
+    "moment": "^2.29.2",
     "moment-range": "^4.0.2",
     "node-cron": "^1.2.1",
     "notifications-node-client": "^4.8.0",
