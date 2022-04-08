@@ -73,6 +73,12 @@ const updateTransactions = async (invoice, cmTransactions) => {
   // Create/update transactions
   for (const cmTransaction of cmTransactions) {
     const invoiceLicence = invoice.getInvoiceLicenceByLicenceNumber(cmTransaction.licenceNumber);
+
+    // ToDo: The following needs to be done in the Charge module so we don't have to remap it here.
+    const { WRLSChargingResponse } = cmTransaction.calculation;
+    WRLSChargingResponse.s127Agreement = WRLSChargingResponse.s127Agreement.replace('Two-part Tariff', 's127 x');
+    WRLSChargingResponse.s130Agreement = WRLSChargingResponse.s130Agreement.replace('CRT', 's130 x');
+
     const transaction = mapTransaction(transactionMap, cmTransaction);
 
     await transactionService.saveTransactionToDB(invoiceLicence, transaction);
