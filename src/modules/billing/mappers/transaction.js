@@ -310,31 +310,22 @@ const modelToChargeModuleSroc = (batch, invoice, invoiceLicence, transaction) =>
   const periodStart = mapChargeModuleDate(transaction.chargePeriod.startDate);
   const periodEnd = mapChargeModuleDate(transaction.chargePeriod.endDate);
   const licence = invoiceLicence.licence;
-  // const chargeElement.additionalCharges = {
-  //   isSupplyPublicWater: true todo
-  // };
 
   // const chargeElement.adjustments = {
   //   charge: 0.5 todo
   // };
 
-  // {
-  //   authrorisedVolume: undefined,
-  //   chargeCategoryCode: undefined,
-  //   chargeCategoryDescription: undefined,
-  //   waterCompanyCharge: undefined
-  // }
   return {
     periodStart,
     periodEnd,
     ruleset: SCHEME.sroc,
     credit: !!transaction.isCredit,
     abatementFactor: parseFloat(transaction.chargeElement.adjustments.s126),
+    authorisedVolume: transaction.chargeElement.volume,
     actualVolume: transaction.chargeElement.volume,
     aggregateProportion: transaction.chargeElement.adjustments.aggregate | 1,
     areaCode: licence.historicalArea.code,
     authorisedDays: transaction.authorisedDays,
-    authorisedVolume: transaction.chargeElement.volume,
     batchNumber: batch.id,
     billableDays: transaction.billableDays,
     chargeCategoryCode: transaction.chargeElement.chargeCategory.reference,
@@ -352,7 +343,7 @@ const modelToChargeModuleSroc = (batch, invoice, invoiceLicence, transaction) =>
     section130Agreement: transaction.chargeElement.adjustments.s130,
     supportedSource: !!transaction.chargeElement.additionalCharges.supportedSource.name,
     supportedSourceName: transaction.chargeElement.additionalCharges.supportedSource.name,
-    twoPartTariff: false, // todo
+    twoPartTariff: false, // todo - transaction.isTwoPartSecondPartCharge this will indicate to the CM it is the 2nd part charge for 2PT licence
     waterCompanyCharge: transaction.isWaterCompanyCharge,
     waterUndertaker: transaction.chargeElement.additionalCharges.isSupplyPublicWater,
     winterOnly: !!transaction.chargeElement.adjustments.winter

@@ -7,4 +7,6 @@ alter table water.billing_transactions
     add column supported_source_name text null,
     add column is_water_company_charge boolean default false,
     add column is_winter_only boolean default false,
-    add column is_water_undertaker boolean default false;
+    add column is_water_undertaker boolean default false
+    drop constraint season_check,
+    alter column season drop not null;

@@ -7,5 +7,8 @@ alter table water.billing_transactions
     drop column supported_source_name,
     drop column is_water_company_charge,
     drop column is_winter_only,
-    drop column is_water_undertaker;
+    drop column is_water_undertaker,
+    add constraint season_check check (
+    charge_type='minimum_charge' or season is not null
+  );
     
