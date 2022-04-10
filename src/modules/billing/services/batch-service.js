@@ -260,6 +260,8 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
   if (batchType === 'supplementary') {
     fromFinancialYearEnding = config.billing.alcsEndYear - (config.billing.supplementaryYears + (config.billing.alcsEndYear - toFinancialYearEnding));
     toFinancialYearEnding = config.billing.alcsEndYear;
+  } else if (batchType === 'two_part_tariff') {
+    fromFinancialYearEnding = toFinancialYearEnding;
   } else {
     toFinancialYearEnding = config.billing.alcsEndYear;
     // this is to temporary block 2023 annual billing until SROC has been implemented.
