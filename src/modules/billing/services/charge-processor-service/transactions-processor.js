@@ -95,7 +95,7 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
     billableDays: getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate, flags.isTwoPartSecondPartCharge),
     status: 'candidate',
     description: chargeElement.description,
-    volume: 0, // 2PT acutal reported volume and reviewed in 1PTT review process
+    volume: chargeElement.volume, // ToDo this should be the acutal reported volume entered in 2PT review process
     section126Factor: chargeElement.adjustments.s126 || 1,
     section127Agreement: chargeElement.adjustments.s127,
     section130Agreement: chargeElement.adjustments.s130,
