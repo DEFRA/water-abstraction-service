@@ -91,7 +91,7 @@ jobs:
           npm run migrate
       - name: Test
         run: |
-          npm run test:ci
+          REDIS_HOST=localhost REDIS_PORT=6379 npm run test:ci
       - name: Code Climate
         uses: codecov/codecov-action@v2
         with:
