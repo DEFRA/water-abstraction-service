@@ -101,7 +101,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: coverage
-          path: coverage/junit.xml
+          path: coverage/
 
   upload-to-codecov:
     needs: [test]
@@ -113,5 +113,7 @@ jobs:
         uses: actions/download-artifact@v2
       - name: Upload to Codecov
         uses: codecov/codecov-action@v2
+        with:
+          directory: ./coverage/
 
 
