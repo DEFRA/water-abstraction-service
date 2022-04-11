@@ -89,13 +89,21 @@ jobs:
       - name: Run database migrations
         run: |
           npm run migrate
-      - name: Test & publish code coverage
-        uses: paambaati/codeclimate-action@v2.7.4
-        env:
-          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
+      - name: Test
+        run: |
+          npm run test:ci
+      - name: Code Climate
+        uses: codecov/codecov-action@v2
         with:
-          coverageCommand: npm run test:ci
-          debug: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/junit.xml
+          name: codecov-umbrella # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: coverage/
+
 
