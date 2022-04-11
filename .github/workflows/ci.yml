@@ -102,18 +102,18 @@ jobs:
           coverageLocations: |
             ${{github.workspace}}/coverage/*.lcov:lcov
 
-    Code-Cov:
-      needs: [test]
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v2
-        - name: Download artifacts
-          uses: actions/download-artifact@v2
-        - name: Upload to Codecov
-          uses: codecov/codecov-action@v2
-          with:
-            directory: ./coverage/
+  Code-Cov:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          directory: ./coverage/
 
  
 
