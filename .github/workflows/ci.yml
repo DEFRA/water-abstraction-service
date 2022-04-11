@@ -46,30 +46,21 @@ jobs:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD:
-        # Service containers to run with `runner-job`
     services:
-      # Label used to access the service container
       postgres:
-        # Docker Hub image
         image: postgres:10-alpine
-        # Provide the password for postgres
         env:
           POSTGRES_USER: water
           POSTGRES_HOST: localhost
           POSTGRES_PASSWORD: water
           POSTGRES_PORT: 5432
           POSTGRES_DB: water
-        # Maps tcp port 5432 on service container to the host
         ports:
           - 5432:5432
-        # Set health checks to wait until postgres has started. You must have this so the runner knows to wait till
-        # postgres is up and running before proceeding
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
       redis:
-        # Docker Hub image
         image: redis
         ports:
-          # Maps port 6379 on service container to the host
           - 6379:6379
     steps:
       - uses: actions/checkout@v2
@@ -109,7 +100,20 @@ jobs:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
         with:
           coverageLocations: |
-            ${{github.workspace}}/coverage/*.lcov:lcov----
+            ${{github.workspace}}/coverage/*.lcov:lcov
+
+    Code-Cov:
+      needs: [test]
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+        - name: Download artifacts
+          uses: actions/download-artifact@v2
+        - name: Upload to Codecov
+          uses: codecov/codecov-action@v2
+          with:
+            directory: ./coverage/
 
  
 
