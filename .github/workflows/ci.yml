@@ -17,10 +17,7 @@ jobs:
     uses: DEFRA/water-abstraction-orchestration/.github/workflows/docker.yml@develop
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [ 12.x, 14.x ]
-    name: Test  - Node.js ${{ matrix.node-version }}
+    name: Test
     env:
       # These need to be duplicated in services section for postgres. Unfortunately, there is not a way to reuse them
       PGUSER: water
@@ -92,18 +89,29 @@ jobs:
       - name: Test
         run: |
           REDIS_HOST=localhost REDIS_PORT=6379 npm run test:ci
-      - name: Code Climate
-        uses: codecov/codecov-action@v2
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/junit.xml
-          name: codecov-umbrella # optional
-          fail_ci_if_error: true # optional (default = false)
-          verbose: true # optional (default = false)
+#      - name: Code Climate
+#        uses: codecov/codecov-action@v2
+#        with:
+#          token: ${{ secrets.CODECOV_TOKEN }}
+#          files: ./coverage/junit.xml
+#          name: codecov-umbrella # optional
+#          fail_ci_if_error: true # optional (default = false)
+#          verbose: true # optional (default = false)
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: coverage
-          path: coverage/
+          path: coverage/junit.xml
+
+  upload-to-codecov:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v2
 
 
