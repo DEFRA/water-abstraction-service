@@ -321,6 +321,7 @@ const modelToChargeModuleSroc = (batch, invoice, invoiceLicence, transaction) =>
     ruleset: SCHEME.sroc,
     credit: !!transaction.isCredit,
     abatementFactor: parseFloat(transaction.chargeElement.adjustments.s126),
+    adjustmentFactor: parseFloat(transaction.chargeElement.adjustments.charge),
     authorisedVolume: transaction.chargeElement.volume,
     // ToDo: For 2PartTariff SROC Bill run, the billing volume should be used for actualVolume instead of chargeElement volume
     actualVolume: transaction.chargeElement.volume,
