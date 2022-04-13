@@ -74,7 +74,6 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
  * Creates a Transaction model
  * @param {DateRange} chargePeriod - charge period for this charge element - taking time-limits into account
  * @param {ChargeElement} chargeElement
- * @param {ChargePurpose} chargePurpose
  * @param {FinancialYear} financialYear
  * @param {Object} flags
  * @param {Boolean} flags.isCompensationCharge
@@ -91,12 +90,12 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
     endDate: chargePeriod.endDate,
     loss: chargeElement.loss,
     chargeType: flags.isCompensationCharge ? 'compensation' : 'standard',
-    authorisedVolume: chargeElement.volume,
+    authorisedQuantity: chargeElement.volume,
     authorisedDays: getBillableDays(absPeriod, financialYear.start.format(DATE_FORMAT), financialYear.end.format(DATE_FORMAT), flags.isTwoPartSecondPartCharge),
     billableDays: getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate, flags.isTwoPartSecondPartCharge),
     status: 'candidate',
     description: chargeElement.description,
-    actualVolume: chargeElement.volume, // ToDo this should be the acutal reported volume entered in 2PT review process
+    volume: chargeElement.volume, // ToDo this should be the acutal reported volume entered in 2PT review process
     section126Factor: chargeElement.adjustments.s126 || 1,
     section127Agreement: chargeElement.adjustments.s127,
     section130Agreement: chargeElement.adjustments.s130,
@@ -238,6 +237,11 @@ const createAnnualAndCompensationTransactions = (elementChargePeriod, chargeElem
   return transactions.filter(transaction => transaction.billableDays > 0);
 };
 
+const actions = {
+  [TRANSACTION_TYPE.annual]: createAnnualAndCompensationTransactions,
+  [TRANSACTION_TYPE.twoPartTariff]: createTwoPartTariffTransactions
+};
+
 const createTransactionsForPeriod = (chargeVersionYear, period, billingVolumes) => {
   const { chargeVersion, financialYear, transactionType } = chargeVersionYear;
   const { agreements, dateRange } = period;
@@ -248,11 +252,7 @@ const createTransactionsForPeriod = (chargeVersionYear, period, billingVolumes) 
       return acc;
     }
     const additionalData = { chargeVersion, billingVolumes };
-    if (transactionType === TRANSACTION_TYPE.annual) {
-      acc.push(...createAnnualAndCompensationTransactions(elementChargePeriod, chargeElement, agreements, financialYear, additionalData));
-    } else if (transactionType === TRANSACTION_TYPE.twoPartTariff) {
-      acc.push(...createTwoPartTariffTransactions(elementChargePeriod, chargeElement, agreements, financialYear, additionalData));
-    }
+    acc.push(...actions[transactionType](elementChargePeriod, chargeElement, agreements, financialYear, additionalData));
     return acc;
   }, []);
 };
