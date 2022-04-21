@@ -35,7 +35,7 @@ const findOneByProperties = async (isTidal, lossFactor, isRestrictedSource, mode
   const model = await ChargeCategory
     .forge()
     .where({ is_tidal: isTidal, loss_factor: lossFactor, model_tier: modelTier, is_restricted_source: isRestrictedSource })
-    .where('min_volume', '<', volume)
+    .where('min_volume', '<=', volume)
     .where('max_volume', '>=', volume)
     .fetch({ require: false });
 
