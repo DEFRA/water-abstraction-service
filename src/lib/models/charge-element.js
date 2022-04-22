@@ -16,6 +16,7 @@ class ChargeElement extends Model {
   constructor (...args) {
     super(...args);
     this.isSection127AgreementEnabled = true;
+    this._scheme = SCHEME.alcs;
   }
 
   /**
