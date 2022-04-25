@@ -13,6 +13,7 @@ const noteMapper = require('../mappers/note');
 
 // Services
 const service = require('./service');
+const notesService = require('./notes-service');
 const chargeElementsService = require('./charge-elements');
 const invoiceAccountsService = require('./invoice-accounts-service');
 
@@ -65,11 +66,14 @@ const getByLicenceRef = async licenceRef =>
  *
  * @param {String} licenceId The licence id
  */
-const getByLicenceId = async licenceId => service.findMany(
-  licenceId,
-  chargeVersionRepo.findByLicenceId,
-  chargeVersionMapper
-);
+const getByLicenceId = async licenceId => {
+  const chargeVersions = await service.findMany(
+    licenceId,
+    chargeVersionRepo.findByLicenceId,
+    chargeVersionMapper
+  );
+  return Promise.all(chargeVersions.map(async chargeVersion => notesService.decorateWithNote(chargeVersion)));
+};
 
 /**
  * Persists a new charge version in the DB
