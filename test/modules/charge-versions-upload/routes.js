@@ -8,7 +8,7 @@ const {
 
 const Hapi = require('@hapi/hapi');
 
-const routes = require('../../../src/modules/charge-versions/routes/charge-versions');
+const routes = require('../../../src/modules/charge-versions-upload/routes');
 
 experiment('postUploadChargeInformation', () => {
   let server;

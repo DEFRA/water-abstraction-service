@@ -1,12 +1,14 @@
-const JOB_NAME = 'charge-information-upload';
+const JOB_NAME = 'charge-information-upload-start';
 const { logger } = require('../../../logger');
 const chargeInformationUpload = require('../lib/charge-information-upload');
 const errorEvent = require('../lib/error-event');
 const csvAdapter = require('../lib/csv-adapter');
 const eventsService = require('../../../lib/services/events');
-const mapToJson = require('./map-to-json');
+const mapToJson = require('./update-charge-information-to-json');
 const { getUploadErrorFilename } = require('../lib/charge-information-upload');
 const s3 = require('../../../lib/services/s3');
+const { set } = require('lodash');
+const helpers = require('../lib/helpers');
 
 /**
  * Creates a message for Bull MQ
@@ -73,6 +75,9 @@ const handleChargeInformationUploadStart = async job => {
   }
 
   try {
+    helpers.clearCache();
+    set(event.metadata, 'statusMessage', 'validating csv');
+    await eventsService.update(event);
     const s3Object = await chargeInformationUpload.getChargeInformationS3Object(event);
     // Pass parsed csv file to the validation function
     // returns true if the validation passes
