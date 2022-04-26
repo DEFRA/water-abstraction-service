@@ -69,7 +69,6 @@ const handleUpdateChargeInformation = async job => {
   }
 
   try {
-    helpers.clearCache();
     const jsonData = await loadJson(event);
 
     // process the json data and apply the new charge versions to the db see: https://eaflood.atlassian.net/browse/WATER-3551
@@ -84,8 +83,7 @@ const handleUpdateChargeInformation = async job => {
       await saveChargeVersion(data);
       const statusMessage = `${jsonData.length} charge versions remaining to save`;
       logger.info(`${JOB_NAME}: ${statusMessage}`);
-      set(event.metadata, 'statusMessage', statusMessage);
-      await eventsService.update(event);
+      await helpers.updateEventStatus(event, statusMessage);
     } while (jsonData.length);
 
     set(event, 'status', chargeInformationUpload.uploadStatus.READY);

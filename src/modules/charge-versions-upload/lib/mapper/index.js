@@ -4,6 +4,7 @@ const chargeVersionMapper = require('./chargeVersionMapper');
 const { logger } = require('../../../../logger');
 const { jobName } = require('../../jobs/update-charge-information-to-json');
 const eventsService = require('../../../../lib/services/events');
+const helpers = require('../helpers');
 
 const mapToRowObject = headers => row => row.reduce((acc, column, index) => {
   return { ...acc, [headers[index]]: column };
@@ -38,9 +39,7 @@ const mapCsv = async (csvStr, user, event) => {
 
   while (rowObjects.length) {
     logger.info(`${jobName}: ${rowObjects.length} rows left to map`);
-    const statusMessage = `${rowObjects.length} rows remaining to map to a charge version`;
-    set(event.metadata, 'statusMessage', statusMessage);
-    await eventsService.update(event);
+    await helpers.updateEventStatus(event, `${rowObjects.length} rows remaining to map to a charge version`);
     const currentRow = rowObjects.shift();
     const nextRow = rowObjects.length && rowObjects[0];
     groupByElementGroup.push(currentRow);

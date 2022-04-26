@@ -10,7 +10,6 @@ const sandbox = require('sinon').createSandbox();
 
 const { mapToChargeVersion } = require('../../../../../src/modules/charge-versions-upload/lib/mapper/chargeVersionMapper');
 const chargeElementMapper = require('../../../../../src/modules/charge-versions-upload/lib/mapper/chargeElementMapper');
-const licenceService = require('../../../../../src/lib/services/licences');
 const chargePurposesMapper = require('../../../../../src/modules/charge-versions-upload/lib/mapper/chargePurposesMapper');
 const chargeCategoryMapper = require('../../../../../src/modules/charge-versions-upload/lib/mapper/chargeCategoryMapper');
 const changeReasonMapper = require('../../../../../src/modules/charge-versions-upload/lib/mapper/changeReasonMapper');
@@ -45,7 +44,7 @@ const dummyPurposeMapper = {
 experiment('mapToChargeVersion', () => {
   beforeEach(() => {
     sandbox.stub(dummyPurposeMapper, 'fn').resolves(chargePurpose);
-    sandbox.stub(licenceService, 'getLicenceByLicenceRef').resolves(licence);
+    sandbox.stub(helpers, 'getLicence').resolves(licence);
     sandbox.stub(helpers, 'getInvoiceAccount').resolves(invoiceAccount);
     sandbox.stub(helpers, 'formatDate').returns(startDate);
     sandbox.stub(chargePurposesMapper, 'mapToChargePurposes').returns(dummyPurposeMapper.fn);
@@ -88,7 +87,7 @@ experiment('mapToChargeVersion', () => {
     expect(chargeElementMapper.mapToChargeElement.callCount).to.equal(1);
     expect(chargeElementMapper.mapToChargeElement.lastCall.args[0]).to.equal({ licenceNumber: 'TEST_LICENCE_NUMBER', purpose: 'A' });
 
-    expect(licenceService.getLicenceByLicenceRef.callCount).to.equal(1);
+    expect(helpers.getLicence.callCount).to.equal(1);
     expect(changeReasonMapper.mapToChangeReason.callCount).to.equal(1);
 
     expect(chargePurposesMapper.mapToChargePurposes.callCount).to.equal(1);
@@ -131,7 +130,7 @@ experiment('mapToChargeVersion', () => {
     expect(chargeElementMapper.mapToChargeElement.firstCall.args[0]).to.equal({ licenceNumber: 'TEST_LICENCE_NUMBER', purpose: 'A' });
     expect(chargeElementMapper.mapToChargeElement.lastCall.args[0]).to.equal({ licenceNumber: 'TEST_LICENCE_NUMBER', purpose: 'B' });
 
-    expect(licenceService.getLicenceByLicenceRef.callCount).to.equal(1);
+    expect(helpers.getLicence.callCount).to.equal(1);
     expect(changeReasonMapper.mapToChangeReason.callCount).to.equal(1);
 
     expect(chargePurposesMapper.mapToChargePurposes.callCount).to.equal(2);
@@ -180,7 +179,7 @@ experiment('mapToChargeVersion', () => {
     expect(chargeElementMapper.mapToChargeElement.firstCall.args[0]).to.equal({ licenceNumber: 'TEST_LICENCE_NUMBER', purpose: 'A' });
     expect(chargeElementMapper.mapToChargeElement.lastCall.args[0]).to.equal({ licenceNumber: 'TEST_LICENCE_NUMBER', purpose: 'D' });
 
-    expect(licenceService.getLicenceByLicenceRef.callCount).to.equal(1);
+    expect(helpers.getLicence.callCount).to.equal(1);
     expect(changeReasonMapper.mapToChangeReason.callCount).to.equal(1);
 
     expect(chargePurposesMapper.mapToChargePurposes.callCount).to.equal(3);

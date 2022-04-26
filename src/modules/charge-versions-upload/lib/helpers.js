@@ -1,12 +1,13 @@
-const { assertDate } = require('../../../lib/models/validators');
+const { assertDate, assertLicenceNumber } = require('../../../lib/models/validators');
 const licencesService = require('../../../lib/services/licences');
 const licencesVersionRepo = require('../../../lib/connectors/repos/licence-versions');
-const { get } = require('lodash');
+const { get, set } = require('lodash');
 const documentsService = require('../../../lib/services/documents-service');
 const { billing } = require('../../../../config');
 const companiesService = require('../../../lib/services/companies-service');
 const chargeVersionsService = require('../../../lib/services/charge-versions');
 const repos = require('../../../lib/connectors/repos');
+const eventsService = require('../../../lib/services/events');
 
 const IMPORTED_REASON = 'Strategic review of charges (SRoC)';
 
@@ -39,12 +40,33 @@ const formatDate = date => {
   }
 };
 
+const getLicence = async licenceNumber => {
+  try {
+    if (!cache.licences) {
+      cache.licences = {};
+    }
+    if (!cache.licences[licenceNumber]) {
+      assertLicenceNumber(licenceNumber);
+      cache.licences[licenceNumber] = await licencesService.getLicenceByLicenceRef(licenceNumber);
+    }
+    return cache.licences[licenceNumber];
+  } catch (_e) {
+    return null;
+  }
+};
+
 const getLicenceVersionPurposes = async licenceId => {
   try {
-    const licenceVersions = await licencesService.getLicenceVersions(licenceId);
-    const { id } = licenceVersions.find(licenceVersion => licenceVersion.status === 'current') || {};
-    const licencesVersion = await licencesVersionRepo.findOne(id);
-    return get(licencesVersion, 'licenceVersionPurposes') || [];
+    if (!cache.licenceVersionPurposes) {
+      cache.licenceVersionPurposes = {};
+    }
+    if (!cache.licenceVersionPurposes[licenceId]) {
+      const licenceVersions = await licencesService.getLicenceVersions(licenceId);
+      const { id } = licenceVersions.find(licenceVersion => licenceVersion.status === 'current') || {};
+      const licencesVersion = await licencesVersionRepo.findOne(id);
+      cache.licenceVersionPurposes[licenceId] = get(licencesVersion, 'licenceVersionPurposes') || [];
+    }
+    return cache.licenceVersionPurposes[licenceId];
   } catch (_e) {
     return null;
   }
@@ -114,12 +136,19 @@ const clearCache = () => {
   cache = {};
 };
 
+const updateEventStatus = async (event, statusMessage) => {
+  set(event.metadata, 'statusMessage', statusMessage);
+  return eventsService.update(event);
+};
+
 exports.parseFactor = parseFactor;
 exports.parseBool = parseBool;
 exports.formatDate = formatDate;
+exports.getLicence = getLicence;
 exports.getLicenceVersionPurposes = getLicenceVersionPurposes;
 exports.getInvoiceAccount = getInvoiceAccount;
 exports.getPurposeUses = getPurposeUses;
 exports.getSupportedSources = getSupportedSources;
 exports.getChangeReason = getChangeReason;
 exports.clearCache = clearCache;
+exports.updateEventStatus = updateEventStatus;
