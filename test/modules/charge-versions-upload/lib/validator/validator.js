@@ -9,7 +9,6 @@ const {
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
-const licenceService = require('../../../../../src/lib/services/licences');
 const repos = require('../../../../../src/lib/connectors/repos');
 const { billing } = require('../../../../../config');
 const { validate } = require('../../../../../src/modules/charge-versions-upload/lib/validator');
@@ -66,11 +65,12 @@ const rowErrors = validationErrors => ({
 
 experiment('validator', () => {
   beforeEach(() => {
-    sandbox.stub(licenceService, 'getLicenceByLicenceRef');
+    sandbox.stub(helpers, 'getLicence');
     sandbox.stub(helpers, 'getLicenceVersionPurposes');
     sandbox.stub(helpers, 'getInvoiceAccount');
     sandbox.stub(helpers, 'getPurposeUses');
     sandbox.stub(helpers, 'getSupportedSources');
+    sandbox.stub(helpers, 'updateEventStatus');
     sandbox.stub(repos.supportedSources, 'findAll');
     sandbox.stub(repos.purposeUses, 'findAll');
     sandbox.stub(billing, 'srocStartDate');
@@ -91,7 +91,7 @@ experiment('validator', () => {
         { description: PURPOSE_USE_DESCRIPTION, isTwoPartTariff: false },
         { description: PURPOSE_USE_DESCRIPTION_TPT, isTwoPartTariff: true }
       ]);
-      licenceService.getLicenceByLicenceRef = async licenceNumber => licenceNumber !== 'INVALID' ? {
+      helpers.getLicence = async licenceNumber => licenceNumber !== 'INVALID' ? {
         startDate: '2022-03-31',
         expiredDate: '2022-05-01',
         lapsedDate: '2022-05-01',
@@ -102,6 +102,7 @@ experiment('validator', () => {
         { purposeUse: { description: PURPOSE_USE_DESCRIPTION_TPT } }
       ]);
       helpers.getInvoiceAccount.resolves([INVOICE_ACCOUNT]);
+      helpers.updateEventStatus.resolves();
     });
 
     test('when the number of headings is inconsistent with the number of rows', async () => {

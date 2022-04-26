@@ -4,7 +4,6 @@ const chargeElementMapper = require('./chargeElementMapper');
 const changeReasonMapper = require('./changeReasonMapper');
 const chargeCategoryMapper = require('./chargeCategoryMapper');
 const chargePurposesMapper = require('./chargePurposesMapper');
-const licencesService = require('../../../../lib/services/licences');
 const helpers = require('../helpers');
 
 const { sroc } = SCHEME;
@@ -18,7 +17,7 @@ const mapToChargeVersion = async (chargeVersionGroup, user, invoiceAccountNumber
   const firstChargeElement = chargeVersionGroup[0][0];
   const { licenceNumber, chargeInformationNotes, chargeInformationStartDate } = firstChargeElement;
 
-  const licence = await licencesService.getLicenceByLicenceRef(licenceNumber);
+  const licence = await helpers.getLicence(licenceNumber);
 
   const chargeElements = [];
   while (chargeVersionGroup.length) {
