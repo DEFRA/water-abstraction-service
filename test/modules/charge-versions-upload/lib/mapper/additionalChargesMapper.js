@@ -7,7 +7,7 @@ const {
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
 const sandbox = require('sinon').createSandbox();
-const supportedSourcesRepo = require('../../../../../src/lib/connectors/repos/supported-sources');
+const helpers = require('../../../../../src/modules/charge-versions-upload/lib/helpers');
 const { mapToAdditionalCharges } = require('../../../../../src/modules/charge-versions-upload/lib/mapper/additionalChargesMapper');
 
 const TEST_SUPPORTED_SOURCE_NAME = 'TEST SUPPORTED SOURCE NAME';
@@ -15,7 +15,7 @@ const TEST_SUPPORTED_SOURCE_ID = uuid();
 
 experiment('mapToadditionalCharges', () => {
   beforeEach(() => {
-    sandbox.stub(supportedSourcesRepo, 'findAll').resolves([{ name: TEST_SUPPORTED_SOURCE_NAME, billingSupportedSourceId: TEST_SUPPORTED_SOURCE_ID }]);
+    sandbox.stub(helpers, 'getSupportedSources').resolves([{ name: TEST_SUPPORTED_SOURCE_NAME, billingSupportedSourceId: TEST_SUPPORTED_SOURCE_ID }]);
   });
 
   afterEach(() => {

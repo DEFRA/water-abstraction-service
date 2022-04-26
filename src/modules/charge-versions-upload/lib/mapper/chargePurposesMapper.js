@@ -78,7 +78,7 @@ const mapToChargePurposes = licenceId => async data => {
       endDate: helpers.formatDate(data.chargeElementTimeLimitEnd)
     };
   }
-  const licenceVersionPurposes = await helpers.getLicenceVersionPurposes(licenceId);
+  const licenceVersionPurposes = [...await helpers.getLicenceVersionPurposes(licenceId)]; // Make a copy
   while (licenceVersionPurposes.length) {
     const licenceVersionPurpose = licenceVersionPurposes.shift();
     if (licenceVersionPurpose.purposeUse.description === data.chargeElementPurpose) {

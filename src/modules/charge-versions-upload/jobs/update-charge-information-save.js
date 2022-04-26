@@ -82,8 +82,7 @@ const handleUpdateChargeInformation = async job => {
       logger.info(`${JOB_NAME}: Saving charge version for ${data.licenceRef}`);
       await saveChargeVersion(data);
       const statusMessage = `${jsonData.length} charge versions remaining to save`;
-      logger.info(`${JOB_NAME}: ${statusMessage}`);
-      await helpers.updateEventStatus(event, statusMessage);
+      await helpers.updateEventStatus(event, statusMessage, JOB_NAME);
     } while (jsonData.length);
 
     set(event, 'status', chargeInformationUpload.uploadStatus.READY);
@@ -96,10 +95,12 @@ const handleUpdateChargeInformation = async job => {
 };
 
 const onFailed = async (_job, err) => {
+  helpers.clearCache();
   logger.error(`${JOB_NAME}: Job has failed`, err);
 };
 
 const onComplete = async () => {
+  helpers.clearCache();
   logger.info(`${JOB_NAME}: Job has completed`);
 };
 

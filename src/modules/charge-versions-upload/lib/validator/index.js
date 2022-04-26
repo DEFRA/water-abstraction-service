@@ -2,6 +2,7 @@ const { snakeCase, camelCase, sortBy, isEqual } = require('lodash');
 const csvParser = require('../csv-adapter/csv-parser');
 const { csvFields } = require('./csvFields');
 const helpers = require('../helpers');
+const { logger } = require('../../../../logger');
 
 const rowOffset = 2; // Takes into account the header row and the row index starting from 0
 
@@ -24,9 +25,9 @@ const validateHeadings = headings => {
   return errors;
 };
 
-const validateRows = async (rows, headings) => {
+const validateRows = async (rows, headings, jobName) => {
   const validateField = async (heading, val, licence, columns, validator = []) => {
-    const [...tests] = validator;
+    const [...tests] = validator; // get a copy of the validator tests
     let message = '';
     do {
       const test = tests.shift();
@@ -40,32 +41,49 @@ const validateRows = async (rows, headings) => {
 
   const validateRow = async (columns, rowIndex) => {
     const licence = await helpers.getLicence(columns[headings.indexOf('licence_number')]);
-    const errors = await Promise.all(headings.map(async (heading, colIndex) => {
+    logger.info(`${jobName}: validating row ${rowIndex} of ${rows.length}`);
+    const fields = headings.map((heading, colIndex) => ({ heading, val: columns[colIndex] }));
+    const errors = [];
+    while (fields.length) {
+      const { heading, val } = fields.shift();
       const { skip = [], validate: validator, allow = [] } = csvFields[camelCase(heading)] || {};
-      const val = columns[colIndex];
       if (allow.includes(val)) {
-        return '';
+        continue;
       }
       if (skip.length) {
         // In this case when a message is returned the validator will be skipped
         const validationSkipped = await validateField(heading, val, licence, columns, skip);
         if (validationSkipped) {
-          return '';
+          continue;
         }
       }
-      return validator ? validateField(heading, val, licence, columns, validator) : Promise.resolve([]);
-    }));
-
-    return errors
-      .flat()
-      .filter(message => !!message)
-      .map(error => `Row ${rowIndex + rowOffset}, ${error}`);
+      if (validator) {
+        const error = await validateField(heading, val, licence, columns, validator);
+        if (error) {
+          errors.push(`Row ${rowIndex + rowOffset}, ${error}`);
+        }
+      }
+    }
+    return errors;
   };
-  const validRows = await Promise.all(rows.map(validateRow));
-  return validRows.flat();
+
+  const rowsToProcess = [...rows];
+
+  const validRows = [];
+
+  while (rowsToProcess.length) {
+    const index = rows.length - rowsToProcess.length;
+    const row = rowsToProcess.shift();
+    const rowErrors = await validateRow(row, index);
+    rowErrors.forEach(rowError => {
+      validRows.push(rowError);
+    });
+  }
+
+  return validRows;
 };
 
-const validateGroups = async (rows, headings) => {
+const validateGroups = async (rows, headings, jobName) => {
   const getCategoryProperties = row => {
     return {
       charge_reference_details_source: row[headings.indexOf('charge_reference_details_source')],
@@ -79,6 +97,7 @@ const validateGroups = async (rows, headings) => {
   const getBillingAccountRef = row => row[headings.indexOf('charge_information_billing_account')];
   const getStartDate = row => row[headings.indexOf('charge_information_start_date')];
 
+  logger.info(`${jobName}: sorting rows`);
   const sortedRows = sortBy(rows.map((row, index) => {
     const licenceNumber = row[headings.indexOf('licence_number')];
     const chargeReferenceDetailsChargeElementGroup = row[headings.indexOf('charge_reference_details_charge_element_group')];
@@ -92,8 +111,12 @@ const validateGroups = async (rows, headings) => {
 
     const previous = sortedRows[rowIndex - 1];
     if (current.licenceNumber !== previous.licenceNumber) {
+      logger.info(`${jobName}: validating rows for licence ${current.licenceNumber}`);
       return errors;
     }
+
+    logger.info(`${jobName}: validating row ${previous.rowNumber} with row ${current.rowNumber}`);
+
     const currentCategoryDetails = getCategoryProperties(current.row);
     const previousCategoryDetails = getCategoryProperties(previous.row);
 
@@ -135,7 +158,7 @@ const createValidationResult = (validationErrors, errorType) => validationErrors
   }
   : { isValid: true };
 
-const validate = async (csv, event) => {
+const validate = async (csv, event, jobName) => {
   try {
     const data = await csvParser.parseCsv(csv);
 
@@ -153,10 +176,10 @@ const validate = async (csv, event) => {
     }
 
     // headings are good, validate the row data
-    await helpers.updateEventStatus(event, 'validating rows');
-    const rowErrors = await validateRows(rows, headings);
-    await helpers.updateEventStatus(event, 'validating row combinations');
-    const rowGroupingErrors = await validateGroups(rows, headings);
+    await helpers.updateEventStatus(event, 'validating rows', jobName);
+    const rowErrors = await validateRows(rows, headings, jobName);
+    await helpers.updateEventStatus(event, 'validating row combinations', jobName);
+    const rowGroupingErrors = await validateGroups(rows, headings, jobName);
     return createValidationResult([...rowErrors, ...rowGroupingErrors].sort(), 'rows');
   } catch (err) {
     return createValidationResult([err.message], 'parse');

@@ -1,7 +1,6 @@
 const csvParser = require('../csv-adapter/csv-parser');
 const { camelCase, set, sortBy } = require('lodash');
 const chargeVersionMapper = require('./chargeVersionMapper');
-const { logger } = require('../../../../logger');
 const { jobName } = require('../../jobs/update-charge-information-to-json');
 const eventsService = require('../../../../lib/services/events');
 const helpers = require('../helpers');
@@ -38,8 +37,7 @@ const mapCsv = async (csvStr, user, event) => {
   let groupByElementGroup = [];
 
   while (rowObjects.length) {
-    logger.info(`${jobName}: ${rowObjects.length} rows left to map`);
-    await helpers.updateEventStatus(event, `${rowObjects.length} rows remaining to map to a charge version`);
+    await helpers.updateEventStatus(event, `${rowObjects.length} rows remaining to map to a charge version`, jobName);
     const currentRow = rowObjects.shift();
     const nextRow = rowObjects.length && rowObjects[0];
     groupByElementGroup.push(currentRow);

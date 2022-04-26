@@ -37,9 +37,9 @@ const createMessage = event => {
  * @return {Promise}          resolves when validation complete
  */
 const validateS3Object = async (s3Object, event) => {
-  const { isValid, validationErrors, errorType } = await csvAdapter.validator(s3Object.Body, event);
+  const { isValid, validationErrors, errorType } = await csvAdapter.validator(s3Object.Body, event, JOB_NAME);
   if (!isValid) {
-    await helpers.updateEventStatus(event, validationErrors.join('. '));
+    await helpers.updateEventStatus(event, validationErrors.join('. '), JOB_NAME);
     const err = new Error('Failed Schema Validation');
     const { INVALID, INVALID_ROWS } = errorEvent.keys.csv;
     err.key = errorType === 'rows' ? INVALID_ROWS : INVALID;
@@ -70,20 +70,18 @@ const handleChargeInformationUploadStart = async job => {
   logger.info(`Handling: ${JOB_NAME}:${job.id}`);
   const { eventId } = job.data;
 
+  helpers.clearCache();
   const event = await eventsService.findOne(eventId);
   if (!event) {
     return errorEvent.throwEventNotFoundError(eventId);
   }
 
   try {
-    helpers.clearCache();
-
-    await helpers.updateEventStatus(event, 'uploading csv');
+    await helpers.updateEventStatus(event, 'uploading csv', JOB_NAME);
     const s3Object = await chargeInformationUpload.getChargeInformationS3Object(event);
-    await helpers.updateEventStatus(event, 'validating csv');
-    // Pass parsed csv file to the validation function
-    // returns true if the validation passes
-    return await validateS3Object(s3Object, event);
+    await helpers.updateEventStatus(event, 'validating csv', JOB_NAME);
+    await validateS3Object(s3Object, event);
+    await helpers.updateEventStatus(event, 'validation complete', JOB_NAME);
   } catch (error) {
     logger.error('Charge information upload failure', error, { job });
     if (error.key === errorEvent.keys.csv.INVALID_ROWS) {
@@ -96,6 +94,7 @@ const handleChargeInformationUploadStart = async job => {
 };
 
 const onFailed = async (_job, err) => {
+  helpers.clearCache();
   logger.error(`${JOB_NAME}: Job has failed`, err);
 };
 
