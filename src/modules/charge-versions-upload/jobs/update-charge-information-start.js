@@ -1,12 +1,13 @@
-const JOB_NAME = 'charge-information-upload';
+const JOB_NAME = 'charge-information-upload-start';
 const { logger } = require('../../../logger');
 const chargeInformationUpload = require('../lib/charge-information-upload');
 const errorEvent = require('../lib/error-event');
 const csvAdapter = require('../lib/csv-adapter');
 const eventsService = require('../../../lib/services/events');
-const mapToJson = require('./map-to-json');
+const mapToJson = require('./update-charge-information-to-json');
 const { getUploadErrorFilename } = require('../lib/charge-information-upload');
 const s3 = require('../../../lib/services/s3');
+const helpers = require('../lib/helpers');
 
 /**
  * Creates a message for Bull MQ
@@ -32,11 +33,13 @@ const createMessage = event => {
  * If validation errors are found, an error is thrown with a key which
  * allows the error type to be stored in the event metadata
  * @param  {String}  s3Object - the file data
+ * @param  {Event}  event - the event object
  * @return {Promise}          resolves when validation complete
  */
-const validateS3Object = async s3Object => {
-  const { isValid, validationErrors, errorType } = await csvAdapter.validator(s3Object.Body);
+const validateS3Object = async (s3Object, event) => {
+  const { isValid, validationErrors, errorType } = await csvAdapter.validator(s3Object.Body, event);
   if (!isValid) {
+    await helpers.updateEventStatus(event, validationErrors.join('. '));
     const err = new Error('Failed Schema Validation');
     const { INVALID, INVALID_ROWS } = errorEvent.keys.csv;
     err.key = errorType === 'rows' ? INVALID_ROWS : INVALID;
@@ -73,10 +76,14 @@ const handleChargeInformationUploadStart = async job => {
   }
 
   try {
+    helpers.clearCache();
+
+    await helpers.updateEventStatus(event, 'uploading csv');
     const s3Object = await chargeInformationUpload.getChargeInformationS3Object(event);
+    await helpers.updateEventStatus(event, 'validating csv');
     // Pass parsed csv file to the validation function
     // returns true if the validation passes
-    return await validateS3Object(s3Object);
+    return await validateS3Object(s3Object, event);
   } catch (error) {
     logger.error('Charge information upload failure', error, { job });
     if (error.key === errorEvent.keys.csv.INVALID_ROWS) {
