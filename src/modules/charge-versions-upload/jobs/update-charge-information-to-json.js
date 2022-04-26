@@ -9,7 +9,6 @@ const errorEvent = require('../lib/error-event');
 const csvAdapter = require('../lib/csv-adapter');
 const config = require('../../../../config');
 const validateChargeInformation = require('./update-charge-information-save');
-const helpers = require('../lib/helpers');
 
 /**
  * Creates a message for Bull MQ
@@ -63,8 +62,6 @@ const handleChargeInformationMapToJsonStart = async job => {
   const { filename } = event.metadata;
 
   try {
-    helpers.clearCache();
-
     const application = config.idm.application.internalUser;
 
     const [s3Object, user] = await Promise.all([

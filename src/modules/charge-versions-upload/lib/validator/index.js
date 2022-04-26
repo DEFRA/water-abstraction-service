@@ -1,19 +1,9 @@
 const { snakeCase, camelCase, sortBy, isEqual } = require('lodash');
 const csvParser = require('../csv-adapter/csv-parser');
-const { assertLicenceNumber } = require('../../../../lib/models/validators');
-const licencesService = require('../../../../lib/services/licences');
 const { csvFields } = require('./csvFields');
+const helpers = require('../helpers');
 
 const rowOffset = 2; // Takes into account the header row and the row index starting from 0
-
-const getLicence = async licenceNumber => {
-  try {
-    assertLicenceNumber(licenceNumber);
-    return await licencesService.getLicenceByLicenceRef(licenceNumber);
-  } catch (_e) {
-    return null;
-  }
-};
 
 const expectedHeadings = Object.keys(csvFields).map(heading => snakeCase(heading));
 
@@ -49,7 +39,7 @@ const validateRows = async (rows, headings) => {
   };
 
   const validateRow = async (columns, rowIndex) => {
-    const licence = await getLicence(columns[headings.indexOf('licence_number')]);
+    const licence = await helpers.getLicence(columns[headings.indexOf('licence_number')]);
     const errors = await Promise.all(headings.map(async (heading, colIndex) => {
       const { skip = [], validate: validator, allow = [] } = csvFields[camelCase(heading)] || {};
       const val = columns[colIndex];
@@ -99,6 +89,7 @@ const validateGroups = async (rows, headings) => {
     if (rowIndex === 0) {
       return errors;
     }
+
     const previous = sortedRows[rowIndex - 1];
     if (current.licenceNumber !== previous.licenceNumber) {
       return errors;
@@ -144,7 +135,7 @@ const createValidationResult = (validationErrors, errorType) => validationErrors
   }
   : { isValid: true };
 
-const validate = async csv => {
+const validate = async (csv, event) => {
   try {
     const data = await csvParser.parseCsv(csv);
 
@@ -162,7 +153,9 @@ const validate = async csv => {
     }
 
     // headings are good, validate the row data
+    await helpers.updateEventStatus(event, 'validating rows');
     const rowErrors = await validateRows(rows, headings);
+    await helpers.updateEventStatus(event, 'validating row combinations');
     const rowGroupingErrors = await validateGroups(rows, headings);
     return createValidationResult([...rowErrors, ...rowGroupingErrors].sort(), 'rows');
   } catch (err) {
