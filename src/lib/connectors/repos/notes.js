@@ -21,6 +21,17 @@ const update = (noteId, changes) =>
  */
 const findOne = async noteId => helpers.findOne(Note, 'noteId', noteId, withRelated);
 
+const findByChargeVersionId = async chargeVersionId => {
+  const model = await Note
+    .forge()
+    .where('type', 'charge_version')
+    .where('type_id', chargeVersionId)
+    .fetch({ require: false });
+
+  return model && model.toJSON();
+};
+
 exports.create = create;
 exports.update = update;
 exports.findOne = findOne;
+exports.findByChargeVersionId = findByChargeVersionId;
