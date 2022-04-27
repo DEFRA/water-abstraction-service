@@ -37,7 +37,8 @@ const setErrorFlagStatuses = [
   twoPartTariffStatuses.ERROR_NO_RETURNS_FOR_MATCHING,
   twoPartTariffStatuses.ERROR_NOT_DUE_FOR_BILLING,
   twoPartTariffStatuses.ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD,
-  twoPartTariffStatuses.ERROR_NO_MATCHING_CHARGE_ELEMENT
+  twoPartTariffStatuses.ERROR_NO_MATCHING_CHARGE_ELEMENT,
+  twoPartTariffStatuses.ERROR_LATE_RETURNS
 ];
 
 class BillingVolume extends Model {
