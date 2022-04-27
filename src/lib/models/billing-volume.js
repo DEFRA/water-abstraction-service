@@ -26,8 +26,7 @@ const twoPartTariffStatuses = {
 
 const assignBillableStatuses = [
   twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED,
-  twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE,
-  twoPartTariffStatuses.ERROR_LATE_RETURNS
+  twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE
 ];
 
 const setErrorFlagStatuses = [

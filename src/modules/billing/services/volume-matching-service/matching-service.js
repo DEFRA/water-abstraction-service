@@ -83,10 +83,12 @@ const match = (chargePeriod, chargeElementGroup, returnGroup, isSummer) => {
   chargeElementGroup.returnSeason = isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
 
   // Returns have errors - assign error and full billable/null to billing volumes
-  if (returnGroup.errorCode) {
+  if (returnGroup.errorCode && returnGroup.errorCode !== 50) {
     return chargeElementGroup
       .setTwoPartTariffStatus(returnGroup.errorCode)
       .toBillingVolumes();
+  } else if (returnGroup.errorCode === 50) {
+    chargeElementGroup.setTwoPartTariffStatus(returnGroup.errorCode);
   }
 
   try {
