@@ -1,6 +1,6 @@
-const startUpload = require('./jobs/start-upload');
-const mapToJson = require('./jobs/map-to-json');
-const updateChargeInformation = require('./jobs/update-charge-information');
+const startUpload = require('./jobs/update-charge-information-start');
+const mapToJson = require('./jobs/update-charge-information-to-json');
+const updateChargeInformation = require('./jobs/update-charge-information-save');
 
 module.exports = {
   name: 'chargeInformationRegisterSubscribersBullMQ',

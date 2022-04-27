@@ -8,7 +8,7 @@ const idmConnector = require('../../../lib/connectors/idm');
 const errorEvent = require('../lib/error-event');
 const csvAdapter = require('../lib/csv-adapter');
 const config = require('../../../../config');
-const validateChargeInformation = require('./update-charge-information');
+const validateChargeInformation = require('./update-charge-information-save');
 
 /**
  * Creates a message for Bull MQ
@@ -34,12 +34,11 @@ const validateUser = user => {
   }
 };
 
-const mapToJson = async (evt, s3Object, user) => {
-  const { metadata } = evt;
+const updateChargeInformationToJson = async (evt, s3Object, user) => {
   try {
-    return await csvAdapter.mapper(s3Object.Body, user);
+    return await csvAdapter.mapper(s3Object.Body, user, evt);
   } catch (error) {
-    error.key = errorEvent.keys[metadata.filename].MAPPING;
+    error.key = errorEvent.keys.csv.MAPPING;
     throw error;
   }
 };
@@ -72,12 +71,11 @@ const handleChargeInformationMapToJsonStart = async job => {
 
     validateUser(user);
 
-    const json = await mapToJson(event, s3Object, user);
+    const json = await updateChargeInformationToJson(event, s3Object, user);
 
     await uploadJsonToS3(event, json);
 
     event.status = uploadStatus.VALIDATED;
-    event.metadata.rows = json.length;
     return await eventsService.update(event);
   } catch (error) {
     logger.error(`Failed to convert ${filename} to JSON`, error, { job });

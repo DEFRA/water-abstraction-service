@@ -12,8 +12,8 @@ const sandbox = require('sinon').createSandbox();
 
 const logger = require('../../../../src/logger');
 const eventsService = require('../../../../src/lib/services/events');
-const startUploadJob = require('../../../../src/modules/charge-versions/jobs/start-upload');
-const csvAdapter = require('../../../../src/modules/charge-versions/lib/csv-adapter');
+const startUploadJob = require('../../../../src/modules/charge-versions-upload/jobs/update-charge-information-start');
+const csvAdapter = require('../../../../src/modules/charge-versions-upload/lib/csv-adapter');
 const uuid = require('uuid/v4');
 const Event = require('../../../../src/lib/models/event');
 const { usersClient } = require('../../../../src/lib/connectors/idm');
@@ -21,9 +21,9 @@ const s3 = require('../../../../src/lib/services/s3');
 
 const eventId = uuid();
 const filename = 'test-file.csv';
-const jobName = 'charge-information-upload';
+const jobName = 'charge-information-upload-start';
 
-experiment('modules/charge-versions/jobs/map-to-json', () => {
+experiment('modules/charge-versions/jobs/update-charge-information-start', () => {
   let event, csvData;
 
   beforeEach(async () => {

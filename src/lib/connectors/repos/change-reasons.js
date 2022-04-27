@@ -14,4 +14,14 @@ const find = async () => {
   return result.toJSON();
 };
 
+const findOneByDescription = async description => {
+  const model = await ChangeReason
+    .forge()
+    .where('description', '=', description)
+    .fetch({ require: false });
+
+  return model && model.toJSON();
+};
+
 exports.find = find;
+exports.findOneByDescription = findOneByDescription;

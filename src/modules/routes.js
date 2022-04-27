@@ -14,6 +14,7 @@ module.exports = [
   ...Object.values(require('./service-status/routes')),
   ...Object.values(require('./change-email/routes')),
   ...Object.values(require('./charge-versions/routes')),
+  ...Object.values(require('./charge-versions-upload/routes')),
   ...Object.values(require('./unlink-licence/routes')),
   ...Object.values(require('./acceptance-tests/routes')),
   ...Object.values(require('./regions/routes')),

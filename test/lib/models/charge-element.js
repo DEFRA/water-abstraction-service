@@ -427,4 +427,20 @@ experiment('lib/models/charge-element', () => {
       expect(func).to.throw();
     });
   });
+  experiment('.scheme', () => {
+    test('default is alcs', async () => {
+      expect(chargeElement.scheme).to.equal('alcs');
+    });
+    test('can be set to a sroc', async () => {
+      chargeElement.scheme = 'sroc';
+      expect(chargeElement.scheme).to.equal('sroc');
+    });
+
+    test('throws an error if set to a invalid scheme', async () => {
+      const func = () => {
+        chargeElement.scheme = 'hey';
+      };
+      expect(func).to.throw();
+    });
+  });
 });
