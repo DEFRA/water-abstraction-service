@@ -12,7 +12,7 @@ const { RETURN_SEASONS } = require('../../../../lib/models/constants');
 
 // Errors
 const { ChargeElementMatchingError } = require('./errors');
-const { ERROR_NO_MATCHING_CHARGE_ELEMENT } = require('../../../../lib/models/billing-volume').twoPartTariffStatuses;
+const { ERROR_NO_MATCHING_CHARGE_ELEMENT, ERROR_LATE_RETURNS } = require('../../../../lib/models/billing-volume').twoPartTariffStatuses;
 
 /**
  * Allocates the return line volume
@@ -83,11 +83,11 @@ const match = (chargePeriod, chargeElementGroup, returnGroup, isSummer) => {
   chargeElementGroup.returnSeason = isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
 
   // Returns have errors - assign error and full billable/null to billing volumes
-  if (returnGroup.errorCode && returnGroup.errorCode !== 50) {
+  if (returnGroup.errorCode && returnGroup.errorCode !== ERROR_LATE_RETURNS) {
     return chargeElementGroup
       .setTwoPartTariffStatus(returnGroup.errorCode)
       .toBillingVolumes();
-  } else if (returnGroup.errorCode === 50) {
+  } else if (returnGroup.errorCode === ERROR_LATE_RETURNS) {
     chargeElementGroup.setTwoPartTariffStatus(returnGroup.errorCode);
   }
 
