@@ -43,6 +43,12 @@ experiment('modules/charge-categories/routes', () => {
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(200);
     });
+    test('returns the 200 for a volume of 0', async () => {
+      queryParams.waterModel = 0;
+      request.url = request.url + '?' + new URLSearchParams(queryParams);
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
 
     test('returns a 400 if the source is not included in the query string', async () => {
       request.url = request.url + '?' + new URLSearchParams(omit(queryParams, 'source'));
@@ -95,6 +101,12 @@ experiment('modules/charge-categories/routes', () => {
     });
     test('returns a 400 if the volume is not a number', async () => {
       queryParams.waterModel = 'invalid';
+      request.url = request.url + '?' + new URLSearchParams(queryParams);
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+    test('returns a 400 if the volume is a negative number', async () => {
+      queryParams.waterModel = -1;
       request.url = request.url + '?' + new URLSearchParams(queryParams);
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
