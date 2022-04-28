@@ -396,16 +396,16 @@ experiment('lib/models/billingVolume', () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_LATE_RETURNS, 20, true);
       });
 
-      test('the volume is set', async () => {
-        expect(billingVolume.volume).to.be.equal(20);
+      test('the volume is set to the actual reported return volume', async () => {
+        expect(billingVolume.volume).to.be.equal(15);
       });
 
-      test('the calculatedVolume is null', async () => {
-        expect(billingVolume.calculatedVolume).to.be.null();
+      test('the calculatedVolume is set to the reported return volume', async () => {
+        expect(billingVolume.calculatedVolume.toNumber()).to.be.equal(25);
       });
 
       test('the error flag is not set', async () => {
-        expect(billingVolume.twoPartTariffError).to.not.be.true();
+        expect(billingVolume.twoPartTariffError).to.be.true();
       });
 
       test('the status code is set', async () => {
