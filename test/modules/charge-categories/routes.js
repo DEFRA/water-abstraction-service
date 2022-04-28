@@ -44,7 +44,7 @@ experiment('modules/charge-categories/routes', () => {
       expect(response.statusCode).to.equal(200);
     });
     test('returns the 200 for a volume of 0', async () => {
-      queryParams.waterModel = 0;
+      queryParams.volume = 0;
       request.url = request.url + '?' + new URLSearchParams(queryParams);
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(200);
@@ -100,13 +100,13 @@ experiment('modules/charge-categories/routes', () => {
       expect(response.statusCode).to.equal(400);
     });
     test('returns a 400 if the volume is not a number', async () => {
-      queryParams.waterModel = 'invalid';
+      queryParams.volume = 'invalid';
       request.url = request.url + '?' + new URLSearchParams(queryParams);
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
     test('returns a 400 if the volume is a negative number', async () => {
-      queryParams.waterModel = -1;
+      queryParams.volume = -1;
       request.url = request.url + '?' + new URLSearchParams(queryParams);
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
