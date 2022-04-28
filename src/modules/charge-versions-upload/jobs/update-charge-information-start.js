@@ -1,12 +1,13 @@
-const JOB_NAME = 'charge-information-upload';
+const JOB_NAME = 'charge-information-upload-start';
 const { logger } = require('../../../logger');
 const chargeInformationUpload = require('../lib/charge-information-upload');
 const errorEvent = require('../lib/error-event');
 const csvAdapter = require('../lib/csv-adapter');
 const eventsService = require('../../../lib/services/events');
-const mapToJson = require('./map-to-json');
+const mapToJson = require('./update-charge-information-to-json');
 const { getUploadErrorFilename } = require('../lib/charge-information-upload');
 const s3 = require('../../../lib/services/s3');
+const helpers = require('../lib/helpers');
 
 /**
  * Creates a message for Bull MQ
@@ -32,11 +33,13 @@ const createMessage = event => {
  * If validation errors are found, an error is thrown with a key which
  * allows the error type to be stored in the event metadata
  * @param  {String}  s3Object - the file data
+ * @param  {Event}  event - the event object
  * @return {Promise}          resolves when validation complete
  */
-const validateS3Object = async s3Object => {
-  const { isValid, validationErrors, errorType } = await csvAdapter.validator(s3Object.Body);
+const validateS3Object = async (s3Object, event) => {
+  const { isValid, validationErrors, errorType } = await csvAdapter.validator(s3Object.Body, event, JOB_NAME);
   if (!isValid) {
+    await helpers.updateEventStatus(event, validationErrors.join('. '), JOB_NAME);
     const err = new Error('Failed Schema Validation');
     const { INVALID, INVALID_ROWS } = errorEvent.keys.csv;
     err.key = errorType === 'rows' ? INVALID_ROWS : INVALID;
@@ -67,16 +70,18 @@ const handleChargeInformationUploadStart = async job => {
   logger.info(`Handling: ${JOB_NAME}:${job.id}`);
   const { eventId } = job.data;
 
+  helpers.clearCache();
   const event = await eventsService.findOne(eventId);
   if (!event) {
     return errorEvent.throwEventNotFoundError(eventId);
   }
 
   try {
+    await helpers.updateEventStatus(event, 'uploading csv', JOB_NAME);
     const s3Object = await chargeInformationUpload.getChargeInformationS3Object(event);
-    // Pass parsed csv file to the validation function
-    // returns true if the validation passes
-    return await validateS3Object(s3Object);
+    await helpers.updateEventStatus(event, 'validating csv', JOB_NAME);
+    await validateS3Object(s3Object, event);
+    await helpers.updateEventStatus(event, 'validation complete', JOB_NAME);
   } catch (error) {
     logger.error('Charge information upload failure', error, { job });
     if (error.key === errorEvent.keys.csv.INVALID_ROWS) {
@@ -89,6 +94,7 @@ const handleChargeInformationUploadStart = async job => {
 };
 
 const onFailed = async (_job, err) => {
+  helpers.clearCache();
   logger.error(`${JOB_NAME}: Job has failed`, err);
 };
 

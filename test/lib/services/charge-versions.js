@@ -14,6 +14,7 @@ const sandbox = require('sinon').createSandbox();
 // Services
 const service = require('../../../src/lib/services/service');
 const licencesService = require('../../../src/lib/services/licences');
+const notesService = require('../../../src/lib/services/notes-service');
 const chargeVersionService = require('../../../src/lib/services/charge-versions');
 const chargeElementService = require('../../../src/lib/services/charge-elements');
 const invoiceAccountsService = require('../../../src/lib/services/invoice-accounts-service');
@@ -35,15 +36,19 @@ const chargeVersionMapper = require('../../../src/lib/mappers/charge-version');
 // Constants
 const NOTE_ID = uuid();
 
+const data = { test: 'test' };
+const note = { test: 'note-data' };
+
 experiment('lib/services/charge-versions', () => {
   beforeEach(async () => {
-    sandbox.stub(service, 'findOne').resolves('test');
-    sandbox.stub(service, 'findMany').resolves('test');
+    sandbox.stub(service, 'findOne').resolves(data);
+    sandbox.stub(service, 'findMany').resolves([data]);
     sandbox.stub(notesRepo, 'create').resolves({ noteId: NOTE_ID });
     sandbox.stub(chargeVersionRepo, 'create').resolves({});
     sandbox.stub(chargeVersionRepo, 'update');
     sandbox.stub(chargeVersionRepo, 'findMany');
     sandbox.stub(licencesService, 'getLicenceById').resolves({});
+    sandbox.stub(notesService, 'decorateWithNote').resolves({ ...data, note });
     sandbox.stub(licencesService, 'flagForSupplementaryBilling');
     sandbox.stub(chargeElementService, 'create');
     sandbox.stub(invoiceAccountsService, 'decorateWithInvoiceAccount').resolves({
@@ -61,7 +66,7 @@ experiment('lib/services/charge-versions', () => {
       const id = uuid();
       const result = await chargeVersionService.getByChargeVersionId(id);
 
-      expect(result).to.equal('test');
+      expect(result).to.equal(data);
 
       const [chargeVersionId, fetch, mapper] = service.findOne.lastCall.args;
       expect(chargeVersionId).to.equal(id);
@@ -98,7 +103,7 @@ experiment('lib/services/charge-versions', () => {
     test('delegates to the service.findMany function', async () => {
       const result = await chargeVersionService.getByLicenceId('test-guid');
 
-      expect(result).to.equal('test');
+      expect(result).to.equal([{ ...data, note }]);
 
       const [licenceRef, fetch, mapper] = service.findMany.lastCall.args;
       expect(licenceRef).to.equal('test-guid');
@@ -111,7 +116,7 @@ experiment('lib/services/charge-versions', () => {
     test('delegates to the service.findMany function', async () => {
       const result = await chargeVersionService.getByLicenceRef('123/123');
 
-      expect(result).to.equal('test');
+      expect(result).to.equal([data]);
 
       const [licenceRef, fetch, mapper] = service.findMany.lastCall.args;
       expect(licenceRef).to.equal('123/123');
