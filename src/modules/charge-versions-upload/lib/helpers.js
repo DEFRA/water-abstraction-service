@@ -8,10 +8,11 @@ const companiesService = require('../../../lib/services/companies-service');
 const chargeVersionsService = require('../../../lib/services/charge-versions');
 const repos = require('../../../lib/connectors/repos');
 const eventsService = require('../../../lib/services/events');
+const { logger } = require('../../../logger');
 
 const IMPORTED_REASON = 'Strategic review of charges (SRoC)';
 
-let cache = {};
+const cache = {};
 
 const parseFactor = factor => {
   switch (factor) {
@@ -40,103 +41,110 @@ const formatDate = date => {
   }
 };
 
-const getLicence = async licenceNumber => {
-  try {
-    if (!cache.licences) {
-      cache.licences = {};
+const deepFreeze = obj => {
+  for (const key in obj) {
+    if (typeof obj[key] === 'object') {
+      deepFreeze(obj[key]);
     }
-    if (!cache.licences[licenceNumber]) {
-      assertLicenceNumber(licenceNumber);
-      cache.licences[licenceNumber] = await licencesService.getLicenceByLicenceRef(licenceNumber);
-    }
-    return cache.licences[licenceNumber];
-  } catch (_e) {
-    return null;
   }
+  return Object.freeze(obj);
+};
+
+const getLicence = async licenceNumber => {
+  if (!cache.licences) {
+    cache.licences = {};
+  }
+  if (!cache.licences[licenceNumber]) {
+    assertLicenceNumber(licenceNumber);
+    // Only include required properties
+    const { id, startDate, expiredDate, lapsedDate, revokedDate, regionalChargeArea } = await licencesService.getLicenceByLicenceRef(licenceNumber);
+    cache.licences[licenceNumber] = deepFreeze({ id, licenceNumber, startDate, expiredDate, lapsedDate, revokedDate, regionalChargeArea });
+  }
+  return cache.licences[licenceNumber];
 };
 
 const getLicenceVersionPurposes = async licenceId => {
-  try {
-    if (!cache.licenceVersionPurposes) {
-      cache.licenceVersionPurposes = {};
-    }
-    if (!cache.licenceVersionPurposes[licenceId]) {
-      const licenceVersions = await licencesService.getLicenceVersions(licenceId);
-      const { id } = licenceVersions.find(licenceVersion => licenceVersion.status === 'current') || {};
-      const licencesVersion = await licencesVersionRepo.findOne(id);
-      cache.licenceVersionPurposes[licenceId] = get(licencesVersion, 'licenceVersionPurposes') || [];
-    }
-    return cache.licenceVersionPurposes[licenceId];
-  } catch (_e) {
-    return null;
+  if (!cache.licenceVersionPurposes) {
+    cache.licenceVersionPurposes = {};
   }
+  if (!cache.licenceVersionPurposes[licenceId]) {
+    const licenceVersions = await licencesService.getLicenceVersions(licenceId);
+    const { id } = licenceVersions.find(licenceVersion => licenceVersion.status === 'current') || {};
+    const licencesVersion = await licencesVersionRepo.findOne(id);
+    const licenceVersionPurposes = get(licencesVersion, 'licenceVersionPurposes') || [];
+
+    // Only purposeUse, purposePrimary and purposeSecondary required
+    const purposes = licenceVersionPurposes.map(purpose => {
+      const { purposeUse = {}, purposePrimary = {}, purposeSecondary = {} } = purpose;
+      return { purposeUse, purposePrimary, purposeSecondary };
+    });
+
+    cache.licenceVersionPurposes[licenceId] = deepFreeze(purposes);
+  }
+  return cache.licenceVersionPurposes[licenceId];
 };
 
 const getInvoiceAccount = async (licence, invoiceAccountNumber) => {
-  try {
-    if (!cache.invoiceAccounts) {
-      cache.invoiceAccounts = [];
-    }
-    const { licenceNumber } = licence;
-    if (!cache.invoiceAccounts[licenceNumber]) {
-      if (invoiceAccountNumber) {
-        const document = await documentsService.getValidDocumentOnDate(licenceNumber, billing.srocStartDate);
-        const licenceHolder = document.roles.find(role => role.roleName === 'licenceHolder');
-        const invoiceAccounts = await companiesService.getCompanyInvoiceAccounts(licenceHolder.company.id);
-        cache.invoiceAccounts[licenceNumber] = invoiceAccounts.find(account => account.accountNumber === invoiceAccountNumber);
-      } else {
-        const chargeVersions = await chargeVersionsService.getByLicenceRef(licenceNumber);
-        const chargeVersion = chargeVersions.find(version => !get(version, 'dateRange.endDate') && version.status === 'current');
-        if (chargeVersion) {
-          const { invoiceAccount } = await chargeVersionsService.getByIdWithInvoiceAccount(chargeVersion.id);
-          cache.invoiceAccounts[licenceNumber] = invoiceAccount;
-        }
+  if (!cache.invoiceAccounts) {
+    cache.invoiceAccounts = {};
+  }
+  const { licenceNumber } = licence;
+  const key = `${licenceNumber}:::${invoiceAccountNumber}`;
+  if (!cache.invoiceAccounts[key]) {
+    if (invoiceAccountNumber) {
+      const document = await documentsService.getValidDocumentOnDate(licenceNumber, billing.srocStartDate);
+      const licenceHolder = document.roles.find(role => role.roleName === 'licenceHolder');
+      const invoiceAccounts = await companiesService.getCompanyInvoiceAccounts(licenceHolder.company.id);
+      cache.invoiceAccounts[key] = deepFreeze(invoiceAccounts.find(account => account.accountNumber === invoiceAccountNumber));
+    } else {
+      const chargeVersions = await chargeVersionsService.getByLicenceRef(licenceNumber);
+      const chargeVersion = chargeVersions.find(version => !get(version, 'dateRange.endDate') && version.status === 'current');
+      if (chargeVersion) {
+        const { invoiceAccount } = await chargeVersionsService.getByIdWithInvoiceAccount(chargeVersion.id);
+        cache.invoiceAccounts[key] = deepFreeze(invoiceAccount);
       }
     }
-    return cache.invoiceAccounts[licenceNumber];
-  } catch (_e) {
-    return null;
   }
+  return cache.invoiceAccounts[key];
 };
 
 const getPurposeUses = async () => {
-  try {
-    if (!cache.purposeUses) {
-      cache.purposeUses = await repos.purposeUses.findAll();
-    }
-    return cache.purposeUses;
-  } catch (_e) {
-    return null;
+  if (!cache.purposeUses) {
+    const purposeUses = await repos.purposeUses.findAll();
+    // Only description and isTwoPartTariff required
+    const uses = purposeUses.map(({ description, isTwoPartTariff }) => ({ description, isTwoPartTariff }));
+    cache.purposeUses = deepFreeze(uses);
   }
+  return cache.purposeUses;
 };
 
 const getSupportedSources = async () => {
-  try {
-    if (!cache.supportedSources) {
-      cache.supportedSources = await repos.supportedSources.findAll();
-    }
-    return cache.supportedSources;
-  } catch (_e) {
-    return null;
+  if (!cache.supportedSources) {
+    const supportedSources = await repos.supportedSources.findAll();
+    // Only name and billingSupportedSourceId required
+    const sources = supportedSources.map(({ name, billingSupportedSourceId }) => ({ name, billingSupportedSourceId }));
+    cache.supportedSources = deepFreeze(sources);
   }
+  return cache.supportedSources;
 };
 
 const getChangeReason = async () => {
-  try {
-    if (!cache.changeReason) {
-      cache.changeReason = await repos.changeReasons.findOneByDescription(IMPORTED_REASON);
-    }
-    return cache.changeReason;
-  } catch (_e) {
-    return null;
+  if (!cache.changeReason) {
+    const changeReason = await repos.changeReasons.findOneByDescription(IMPORTED_REASON);
+    const { changeReasonId, type, description, triggersMinimumCharge, isEnabledForNewChargeVersions } = changeReason;
+    cache.changeReason = deepFreeze({ changeReasonId, type, description, triggersMinimumCharge, isEnabledForNewChargeVersions });
   }
+  return cache.changeReason;
 };
 
 const clearCache = () => {
-  cache = {};
+  for (const key in cache) {
+    delete cache[key];
+  }
 };
 
-const updateEventStatus = async (event, statusMessage) => {
+const updateEventStatus = async (event, statusMessage, jobName) => {
+  logger.info(`${jobName}: ${statusMessage}`);
   set(event.metadata, 'statusMessage', statusMessage);
   return eventsService.update(event);
 };

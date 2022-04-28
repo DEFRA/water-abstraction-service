@@ -8,7 +8,8 @@ const idmConnector = require('../../../lib/connectors/idm');
 const errorEvent = require('../lib/error-event');
 const csvAdapter = require('../lib/csv-adapter');
 const config = require('../../../../config');
-const validateChargeInformation = require('./update-charge-information-save');
+const chargeInformationSave = require('./update-charge-information-save');
+const helpers = require('../lib/helpers');
 
 /**
  * Creates a message for Bull MQ
@@ -98,13 +99,14 @@ const uploadJsonToS3 = (event, json) => {
 };
 
 const onFailed = async (_job, err) => {
+  helpers.clearCache();
   logger.error(`${JOB_NAME}: Job has failed`, err);
 };
 
 const onComplete = async (job, queueManager) => {
   // Format and add BullMQ message
   const { eventId } = job.data;
-  await queueManager.add(validateChargeInformation.jobName, { eventId });
+  await queueManager.add(chargeInformationSave.jobName, { eventId });
   logger.info(`${JOB_NAME}: Job has completed`);
 };
 

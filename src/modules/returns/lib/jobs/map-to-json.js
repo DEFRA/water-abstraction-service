@@ -111,3 +111,10 @@ exports.handler = handleReturnsMapToJsonStart;
 exports.onFailed = onFailed;
 exports.onComplete = onComplete;
 exports.jobName = JOB_NAME;
+exports.workerOptions = {
+  // default values are in the comments below
+  maxStalledCount: 2, // 1
+  stalledInterval: 30000, // 30 seconds
+  lockDuration: 120000, // 30 seconds
+  lockRenewTime: 60000 // defaults to half lockDuration
+};
