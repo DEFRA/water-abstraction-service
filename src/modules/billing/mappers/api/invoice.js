@@ -12,10 +12,11 @@ const containsWaterUndertaker = invoiceLicences => {
 const nullToEmpty = (val) => val === null ? '' : val;
 
 const createCompanyContact = (companyContact) => {
-  let contact = null;
+  const contact = {};
   if (companyContact) {
     companyContact.forEach((val) => {
-      contact = `${nullToEmpty(val.salutation)} ${nullToEmpty(val.firstName)} ${nullToEmpty(val.middleInitials)} ${nullToEmpty(val.lastName)}`;
+      const name = `${nullToEmpty(val.contact.salutation)} ${nullToEmpty(val.contact.firstName)} ${nullToEmpty(val.contact.middleInitials)} ${nullToEmpty(val.contact.lastName)}`;
+      contact[val.role.name] = name.trim();
     });
   }
   return contact;
@@ -25,9 +26,9 @@ const map = {
   id: 'id',
   'invoiceAccount.accountNumber': 'accountNumber',
   'invoiceAccount.company.name': 'name',
-  'invoiceAccount.company.companyContact[].contact': [
+  'invoiceAccount.company.companyContact[]': [
     {
-      key: 'billingContact.companyContact',
+      key: 'billingContact.roleContact',
       transform: (companyContact) => createCompanyContact(companyContact)
     }
   ],
