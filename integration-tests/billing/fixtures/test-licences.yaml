@@ -2,7 +2,7 @@
   model: Region
   fields:
     chargeRegionId: S
-    naldRegionId: 6
+    naldRegionId: 9
     name: Southern (Test replica)
     displayName: Southern (Test replica)
     isTest: true
