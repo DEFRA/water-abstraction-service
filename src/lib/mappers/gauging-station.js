@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 'use strict';
 
 const { createMapper } = require('../object-mapper');
@@ -8,7 +9,6 @@ const GaugingStation = require('../models/gauging-station');
 const csvToModel = data => {
   const gaugingStation = new GaugingStation();
 
-  /* eslint-disable */
   const {
     hydrology_station_id,
     station_reference,
@@ -22,9 +22,6 @@ const csvToModel = data => {
     catchment_name,
     river_name
   } = data;
-  /* eslint-enable */
-
-  // eslint-disable-next-line camelcase
   const hydrologyStationId = hydrology_station_id && hydrology_station_id.length === 36 ? hydrology_station_id : null;
 
   return gaugingStation.fromHash({
