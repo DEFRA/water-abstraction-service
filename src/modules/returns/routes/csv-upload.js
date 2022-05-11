@@ -13,7 +13,7 @@ const getSubmitConfig = (isSingleReturn) => {
     params.returnId = Joi.string().required();
   }
 
-  const submitConfig = {
+  return {
     pre: [
       { method: pre.preLoadEvent },
       { method: pre.preLoadJson },
@@ -28,7 +28,6 @@ const getSubmitConfig = (isSingleReturn) => {
       })
     }
   };
-  return submitConfig;
 };
 
 module.exports = {
