@@ -6,7 +6,6 @@ const { get, omit } = require('lodash');
  * @return {Number|null} the total volume or null for nil return
  */
 const getTotalVolume = ret => {
-  console.log(ret);
   if (ret.isNil) {
     return null;
   }
