@@ -6,6 +6,7 @@ const { logger } = require('../../../../logger');
 const uploadValidator = require('../../lib/returns-upload-validator');
 const { mapMultipleReturn } = require('../../lib/upload-preview-mapper');
 const { set } = require('lodash');
+const s3 = require('../../../../lib/services/s3');
 
 /**
  * Creates a message for Bull MQ
@@ -21,6 +22,19 @@ const createMessage = data => {
       jobId: `${JOB_NAME}.${data.eventId}`
     }
   ];
+};
+
+/**
+ * Persists a JSON string to S3 using the eventid as the filename/S3 key.
+ *
+ * @param {string} eventId the event id
+ * @param {string} json The JSON string to persist to S3
+ * @returns {Promise} Response from s3.upload
+ */
+const uploadJsonToS3 = (eventId, json) => {
+  const jsonFileName = returnsUpload.getUploadFilename(eventId, 'json');
+  const str = JSON.stringify(json, null, 2);
+  return s3.upload(jsonFileName, Buffer.from(str, 'utf8'));
 };
 
 /**
@@ -41,7 +55,10 @@ const handleValidateReturnsStart = async job => {
   try {
     const jsonData = await loadJson(eventId);
 
+    // first
     const validated = await uploadValidator.validate(jsonData, companyId);
+    // save new or overwrite json with errors
+    await uploadJsonToS3(eventId, validated);
     const data = validated.map(mapMultipleReturn);
 
     set(event, 'metadata.validationResults', getEventReturnData(data));
@@ -91,3 +108,10 @@ exports.handler = handleValidateReturnsStart;
 exports.onFailed = onFailed;
 exports.onComplete = onComplete;
 exports.jobName = JOB_NAME;
+exports.workerOptions = {
+  // default values are in the comments below
+  maxStalledCount: 2, // 1
+  stalledInterval: 30000, // 30 seconds
+  lockDuration: 120000, // 30 seconds
+  lockRenewTime: 60000 // defaults to half lockDuration
+};

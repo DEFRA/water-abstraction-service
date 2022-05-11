@@ -246,8 +246,8 @@ const validator = cond([
  * @param {String} context.companyId - the CRM company entity ID for current user
  * @return {Object} return object decorated with errors array
  */
-const validateReturn = (ret, context) => {
-  const error = validator(ret, context);
+const validateReturn = (ret, context, validate) => {
+  const error = validate ? validator(ret, context) : null;
 
   return {
     ...ret,
@@ -262,7 +262,7 @@ const validateReturn = (ret, context) => {
  *                                  to current company
  * @return {Promise}                array of returns with errors[] added
  */
-const validateBatch = async (uploadedReturns, context) => {
+const validateBatch = async (uploadedReturns, context, validate) => {
   const returnIds = uploadedReturns.map(ret => ret.returnId);
   const returns = await returnsConnector.getActiveReturns(returnIds);
 
@@ -270,7 +270,7 @@ const validateBatch = async (uploadedReturns, context) => {
     return validateReturn(ret, {
       ...context,
       returns
-    });
+    }, validate);
   });
 };
 
@@ -296,13 +296,13 @@ const batchProcess = async (arr, batchSize, iteratee, ...params) => {
  * @param  {String} companyId - GUID CRM company entity ID
  * @return {Promise}          - resolves with each return having errors array
  */
-const validate = async (returns, companyId) => {
-  const documents = await getDocuments(returns);
+const validate = async (returns, companyId, validate = true) => {
+  const documents = validate ? await getDocuments(returns) : [];
   const context = {
     companyId,
     documents
   };
-  return batchProcess(returns, 100, validateBatch, context);
+  return batchProcess(returns, 100, validateBatch, context, validate);
 };
 
 exports.validate = validate;

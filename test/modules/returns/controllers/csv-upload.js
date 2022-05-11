@@ -26,7 +26,7 @@ const UUIDV4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-
 const testEventId = 'f6378a83-015b-4afd-8de1-d7eb2ce8e032';
 const testCompanyId = 'f3de149d-93d3-46e3-a506-e754ceb4b62d';
 
-const requestFactory = (returnId) => {
+const requestFactory = (returnId, lines = []) => {
   return {
     params: {
       eventId: 'bb69e563-1a0c-4661-8e33-51ddf737740d',
@@ -41,10 +41,12 @@ const requestFactory = (returnId) => {
     },
     jsonData: [{
       returnId: 'x',
-      lines: []
+      lines,
+      errors: []
     }, {
       returnId: 'y',
-      lines: []
+      lines,
+      errors: []
     }],
     queueManager: {
       add: sandbox.stub().resolves()
@@ -186,15 +188,6 @@ experiment('modules/returns/controllers/csv-upload', () => {
       }
     });
 
-    test('calls validator with the return specified in the request', async () => {
-      const request = requestFactory('x');
-      await controller.getUploadPreviewReturn(request, h);
-      const [returns, companyId] = uploadValidator.validate.lastCall.args;
-      expect(returns.length).to.equal(1);
-      expect(returns[0].returnId).to.equal('x');
-      expect(companyId).to.equal(request.query.companyId);
-    });
-
     test('throws an error if error in return service response', async () => {
       const request = requestFactory('x');
       returnsConnector.returns.findOne.resolves({ error: 'oh no' });
@@ -202,13 +195,32 @@ experiment('modules/returns/controllers/csv-upload', () => {
       expect(func()).to.reject();
     });
 
-    test('it should responsd with the return', async () => {
-      const request = requestFactory('x');
+    test('it should responds with the return', async () => {
+      const lines = [{
+        unit: 'm³',
+        userUnit: 'm³',
+        startDate: '2021-05-01',
+        endDate: '2021-05-31',
+        timePeriod: 'month',
+        quantity: 0.1,
+        readingType: 'estimated'
+      },
+      {
+        unit: 'm³',
+        userUnit: 'm³',
+        startDate: '2021-06-01',
+        endDate: '2021-06-30',
+        timePeriod: 'month',
+        quantity: 0.1,
+        readingType: 'estimated'
+      }];
+
+      const request = requestFactory('x', lines);
       const response = await controller.getUploadPreviewReturn(request, h);
-      expect(response.error).to.equal(null);
+      expect(response.data.errors).to.equal([]);
       expect(response.data.returnId).to.equal('x');
       expect(response.data.metadata).to.equal(returnServiceResponse.data.metadata);
-      expect(response.data.totalVolume).to.equal(5);
+      expect(response.data.totalVolume).to.equal(0.2);
     });
   });
 
@@ -256,6 +268,8 @@ experiment('modules/returns/controllers/csv-upload', () => {
 
     test('it should throw a bad request error if no returns to submit', async () => {
       const request = requestFactory();
+      request.jsonData[0].errors = [ 'error' ];
+      request.jsonData[1].errors = [ 'error' ];
       uploadValidator.validate.resolves([]);
       try {
         await controller.postUploadSubmit(request, h);
