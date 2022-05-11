@@ -10,13 +10,13 @@ const containsWaterUndertaker = invoiceLicences => {
 };
 
 const nullToEmpty = (val) => val === null ? '' : val;
+const buildName = (name) => `${nullToEmpty(name.salutation)} ${nullToEmpty(name.firstName)} ${nullToEmpty(name.middleInitials)} ${nullToEmpty(name.lastName)}`;
 
 const createCompanyContact = (companyContact) => {
   const contact = {};
   if (companyContact) {
     companyContact.forEach((val) => {
-      const name = `${nullToEmpty(val.contact.salutation)} ${nullToEmpty(val.contact.firstName)} ${nullToEmpty(val.contact.middleInitials)} ${nullToEmpty(val.contact.lastName)}`;
-      contact[val.role.name] = name.trim();
+      contact[val.role.name] = buildName(val.contact);
     });
   }
   return contact;
@@ -26,13 +26,6 @@ const map = {
   id: 'id',
   'invoiceAccount.accountNumber': 'accountNumber',
   'invoiceAccount.company.name': 'name',
-  'invoiceAccount.company.companyContact[]': [
-    {
-      key: 'billingContact.roleContact',
-      transform: (companyContact) => createCompanyContact(companyContact)
-    }
-  ],
-  'agentCompany.name': 'billingContact.agentCompanyName',
   netTotal: 'netTotal',
   'invoiceLicences[].licence.licenceNumber': 'licenceNumbers[]',
   'financialYear.yearEnding': 'financialYearEnding',
@@ -40,7 +33,18 @@ const map = {
     key: 'isWaterUndertaker',
     transform: containsWaterUndertaker
   },
-  hasTransactionErrors: 'hasTransactionErrors'
+  hasTransactionErrors: 'hasTransactionErrors',
+  'invoiceAccount.company.companyContact[]': [
+    {
+      key: 'billingContact.roleContact',
+      transform: (companyContact) => createCompanyContact(companyContact)
+    }
+  ],
+  'agentCompany.name': 'billingContact.agentCompanyName',
+  contact: {
+    key: 'faoContact',
+    transform: (contact) => contact ? buildName(contact) : null
+  }
 };
 
 /**
