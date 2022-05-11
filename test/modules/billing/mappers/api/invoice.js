@@ -51,6 +51,9 @@ experiment('modules/billing/mappers/api/invoice', () => {
       expect(result).to.equal({
         id: INVOICE_ID,
         accountNumber: 'A12345678A',
+        billingContact: {
+          roleContact: {}
+        },
         name: 'Test Co Ltd.',
         netTotal: 3634654,
         licenceNumbers: ['01/123/ABC'],
