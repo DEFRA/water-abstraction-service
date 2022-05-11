@@ -268,8 +268,8 @@ experiment('modules/returns/controllers/csv-upload', () => {
 
     test('it should throw a bad request error if no returns to submit', async () => {
       const request = requestFactory();
-      request.jsonData[0].errors = [ 'error' ];
-      request.jsonData[1].errors = [ 'error' ];
+      request.jsonData[0].errors = ['error'];
+      request.jsonData[1].errors = ['error'];
       uploadValidator.validate.resolves([]);
       try {
         await controller.postUploadSubmit(request, h);
