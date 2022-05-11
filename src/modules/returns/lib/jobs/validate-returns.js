@@ -56,7 +56,7 @@ const handleValidateReturnsStart = async job => {
     const jsonData = await loadJson(eventId);
 
     // first
-    const validated = await uploadValidator.validate(jsonData, companyId);
+    const validated = await uploadValidator.validate(jsonData, companyId, true);
     // save new or overwrite json with errors
     await uploadJsonToS3(eventId, validated);
     const data = validated.map(mapMultipleReturn);

@@ -296,12 +296,12 @@ const batchProcess = async (arr, batchSize, iteratee, ...params) => {
  * @param  {String} companyId - GUID CRM company entity ID
  * @return {Promise}          - resolves with each return having errors array
  */
-const validate = async (returns, companyId, validate = true) => {
+const validate = async (returns, companyId, validateJson = false) => {
   const documents = validate ? await getDocuments(returns) : [];
   const context = {
     companyId,
     documents,
-    validate
+    validateJson
   };
   return batchProcess(returns, 100, validateBatch, context);
 };
