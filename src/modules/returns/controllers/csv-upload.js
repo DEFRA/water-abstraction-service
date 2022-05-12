@@ -148,7 +148,7 @@ const postUploadSubmit = async (request, h) => {
     }
 
     // Update event
-    eventsService.update(applySubmitting(request.event, valid));
+    await eventsService.update(applySubmitting(request.event, valid));
 
     // Format and add BullMQ message
     await request.queueManager.add(persistReturnsJob.jobName, { eventId });
