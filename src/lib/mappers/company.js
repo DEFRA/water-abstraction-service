@@ -15,7 +15,8 @@ const crmToModelMapper = createMapper()
   .copy(
     'name',
     'type',
-    'organisationType'
+    'organisationType',
+    'companyContact'
   )
   .map('companyId').to('id');
 
