@@ -247,7 +247,7 @@ const validator = cond([
  * @return {Object} return object decorated with errors array
  */
 const validateReturn = (ret, context) => {
-  const error = context.validate ? validator(ret, context) : null;
+  const error = context.validateJson ? validator(ret, context) : null;
 
   return {
     ...ret,
@@ -297,7 +297,7 @@ const batchProcess = async (arr, batchSize, iteratee, ...params) => {
  * @return {Promise}          - resolves with each return having errors array
  */
 const validate = async (returns, companyId, validateJson = false) => {
-  const documents = validate ? await getDocuments(returns) : [];
+  const documents = validateJson ? await getDocuments(returns) : [];
   const context = {
     companyId,
     documents,
