@@ -10,7 +10,6 @@ const returns = require('../../../../src/lib/connectors/returns');
 const documents = require('../../../../src/lib/connectors/crm/documents');
 
 const data = require('./data/returns-upload-validator.js');
-const { trimValues } = require('@envage/water-abstraction-helpers/src/nald');
 
 experiment('batchProcess', () => {
   const data = [0, 1, 2, 3];
