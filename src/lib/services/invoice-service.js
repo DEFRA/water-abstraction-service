@@ -119,7 +119,8 @@ const decorateInvoiceWithCRMData = (invoice, context) => {
     'address',
     'invoiceAccount',
     'agentCompany',
-    'contact'
+    'contact',
+    'company'
   );
 
   return invoice.fromHash(pickBy(properties));
@@ -143,6 +144,7 @@ const mapToInvoices = async context => {
     const mappedInvoice = await mapInvoice(billingInvoice, context);
     invoices.push(mappedInvoice);
   }
+
   return invoices;
 };
 
@@ -200,7 +202,7 @@ const getInvoicesForBatchDownload = async batch => {
  * @param {Object} options
  * @param {Boolean} options.includeTransactions
  * @param {Boolean} options.includeInvoiceAccounts - whether to load invoice data from CRM
- * @return {Promise<Invoice>}
+ * @return {Array<Invoice>}
  */
 const getInvoicesForBatch = async (batch, options = {}) => {
   const defaults = {
@@ -208,13 +210,12 @@ const getInvoicesForBatch = async (batch, options = {}) => {
     includeInvoiceAccounts: false
   };
 
-  const context = { batch, options: Object.assign(defaults, options) };
+  let context = { batch, options: Object.assign(defaults, options) };
 
-  return pWaterfall([
-    getBatchInvoices,
-    getCRMData,
-    mapToInvoices
-  ], context);
+  context = await getBatchInvoices(context);
+  context = await getCRMData(context);
+  context = await mapToInvoices(context);
+  return context;
 };
 
 const getInvoicesTransactionsForBatch = partialRight(getInvoicesForBatch, {
