@@ -55,7 +55,7 @@
     startDate: '2020-01-01'
     isTest: true
 
-  ref: $licenceVersion
+- ref: $licenceVersion
   model: LicenceVersion
   fields:
     licenceId: $dailyLicence.licenceId
@@ -66,8 +66,6 @@
     endDate: null
     externalId: 6:1234:1:0
     isTest: true
-
-
 
 - ref: $primaryPurpose
   model: PurposePrimary
@@ -99,9 +97,10 @@
       - legacyId
 
       ##licence version purpose
-  ref: $dailyLicenceVersionPurposes
-  model: LicenceVersionPurposes
+- ref: $dailyLicenceVersionPurposes
+  model: LicenceVersionPurpose
   fields:
+    licenceVersionId: $licenceVersion.licenceVersionId
     purposePrimaryId: $primaryPurpose.purposePrimaryId
     purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
     purposeUseId: $purposeUse.purposeUseId
@@ -111,10 +110,9 @@
     abstractionPeriodEndMonth: 3
     timeLimitedStartDate: null
     timeLimitedEndDate: null
-    annualQuantity: 15.54
+    annualQuantity: 1554
     externalId: 6:1234
     isTest: true
-
 
 - ref: $monthlyLicenceBReturnVersionA
   model: ReturnVersion
