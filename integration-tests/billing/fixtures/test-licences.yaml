@@ -55,6 +55,20 @@
     startDate: '2020-01-01'
     isTest: true
 
+  ref: $licenceVersion
+  model: LicenceVersion
+  fields:
+    licenceId: $dailyLicence.licenceId
+    issue : 1
+    increment: 0
+    status: 'current'
+    startDate: '2020-01-01'
+    endDate: null
+    externalId: 6:1234:1:0
+    isTest: true
+
+
+
 - ref: $primaryPurpose
   model: PurposePrimary
   fields:
@@ -83,6 +97,24 @@
   constraints:
     purposes_uses_unq_legacy_id:
       - legacyId
+
+      ##licence version purpose
+  ref: $dailyLicenceVersionPurposes
+  model: LicenceVersionPurposes
+  fields:
+    purposePrimaryId: $primaryPurpose.purposePrimaryId
+    purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 4
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 3
+    timeLimitedStartDate: null
+    timeLimitedEndDate: null
+    annualQuantity: 15.54
+    externalId: 6:1234
+    isTest: true
+
 
 - ref: $monthlyLicenceBReturnVersionA
   model: ReturnVersion
