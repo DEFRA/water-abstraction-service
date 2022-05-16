@@ -5,7 +5,7 @@
  */
 
 const Boom = require('@hapi/boom');
-const { find, first, set } = require('lodash');
+const { find, set } = require('lodash');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 
 const eventFactory = require('../lib/event-factory');
@@ -15,7 +15,6 @@ const { uploadStatus, getUploadFilename } = require('../lib/returns-upload');
 const { logger } = require('../../../logger');
 const startUploadJob = require('../lib/jobs/start-upload');
 const persistReturnsJob = require('../lib/jobs/persist-returns');
-const uploadValidator = require('../lib/returns-upload-validator');
 const { mapSingleReturn } = require('../lib/upload-preview-mapper');
 const returnsConnector = require('../../../lib/connectors/returns');
 
@@ -74,32 +73,29 @@ const postUpload = async (request, h) => {
  * @return {Promise} resolves with return data { error : null, data : {} }
  */
 const getUploadPreviewReturn = async (request, h) => {
-  const params = parseRequest(request);
-  const { companyId, returnId } = params;
+  const { returnId } = request.params;
 
   try {
     const match = find(request.jsonData, { returnId });
 
     if (!match) {
-      throw Boom.notFound(`Return ${returnId} not found in upload`, params);
+      throw Boom.notFound(`Return ${returnId} not found in upload`, request.params);
     }
 
-    // Validate JSON data, and fetch return from return service
-    const [validated, response] = await Promise.all([
-      uploadValidator.validate([match], companyId),
-      returnsConnector.returns.findOne(returnId)
-    ]);
+    const response = await returnsConnector.returns.findOne(returnId);
 
     throwIfError(response.error);
 
-    const data = validated.map(row => mapSingleReturn(row, response.data));
+    const data = mapSingleReturn(match, response.data);
 
     return {
-      error: null,
-      data: first(data)
+      data: {
+        ...data,
+        errors: []
+      }
     };
   } catch (error) {
-    logger.error('Return upload preview failed', error, params);
+    logger.error('Return upload preview failed', error, request.params);
     throw error;
   }
 };
@@ -126,12 +122,6 @@ const applySubmitting = (event, data) => {
 const isValidReturn = ret => ret.errors.length === 0;
 const isReadyEvent = evt => evt.status === uploadStatus.READY;
 
-const parseRequest = (request) => {
-  const { eventId, returnId } = request.params;
-  const { companyId } = request.query;
-  return { eventId, companyId, returnId };
-};
-
 /**
  * Route handler to trigger the submission of valid returns corresponding
  * to the supplied upload event ID
@@ -142,7 +132,8 @@ const parseRequest = (request) => {
  * @return {Promise}         resolves with JSON if submitted
  */
 const postUploadSubmit = async (request, h) => {
-  const { eventId, companyId } = parseRequest(request);
+  const { eventId } = request.params;
+  const { companyId } = request.query;
 
   try {
     // Check event status is 'validated'
@@ -150,10 +141,7 @@ const postUploadSubmit = async (request, h) => {
       throw Boom.badRequest('Event status not \'ready\'');
     }
 
-    // Validate data in JSON
-    const data = await uploadValidator.validate(request.jsonData, companyId);
-
-    const valid = data.filter(isValidReturn);
+    const valid = request.jsonData.filter(isValidReturn);
 
     // Check 1+ valid returns
     if (valid.length < 1) {
@@ -166,7 +154,7 @@ const postUploadSubmit = async (request, h) => {
     // Format and add BullMQ message
     await request.queueManager.add(persistReturnsJob.jobName, { eventId });
 
-    return { data, error: null };
+    return { data: request.jsonData, error: null };
   } catch (error) {
     logger.error('Return upload preview failed', error, { eventId, companyId });
     throw error;

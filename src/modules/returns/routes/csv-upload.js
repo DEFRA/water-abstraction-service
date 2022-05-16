@@ -2,20 +2,25 @@
 
 const Joi = require('joi');
 const controller = require('../controllers/csv-upload');
-const { set } = require('lodash');
 const pre = require('../pre-handlers');
 
 const getSubmitConfig = (isSingleReturn) => {
-  const submitConfig = {
+  const params = {
+    eventId: Joi.string().uuid().required()
+  };
+
+  if (isSingleReturn) {
+    params.returnId = Joi.string().required();
+  }
+
+  return {
     pre: [
       { method: pre.preLoadEvent },
       { method: pre.preLoadJson },
       { method: pre.preCheckIssuer }
     ],
     validate: {
-      params: Joi.object().keys({
-        eventId: Joi.string().uuid().required()
-      }),
+      params: Joi.object().keys(params),
       query: Joi.object().keys({
         entityId: Joi.string().uuid().required(),
         companyId: Joi.string().uuid().required(),
@@ -23,11 +28,6 @@ const getSubmitConfig = (isSingleReturn) => {
       })
     }
   };
-
-  if (isSingleReturn) {
-    set(submitConfig, 'validate.params.returnId', Joi.string().required());
-  }
-  return submitConfig;
 };
 
 module.exports = {

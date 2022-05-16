@@ -247,7 +247,7 @@ const validator = cond([
  * @return {Object} return object decorated with errors array
  */
 const validateReturn = (ret, context) => {
-  const error = validator(ret, context);
+  const error = context.validateJson ? validator(ret, context) : null;
 
   return {
     ...ret,
@@ -296,11 +296,12 @@ const batchProcess = async (arr, batchSize, iteratee, ...params) => {
  * @param  {String} companyId - GUID CRM company entity ID
  * @return {Promise}          - resolves with each return having errors array
  */
-const validate = async (returns, companyId) => {
-  const documents = await getDocuments(returns);
+const validate = async (returns, companyId, validateJson = false) => {
+  const documents = validateJson ? await getDocuments(returns) : [];
   const context = {
     companyId,
-    documents
+    documents,
+    validateJson
   };
   return batchProcess(returns, 100, validateBatch, context);
 };
