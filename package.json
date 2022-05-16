@@ -8,7 +8,6 @@
     "url": "https://github.com/DEFRA/water-abstraction-service"
   },
   "scripts": {
-    "dev": "cd \"$(dirname \"$0\")\" || exit && export $(grep -v '^#' ../water-abstraction-orchestration/secrets/.env | xargs) && export $(grep -v '^#' ../water-abstraction-orchestration/services/variables.env | xargs) && nodemon . ",
     "test": "DATABASE_URL=postgres://water_user:password@localhost:5432/permits LAZY_REDIS=1 lab",
     "test:bail": "DATABASE_URL=postgres://water_user:password@localhost:5432/permits LAZY_REDIS=1 lab --bail",
     "test:ci": "CHARGE_MODULE_ORIGIN=https://charging.defra.net LAZY_REDIS=1 lab --bail  -t 55 -m 0 --coverage-path ./src/ -r html -o coverage/coverage.html -r lcov -o coverage/lcov.info --reporter junit -o coverage/junit.xml -r console -o stdout",
