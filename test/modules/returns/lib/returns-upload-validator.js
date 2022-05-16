@@ -72,25 +72,25 @@ experiment('validate', () => {
 
   test('fails validation if a current CRM document cannot be found', async () => {
     const { ERR_LICENCE_NOT_FOUND } = returnsUploadValidator.uploadErrors;
-    const [{ errors }] = await returnsUploadValidator.validate([data.upload[0]], data.companyId);
+    const [{ errors }] = await returnsUploadValidator.validate([data.upload[0]], data.companyId, true);
     expect(errors).to.equal([ERR_LICENCE_NOT_FOUND]);
   });
 
   test('fails validation if CRM document company does not match user company', async () => {
     const { ERR_PERMISSION } = returnsUploadValidator.uploadErrors;
-    const [{ errors }] = await returnsUploadValidator.validate([data.upload[1]], data.companyId);
+    const [{ errors }] = await returnsUploadValidator.validate([data.upload[1]], data.companyId, true);
     expect(errors).to.equal([ERR_PERMISSION]);
   });
 
   test('fails validation if the submitted return ID is not found', async () => {
     const { ERR_NOT_FOUND } = returnsUploadValidator.uploadErrors;
-    const [{ errors }] = await returnsUploadValidator.validate([data.upload[2]], data.companyId);
+    const [{ errors }] = await returnsUploadValidator.validate([data.upload[2]], data.companyId, true);
     expect(errors).to.equal([ERR_NOT_FOUND]);
   });
 
   test('fails validation if the submitted return does not have due status', async () => {
     const { ERR_NOT_DUE } = returnsUploadValidator.uploadErrors;
-    const [{ errors }] = await returnsUploadValidator.validate([data.upload[3]], data.companyId);
+    const [{ errors }] = await returnsUploadValidator.validate([data.upload[3]], data.companyId, true);
     expect(errors).to.equal([ERR_NOT_DUE]);
   });
 
@@ -98,25 +98,25 @@ experiment('validate', () => {
     const { ERR_VOLUMES } = returnsUploadValidator.uploadErrors;
     const returnData = cloneDeep([data.upload[5]]);
     returnData[0].lines[0].quantity = '-4';
-    const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId);
+    const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId, true);
     expect(errors).to.equal([ERR_VOLUMES]);
   });
 
   test('passes validation if data is OK', async () => {
-    const [{ errors }] = await returnsUploadValidator.validate([data.upload[4]], data.companyId);
+    const [{ errors }] = await returnsUploadValidator.validate([data.upload[4]], data.companyId, true);
     expect(errors).to.equal([]);
   });
 
   test('fails validation if return lines do not match those expected', async () => {
     const { ERR_LINES } = returnsUploadValidator.uploadErrors;
-    const [{ errors }] = await returnsUploadValidator.validate([data.upload[5]], data.companyId);
+    const [{ errors }] = await returnsUploadValidator.validate([data.upload[5]], data.companyId, true);
     expect(errors).to.equal([ERR_LINES]);
   });
 
   test('fails validation if supplied return frequency does match that expected in the return header', async () => {
     const { ERR_LINES } = returnsUploadValidator.uploadErrors;
     const testData = data.upload[6];
-    const [{ errors }] = await returnsUploadValidator.validate([testData], data.companyId);
+    const [{ errors }] = await returnsUploadValidator.validate([testData], data.companyId, true);
     expect(errors).to.equal([ERR_LINES]);
   });
 
@@ -128,14 +128,14 @@ experiment('validate', () => {
       endDate: '2019-02-28',
       quantity: '0'
     };
-    const [{ errors }] = await returnsUploadValidator.validate([testData], data.companyId);
+    const [{ errors }] = await returnsUploadValidator.validate([testData], data.companyId, true);
     expect(errors).to.equal([ERR_DATE_FORMAT]);
   });
 
   test('it should fail validation if it doesnt match the Joi schema', async () => {
     const { ERR_SCHEMA } = returnsUploadValidator.uploadErrors;
     const upload = [omit(data.upload[4], 'isCurrent')];
-    const [{ errors }] = await returnsUploadValidator.validate(upload, data.companyId);
+    const [{ errors }] = await returnsUploadValidator.validate(upload, data.companyId, true);
     expect(errors).to.equal([ERR_SCHEMA]);
   });
 
@@ -152,7 +152,7 @@ experiment('validate', () => {
       });
     });
     test('passes validation if meter details are present', async () => {
-      const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId);
+      const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId, true);
       expect(errors).to.equal([]);
     });
 
@@ -160,7 +160,7 @@ experiment('validate', () => {
       const { ERR_METER_DETAILS } = returnsUploadValidator.uploadErrors;
       set(returnData[0], 'isNil', false);
       returnData[0].meters[0].manufacturer = '';
-      const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId);
+      const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId, true);
       expect(errors).to.equal([ERR_METER_DETAILS]);
     });
 
@@ -168,7 +168,7 @@ experiment('validate', () => {
       const { ERR_METER_DETAILS } = returnsUploadValidator.uploadErrors;
       set(returnData[0], 'isNil', false);
       returnData[0].meters[0].serialNumber = '';
-      const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId);
+      const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId, true);
       expect(errors).to.equal([ERR_METER_DETAILS]);
     });
   });
