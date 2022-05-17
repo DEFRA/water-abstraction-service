@@ -25,6 +25,7 @@ const { jobName: approveBatchJobName } = require('../jobs/approve-batch');
 const batchStatus = require('../jobs/lib/batch-status');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 const { BillingBatch } = require('../../../lib/connectors/bookshelf');
+const { returns, charging } = require('@envage/water-abstraction-helpers');
 /**
  * Resource that will create a new batch skeleton which will
  * then be asynchronously populated with charge versions by a
@@ -204,6 +205,10 @@ const postSetBatchStatusToCancel = async (request, h) => {
 const getBatchBillableYears = async (request, h) => {
   const { regionId, batchType, financialYearEnding, isSummer } = request.payload;
 
+  const cycles = returns.date.createReturnCycles().reverse();
+
+  const endDates = cycles.filter(cycle => cycle.isSummer === isSummer).map(cycle => charging.getFinancialYear(cycle.endDate));
+
   const model = await BillingBatch
     .forge()
     .where({
@@ -212,7 +217,7 @@ const getBatchBillableYears = async (request, h) => {
       is_summer: isSummer
     })
     .where('status', 'in', ['sent'])
-    .fetch();
+    .fetch({ columns: ['to_financial_year_ending'] });
   const response = model ? model.toJSON() : null;
 
   return h.response(response).code(200);
