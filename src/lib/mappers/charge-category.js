@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 'use strict';
 const { truncate } = require('lodash');
 
@@ -10,7 +11,6 @@ const ChargeCategory = require('../models/charge-category');
 const csvToModel = data => {
   const chargeCategory = new ChargeCategory();
 
-  /* eslint-disable */
   const {
     reference,
     subsistence_charge,
@@ -23,7 +23,6 @@ const csvToModel = data => {
     model_tier,
     is_restricted_source
   } = data;
-  /* eslint-enable */
   return chargeCategory.fromHash({
     reference,
     description,

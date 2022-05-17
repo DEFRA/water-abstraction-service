@@ -17,13 +17,14 @@ const { logger } = require('../../../../../src/logger');
 const eventsService = require('../../../../../src/lib/services/events');
 const Event = require('../../../../../src/lib/models/event');
 const errorEvent = require('../../../../../src/modules/returns/lib/jobs/error-event');
+const s3 = require('../../../../../src/lib/services/s3');
 
 const eventId = uuid();
 
 experiment('validate-returns', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'info').returns();
-    sandbox.stub(logger, 'error').returns();
+    sandbox.stub(s3, 'upload').resolves();
   });
 
   afterEach(async () => {
