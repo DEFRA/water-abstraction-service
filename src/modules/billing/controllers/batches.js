@@ -24,6 +24,7 @@ const { jobName: refreshTotalsJobName } = require('../jobs/refresh-totals');
 const { jobName: approveBatchJobName } = require('../jobs/approve-batch');
 const batchStatus = require('../jobs/lib/batch-status');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
+const { BillingBatch } = require('../../../lib/connectors/bookshelf');
 /**
  * Resource that will create a new batch skeleton which will
  * then be asynchronously populated with charge versions by a
@@ -200,6 +201,23 @@ const postSetBatchStatusToCancel = async (request, h) => {
   }
 };
 
+const getBatchBillableYears = async (request, h) => {
+  const { regionId, batchType, financialYearEnding, isSummer } = request.payload;
+
+  const model = await BillingBatch
+    .forge()
+    .where({
+      region_id: regionId,
+      batch_type: batchType,
+      is_summer: isSummer
+    })
+    .where('status', 'in', ['sent'])
+    .fetch();
+  const response = model ? model.toJSON() : null;
+
+  return h.response(response).code(200);
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchDownloadData = getBatchDownloadData;
@@ -215,3 +233,5 @@ exports.postCreateBatch = postCreateBatch;
 
 exports.deleteAllBillingData = deleteAllBillingData;
 exports.postSetBatchStatusToCancel = postSetBatchStatusToCancel;
+
+exports.getBatchBillableYears = getBatchBillableYears;

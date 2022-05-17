@@ -274,17 +274,39 @@ const postSetBatchStatusToCancel = {
   }
 };
 
-exports.getBatch = getBatch;
-exports.getBatches = getBatches;
-exports.getBatchInvoices = getBatchInvoices;
-exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
-exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
-exports.getInvoiceLicence = getInvoiceLicence;
-exports.deleteBatchInvoice = deleteBatchInvoice;
-exports.deleteBatch = deleteBatch;
+const getBatchBillableYears = {
+  method: 'POST',
+  path: `${BASE_PATH}/billable-years`,
+  handler: controller.getBatchBillableYears,
+  config: {
+    validate: {
+      payload: Joi.object().keys({
+        userEmail: Joi.string().email().required(),
+        regionId: Joi.string().uuid().required(),
+        batchType: Joi.string().valid('annual', 'supplementary', 'two_part_tariff').required(),
+        financialYearEnding: Joi.number().required(),
+        isSummer: Joi.boolean().default(false)
+      })
+    }
+    // auth: {
+    //   scope: [billing]
+    // }
+  }
+};
 
-exports.postApproveBatch = postApproveBatch;
-exports.postCreateBatch = postCreateBatch;
-exports.postApproveReviewBatch = postApproveReviewBatch;
-exports.getBatchDownloadData = getBatchDownloadData;
-exports.postSetBatchStatusToCancel = postSetBatchStatusToCancel;
+module.exports = {
+  getBatchBillableYears,
+  getBatch,
+  getBatches,
+  getBatchInvoices,
+  getBatchInvoiceDetail,
+  getBatchInvoicesDetails,
+  getInvoiceLicence,
+  deleteBatchInvoice,
+  deleteBatch,
+  postApproveBatch,
+  postCreateBatch,
+  postApproveReviewBatch,
+  getBatchDownloadData,
+  postSetBatchStatusToCancel
+};
