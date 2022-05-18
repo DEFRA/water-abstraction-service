@@ -202,41 +202,51 @@ const postSetBatchStatusToCancel = async (request, h) => {
   }
 };
 
+// TODO: We also need to filter out years which don't have a licence or anything recorded against it as there's no point
+// in creating a batch
 const getBatchBillableYears = async (request, h) => {
-  const { regionId, batchType, financialYearEnding, isSummer } = request.payload;
+  const { regionId, batchType, isSummer } = request.payload;
 
-  const cycles = returns.date.createReturnCycles().reverse();
+  const allPossibleCycles = returns.date.createReturnCycles();
 
-  const endDates = cycles.filter(cycle => cycle.isSummer === isSummer).map(cycle => charging.getFinancialYear(cycle.endDate));
+  const allPossibleEndDates = allPossibleCycles
+    .filter(cycle => cycle.isSummer === isSummer)
+    .map(cycle => charging.getFinancialYear(cycle.endDate));
 
-  const model = await BillingBatch
-    .forge()
+  const existingBatches = await BillingBatch
     .where({
       region_id: regionId,
       batch_type: batchType,
       is_summer: isSummer
     })
-    .where('status', 'in', ['sent'])
-    .fetch({ columns: ['to_financial_year_ending'] });
-  const response = model ? model.toJSON() : null;
+    .where('status', 'in', [
+      BATCH_STATUS.sent,
+      BATCH_STATUS.processing,
+      BATCH_STATUS.ready,
+      BATCH_STATUS.review
+    ])
+    .fetchAll({ columns: ['to_financial_year_ending'] });
 
-  return h.response(response).code(200);
+  const existingBatchYears = existingBatches.toJSON().map(item => item.toFinancialYearEnding);
+
+  const remainingYears = allPossibleEndDates.filter(date => !existingBatchYears.includes(date));
+
+  return h.response({ unsentYears: remainingYears }).code(200);
 };
 
-exports.getBatch = getBatch;
-exports.getBatches = getBatches;
-exports.getBatchDownloadData = getBatchDownloadData;
-exports.getBatchInvoices = getBatchInvoices;
-exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
-exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
-exports.getInvoiceLicenceWithTransactions = getInvoiceLicenceWithTransactions;
-exports.deleteBatchInvoice = deleteBatchInvoice;
-exports.deleteBatch = deleteBatch;
-
-exports.postApproveBatch = postApproveBatch;
-exports.postCreateBatch = postCreateBatch;
-
-exports.deleteAllBillingData = deleteAllBillingData;
-exports.postSetBatchStatusToCancel = postSetBatchStatusToCancel;
-
-exports.getBatchBillableYears = getBatchBillableYears;
+module.exports = {
+  getBatch,
+  getBatches,
+  getBatchDownloadData,
+  getBatchInvoices,
+  getBatchInvoiceDetail,
+  getBatchInvoicesDetails,
+  getInvoiceLicenceWithTransactions,
+  deleteBatchInvoice,
+  deleteBatch,
+  postApproveBatch,
+  postCreateBatch,
+  deleteAllBillingData,
+  postSetBatchStatusToCancel,
+  getBatchBillableYears
+};

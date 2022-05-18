@@ -284,7 +284,6 @@ const getBatchBillableYears = {
         userEmail: Joi.string().email().required(),
         regionId: Joi.string().uuid().required(),
         batchType: Joi.string().valid('annual', 'supplementary', 'two_part_tariff').required(),
-        financialYearEnding: Joi.number().required(),
         isSummer: Joi.boolean().default(false)
       })
     }
