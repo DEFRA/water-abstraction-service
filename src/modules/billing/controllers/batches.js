@@ -211,7 +211,8 @@ const getBatchBillableYears = async (request, h) => {
 
   const allPossibleEndDates = allPossibleCycles
     .filter(cycle => cycle.isSummer === isSummer)
-    .map(cycle => charging.getFinancialYear(cycle.endDate));
+    .map(cycle => charging.getFinancialYear(cycle.endDate))
+    .sort((a, b) => b - a);
 
   const existingBatches = await BillingBatch
     .where({
