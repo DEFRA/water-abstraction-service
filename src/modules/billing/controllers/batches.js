@@ -1,6 +1,7 @@
 'use strict';
 
 const Boom = require('@hapi/boom');
+const moment = require('moment');
 
 const { flatMap, uniq } = require('lodash');
 const { envelope } = require('../../../lib/response');
@@ -207,13 +208,6 @@ const postSetBatchStatusToCancel = async (request, h) => {
 const getBatchBillableYears = async (request, h) => {
   const { regionId, batchType, isSummer } = request.payload;
 
-  const allPossibleCycles = returns.date.createReturnCycles();
-
-  const allPossibleEndDates = allPossibleCycles
-    .filter(cycle => cycle.isSummer === isSummer)
-    .map(cycle => charging.getFinancialYear(cycle.endDate))
-    .sort((a, b) => b - a);
-
   const existingBatches = await BillingBatch
     .where({
       region_id: regionId,
@@ -228,9 +222,22 @@ const getBatchBillableYears = async (request, h) => {
     ])
     .fetchAll({ columns: ['to_financial_year_ending'] });
 
+  const allPossibleCycles = returns.date.createReturnCycles();
+
+  const allPossibleEndDates = allPossibleCycles
+    .filter(cycle => cycle.isSummer === isSummer)
+    .map(cycle => {
+      return {
+        financialYear: charging.getFinancialYear(cycle.endDate),
+        isCurrent: moment(cycle.dueDate).isBefore(moment(), 'day')
+      }
+    })
+    .sort((a, b) => b - a);
+
   const existingBatchYears = existingBatches.toJSON().map(item => item.toFinancialYearEnding);
 
-  const remainingYears = allPossibleEndDates.filter(date => !existingBatchYears.includes(date));
+  const remainingYears = allPossibleEndDates
+    .filter(possibleDate => !existingBatchYears.includes(possibleDate.financialYear));
 
   return h.response({ unsentYears: remainingYears }).code(200);
 };
