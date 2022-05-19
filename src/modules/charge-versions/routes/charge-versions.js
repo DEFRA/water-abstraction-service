@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const controller = require('../controllers/charge-versions');
-const Joi = require('joi');
+const controller = require('../controllers/charge-versions')
+const Joi = require('joi')
 
-const VALID_GUID = Joi.string().guid().required();
+const VALID_GUID = Joi.string().guid().required()
 
 module.exports = {
 
@@ -69,4 +69,4 @@ module.exports = {
       }
     }
   }
-};
+}

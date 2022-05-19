@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
-const moment = require('moment');
-const { maxBy } = require('lodash');
-const abstractionHelpers = require('@envage/water-abstraction-helpers');
+const moment = require('moment')
+const { maxBy } = require('lodash')
+const abstractionHelpers = require('@envage/water-abstraction-helpers')
 
-const { mapQuantity, mapUnit, getStartDate, mapUsability } = abstractionHelpers.returns.mappers;
+const { mapQuantity, mapUnit, getStartDate, mapUsability } = abstractionHelpers.returns.mappers
 
 /**
  * Maps a row of data from NALD to a fake line row in the new returns service
@@ -13,10 +13,10 @@ const { mapQuantity, mapUnit, getStartDate, mapUsability } = abstractionHelpers.
  * @return {Object}
  */
 const naldToReturnLine = (returnRow, line) => {
-  const startDate = getStartDate(returnRow.start_date, line.RET_DATE, returnRow.returns_frequency);
-  const endDate = moment(line.RET_DATE, 'YYYYMMDDHHmmss').format('YYYY-MM-DD');
-  const lineId = `${returnRow.return_id}:${endDate}`;
-  const { ARFL_ARTY_ID, ARFL_DATE_FROM, RET_DATE } = line;
+  const startDate = getStartDate(returnRow.start_date, line.RET_DATE, returnRow.returns_frequency)
+  const endDate = moment(line.RET_DATE, 'YYYYMMDDHHmmss').format('YYYY-MM-DD')
+  const lineId = `${returnRow.return_id}:${endDate}`
+  const { ARFL_ARTY_ID, ARFL_DATE_FROM, RET_DATE } = line
 
   return {
     line_id: lineId,
@@ -31,8 +31,8 @@ const naldToReturnLine = (returnRow, line) => {
       version: 1,
       nald: { ARFL_ARTY_ID, ARFL_DATE_FROM, RET_DATE }
     }
-  };
-};
+  }
+}
 
 /**
  * For weekly returns, looks through the years lines data and finds the
@@ -49,20 +49,20 @@ const getWeekdayHistogram = (lines) => {
     4: { day: 4, freq: 0 },
     5: { day: 5, freq: 0 },
     6: { day: 6, freq: 0 }
-  };
+  }
 
   const days = lines.reduce((acc, line) => {
     if (line.quantity !== null) {
-      const day = moment(line.end_date).day();
-      acc[day].freq++;
+      const day = moment(line.end_date).day()
+      acc[day].freq++
     }
-    return acc;
-  }, initial);
+    return acc
+  }, initial)
 
-  const max = maxBy(Object.values(days), day => day.freq);
+  const max = maxBy(Object.values(days), day => day.freq)
 
-  return max.day;
-};
+  return max.day
+}
 
 /**
  * For weekly returns, we wish to filter out irrelevant daily null values
@@ -71,12 +71,12 @@ const getWeekdayHistogram = (lines) => {
  * @return {Array} data with irrelevant lines removed
  */
 const filterWeeklyRows = (returnRow, lines) => {
-  const dayOfWeek = getWeekdayHistogram(lines);
+  const dayOfWeek = getWeekdayHistogram(lines)
 
   return lines.filter(row => {
-    return moment(row.end_date, 'YYYY-MM-DD').day() === dayOfWeek || row.quantity !== null;
-  });
-};
+    return moment(row.end_date, 'YYYY-MM-DD').day() === dayOfWeek || row.quantity !== null
+  })
+}
 
 /**
  * Process line data
@@ -85,15 +85,15 @@ const filterWeeklyRows = (returnRow, lines) => {
  * @return {Array} data with irrelevant lines removed
  */
 const naldToReturnLines = (returnRow, lines) => {
-  const data = lines.map(row => (naldToReturnLine(returnRow, row)));
+  const data = lines.map(row => (naldToReturnLine(returnRow, row)))
 
   if (returnRow.returns_frequency === 'week') {
-    return filterWeeklyRows(returnRow, data);
+    return filterWeeklyRows(returnRow, data)
   }
 
-  return data;
-};
+  return data
+}
 
 module.exports = {
   naldToReturnLines
-};
+}

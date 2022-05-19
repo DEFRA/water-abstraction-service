@@ -1,30 +1,30 @@
-'use strict';
+'use strict'
 
 const {
   experiment,
   test,
   before,
   after
-} = exports.lab = require('@hapi/lab').script();
+} = exports.lab = require('@hapi/lab').script()
 
-const { expect } = require('@hapi/code');
+const { expect } = require('@hapi/code')
 
-const server = require('../../index.js');
-const { logger } = require('../../src/logger');
+const server = require('../../index.js')
+const { logger } = require('../../src/logger')
 
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sinon = require('sinon')
+const sandbox = sinon.createSandbox()
 
 experiment('Test sending a email notification', () => {
   before(async () => {
-    sandbox.stub(logger, 'error').returns();
-    sandbox.stub(logger, 'info').returns();
-    await server._start();
-  });
+    sandbox.stub(logger, 'error').returns()
+    sandbox.stub(logger, 'info').returns()
+    await server._start()
+  })
 
   after(async () => {
-    sandbox.restore();
-  });
+    sandbox.restore()
+  })
 
   test('The API should throw an error when personalisation is not supplied', async () => {
     const request = {
@@ -36,10 +36,10 @@ experiment('Test sending a email notification', () => {
       headers: {
         Authorization: process.env.JWT_TOKEN
       }
-    };
-    const res = await server.inject(request);
-    expect(res.statusCode).to.equal(400);
-  });
+    }
+    const res = await server.inject(request)
+    expect(res.statusCode).to.equal(400)
+  })
 
   // Send email notification
   test('The API should throw an error when an invalid template id is supplied', async () => {
@@ -55,11 +55,11 @@ experiment('Test sending a email notification', () => {
       headers: {
         Authorization: process.env.JWT_TOKEN
       }
-    };
+    }
 
-    const res = await server.inject(request);
-    expect(res.statusCode).to.equal(400);
-  });
+    const res = await server.inject(request)
+    expect(res.statusCode).to.equal(400)
+  })
 
   // Send email notification
   test('The API should throw an error when a template id that is missing in notify is supplied', async () => {
@@ -75,11 +75,11 @@ experiment('Test sending a email notification', () => {
       headers: {
         Authorization: process.env.JWT_TOKEN
       }
-    };
+    }
 
-    const res = await server.inject(request);
-    expect(res.statusCode).to.equal(400);
-  });
+    const res = await server.inject(request)
+    expect(res.statusCode).to.equal(400)
+  })
 
   // Send email notification
   test('The API should throw an error when personalisation params are missing', async () => {
@@ -92,12 +92,12 @@ experiment('Test sending a email notification', () => {
       headers: {
         Authorization: process.env.JWT_TOKEN
       }
-    };
+    }
 
-    const res = await server.inject(request);
+    const res = await server.inject(request)
 
-    expect(res.statusCode).to.equal(400);
-  });
+    expect(res.statusCode).to.equal(400)
+  })
 
   // Send email notification
   test('The API should not throw an error when valid email address specified for message of type email', async () => {
@@ -113,13 +113,13 @@ experiment('Test sending a email notification', () => {
       headers: {
         Authorization: process.env.JWT_TOKEN
       }
-    };
+    }
 
-    const res = await server.inject(request);
+    const res = await server.inject(request)
 
-    expect(res.statusCode).to.equal(200);
-  });
-});
+    expect(res.statusCode).to.equal(200)
+  })
+})
 experiment('Test sending a SMS notification', () => {
   // Send email notification
   test('The API should not throw an error when valid number specified for message of type sms', async () => {
@@ -135,12 +135,12 @@ experiment('Test sending a SMS notification', () => {
       headers: {
         Authorization: process.env.JWT_TOKEN
       }
-    };
+    }
 
-    const res = await server.inject(request);
-    expect(res.statusCode).to.equal(200);
-  });
-});
+    const res = await server.inject(request)
+    expect(res.statusCode).to.equal(200)
+  })
+})
 
 experiment('Test sending a Postal notification', () => {
   // Send letter notification
@@ -161,13 +161,13 @@ experiment('Test sending a Postal notification', () => {
       headers: {
         Authorization: process.env.JWT_TOKEN
       }
-    };
+    }
 
-    const res = await server.inject(request);
+    const res = await server.inject(request)
 
-    expect(res.statusCode).to.equal(200);
-  });
-});
+    expect(res.statusCode).to.equal(200)
+  })
+})
 
 // futureSend
 experiment('Scheduled notifications', () => {
@@ -187,12 +187,12 @@ experiment('Scheduled notifications', () => {
       headers: {
         Authorization: process.env.JWT_TOKEN
       }
-    };
+    }
 
-    const res = await server.inject(request);
+    const res = await server.inject(request)
 
-    expect(res.statusCode).to.equal(200);
-  });
+    expect(res.statusCode).to.equal(200)
+  })
 
   test('The API should throw an error when invalid date is supplied when scheduling a message', async () => {
     const request = {
@@ -208,12 +208,12 @@ experiment('Scheduled notifications', () => {
       headers: {
         Authorization: process.env.JWT_TOKEN
       }
-    };
+    }
 
-    const res = await server.inject(request);
+    const res = await server.inject(request)
 
-    expect(res.statusCode).to.equal(400);
-  });
+    expect(res.statusCode).to.equal(400)
+  })
 
   test('The API should throw an error when database throws an error', async () => {
     const request = {
@@ -230,8 +230,8 @@ experiment('Scheduled notifications', () => {
       headers: {
         Authorization: process.env.JWT_TOKEN
       }
-    };
-    const res = await server.inject(request);
-    expect(res.statusCode).to.equal(400);
-  });
-});
+    }
+    const res = await server.inject(request)
+    expect(res.statusCode).to.equal(400)
+  })
+})

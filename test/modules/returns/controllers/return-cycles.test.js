@@ -1,21 +1,21 @@
-'use strict';
+'use strict'
 
 const {
   experiment,
   beforeEach,
   afterEach,
   test
-} = exports.lab = require('@hapi/lab').script();
-const { expect } = require('@hapi/code');
+} = exports.lab = require('@hapi/lab').script()
+const { expect } = require('@hapi/code')
 
-const sandbox = require('sinon').createSandbox();
+const sandbox = require('sinon').createSandbox()
 
-const controller = require('../../../../src/lib/controller');
-const returnCyclesController = require('../../../../src/modules/returns/controllers/return-cycles');
-const returnCyclesService = require('../../../../src/lib/services/return-cycles');
+const controller = require('../../../../src/lib/controller')
+const returnCyclesController = require('../../../../src/modules/returns/controllers/return-cycles')
+const returnCyclesService = require('../../../../src/lib/services/return-cycles')
 
 experiment('modules/returns/controllers/controller', () => {
-  let request, response;
+  let request, response
 
   beforeEach(async () => {
     request = {
@@ -27,46 +27,46 @@ experiment('modules/returns/controllers/controller', () => {
           returnCycleId: 'some-id'
         }
       }
-    };
+    }
 
-    sandbox.stub(controller, 'getEntities');
-  });
+    sandbox.stub(controller, 'getEntities')
+  })
 
   afterEach(async () => {
-    sandbox.restore();
-  });
+    sandbox.restore()
+  })
 
   experiment('.getReturnCyclesReport', () => {
     beforeEach(async () => {
-      returnCyclesController.getReturnCyclesReport();
-    });
+      returnCyclesController.getReturnCyclesReport()
+    })
 
     test('delegates to getReturnCycleReport service method', async () => {
       expect(controller.getEntities.calledWith(
         null, returnCyclesService.getReturnCycleReport
-      )).to.be.true();
-    });
-  });
+      )).to.be.true()
+    })
+  })
 
   experiment('.getReturnCycle', () => {
     beforeEach(async () => {
-      response = returnCyclesController.getReturnCycle(request);
-    });
+      response = returnCyclesController.getReturnCycle(request)
+    })
 
     test('returns the return cycle from request.pre', async () => {
-      expect(response).to.equal(request.pre.returnCycle);
-    });
-  });
+      expect(response).to.equal(request.pre.returnCycle)
+    })
+  })
 
   experiment('.getReturnCycleReturns', () => {
     beforeEach(async () => {
-      await returnCyclesController.getReturnCycleReturns(request);
-    });
+      await returnCyclesController.getReturnCycleReturns(request)
+    })
 
     test('delegates to getReturnCycleReport service method', async () => {
       expect(controller.getEntities.calledWith(
         request.params.returnCycleId, returnCyclesService.getReturnCycleReturns
-      )).to.be.true();
-    });
-  });
-});
+      )).to.be.true()
+    })
+  })
+})

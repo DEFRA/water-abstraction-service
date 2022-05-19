@@ -1,35 +1,35 @@
-'use strict';
+'use strict'
 
-const { expect } = require('@hapi/code');
-const uuid = require('uuid/v4');
+const { expect } = require('@hapi/code')
+const uuid = require('uuid/v4')
 
 const {
   beforeEach,
   experiment,
   test
-} = exports.lab = require('@hapi/lab').script();
+} = exports.lab = require('@hapi/lab').script()
 
-const testHelpers = require('../../../test-helpers');
-const routes = require('../../../../src/modules/licences/routes/charge-versions');
+const testHelpers = require('../../../test-helpers')
+const routes = require('../../../../src/modules/licences/routes/charge-versions')
 
 experiment('modules/licences/routes/charge-versions', () => {
   experiment('.getChargeVersionsByLicence', () => {
-    let server;
+    let server
 
     beforeEach(async () => {
-      server = await testHelpers.createServerForRoute(routes.getChargeVersionsByLicence);
-    });
+      server = await testHelpers.createServerForRoute(routes.getChargeVersionsByLicence)
+    })
 
     test('validates the licence id must be a uuid', async () => {
-      const url = '/water/1.0/licences/not-a-valid-id/charge-versions';
-      const output = await server.inject(url);
-      expect(output.statusCode).to.equal(400);
-    });
+      const url = '/water/1.0/licences/not-a-valid-id/charge-versions'
+      const output = await server.inject(url)
+      expect(output.statusCode).to.equal(400)
+    })
 
     test('allows a valid uuid for the licence id', async () => {
-      const url = `/water/1.0/licences/${uuid()}/charge-versions`;
-      const output = await server.inject(url);
-      expect(output.statusCode).to.equal(200);
-    });
-  });
-});
+      const url = `/water/1.0/licences/${uuid()}/charge-versions`
+      const output = await server.inject(url)
+      expect(output.statusCode).to.equal(200)
+    })
+  })
+})

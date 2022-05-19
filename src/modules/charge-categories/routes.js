@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const controller = require('./controller');
-const Joi = require('joi');
+const controller = require('./controller')
+const Joi = require('joi')
 module.exports = {
 
   getChargeCategoryByProperties: {
@@ -20,4 +20,4 @@ module.exports = {
       }
     }
   }
-};
+}

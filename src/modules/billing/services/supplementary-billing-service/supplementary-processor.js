@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 /**
  * @module exports a pure function processBatch() which looks through
@@ -7,14 +7,14 @@
  * changes are needed
  */
 
-const { groupBy, pick, negate, flatMap, mapValues, sortBy } = require('lodash');
-const moment = require('moment');
-const Decimal = require('decimal.js-light');
+const { groupBy, pick, negate, flatMap, mapValues, sortBy } = require('lodash')
+const moment = require('moment')
+const Decimal = require('decimal.js-light')
 
-const hashers = require('../../../../lib/hash');
-const { actions } = require('./constants');
+const hashers = require('../../../../lib/hash')
+const { actions } = require('./constants')
 
-const { isNaldTransaction } = require('../../lib/charge-period');
+const { isNaldTransaction } = require('../../lib/charge-period')
 
 /**
  * These are the keys in the abstractionPeriod field
@@ -25,7 +25,7 @@ const abstractionPeriodKeys = [
   'startMonth',
   'endDay',
   'endMonth'
-];
+]
 
 /**
  * These are the common keys for all transactions when
@@ -45,7 +45,7 @@ const commonTransactionKeys = [
   'isTwoPartSecondPartCharge',
   'invoiceAccountNumber',
   'financialYearEnding'
-];
+]
 
 /**
  * Gets a grouping key for the given transaction - this is to allow
@@ -59,15 +59,15 @@ const commonTransactionKeys = [
  */
 const getGroupingKey = transaction => {
   // Create a list of keys which will form the grouping key
-  const keys = [...commonTransactionKeys];
+  const keys = [...commonTransactionKeys]
   transaction.isTwoPartSecondPartCharge
     ? keys.push('isSummer')
-    : keys.push('authorisedDays', 'volume');
+    : keys.push('authorisedDays', 'volume')
 
   // The 'new licence' flag only affects WRLS transactions so it does not
   // need to be incorporated into the key for NALD transactions
   if (!isNaldTransaction(transaction.startDate)) {
-    keys.push('isNewLicence');
+    keys.push('isNewLicence')
   }
 
   // Get the data and serialize to a JSON string
@@ -75,11 +75,11 @@ const getGroupingKey = transaction => {
     ...pick(transaction, keys),
     chargeElementPurposeUseCode: transaction.chargeElementPurposeUseCode,
     abstractionPeriod: pick(transaction.abstractionPeriod, abstractionPeriodKeys)
-  };
-  return hashers.createMd5Hash(JSON.stringify(data));
-};
+  }
+  return hashers.createMd5Hash(JSON.stringify(data))
+}
 
-const xor = (a, b) => a ? !b : b;
+const xor = (a, b) => a ? !b : b
 
 /**
  * Maps an array of transactions to a data structure which includes a summed total
@@ -100,12 +100,12 @@ const xor = (a, b) => a ? !b : b;
  * @return {Object} data structure containing { transactions: [], sum }
  */
 const mapTransactionGroup = (batchId, transactions) => transactions.reduce((acc, transaction) => {
-  const isCurrentBatch = transaction.billingBatchId === batchId;
-  const propertyKey = transaction.isTwoPartSecondPartCharge ? 'volume' : 'billableDays';
-  const propertyValue = transaction[propertyKey] || 0;
-  let value = new Decimal(propertyValue);
+  const isCurrentBatch = transaction.billingBatchId === batchId
+  const propertyKey = transaction.isTwoPartSecondPartCharge ? 'volume' : 'billableDays'
+  const propertyValue = transaction[propertyKey] || 0
+  let value = new Decimal(propertyValue)
   if (xor(transaction.isCredit, !isCurrentBatch)) {
-    value = value.negated();
+    value = value.negated()
   }
   return {
     transactions: [...acc.transactions, {
@@ -114,11 +114,11 @@ const mapTransactionGroup = (batchId, transactions) => transactions.reduce((acc,
       action: null
     }],
     sum: acc.sum.plus(value)
-  };
+  }
 }, {
   transactions: [],
   sum: new Decimal(0)
-});
+})
 
 /**
  * Predicate to check if this transaction should be considered.
@@ -130,7 +130,7 @@ const mapTransactionGroup = (batchId, transactions) => transactions.reduce((acc,
  * @return {Boolean}
  */
 const isValidTransaction = transaction =>
-  ['standard', 'compensation'].includes(transaction.chargeType);
+  ['standard', 'compensation'].includes(transaction.chargeType)
 
 /**
  * Predicate to check if transaction is part of the current batch
@@ -138,7 +138,7 @@ const isValidTransaction = transaction =>
  * @param {Object} transaction
  * @return {Boolean}
  */
-const isCurrentBatchTransaction = transaction => transaction.isCurrentBatch;
+const isCurrentBatchTransaction = transaction => transaction.isCurrentBatch
 
 /**
  * Predicate to check if transaction is part of an existing batch
@@ -146,7 +146,7 @@ const isCurrentBatchTransaction = transaction => transaction.isCurrentBatch;
  * @param {Object} transaction
  * @return {Boolean}
  */
-const isExistingBatchTransaction = negate(isCurrentBatchTransaction);
+const isExistingBatchTransaction = negate(isCurrentBatchTransaction)
 
 /**
  * Deletes all transactions in the given group that are
@@ -160,9 +160,9 @@ const markCurrentBatchTransactionsForDeletion = group => {
   group.transactions
     .filter(isCurrentBatchTransaction)
     .forEach(transaction => {
-      transaction.action = actions.deleteTransaction;
-    });
-};
+      transaction.action = actions.deleteTransaction
+    })
+}
 
 /**
  * Gets a key for pairing transactions within a group which have the same:
@@ -174,12 +174,12 @@ const markCurrentBatchTransactionsForDeletion = group => {
  * @return {String}
  */
 const getPairGroupingKey = transaction => {
-  const keys = ['startDate', 'endDate'];
+  const keys = ['startDate', 'endDate']
   keys.push(
     transaction.isTwoPartSecondPartCharge ? 'volume' : 'billableDays'
-  );
-  return JSON.stringify(pick(transaction, keys));
-};
+  )
+  return JSON.stringify(pick(transaction, keys))
+}
 
 /**
  * Filters cancelling transactions in the supplied list
@@ -201,11 +201,11 @@ const getPairGroupingKey = transaction => {
 const filterCancellingTransactions = transactions => {
   return sortBy(transactions, transaction => moment(transaction.dateCreated).unix())
     .reduce((acc, transaction) => {
-      const index = acc.findIndex(row => row.isCredit === !transaction.isCredit);
-      index === -1 ? acc.push(transaction) : acc.splice(index, 1);
-      return acc;
-    }, []);
-};
+      const index = acc.findIndex(row => row.isCredit === !transaction.isCredit)
+      index === -1 ? acc.push(transaction) : acc.splice(index, 1)
+      return acc
+    }, [])
+}
 
 /**
  * Looks at all the transactions in a group, and returns a new array of
@@ -216,10 +216,10 @@ const filterCancellingTransactions = transactions => {
  * @return {Array<Object>} transactions with cancelling pairs removed
  */
 const getNonCancellingTransactions = transactions => {
-  const pairGroups = groupBy(transactions, getPairGroupingKey);
-  const filteredGroups = mapValues(pairGroups, filterCancellingTransactions);
-  return flatMap(Object.values(filteredGroups));
-};
+  const pairGroups = groupBy(transactions, getPairGroupingKey)
+  const filteredGroups = mapValues(pairGroups, filterCancellingTransactions)
+  return flatMap(Object.values(filteredGroups))
+}
 
 /**
  * Updates a transaction in the current batch
@@ -229,19 +229,19 @@ const getNonCancellingTransactions = transactions => {
  * @return {Promise}
  */
 const markExistingBatchTransactionsForReversal = async group => {
-  const existingBatchTransactions = group.transactions.filter(isExistingBatchTransaction);
+  const existingBatchTransactions = group.transactions.filter(isExistingBatchTransaction)
 
   // Get a list of transactions to reverse
-  const effectiveTransactions = getNonCancellingTransactions(existingBatchTransactions);
+  const effectiveTransactions = getNonCancellingTransactions(existingBatchTransactions)
   if (effectiveTransactions.length === 0) {
-    return;
+    return
   }
 
   // Create invoice and invoice licence
   effectiveTransactions.forEach(transaction => {
-    transaction.action = actions.reverseTransaction;
-  });
-};
+    transaction.action = actions.reverseTransaction
+  })
+}
 
 /**
  * Processes a transaction group and takes one of 3 actions:
@@ -259,17 +259,17 @@ const processTransactionGroup = async (batchId, group) => {
   // If group sums to zero, we don't need any adjustments in this group.
   // Flag current batch transactions for deletion
   if (group.sum.equals(0)) {
-    return markCurrentBatchTransactionsForDeletion(group);
+    return markCurrentBatchTransactionsForDeletion(group)
   } else {
     // Otherwise we flag historical transactions in the group to be reversed
     // so that the customer will net
     // have only been charged the correct transactions generated by the
     // current batch
-    return markExistingBatchTransactionsForReversal(group);
+    return markExistingBatchTransactionsForReversal(group)
   }
-};
+}
 
-const getTransactions = group => group.transactions;
+const getTransactions = group => group.transactions
 
 /**
  * Processes the supplementary billing batch specified by
@@ -281,22 +281,22 @@ const getTransactions = group => group.transactions;
  */
 const processBatch = (batchId, transactions) => {
   // Valid transactions excludes min charge transactions
-  const validTransactions = transactions.filter(isValidTransaction);
+  const validTransactions = transactions.filter(isValidTransaction)
 
   // Group transactions
   const transactionGroups = mapValues(
     groupBy(validTransactions, getGroupingKey),
     groupTransactions => mapTransactionGroup(batchId, groupTransactions)
-  );
+  )
 
   for (const key in transactionGroups) {
-    processTransactionGroup(batchId, transactionGroups[key]);
+    processTransactionGroup(batchId, transactionGroups[key])
   }
 
   // Convert data structure back to a flat array of transactions
   return flatMap(
     Object.values(transactionGroups).map(getTransactions)
-  );
-};
+  )
+}
 
-exports.processBatch = processBatch;
+exports.processBatch = processBatch

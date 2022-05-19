@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const { bookshelf } = require('./bookshelf.js');
+const { bookshelf } = require('./bookshelf.js')
 
 module.exports = bookshelf.model('ChargeVersionWorkflow', {
   tableName: 'water.charge_version_workflows',
@@ -12,10 +12,10 @@ module.exports = bookshelf.model('ChargeVersionWorkflow', {
   requireFetch: false,
 
   licence () {
-    return this.hasOne('Licence', 'licence_id', 'licence_id');
+    return this.hasOne('Licence', 'licence_id', 'licence_id')
   },
 
   licenceVersion () {
-    return this.hasOne('LicenceVersion', 'licence_version_id', 'licence_version_id');
+    return this.hasOne('LicenceVersion', 'licence_version_id', 'licence_version_id')
   }
-});
+})

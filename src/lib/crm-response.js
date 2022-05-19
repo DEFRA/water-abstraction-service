@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 /**
  * If the error is a 409 and there is an existing entity
@@ -9,9 +9,9 @@
  */
 const getExistingEntity = err => {
   if (err.statusCode === 409 && err.error.existingEntity) {
-    return err.error.existingEntity;
+    return err.error.existingEntity
   }
-  throw err;
-};
+  throw err
+}
 
-exports.getExistingEntity = getExistingEntity;
+exports.getExistingEntity = getExistingEntity

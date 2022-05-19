@@ -1,28 +1,28 @@
-'use strict';
+'use strict'
 
-const { flatMap, first, last, identity } = require('lodash');
-const bluebird = require('bluebird');
-const moment = require('moment');
+const { flatMap, first, last, identity } = require('lodash')
+const bluebird = require('bluebird')
+const moment = require('moment')
 
-const DATE_FORMAT = 'YYYY-MM-DD';
+const DATE_FORMAT = 'YYYY-MM-DD'
 
-const returnsDateHelpers = require('@envage/water-abstraction-helpers').returns.date;
+const returnsDateHelpers = require('@envage/water-abstraction-helpers').returns.date
 
-const apiConnector = require('./api-connector');
-const returnVersionMapper = require('../../mappers/return-version');
+const apiConnector = require('./api-connector')
+const returnVersionMapper = require('../../mappers/return-version')
 
 // Services
-const documentsService = require('../documents-service');
-const returnsMappingService = require('./returns-mapping-service');
+const documentsService = require('../documents-service')
+const returnsMappingService = require('./returns-mapping-service')
 
 // Models
-const { RETURN_STATUS } = require('../../models/return');
-const { ROLE_NAMES } = require('../../models/role');
+const { RETURN_STATUS } = require('../../models/return')
+const { ROLE_NAMES } = require('../../models/role')
 
 const getFinancialYear = returnCycle => {
-  const endYear = parseInt(returnCycle.endDate.substr(0, 4));
-  return returnCycle.isSummer ? endYear + 1 : endYear;
-};
+  const endYear = parseInt(returnCycle.endDate.substr(0, 4))
+  return returnCycle.isSummer ? endYear + 1 : endYear
+}
 
 /**
  * Gets all non-void returns for the given licence number
@@ -33,15 +33,15 @@ const getFinancialYear = returnCycle => {
  */
 const fetchReturns = async (licenceNumber, financialYear) => {
   const cycles = returnsDateHelpers.createReturnCycles(`${(financialYear.endYear - 2)}-01-01`)
-    .filter(cycle => getFinancialYear(cycle) === financialYear.endYear);
+    .filter(cycle => getFinancialYear(cycle) === financialYear.endYear)
 
   // Make API call to get returns for each cycle
-  const tasks = cycles.map(cycle => apiConnector.getReturnsForLicenceInCycle(licenceNumber, cycle));
-  const data = await Promise.all(tasks);
+  const tasks = cycles.map(cycle => apiConnector.getReturnsForLicenceInCycle(licenceNumber, cycle))
+  const data = await Promise.all(tasks)
 
   // Return as single flat array
-  return flatMap(data);
-};
+  return flatMap(data)
+}
 
 /**
  * Loads the current return version and lines, maps to service models,
@@ -51,24 +51,24 @@ const fetchReturns = async (licenceNumber, financialYear) => {
  */
 const decorateWithCurrentVersion = async ret => {
   if (ret.status !== RETURN_STATUS.completed) {
-    return ret;
+    return ret
   }
   // Load current version
-  const version = await apiConnector.getCurrentVersion(ret.id);
+  const version = await apiConnector.getCurrentVersion(ret.id)
   if (!version) {
-    return ret;
+    return ret
   }
   // Load lines
-  let lines;
+  let lines
   if (!version.nil_return) {
-    lines = await apiConnector.getLines(version.version_id);
+    lines = await apiConnector.getLines(version.version_id)
   }
   // Map to service models
   ret.returnVersions = [
     returnVersionMapper.returnsServiceToModel(version, lines)
-  ];
-  return ret;
-};
+  ]
+  return ret
+}
 
 /**
  * Gets all returns for the licence in the supplied FinancialYear
@@ -80,22 +80,22 @@ const decorateWithCurrentVersion = async ret => {
  */
 const getReturnsForLicenceInFinancialYear = async (licenceNumber, financialYear) => {
   // Get returns from returns service
-  const returnsData = await fetchReturns(licenceNumber, financialYear);
+  const returnsData = await fetchReturns(licenceNumber, financialYear)
 
   // Map to service models including locally loaded ReturnRequirement
-  const returns = await returnsMappingService.mapReturnsToModels(returnsData);
+  const returns = await returnsMappingService.mapReturnsToModels(returnsData)
 
   // Decorate each return with its current version
-  const tasks = returns.map(decorateWithCurrentVersion);
-  return Promise.all(tasks);
-};
+  const tasks = returns.map(decorateWithCurrentVersion)
+  return Promise.all(tasks)
+}
 
 /**
  * Checks whether the role is either a licence holder or returns role
  * @param {Role} role
  * @return {Boolean}
  */
-const isRoleLicenceHolderOrReturns = role => role.isRoleName(ROLE_NAMES.licenceHolder, ROLE_NAMES.returnsTo);
+const isRoleLicenceHolderOrReturns = role => role.isRoleName(ROLE_NAMES.licenceHolder, ROLE_NAMES.returnsTo)
 
 /**
  * Checks whether the role is either current, or was active on the
@@ -107,14 +107,14 @@ const isRoleLicenceHolderOrReturns = role => role.isRoleName(ROLE_NAMES.licenceH
 const isRoleDateRangeValid = (document, role) => {
   // Returns role with open-ended range (has not ended)
   if (role.dateRange.endDate === null) {
-    return true;
+    return true
   }
   // Returns role which ends on document end date (was active at end date of document)
   if (role.dateRange.endDate === document.dateRange.endDate) {
-    return true;
+    return true
   }
-  return false;
-};
+  return false
+}
 
 /**
  * Gets the relevant returns roles for the specified document which:
@@ -129,8 +129,8 @@ const filterDocumentRoles = document => {
   // - If the role has already ended, they can also be ignored
   return document.roles
     .filter(isRoleLicenceHolderOrReturns)
-    .filter(role => isRoleDateRangeValid(document, role));
-};
+    .filter(role => isRoleDateRangeValid(document, role))
+}
 
 /**
  * Gets the latter of: document start date, 2009-03-31
@@ -139,7 +139,7 @@ const filterDocumentRoles = document => {
  */
 const getFilterStartDate = document => last(
   [document.dateRange.startDate, '2009-03-31'].sort()
-);
+)
 
 /**
  * Gets the earlier of: document end date, today's date
@@ -150,7 +150,7 @@ const getFilterEndDate = document => first(
   [document.dateRange.endDate, moment().format(DATE_FORMAT)]
     .filter(identity)
     .sort()
-);
+)
 
 /**
  * Gets both the CRM document and a list of returns for the specified
@@ -164,25 +164,25 @@ const getFilterEndDate = document => first(
  */
 const getDocumentReturns = async (licenceNumber, documentId) => {
   // Get full document from CRM
-  const document = await documentsService.getDocument(documentId);
+  const document = await documentsService.getDocument(documentId)
 
   // Filter document roles to only include relevant current roles for returns
-  document.roles = filterDocumentRoles(document);
+  document.roles = filterDocumentRoles(document)
 
   // Get returns with "due" or "received" status with end date during the document date range
   const returnsData = await apiConnector.getLicenceReturnsByStatusAndEndDate(licenceNumber, [
     RETURN_STATUS.due,
     RETURN_STATUS.received
-  ], getFilterStartDate(document), getFilterEndDate(document));
+  ], getFilterStartDate(document), getFilterEndDate(document))
 
   // Map to service models including locally loaded ReturnRequirement
-  const returns = await returnsMappingService.mapReturnsToModels(returnsData);
+  const returns = await returnsMappingService.mapReturnsToModels(returnsData)
 
   return {
     returns,
     document
-  };
-};
+  }
+}
 
 /**
  * For the paper forms flow
@@ -193,24 +193,24 @@ const getDocumentReturns = async (licenceNumber, documentId) => {
  */
 const getReturnsWithContactsForLicence = async (licenceNumber) => {
   // Find documents for licence
-  const documents = await documentsService.getDocuments(licenceNumber);
+  const documents = await documentsService.getDocuments(licenceNumber)
 
   // Get full document structure with list of returns
-  const documentsAndReturns = bluebird.map(documents, document => getDocumentReturns(licenceNumber, document.id));
+  const documentsAndReturns = bluebird.map(documents, document => getDocumentReturns(licenceNumber, document.id))
 
   // Exclude any documents without any returns
-  return documentsAndReturns.filter(row => row.returns.length > 0);
-};
+  return documentsAndReturns.filter(row => row.returns.length > 0)
+}
 
 const getReturnsForLicence = async (licenceNumber, page, perPage) => {
-  const { data, pagination } = await apiConnector.getReturnsForLicence(licenceNumber, page, perPage);
+  const { data, pagination } = await apiConnector.getReturnsForLicence(licenceNumber, page, perPage)
 
   return {
     data: await returnsMappingService.mapReturnsToModels(data),
     pagination
-  };
-};
+  }
+}
 
-exports.getReturnsForLicenceInFinancialYear = getReturnsForLicenceInFinancialYear;
-exports.getReturnsWithContactsForLicence = getReturnsWithContactsForLicence;
-exports.getReturnsForLicence = getReturnsForLicence;
+exports.getReturnsForLicenceInFinancialYear = getReturnsForLicenceInFinancialYear
+exports.getReturnsWithContactsForLicence = getReturnsWithContactsForLicence
+exports.getReturnsForLicence = getReturnsForLicence

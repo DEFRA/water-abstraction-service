@@ -1,13 +1,13 @@
 /* eslint-disable camelcase */
-'use strict';
+'use strict'
 
-const { createMapper } = require('../object-mapper');
-const helpers = require('./lib/helpers');
+const { createMapper } = require('../object-mapper')
+const helpers = require('./lib/helpers')
 
-const GaugingStation = require('../models/gauging-station');
+const GaugingStation = require('../models/gauging-station')
 
 const csvToModel = data => {
-  const gaugingStation = new GaugingStation();
+  const gaugingStation = new GaugingStation()
 
   const {
     hydrology_station_id,
@@ -21,8 +21,8 @@ const csvToModel = data => {
     grid_reference,
     catchment_name,
     river_name
-  } = data;
-  const hydrologyStationId = hydrology_station_id && hydrology_station_id.length === 36 ? hydrology_station_id : null;
+  } = data
+  const hydrologyStationId = hydrology_station_id && hydrology_station_id.length === 36 ? hydrology_station_id : null
 
   return gaugingStation.fromHash({
     hydrologyStationId,
@@ -36,8 +36,8 @@ const csvToModel = data => {
     gridReference: grid_reference,
     catchmentName: catchment_name,
     riverName: river_name
-  });
-};
+  })
+}
 
 /* Humanize and copy fields */
 const dbToModelMapper = createMapper()
@@ -65,9 +65,9 @@ const dbToModelMapper = createMapper()
     'metadata',
     'dateCreated',
     'dateUpdated'
-  );
+  )
 
-const dbToModel = row => helpers.createModel(GaugingStation, row, dbToModelMapper);
+const dbToModel = row => helpers.createModel(GaugingStation, row, dbToModelMapper)
 
-exports.dbToModel = dbToModel;
-exports.csvToModel = csvToModel;
+exports.dbToModel = dbToModel
+exports.csvToModel = csvToModel

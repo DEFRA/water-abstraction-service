@@ -1,22 +1,22 @@
-'use strict';
+'use strict'
 
-const moment = require('moment');
-const { titleCase } = require('title-case');
-const { identity, get, isNull, trim } = require('lodash');
-const helpers = require('@envage/water-abstraction-helpers').charging;
+const moment = require('moment')
+const { titleCase } = require('title-case')
+const { identity, get, isNull, trim } = require('lodash')
+const helpers = require('@envage/water-abstraction-helpers').charging
 
-const DateRange = require('../../../lib/models/date-range');
-const Transaction = require('../../../lib/models/transaction');
-const Agreement = require('../../../lib/models/agreement');
+const DateRange = require('../../../lib/models/date-range')
+const Transaction = require('../../../lib/models/transaction')
+const Agreement = require('../../../lib/models/agreement')
 
-const { SCHEME } = require('../../../lib/models/constants');
+const { SCHEME } = require('../../../lib/models/constants')
 
-const chargeElementMapper = require('../../../lib/mappers/charge-element');
-const billingVolumeMapper = require('./billing-volume');
-const abstractionPeriodMapper = require('../../../lib/mappers/abstraction-period');
+const chargeElementMapper = require('../../../lib/mappers/charge-element')
+const billingVolumeMapper = require('./billing-volume')
+const abstractionPeriodMapper = require('../../../lib/mappers/abstraction-period')
 
-const { createMapper } = require('../../../lib/object-mapper');
-const { createModel } = require('../../../lib/mappers/lib/helpers');
+const { createMapper } = require('../../../lib/object-mapper')
+const { createModel } = require('../../../lib/mappers/lib/helpers')
 
 /**
  * Create agreement model with supplied code
@@ -26,13 +26,13 @@ const { createModel } = require('../../../lib/mappers/lib/helpers');
  * @return {Agreement}
  */
 const createAgreement = (code, factor) => {
-  const agreement = new Agreement();
+  const agreement = new Agreement()
   agreement.fromHash({
     code,
     ...(factor !== undefined && { factor })
-  });
-  return agreement;
-};
+  })
+  return agreement
+}
 
 /**
  * Maps a DB row to an array of Agreement models
@@ -44,26 +44,26 @@ const mapDBToAgreements = row => {
     row.section126Factor !== null && createAgreement('S126', row.section126Factor),
     row.section127Agreement && createAgreement('S127'),
     row.section130Agreement && createAgreement(row.section130Agreement)
-  ];
-  return agreements.filter(identity);
-};
+  ]
+  return agreements.filter(identity)
+}
 
 const doesVolumeMatchTransaction = (volume, transaction) => {
-  const transactionFinancialYear = helpers.getFinancialYear(transaction.endDate);
-  const isSummerTransaction = transaction.season === 'summer';
+  const transactionFinancialYear = helpers.getFinancialYear(transaction.endDate)
+  const isSummerTransaction = transaction.season === 'summer'
 
-  const financialYearsMatch = parseInt(volume.financialYear) === parseInt(transactionFinancialYear);
-  const seasonsMatch = isSummerTransaction === volume.isSummer;
+  const financialYearsMatch = parseInt(volume.financialYear) === parseInt(transactionFinancialYear)
+  const seasonsMatch = isSummerTransaction === volume.isSummer
 
-  return financialYearsMatch && seasonsMatch;
-};
+  return financialYearsMatch && seasonsMatch
+}
 
 const getBillingVolumeForTransaction = row => {
-  const relevantBillingVolume = row.billingVolume.find(volume => doesVolumeMatchTransaction(volume, row));
-  return relevantBillingVolume ? billingVolumeMapper.dbToModel(relevantBillingVolume) : null;
-};
+  const relevantBillingVolume = row.billingVolume.find(volume => doesVolumeMatchTransaction(volume, row))
+  return relevantBillingVolume ? billingVolumeMapper.dbToModel(relevantBillingVolume) : null
+}
 
-const isValueEqualTo = testValue => value => testValue === value;
+const isValueEqualTo = testValue => value => testValue === value
 
 /**
  * Maps a row from water.billing_transactions to a Transaction model
@@ -101,7 +101,7 @@ const dbToModelMapper = createMapper()
   .map().to('agreements', mapDBToAgreements)
   .map(['billingVolume', 'endDate', 'season']).to('billingVolume',
     (billingVolume, endDate, season) => billingVolume ? getBillingVolumeForTransaction({ billingVolume, endDate, season }) : null)
-  .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel);
+  .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel)
 
 const dbToModelMapperSroc = createMapper()
   .copy(
@@ -131,7 +131,7 @@ const dbToModelMapperSroc = createMapper()
   .map('chargeType').to('isMinimumCharge', isValueEqualTo('minimum_charge'))
   .map('chargeElement').to('chargeElement', chargeElementMapper.dbToModel)
   .map('volume').to('volume', volume => isNull(volume) ? null : parseFloat(volume))
-  .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel);
+  .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel)
 
 /**
  * Converts DB representation to a Transaction service model
@@ -141,24 +141,24 @@ const dbToModelMapperSroc = createMapper()
 const dbToModel = row => {
   return row.scheme === 'alcs'
     ? createModel(Transaction, row, dbToModelMapper)
-    : createModel(Transaction, row, dbToModelMapperSroc);
-};
+    : createModel(Transaction, row, dbToModelMapperSroc)
+}
 
 const mapChargeType = (isCompensationCharge, isMinimumCharge) => {
   if (isCompensationCharge) {
-    return 'compensation';
+    return 'compensation'
   }
   if (isMinimumCharge) {
-    return 'minimum_charge';
+    return 'minimum_charge'
   }
-  return 'standard';
-};
+  return 'standard'
+}
 
-const isSection127Agreement = agreements => !!agreements.find(agreement => agreement.isTwoPartTariff());
+const isSection127Agreement = agreements => !!agreements.find(agreement => agreement.isTwoPartTariff())
 
-const getSection126Factor = agreements => get(agreements.find(agreement => agreement.isAbatement()), 'factor', null);
+const getSection126Factor = agreements => get(agreements.find(agreement => agreement.isAbatement()), 'factor', null)
 
-const getSection130Agreement = agreements => get(agreements.find(agreement => agreement.isCanalAndRiversTrust()), 'code', null);
+const getSection130Agreement = agreements => get(agreements.find(agreement => agreement.isCanalAndRiversTrust()), 'code', null)
 
 const modelToDbMapper = createMapper()
   .copy(
@@ -196,7 +196,7 @@ const modelToDbMapper = createMapper()
   .map('calcS126Factor').to('calcS126Factor', value => value ? value.split(' x ')[1] || null : null)
   .map('calcS127Factor').to('calcS127Factor', value => value ? value.split(' x ')[1] || null : null)
   .map('calcWinterDiscountFactor').to('calcWinterDiscountFactor', value => value ? value.split(' x ')[1] || null : null)
-  .map('value').to('netAmount');
+  .map('value').to('netAmount')
 
 /**
  * Maps a Transaction instance (with associated InvoiceLicence) to
@@ -208,10 +208,10 @@ const modelToDbMapper = createMapper()
 const modelToDb = (invoiceLicence, transaction) => ({
   billingInvoiceLicenceId: invoiceLicence.id,
   ...modelToDbMapper.execute(transaction)
-});
+})
 
-const DATE_FORMAT = 'YYYY-MM-DD';
-const CM_DATE_FORMAT = 'DD-MMM-YYYY';
+const DATE_FORMAT = 'YYYY-MM-DD'
+const CM_DATE_FORMAT = 'DD-MMM-YYYY'
 
 /**
  * Converts a service date to a Charge Module date
@@ -219,7 +219,7 @@ const CM_DATE_FORMAT = 'DD-MMM-YYYY';
  * @return {String} Charge Module format date, DD-MMM-YYYY
  */
 const mapChargeModuleDate = str =>
-  moment(str, DATE_FORMAT).format(CM_DATE_FORMAT).toUpperCase();
+  moment(str, DATE_FORMAT).format(CM_DATE_FORMAT).toUpperCase()
 
 /**
  * Gets all charge agreement variables/flags from transaction
@@ -230,14 +230,14 @@ const mapChargeModuleDate = str =>
 const mapAgreementsToChargeModule = transaction => {
   const section130Agreement = ['S130U', 'S130S', 'S130T', 'S130W']
     .map(code => transaction.getAgreementByCode(code))
-    .some(identity);
-  const section126Agreement = transaction.getAgreementByCode('S126');
+    .some(identity)
+  const section126Agreement = transaction.getAgreementByCode('S126')
   return {
     section126Factor: section126Agreement ? section126Agreement.factor : 1,
     section127Agreement: !!transaction.getAgreementByCode('S127'),
     section130Agreement
-  };
-};
+  }
+}
 
 /**
  * Gets all charge agreement variables from ChargeElement
@@ -251,7 +251,7 @@ const mapChargeElementToChargeModuleTransaction = chargeElement => ({
   loss: titleCase(chargeElement.loss),
   eiucSource: titleCase(chargeElement.eiucSource),
   chargeElementId: chargeElement.id
-});
+})
 
 /**
  * Gets all charge agreement variables from Licence
@@ -265,7 +265,7 @@ const mapLicenceToChargeElementTransaction = licence => ({
   licenceNumber: licence.licenceNumber,
   region: licence.region.code,
   areaCode: licence.historicalArea.code
-});
+})
 
 /**
  * Maps service models to Charge Module transaction data that
@@ -277,8 +277,8 @@ const mapLicenceToChargeElementTransaction = licence => ({
  * @return {Object}
  */
 const modelToChargeModuleAlcs = (batch, invoice, invoiceLicence, transaction) => {
-  const periodStart = mapChargeModuleDate(transaction.chargePeriod.startDate);
-  const periodEnd = mapChargeModuleDate(transaction.chargePeriod.endDate);
+  const periodStart = mapChargeModuleDate(transaction.chargePeriod.startDate)
+  const periodEnd = mapChargeModuleDate(transaction.chargePeriod.endDate)
 
   return {
     ruleset: 'presroc',
@@ -299,8 +299,8 @@ const modelToChargeModuleAlcs = (batch, invoice, invoiceLicence, transaction) =>
     ...mapChargeElementToChargeModuleTransaction(transaction.chargeElement),
     ...mapLicenceToChargeElementTransaction(invoiceLicence.licence),
     subjectToMinimumCharge: !transaction.isTwoPartSecondPartCharge
-  };
-};
+  }
+}
 
 /**
  * Maps service models to Charge Module transaction data that
@@ -308,9 +308,9 @@ const modelToChargeModuleAlcs = (batch, invoice, invoiceLicence, transaction) =>
  * @param transaction bookshelf object with related data
  */
 const modelToChargeModuleSroc = transaction => {
-  const periodStart = mapChargeModuleDate(transaction.startDate);
-  const periodEnd = mapChargeModuleDate(transaction.endDate);
-  const licence = transaction.billingInvoiceLicence.licence;
+  const periodStart = mapChargeModuleDate(transaction.startDate)
+  const periodEnd = mapChargeModuleDate(transaction.endDate)
+  const licence = transaction.billingInvoiceLicence.licence
 
   return {
     periodStart,
@@ -348,14 +348,14 @@ const modelToChargeModuleSroc = transaction => {
     waterUndertaker: transaction.isWaterUndertaker,
     winterOnly: !!transaction.chargeElement.adjustments.winter,
     chargeElementId: transaction.chargeElement.chargeElementId
-  };
-};
+  }
+}
 
 const cmStatusMap = new Map([
   ['unbilled', Transaction.statuses.chargeCreated]
-]);
+])
 
-const mapCMTransactionStatus = cmStatus => cmStatusMap.get(cmStatus);
+const mapCMTransactionStatus = cmStatus => cmStatusMap.get(cmStatus)
 
 /**
  * Creates a Transaction model for Minimum Charge transaction
@@ -380,7 +380,7 @@ const cmToModelMapper = createMapper()
   .map('calculation.WRLSChargingResponse.abatementAdjustment').to('calcS126Factor')
   .map('calculation.WRLSChargingResponse.s127Agreement').to('calcS127Factor')
   .map('calculation.WRLSChargingResponse.eiucFactor').to('calcEiucFactor')
-  .map('calculation.WRLSChargingResponse.eiucSourceFactor').to('calcEiucSourceFactor');
+  .map('calculation.WRLSChargingResponse.eiucSourceFactor').to('calcEiucSourceFactor')
 
 /**
  * Converts Minimum Charge transaction returned from the CM
@@ -389,26 +389,26 @@ const cmToModelMapper = createMapper()
  * @return {Transaction}
  */
 const cmToModel = data =>
-  createModel(Transaction, data, cmToModelMapper);
+  createModel(Transaction, data, cmToModelMapper)
 
-const cmToPojo = cmTransaction => cmToModelMapper.execute(cmTransaction);
+const cmToPojo = cmTransaction => cmToModelMapper.execute(cmTransaction)
 
 const cmToDb = cmTransaction => modelToDbMapper.execute(
   cmToPojo(cmTransaction)
-);
+)
 
 const inverseCreditNoteSign = transaction => {
   if (transaction.credit === true) {
-    transaction.chargeValue = -Math.abs(transaction.chargeValue);
+    transaction.chargeValue = -Math.abs(transaction.chargeValue)
   }
-  return transaction;
-};
+  return transaction
+}
 
-exports.dbToModel = dbToModel;
-exports.modelToDb = modelToDb;
-exports.modelToChargeModule = modelToChargeModuleAlcs;
-exports.modelToChargeModuleSroc = modelToChargeModuleSroc;
-exports.cmToModel = cmToModel;
-exports.cmToPojo = cmToPojo;
-exports.cmToDb = cmToDb;
-exports.inverseCreditNoteSign = inverseCreditNoteSign;
+exports.dbToModel = dbToModel
+exports.modelToDb = modelToDb
+exports.modelToChargeModule = modelToChargeModuleAlcs
+exports.modelToChargeModuleSroc = modelToChargeModuleSroc
+exports.cmToModel = cmToModel
+exports.cmToPojo = cmToPojo
+exports.cmToDb = cmToDb
+exports.inverseCreditNoteSign = inverseCreditNoteSign

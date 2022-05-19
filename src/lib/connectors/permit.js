@@ -1,18 +1,18 @@
-'use strict';
+'use strict'
 
-const { get } = require('lodash');
-const urlJoin = require('url-join');
-const moment = require('moment');
+const { get } = require('lodash')
+const urlJoin = require('url-join')
+const moment = require('moment')
 
-const helpers = require('@envage/water-abstraction-helpers');
-const apiClientFactory = require('./api-client-factory');
-const config = require('../../../config');
-const { licence: { regimeId, typeId } } = config;
+const helpers = require('@envage/water-abstraction-helpers')
+const apiClientFactory = require('./api-client-factory')
+const config = require('../../../config')
+const { licence: { regimeId, typeId } } = config
 
-const factory = require('./service-version-factory');
-const calendarToIso = helpers.nald.dates.calendarToIso;
+const factory = require('./service-version-factory')
+const calendarToIso = helpers.nald.dates.calendarToIso
 
-const licences = apiClientFactory.create(`${config.services.permits}licence`);
+const licences = apiClientFactory.create(`${config.services.permits}licence`)
 
 const getLicenceNumbersFilter = licenceNumbers => ({
   licence_regime_id: regimeId,
@@ -20,7 +20,7 @@ const getLicenceNumbersFilter = licenceNumbers => ({
   licence_ref: {
     $in: licenceNumbers
   }
-});
+})
 
 /**
  * Gets the NALD region codes for each licence number supplied, and returns a map
@@ -29,28 +29,28 @@ const getLicenceNumbersFilter = licenceNumbers => ({
  */
 const getLicenceRegionCodes = async (licenceNumbers) => {
   if (licenceNumbers.length === 0) {
-    return {};
+    return {}
   }
-  const filter = getLicenceNumbersFilter(licenceNumbers);
-  const columns = ['licence_ref', 'licence_data_value->>FGAC_REGION_CODE'];
-  const data = await licences.findAll(filter, null, columns);
+  const filter = getLicenceNumbersFilter(licenceNumbers)
+  const columns = ['licence_ref', 'licence_data_value->>FGAC_REGION_CODE']
+  const data = await licences.findAll(filter, null, columns)
 
   return data.reduce((acc, row) => {
     return {
       ...acc,
       [row.licence_ref]: parseInt(row['?column?'])
-    };
-  }, {});
-};
+    }
+  }, {})
+}
 
 const getLicenceEndDates = async licenceNumbers => {
   if (licenceNumbers.length === 0) {
-    return {};
+    return {}
   }
 
-  const filter = getLicenceNumbersFilter(licenceNumbers);
-  const columns = ['licence_ref', 'licence_data_value'];
-  const data = await licences.findAll(filter, null, columns);
+  const filter = getLicenceNumbersFilter(licenceNumbers)
+  const columns = ['licence_ref', 'licence_data_value']
+  const data = await licences.findAll(filter, null, columns)
 
   return data.reduce((acc, row) => {
     return {
@@ -60,9 +60,9 @@ const getLicenceEndDates = async licenceNumbers => {
         dateExpired: calendarToIso(row.licence_data_value.EXPIRY_DATE),
         dateLapsed: calendarToIso(row.licence_data_value.LAPSED_DATE)
       }
-    };
-  }, {});
-};
+    }
+  }, {})
+}
 
 /**
  * Loads the water licence from the permit repo with the specified licence
@@ -75,10 +75,10 @@ licences.getWaterLicence = async (licenceNumber) => {
     licence_ref: licenceNumber,
     licence_type_id: typeId,
     licence_regime_id: regimeId
-  };
-  const licenceResponse = await licences.findMany(filter);
-  return get(licenceResponse, 'data[0]');
-};
+  }
+  const licenceResponse = await licences.findMany(filter)
+  return get(licenceResponse, 'data[0]')
+}
 
 /**
  * Grabs all licences that are overdue for having their
@@ -98,9 +98,9 @@ licences.getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise = () =
         date_licence_version_purpose_conditions_last_copied: null
       }
     ]
-  };
-  return licences.findAll(filter, null, ['licence_id', 'licence_ref', 'licence_data_value']);
-};
+  }
+  return licences.findAll(filter, null, ['licence_id', 'licence_ref', 'licence_data_value'])
+}
 
 /**
  * Grabs all licences that are overdue for having their
@@ -120,20 +120,20 @@ licences.getWaterLicencesThatHaveGaugingStationLinkagesThatNeedToBeCopiedFromDig
         date_gauging_station_links_last_copied: null
       }
     ]
-  };
-  return licences.findAll(filter, null, ['licence_id', 'licence_ref', 'licence_data_value']);
-};
+  }
+  return licences.findAll(filter, null, ['licence_id', 'licence_ref', 'licence_data_value'])
+}
 
 const deleteAcceptanceTestData = () => {
-  const url = urlJoin(config.services.permits, 'acceptance-tests');
-  return helpers.serviceRequest.delete(url);
-};
+  const url = urlJoin(config.services.permits, 'acceptance-tests')
+  return helpers.serviceRequest.delete(url)
+}
 
-exports.licences = licences;
-exports.getLicenceRegionCodes = getLicenceRegionCodes;
-exports.getLicenceEndDates = getLicenceEndDates;
-exports.getServiceVersion = factory.create(config.services.permits);
+exports.licences = licences
+exports.getLicenceRegionCodes = getLicenceRegionCodes
+exports.getLicenceEndDates = getLicenceEndDates
+exports.getServiceVersion = factory.create(config.services.permits)
 
 if (config.isAcceptanceTestTarget) {
-  exports.deleteAcceptanceTestData = deleteAcceptanceTestData;
+  exports.deleteAcceptanceTestData = deleteAcceptanceTestData
 }

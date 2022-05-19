@@ -1,20 +1,20 @@
-'use strict';
+'use strict'
 
-const moment = require('moment');
-const promiseWaterfall = require('p-waterfall');
+const moment = require('moment')
+const promiseWaterfall = require('p-waterfall')
 
-const InvoiceAccountAddress = require('../models/invoice-account-address');
-const invoiceAccountsConnector = require('../connectors/crm-v2/invoice-accounts');
-const invoiceAccountAddressesService = require('./invoice-account-addresses-service');
-const companiesService = require('./companies-service');
-const addressesService = require('./addresses-service');
-const contactsService = require('./contacts-service');
-const regionsService = require('./regions-service');
-const mappers = require('../mappers');
-const validators = require('../models/validators');
-const { CONTACT_ROLES } = require('../models/constants');
-const { logger } = require('../../logger');
-const DATE_FORMAT = 'YYYY-MM-DD';
+const InvoiceAccountAddress = require('../models/invoice-account-address')
+const invoiceAccountsConnector = require('../connectors/crm-v2/invoice-accounts')
+const invoiceAccountAddressesService = require('./invoice-account-addresses-service')
+const companiesService = require('./companies-service')
+const addressesService = require('./addresses-service')
+const contactsService = require('./contacts-service')
+const regionsService = require('./regions-service')
+const mappers = require('../mappers')
+const validators = require('../models/validators')
+const { CONTACT_ROLES } = require('../models/constants')
+const { logger } = require('../../logger')
+const DATE_FORMAT = 'YYYY-MM-DD'
 
 /**
  * Gets invoice accounts with specified IDs from CRM and
@@ -24,15 +24,15 @@ const DATE_FORMAT = 'YYYY-MM-DD';
  */
 const getByInvoiceAccountIds = async (ids = []) => {
   if (ids.length === 0) {
-    return [];
+    return []
   }
 
-  const invoiceAccounts = await invoiceAccountsConnector.getInvoiceAccountsByIds(ids);
+  const invoiceAccounts = await invoiceAccountsConnector.getInvoiceAccountsByIds(ids)
 
   return invoiceAccounts.map(invoiceAccount =>
     mappers.invoiceAccount.crmToModel(invoiceAccount)
-  );
-};
+  )
+}
 
 /**
  * Gets the invoice accounts with the specified ID from CRM and
@@ -41,12 +41,12 @@ const getByInvoiceAccountIds = async (ids = []) => {
  * @return {Promise<InvoiceAccount>}
  */
 const getByInvoiceAccountId = async id => {
-  const invoiceAccount = await invoiceAccountsConnector.getInvoiceAccountById(id);
-  return mappers.invoiceAccount.crmToModel(invoiceAccount);
-};
+  const invoiceAccount = await invoiceAccountsConnector.getInvoiceAccountById(id)
+  return mappers.invoiceAccount.crmToModel(invoiceAccount)
+}
 
 const deleteInvoiceAccount = async invoiceAccount =>
-  invoiceAccountsConnector.deleteInvoiceAccount(invoiceAccount.id);
+  invoiceAccountsConnector.deleteInvoiceAccount(invoiceAccount.id)
 
 /**
  * Creates a new invoice account in the CRM
@@ -54,15 +54,15 @@ const deleteInvoiceAccount = async invoiceAccount =>
  * @param {InvoiceAccount} invoiceAccount containing data to be persisted
  */
 const createInvoiceAccount = async (regionId, invoiceAccount) => {
-  const { code: regionCode } = await regionsService.getRegion(regionId);
+  const { code: regionCode } = await regionsService.getRegion(regionId)
   const invoiceAccountEntity = await invoiceAccountsConnector.createInvoiceAccount({
     regionCode,
     companyId: invoiceAccount.company.id,
     startDate: invoiceAccount.dateRange.startDate
-  });
+  })
 
-  return mappers.invoiceAccount.crmToModel(invoiceAccountEntity);
-};
+  return mappers.invoiceAccount.crmToModel(invoiceAccountEntity)
+}
 
 /**
  * If an agent company is present in the invoice account address,
@@ -72,14 +72,14 @@ const createInvoiceAccount = async (regionId, invoiceAccount) => {
  * @return {Promise<Object>} context
  */
 const persistAgentCompany = async context => {
-  const { agentCompany } = context.invoiceAccountAddress;
+  const { agentCompany } = context.invoiceAccountAddress
   if (agentCompany && !agentCompany.id) {
-    context.invoiceAccountAddress.agentCompany = await companiesService.createCompany(agentCompany);
+    context.invoiceAccountAddress.agentCompany = await companiesService.createCompany(agentCompany)
   }
-  return context;
-};
+  return context
+}
 
-const getInvoiceAccountAddressCompany = context => context.invoiceAccountAddress.agentCompany || context.invoiceAccount.company;
+const getInvoiceAccountAddressCompany = context => context.invoiceAccountAddress.agentCompany || context.invoiceAccount.company
 
 /**
  * Persist the address to the CRM if it has no ID
@@ -89,22 +89,22 @@ const getInvoiceAccountAddressCompany = context => context.invoiceAccountAddress
  * @return {Promise<Object>} context
  */
 const persistAddress = async context => {
-  const { address, dateRange: { startDate } } = context.invoiceAccountAddress;
+  const { address, dateRange: { startDate } } = context.invoiceAccountAddress
 
   // Create address in CRM
   if (!address.id) {
-    context.invoiceAccountAddress.address = await addressesService.createAddress(address);
+    context.invoiceAccountAddress.address = await addressesService.createAddress(address)
   }
 
   // Add address to company with "billing" role
-  const company = getInvoiceAccountAddressCompany(context);
+  const company = getInvoiceAccountAddressCompany(context)
   await companiesService.createCompanyAddress(company.id, context.invoiceAccountAddress.address.id, {
     startDate,
     roleName: CONTACT_ROLES.billing
-  });
+  })
 
-  return context;
-};
+  return context
+}
 
 /**
  * Persist the contact to the CRM if it has no ID
@@ -114,24 +114,24 @@ const persistAddress = async context => {
  * @return {Promise<Object>} context
  */
 const persistContact = async context => {
-  const { contact, dateRange: { startDate } } = context.invoiceAccountAddress;
+  const { contact, dateRange: { startDate } } = context.invoiceAccountAddress
 
   if (contact) {
     // Create contact in CRM
     if (!contact.id) {
-      context.invoiceAccountAddress.contact = await contactsService.createContact(contact);
+      context.invoiceAccountAddress.contact = await contactsService.createContact(contact)
     }
 
     // Add contact to company with "billing" role
-    const company = getInvoiceAccountAddressCompany(context);
+    const company = getInvoiceAccountAddressCompany(context)
     await companiesService.createCompanyContact(company.id, context.invoiceAccountAddress.contact.id, {
       startDate,
       roleName: CONTACT_ROLES.billing
-    });
+    })
   }
 
-  return context;
-};
+  return context
+}
 
 /**
  * If there is an existing invoice account address...
@@ -144,50 +144,50 @@ const persistContact = async context => {
  * @return {Promise<Object>} context
  */
 const updateExistingInvoiceAccountAddresses = async context => {
-  const { invoiceAccount: { invoiceAccountAddresses }, invoiceAccountAddress } = context;
+  const { invoiceAccount: { invoiceAccountAddresses }, invoiceAccountAddress } = context
   for (const existingInvoiceAccountAddress of invoiceAccountAddresses) {
     // Same start date - delete existing record
     if (existingInvoiceAccountAddress.dateRange.isStartDate(invoiceAccountAddress.dateRange.startDate)) {
-      await invoiceAccountAddressesService.deleteInvoiceAccountAddress(existingInvoiceAccountAddress.id);
+      await invoiceAccountAddressesService.deleteInvoiceAccountAddress(existingInvoiceAccountAddress.id)
     } else if (existingInvoiceAccountAddress.dateRange.includes(invoiceAccountAddress.dateRange.startDate)) {
       // Patch end date to day before new date
-      const previousDay = moment(invoiceAccountAddress.dateRange.startDate).subtract(1, 'day').format(DATE_FORMAT);
-      await invoiceAccountAddressesService.setEndDate(existingInvoiceAccountAddress.id, previousDay);
+      const previousDay = moment(invoiceAccountAddress.dateRange.startDate).subtract(1, 'day').format(DATE_FORMAT)
+      await invoiceAccountAddressesService.setEndDate(existingInvoiceAccountAddress.id, previousDay)
     }
   }
 
-  return context;
-};
+  return context
+}
 
 const persistInvoiceAccountAddress = async context => {
-  const { invoiceAccount, invoiceAccountAddress } = context;
-  return invoiceAccountAddressesService.createInvoiceAccountAddress(invoiceAccount, invoiceAccountAddress);
-};
+  const { invoiceAccount, invoiceAccountAddress } = context
+  return invoiceAccountAddressesService.createInvoiceAccountAddress(invoiceAccount, invoiceAccountAddress)
+}
 
 const createInvoiceAccountAddress = async (invoiceAccountId, invoiceAccountAddress) => {
-  validators.assertId(invoiceAccountId);
-  validators.assertIsInstanceOf(invoiceAccountAddress, InvoiceAccountAddress);
+  validators.assertId(invoiceAccountId)
+  validators.assertIsInstanceOf(invoiceAccountAddress, InvoiceAccountAddress)
 
   // Load invoice account
-  const invoiceAccount = await getByInvoiceAccountId(invoiceAccountId);
+  const invoiceAccount = await getByInvoiceAccountId(invoiceAccountId)
 
   // Create list of tasks needed to create the invoice account address
-  const context = { invoiceAccount, invoiceAccountAddress };
+  const context = { invoiceAccount, invoiceAccountAddress }
   const tasks = [
     persistAgentCompany,
     persistAddress,
     persistContact,
     updateExistingInvoiceAccountAddresses,
     persistInvoiceAccountAddress
-  ];
+  ]
 
   try {
-    return await promiseWaterfall(tasks, context);
+    return await promiseWaterfall(tasks, context)
   } catch (err) {
-    logger.error('Error creating invoice account address', context);
-    throw err;
+    logger.error('Error creating invoice account address', context)
+    throw err
   }
-};
+}
 
 /**
  * Gets the related invoice account for the supplied ChargeVersion model
@@ -196,21 +196,21 @@ const createInvoiceAccountAddress = async (invoiceAccountId, invoiceAccountAddre
  */
 const decorateWithInvoiceAccount = async model => {
   if (!model.invoiceAccount) {
-    return model;
+    return model
   }
-  const { id } = model.invoiceAccount;
-  const invoiceAccount = await getByInvoiceAccountId(id);
-  model.invoiceAccount = invoiceAccount;
-  return model;
-};
+  const { id } = model.invoiceAccount
+  const invoiceAccount = await getByInvoiceAccountId(id)
+  model.invoiceAccount = invoiceAccount
+  return model
+}
 
 const updateInvoiceAccountsWithCustomerFileReference =
-  invoiceAccountsConnector.updateInvoiceAccountsWithCustomerFileReference;
+  invoiceAccountsConnector.updateInvoiceAccountsWithCustomerFileReference
 
-exports.getByInvoiceAccountIds = getByInvoiceAccountIds;
-exports.getByInvoiceAccountId = getByInvoiceAccountId;
-exports.decorateWithInvoiceAccount = decorateWithInvoiceAccount;
-exports.deleteInvoiceAccount = deleteInvoiceAccount;
-exports.createInvoiceAccount = createInvoiceAccount;
-exports.createInvoiceAccountAddress = createInvoiceAccountAddress;
-exports.updateInvoiceAccountsWithCustomerFileReference = updateInvoiceAccountsWithCustomerFileReference;
+exports.getByInvoiceAccountIds = getByInvoiceAccountIds
+exports.getByInvoiceAccountId = getByInvoiceAccountId
+exports.decorateWithInvoiceAccount = decorateWithInvoiceAccount
+exports.deleteInvoiceAccount = deleteInvoiceAccount
+exports.createInvoiceAccount = createInvoiceAccount
+exports.createInvoiceAccountAddress = createInvoiceAccountAddress
+exports.updateInvoiceAccountsWithCustomerFileReference = updateInvoiceAccountsWithCustomerFileReference

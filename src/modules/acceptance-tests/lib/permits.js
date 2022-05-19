@@ -1,3 +1,3 @@
-const permitsConnector = require('../../../lib/connectors/permit');
+const permitsConnector = require('../../../lib/connectors/permit')
 
-exports.delete = () => permitsConnector.deleteAcceptanceTestData();
+exports.delete = () => permitsConnector.deleteAcceptanceTestData()

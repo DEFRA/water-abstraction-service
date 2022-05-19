@@ -1,17 +1,17 @@
-'use strict';
+'use strict'
 
-const Model = require('./model');
-const validators = require('./validators');
-const Joi = require('joi');
-const { identity, pick } = require('lodash');
-const { VALID_ADDRESS } = require('@envage/water-abstraction-helpers').validators;
+const Model = require('./model')
+const validators = require('./validators')
+const Joi = require('joi')
+const { identity, pick } = require('lodash')
+const { VALID_ADDRESS } = require('@envage/water-abstraction-helpers').validators
 
 const ADDRESS_SOURCE = {
   nald: 'nald',
   wrls: 'wrls',
   eaAddressFacade: 'ea-address-facade',
   companiesHouse: 'companies-house'
-};
+}
 
 const UK_COUNTRIES = [
   'united kingdom',
@@ -20,7 +20,7 @@ const UK_COUNTRIES = [
   'scotland',
   'northern ireland',
   'uk'
-];
+]
 
 /**
  * Zero pads integers within an address line for sorting
@@ -29,7 +29,7 @@ const UK_COUNTRIES = [
  * @return {String} address line with numeric components zero-padded
  */
 const zeroPad = addressLine =>
-  addressLine.replace(/[0-9]+/, match => match.padStart(7, '0'));
+  addressLine.replace(/[0-9]+/, match => match.padStart(7, '0'))
 
 /**
  * Gets a string which can be used for sorting addresses
@@ -54,8 +54,8 @@ const getSortKey = address => {
   ].reverse()
     .filter(identity)
     .map(str => str.toUpperCase().replace(/ /, '_'))
-    .join('_');
-};
+    .join('_')
+}
 
 const mapToValidator = address => ({
   ...pick(address,
@@ -71,92 +71,92 @@ const mapToValidator = address => ({
       'uprn'
     ]),
   dataSource: address.source
-});
+})
 
 class Address extends Model {
   constructor (...args) {
-    super(...args);
-    this.addressLine1 = null;
-    this.addressLine2 = null;
-    this.addressLine3 = null;
-    this.addressLine4 = null;
-    this.town = null;
-    this.county = null;
-    this.postcode = null;
-    this.country = null;
-    this.uprn = null;
+    super(...args)
+    this.addressLine1 = null
+    this.addressLine2 = null
+    this.addressLine3 = null
+    this.addressLine4 = null
+    this.town = null
+    this.county = null
+    this.postcode = null
+    this.country = null
+    this.uprn = null
   }
 
   set addressLine1 (addressLine1) {
-    validators.assertNullableString(addressLine1);
-    this._addressLine1 = addressLine1;
+    validators.assertNullableString(addressLine1)
+    this._addressLine1 = addressLine1
   }
 
   get addressLine1 () {
-    return this._addressLine1;
+    return this._addressLine1
   }
 
   set addressLine2 (addressLine2) {
-    validators.assertNullableString(addressLine2);
-    this._addressLine2 = addressLine2;
+    validators.assertNullableString(addressLine2)
+    this._addressLine2 = addressLine2
   }
 
   get addressLine2 () {
-    return this._addressLine2;
+    return this._addressLine2
   }
 
   set addressLine3 (addressLine3) {
-    validators.assertNullableString(addressLine3);
-    this._addressLine3 = addressLine3;
+    validators.assertNullableString(addressLine3)
+    this._addressLine3 = addressLine3
   }
 
   get addressLine3 () {
-    return this._addressLine3;
+    return this._addressLine3
   }
 
   set addressLine4 (addressLine4) {
-    validators.assertNullableString(addressLine4);
-    this._addressLine4 = addressLine4;
+    validators.assertNullableString(addressLine4)
+    this._addressLine4 = addressLine4
   }
 
   get addressLine4 () {
-    return this._addressLine4;
+    return this._addressLine4
   }
 
   set town (town) {
-    validators.assertNullableString(town);
-    this._town = town;
+    validators.assertNullableString(town)
+    this._town = town
   }
 
   get town () {
-    return this._town;
+    return this._town
   }
 
   set county (county) {
-    validators.assertNullableString(county);
-    this._county = county;
+    validators.assertNullableString(county)
+    this._county = county
   }
 
   get county () {
-    return this._county;
+    return this._county
   }
 
   set postcode (postcode) {
-    validators.assertNullableString(postcode);
-    this._postcode = postcode;
+    validators.assertNullableString(postcode)
+    this._postcode = postcode
   }
 
   get postcode () {
-    return this._postcode;
+    return this._postcode
   }
 
   set country (country) {
-    validators.assertNullableString(country);
-    this._country = country;
+    validators.assertNullableString(country)
+    this._country = country
   }
 
   get country () {
-    return this._country;
+    return this._country
   }
 
   /**
@@ -164,12 +164,12 @@ class Address extends Model {
    * @param {String} wrls|nald|ea-address-facade
    */
   set source (source) {
-    validators.assertEnum(source, Object.values(ADDRESS_SOURCE));
-    this._source = source;
+    validators.assertEnum(source, Object.values(ADDRESS_SOURCE))
+    this._source = source
   }
 
   get source () {
-    return this._source;
+    return this._source
   }
 
   /**
@@ -177,12 +177,12 @@ class Address extends Model {
    * @param {Number} uprn
    */
   set uprn (uprn) {
-    validators.assertNullablePositiveOrZeroInteger(uprn);
-    this._uprn = uprn;
+    validators.assertNullablePositiveOrZeroInteger(uprn)
+    this._uprn = uprn
   }
 
   get uprn () {
-    return this._uprn;
+    return this._uprn
   }
 
   /**
@@ -200,7 +200,7 @@ class Address extends Model {
       county: this.county,
       postcode: this.postcode,
       country: this.country
-    };
+    }
   }
 
   /**
@@ -211,14 +211,14 @@ class Address extends Model {
     // Skip validation for NALD/companies house addresses
     const schema = [ADDRESS_SOURCE.nald, ADDRESS_SOURCE.companiesHouse].includes(this.source)
       ? Joi.object()
-      : VALID_ADDRESS;
+      : VALID_ADDRESS
 
-    const mappedAddress = mapToValidator(this);
-    return schema.validate(mappedAddress, { abortEarly: false });
+    const mappedAddress = mapToValidator(this)
+    return schema.validate(mappedAddress, { abortEarly: false })
   }
 
   get sortKey () {
-    return getSortKey(this);
+    return getSortKey(this)
   }
 
   /**
@@ -228,15 +228,15 @@ class Address extends Model {
   get isUKAddress () {
     // Some NALD addresses have a null country - treat as UK
     if (this.source === ADDRESS_SOURCE.nald && this.country === null) {
-      return true;
+      return true
     } else if (this.country === null) {
-      return false;
+      return false
     } else {
     // Otherwise use list of UK countries
-      return UK_COUNTRIES.includes(this.country.trim().toLowerCase());
+      return UK_COUNTRIES.includes(this.country.trim().toLowerCase())
     }
   }
 }
 
-module.exports = Address;
-module.exports.ADDRESS_SOURCE = ADDRESS_SOURCE;
+module.exports = Address
+module.exports.ADDRESS_SOURCE = ADDRESS_SOURCE

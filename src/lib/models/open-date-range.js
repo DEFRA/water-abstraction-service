@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const DateRange = require('./date-range');
-const { assertNullableDate } = require('./validators');
+const DateRange = require('./date-range')
+const { assertNullableDate } = require('./validators')
 
 class OpenDateRange extends DateRange {
   /**
@@ -9,13 +9,13 @@ class OpenDateRange extends DateRange {
    * @return {String} format YYYY-MM-DD
    */
   get endDate () {
-    return this._endDate;
+    return this._endDate
   }
 
   set endDate (date) {
-    assertNullableDate(date);
-    this._endDate = date;
+    assertNullableDate(date)
+    this._endDate = date
   }
 }
 
-module.exports = OpenDateRange;
+module.exports = OpenDateRange

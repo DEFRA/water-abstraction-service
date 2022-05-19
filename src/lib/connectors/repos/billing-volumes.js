@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-const { BillingVolume, bookshelf } = require('../bookshelf');
-const queries = require('./queries/billing-volumes');
-const raw = require('./lib/raw');
+const { BillingVolume, bookshelf } = require('../bookshelf')
+const queries = require('./queries/billing-volumes')
+const raw = require('./lib/raw')
 
 /**
  * Create a new billing volume
@@ -11,9 +11,9 @@ const raw = require('./lib/raw');
 const create = async data => {
   const model = await BillingVolume
     .forge(data)
-    .save();
-  return model.toJSON();
-};
+    .save()
+  return model.toJSON()
+}
 
 /**
  * Gets billing volumes for charge elements and financial year
@@ -31,10 +31,10 @@ const findApprovedByChargeElementIdsFinancialYearAndBatchId = async (ids, financ
       errored_on: null,
       billing_batch_id: batchId
     })
-    .fetchAll();
+    .fetchAll()
 
-  return result.toJSON();
-};
+  return result.toJSON()
+}
 
 /**
  * Updates the record with the fields contained within changes object
@@ -42,9 +42,9 @@ const findApprovedByChargeElementIdsFinancialYearAndBatchId = async (ids, financ
  * @param {Object} changes
  */
 const update = async (billingVolumeId, changes) => {
-  const result = await BillingVolume.forge({ billingVolumeId }).save(changes);
-  return result.toJSON();
-};
+  const result = await BillingVolume.forge({ billingVolumeId }).save(changes)
+  return result.toJSON()
+}
 
 /**
  * Gets billing volumes for a given batchId where the isApproved flag = flase
@@ -54,10 +54,10 @@ const getUnapprovedVolumesForBatch = async batchId => {
   const result = await BillingVolume
     .forge()
     .where({ billing_batch_id: batchId, is_approved: false, errored_on: null })
-    .fetchAll();
+    .fetchAll()
 
-  return result.toJSON();
-};
+  return result.toJSON()
+}
 
 const findByBatchId = async batchId => {
   const result = await BillingVolume
@@ -65,9 +65,9 @@ const findByBatchId = async batchId => {
     .where({
       billing_batch_id: batchId
     })
-    .fetchAll();
-  return result.toJSON();
-};
+    .fetchAll()
+  return result.toJSON()
+}
 
 /**
  * Deletes all billing volumes for given batch
@@ -76,7 +76,7 @@ const findByBatchId = async batchId => {
 const deleteByBatchId = async batchId => BillingVolume
   .forge()
   .where({ billing_batch_id: batchId })
-  .destroy({ require: false });
+  .destroy({ require: false })
 
 /**
 * Deletes all billing volumes related to invoice licence
@@ -85,7 +85,7 @@ const deleteByBatchId = async batchId => BillingVolume
 */
 // @TODO: Check if this works as expected when functionality to delete invoices by financial year
 const deleteByInvoiceLicenceAndBatchId = async (invoiceLicenceId, batchId) =>
-  bookshelf.knex.raw(queries.deleteByInvoiceLicenceAndBatchId, { invoiceLicenceId, batchId });
+  bookshelf.knex.raw(queries.deleteByInvoiceLicenceAndBatchId, { invoiceLicenceId, batchId })
 
 /**
 * Deletes all billing volumes for given invoice account and batch
@@ -93,7 +93,7 @@ const deleteByInvoiceLicenceAndBatchId = async (invoiceLicenceId, batchId) =>
 * @param {String} invoiceAccountId - guid
 */
 const deleteByBatchAndInvoiceId = async (batchId, billingInvoiceId) =>
-  bookshelf.knex.raw(queries.deleteByBatchAndInvoiceId, { batchId, billingInvoiceId });
+  bookshelf.knex.raw(queries.deleteByBatchAndInvoiceId, { batchId, billingInvoiceId })
 
 /**
  * Finds billing volumes relating to the supplied billing batch ID and licence ID
@@ -101,7 +101,7 @@ const deleteByBatchAndInvoiceId = async (batchId, billingInvoiceId) =>
  * @param {String} licenceId
  */
 const findByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
-  raw.multiRow(queries.findByBatchIdAndLicenceId, { billingBatchId, licenceId });
+  raw.multiRow(queries.findByBatchIdAndLicenceId, { billingBatchId, licenceId })
 
 /**
  * Finds billing volumes by supplied IDs
@@ -116,9 +116,9 @@ const findByIds = async billingVolumeIds => {
         'chargeElement',
         'chargeElement.purposeUse'
       ]
-    });
-  return result.toJSON();
-};
+    })
+  return result.toJSON()
+}
 
 /**
  * Deletes billing volumes in a batch for a particular licence ID
@@ -126,7 +126,7 @@ const findByIds = async billingVolumeIds => {
  * @param {String} licenceId
  */
 const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
-  bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId });
+  bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId })
 
 /**
  * Updates all records by batch ID
@@ -136,9 +136,9 @@ const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
 const updateByBatchId = async (billingBatchId, changes) => {
   const result = await BillingVolume
     .where('billing_batch_id', billingBatchId)
-    .save(changes, { method: 'update', require: false });
-  return result.toJSON();
-};
+    .save(changes, { method: 'update', require: false })
+  return result.toJSON()
+}
 
 /**
  * Marks all records as errored by batch ID
@@ -149,9 +149,9 @@ const markVolumesAsErrored = async (billingBatchId, options = {}) => {
     .where('billing_batch_id', billingBatchId)
     .save({
       errored_on: new Date()
-    }, { method: 'update', ...options });
-  return result.toJSON();
-};
+    }, { method: 'update', ...options })
+  return result.toJSON()
+}
 
 /**
  * Finds approved billing volumes for the specified charge version ID
@@ -165,7 +165,7 @@ const markVolumesAsErrored = async (billingBatchId, options = {}) => {
 const findByChargeVersionFinancialYearAndSeason = async (chargeVersionId, financialYearEnding, isSummer) =>
   raw.multiRow(queries.findByChargeVersionFinancialYearAndSeason, {
     chargeVersionId, financialYearEnding, isSummer
-  });
+  })
 
 /**
  * Finds billing volumes for the specified charge version ID
@@ -175,7 +175,7 @@ const findByChargeVersionFinancialYearAndSeason = async (chargeVersionId, financ
  * @param {String} licenceId
  */
 const findByChargeVersionAndFinancialYear = (chargeVersionId, financialYearEnding) =>
-  raw.multiRow(queries.findByChargeVersionAndFinancialYear, { chargeVersionId, financialYearEnding });
+  raw.multiRow(queries.findByChargeVersionAndFinancialYear, { chargeVersionId, financialYearEnding })
 
 /**
  * Finds billing volumes for the specified charge version ID
@@ -187,21 +187,21 @@ const findByChargeVersionAndFinancialYear = (chargeVersionId, financialYearEndin
 const deleteByFinancialYearEnding = (batchId, licenceId, financialYearEnding) =>
   raw.multiRow(queries.deleteByFinancialYearEnding, {
     batchId, licenceId, financialYearEnding
-  });
+  })
 
-exports.create = create;
-exports.findApprovedByChargeElementIdsFinancialYearAndBatchId = findApprovedByChargeElementIdsFinancialYearAndBatchId;
-exports.update = update;
-exports.getUnapprovedVolumesForBatch = getUnapprovedVolumesForBatch;
-exports.findByBatchId = findByBatchId;
-exports.deleteByBatchId = deleteByBatchId;
-exports.deleteByInvoiceLicenceAndBatchId = deleteByInvoiceLicenceAndBatchId;
-exports.deleteByBatchAndInvoiceId = deleteByBatchAndInvoiceId;
-exports.findByBatchIdAndLicenceId = findByBatchIdAndLicenceId;
-exports.findByIds = findByIds;
-exports.deleteByBatchIdAndLicenceId = deleteByBatchIdAndLicenceId;
-exports.updateByBatchId = updateByBatchId;
-exports.markVolumesAsErrored = markVolumesAsErrored;
-exports.findByChargeVersionFinancialYearAndSeason = findByChargeVersionFinancialYearAndSeason;
-exports.findByChargeVersionAndFinancialYear = findByChargeVersionAndFinancialYear;
-exports.deleteByFinancialYearEnding = deleteByFinancialYearEnding;
+exports.create = create
+exports.findApprovedByChargeElementIdsFinancialYearAndBatchId = findApprovedByChargeElementIdsFinancialYearAndBatchId
+exports.update = update
+exports.getUnapprovedVolumesForBatch = getUnapprovedVolumesForBatch
+exports.findByBatchId = findByBatchId
+exports.deleteByBatchId = deleteByBatchId
+exports.deleteByInvoiceLicenceAndBatchId = deleteByInvoiceLicenceAndBatchId
+exports.deleteByBatchAndInvoiceId = deleteByBatchAndInvoiceId
+exports.findByBatchIdAndLicenceId = findByBatchIdAndLicenceId
+exports.findByIds = findByIds
+exports.deleteByBatchIdAndLicenceId = deleteByBatchIdAndLicenceId
+exports.updateByBatchId = updateByBatchId
+exports.markVolumesAsErrored = markVolumesAsErrored
+exports.findByChargeVersionFinancialYearAndSeason = findByChargeVersionFinancialYearAndSeason
+exports.findByChargeVersionAndFinancialYear = findByChargeVersionAndFinancialYear
+exports.deleteByFinancialYearEnding = deleteByFinancialYearEnding

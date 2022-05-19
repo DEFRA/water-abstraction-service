@@ -1,5 +1,5 @@
-const { isEqual } = require('lodash');
-const { parseFactor, parseBool } = require('../helpers');
+const { isEqual } = require('lodash')
+const { parseFactor, parseBool } = require('../helpers')
 
 const getAdjustments = data => {
   const adjustments = {
@@ -9,7 +9,7 @@ const getAdjustments = data => {
     charge: parseFactor(data.chargeReferenceDetailsAdjustmentFactor),
     winter: parseBool(data.chargeReferenceDetailsWinterDiscount),
     aggregate: parseFactor(data.chargeReferenceDetailsAggregateFactor)
-  };
+  }
 
   // Return Empty adjustments if there are no adjustments
 
@@ -20,7 +20,9 @@ const getAdjustments = data => {
     charge: null,
     winter: false,
     aggregate: null
-  }) ? {} : adjustments;
-};
+  })
+    ? {}
+    : adjustments
+}
 
-exports.mapToAdjustments = getAdjustments;
+exports.mapToAdjustments = getAdjustments

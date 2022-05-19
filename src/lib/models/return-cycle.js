@@ -1,13 +1,13 @@
-'use strict';
+'use strict'
 
-const Model = require('./model');
-const DateRange = require('./date-range');
-const validators = require('./validators');
+const Model = require('./model')
+const DateRange = require('./date-range')
+const validators = require('./validators')
 
 class ReturnCycle extends Model {
   constructor (id) {
-    super(id);
-    this._returnVersions = [];
+    super(id)
+    this._returnVersions = []
   }
 
   /**
@@ -15,12 +15,12 @@ class ReturnCycle extends Model {
    * @param {DateRange} dateRange
    */
   set dateRange (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    this._dateRange = dateRange;
+    validators.assertIsInstanceOf(dateRange, DateRange)
+    this._dateRange = dateRange
   }
 
   get dateRange () {
-    return this._dateRange;
+    return this._dateRange
   }
 
   /**
@@ -28,13 +28,13 @@ class ReturnCycle extends Model {
    * @param {Boolean}
    */
   set isSummer (isSummer) {
-    validators.assertIsBoolean(isSummer);
-    this._isSummer = isSummer;
+    validators.assertIsBoolean(isSummer)
+    this._isSummer = isSummer
   }
 
   get isSummer () {
-    return this._isSummer;
+    return this._isSummer
   }
 }
 
-module.exports = ReturnCycle;
+module.exports = ReturnCycle

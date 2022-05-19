@@ -1,26 +1,26 @@
-const objectMapper = require('object-mapper');
+const objectMapper = require('object-mapper')
 
 const getIsWaterUndertaker = invoiceLicence =>
-  invoiceLicence.licence.isWaterUndertaker;
+  invoiceLicence.licence.isWaterUndertaker
 
 const containsWaterUndertaker = invoiceLicences => {
   return invoiceLicences
     .map(getIsWaterUndertaker)
-    .includes(true);
-};
+    .includes(true)
+}
 
-const nullToEmpty = (val) => val === null ? '' : val;
-const buildName = (name) => `${nullToEmpty(name.salutation)} ${nullToEmpty(name.firstName)} ${nullToEmpty(name.middleInitials)} ${nullToEmpty(name.lastName)}`;
+const nullToEmpty = (val) => val === null ? '' : val
+const buildName = (name) => `${nullToEmpty(name.salutation)} ${nullToEmpty(name.firstName)} ${nullToEmpty(name.middleInitials)} ${nullToEmpty(name.lastName)}`
 
 const createCompanyContact = (companyContact) => {
-  const contact = {};
+  const contact = {}
   if (companyContact) {
     companyContact.forEach((val) => {
-      contact[val.role.name] = buildName(val.contact);
-    });
+      contact[val.role.name] = buildName(val.contact)
+    })
   }
-  return contact;
-};
+  return contact
+}
 
 const map = {
   id: 'id',
@@ -45,7 +45,7 @@ const map = {
     key: 'faoContact',
     transform: (contact) => contact ? buildName(contact) : null
   }
-};
+}
 
 /**
  * Maps an invoice to the API invoice list view
@@ -53,7 +53,7 @@ const map = {
  * @return {Object}
  */
 const modelToBatchInvoice = invoice => {
-  return objectMapper(invoice, map);
-};
+  return objectMapper(invoice, map)
+}
 
-exports.modelToBatchInvoices = modelToBatchInvoice;
+exports.modelToBatchInvoices = modelToBatchInvoice

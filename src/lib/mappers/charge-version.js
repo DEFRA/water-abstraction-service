@@ -1,33 +1,33 @@
-'use strict';
+'use strict'
 
-const { createMapper } = require('../object-mapper');
+const { createMapper } = require('../object-mapper')
 
-const ChargeVersion = require('../models/charge-version');
-const Company = require('../models/company');
-const DateRange = require('../models/date-range');
-const InvoiceAccount = require('../models/invoice-account');
-const Region = require('../models/region');
+const ChargeVersion = require('../models/charge-version')
+const Company = require('../models/company')
+const DateRange = require('../models/date-range')
+const InvoiceAccount = require('../models/invoice-account')
+const Region = require('../models/region')
 
-const changeReasonMapper = require('./change-reason');
-const chargeElementMapper = require('./charge-element');
-const licenceMapper = require('./licence');
-const invoiceAccountMapper = require('./invoice-account');
-const userMapper = require('./user');
-const noteMapper = require('./note');
-const dateRangeMapper = require('./date-range');
+const changeReasonMapper = require('./change-reason')
+const chargeElementMapper = require('./charge-element')
+const licenceMapper = require('./licence')
+const invoiceAccountMapper = require('./invoice-account')
+const userMapper = require('./user')
+const noteMapper = require('./note')
+const dateRangeMapper = require('./date-range')
 
-const { createModel } = require('./lib/helpers');
+const { createModel } = require('./lib/helpers')
 
 const createRegion = regionCode => {
-  const region = new Region();
+  const region = new Region()
   return region.fromHash({
     numericCode: regionCode,
     type: Region.types.region
-  });
-};
+  })
+}
 
 const mapInvoiceAccountId = id =>
-  id ? new InvoiceAccount(id) : null;
+  id ? new InvoiceAccount(id) : null
 
 const dbToModelMapper = createMapper()
   .map('chargeVersionId').to('id')
@@ -46,10 +46,10 @@ const dbToModelMapper = createMapper()
   .map('note').to('note', noteMapper.dbToModel)
   .map('licence').to('licence', licenceMapper.dbToModel)
   .map('createdBy').to('createdBy', userMapper.pojoToModel)
-  .map('approvedBy').to('approvedBy', userMapper.pojoToModel);
+  .map('approvedBy').to('approvedBy', userMapper.pojoToModel)
 
 const dbToModel = row =>
-  createModel(ChargeVersion, row, dbToModelMapper);
+  createModel(ChargeVersion, row, dbToModelMapper)
 
 const modelToDbMapper = createMapper()
   .map('id').to('chargeVersionId')
@@ -73,9 +73,9 @@ const modelToDbMapper = createMapper()
   .map('invoiceAccount.id').to('invoiceAccountId')
   .map('changeReason.id').to('changeReasonId')
   .map('createdBy').to('createdBy', userMapper.modelToDb)
-  .map('approvedBy').to('approvedBy', userMapper.modelToDb);
+  .map('approvedBy').to('approvedBy', userMapper.modelToDb)
 
-const modelToDb = model => modelToDbMapper.execute(model);
+const modelToDb = model => modelToDbMapper.execute(model)
 
 const pojoToModelMapper = createMapper()
   .copy(
@@ -92,15 +92,15 @@ const pojoToModelMapper = createMapper()
   .map('chargeElements').to('chargeElements', chargeElements => chargeElements.map(chargeElementMapper.pojoToModel))
   .map('invoiceAccount').to('invoiceAccount', invoiceAccountMapper.pojoToModel)
   .map('createdBy').to('createdBy', userMapper.pojoToModel)
-  .map('approvedBy').to('approvedBy', userMapper.pojoToModel);
+  .map('approvedBy').to('approvedBy', userMapper.pojoToModel)
 
 /**
  * Converts a plain object representation of a ChargeVersion to a ChargeVersion model
  * @param {Object} pojo
  * @return ChargeVersion
  */
-const pojoToModel = pojo => createModel(ChargeVersion, pojo, pojoToModelMapper);
+const pojoToModel = pojo => createModel(ChargeVersion, pojo, pojoToModelMapper)
 
-exports.dbToModel = dbToModel;
-exports.modelToDb = modelToDb;
-exports.pojoToModel = pojoToModel;
+exports.dbToModel = dbToModel
+exports.modelToDb = modelToDb
+exports.pojoToModel = pojoToModel

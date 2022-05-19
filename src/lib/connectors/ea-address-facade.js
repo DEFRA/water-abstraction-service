@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const { http } = require('@envage/water-abstraction-helpers');
-const config = require('../../../config');
-const { set } = require('lodash');
-const urlJoin = require('url-join');
+const { http } = require('@envage/water-abstraction-helpers')
+const config = require('../../../config')
+const { set } = require('lodash')
+const urlJoin = require('url-join')
 
 /**
  * Makes a request to the EA address facade
@@ -17,10 +17,10 @@ const eaAddressFacadeRequest = (tail, options = {}) => {
     uri: urlJoin(config.eaAddressFacade.uri, tail),
     json: true,
     ...options
-  };
-  set(requestOptions, 'qs.key', 'client1');
-  return http.request(requestOptions);
-};
+  }
+  set(requestOptions, 'qs.key', 'client1')
+  return http.request(requestOptions)
+}
 
 /**
  * Search OS places for addresses with the given postcode
@@ -33,7 +33,7 @@ const getAddressesByPostcode = postcode => {
     qs: {
       'query-string': postcode
     }
-  });
-};
+  })
+}
 
-exports.getAddressesByPostcode = getAddressesByPostcode;
+exports.getAddressesByPostcode = getAddressesByPostcode

@@ -3,14 +3,14 @@ const {
   test,
   beforeEach,
   afterEach
-} = exports.lab = require('@hapi/lab').script();
-const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+} = exports.lab = require('@hapi/lab').script()
+const { expect } = require('@hapi/code')
+const sinon = require('sinon')
+const sandbox = sinon.createSandbox()
 
-const LicenceAgreementRepository = require('../../../../src/lib/connectors/repository/LicenceAgreementRepository');
+const LicenceAgreementRepository = require('../../../../src/lib/connectors/repository/LicenceAgreementRepository')
 
-const repo = new LicenceAgreementRepository();
+const repo = new LicenceAgreementRepository()
 
 const data = {
   licenceNumber: '01/123/ABC',
@@ -22,61 +22,61 @@ const data = {
     start_date: '2019-06-01',
     end_date: null
   }]
-};
+}
 
 experiment('lib/connectors/repository/LicenceAgreementRepository', () => {
   beforeEach(async () => {
-    sandbox.stub(LicenceAgreementRepository.prototype, 'find');
-  });
+    sandbox.stub(LicenceAgreementRepository.prototype, 'find')
+  })
 
   afterEach(async () => {
-    sandbox.restore();
-  });
+    sandbox.restore()
+  })
 
   experiment('.findByLicenceNumber', () => {
-    let result;
+    let result
 
     beforeEach(async () => {
       LicenceAgreementRepository.prototype.find.resolves({
         rows: data.singleRow
-      });
-    });
+      })
+    })
 
     experiment('when financial agreement codes are not supplied', () => {
       beforeEach(async () => {
-        result = await repo.findByLicenceNumber(data.licenceNumber);
-      });
+        result = await repo.findByLicenceNumber(data.licenceNumber)
+      })
 
       test('calls prototype.find with appropriate filter', async () => {
-        const filter = LicenceAgreementRepository.prototype.find.lastCall.args[0];
+        const filter = LicenceAgreementRepository.prototype.find.lastCall.args[0]
         expect(filter).to.equal({
           licence_ref: data.licenceNumber
-        });
-      });
+        })
+      })
 
       test('resolves with list of agreements', async () => {
-        expect(result).to.equal(data.singleRow);
-      });
-    });
+        expect(result).to.equal(data.singleRow)
+      })
+    })
 
     experiment('when financial agreement codes are supplied', () => {
       beforeEach(async () => {
-        result = await repo.findByLicenceNumber(data.licenceNumber, data.agreementCodes);
-      });
+        result = await repo.findByLicenceNumber(data.licenceNumber, data.agreementCodes)
+      })
 
       test('calls prototype.find with appropriate filter', async () => {
-        const filter = LicenceAgreementRepository.prototype.find.lastCall.args[0];
+        const filter = LicenceAgreementRepository.prototype.find.lastCall.args[0]
         expect(filter).to.equal({
           licence_ref: data.licenceNumber,
           financial_agreement_type_id: {
             $in: data.agreementCodes
           }
-        });
-      });
+        })
+      })
 
       test('resolves with list of agreements', async () => {
-        expect(result).to.equal(data.singleRow);
-      });
-    });
-  });
-});
+        expect(result).to.equal(data.singleRow)
+      })
+    })
+  })
+})

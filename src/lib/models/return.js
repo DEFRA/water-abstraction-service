@@ -1,37 +1,37 @@
-'use strict';
+'use strict'
 
-const moment = require('moment');
+const moment = require('moment')
 
-const AbstractionPeriod = require('./model');
-const Model = require('./model');
-const DateRange = require('./date-range');
-const ReturnVersion = require('./return-version');
-const ReturnRequirement = require('./return-requirement');
+const AbstractionPeriod = require('./model')
+const Model = require('./model')
+const DateRange = require('./date-range')
+const ReturnVersion = require('./return-version')
+const ReturnRequirement = require('./return-requirement')
 
-const validators = require('./validators');
-const { get } = require('lodash');
-const config = require('../../../config');
+const validators = require('./validators')
+const { get } = require('lodash')
+const config = require('../../../config')
 
 const RETURN_STATUS = {
   completed: 'completed',
   due: 'due',
   received: 'received',
   void: 'void'
-};
+}
 
 class Return extends Model {
   constructor (id) {
-    super(id);
-    this._returnVersions = [];
+    super(id)
+    this._returnVersions = []
   }
 
   set id (id) {
-    validators.assertReturnId(id);
-    this._id = id;
+    validators.assertReturnId(id)
+    this._id = id
   }
 
   get id () {
-    return this._id;
+    return this._id
   }
 
   /**
@@ -39,12 +39,12 @@ class Return extends Model {
    * @param {DateRange} dateRange
    */
   set dateRange (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    this._dateRange = dateRange;
+    validators.assertIsInstanceOf(dateRange, DateRange)
+    this._dateRange = dateRange
   }
 
   get dateRange () {
-    return this._dateRange;
+    return this._dateRange
   }
 
   /**
@@ -53,12 +53,12 @@ class Return extends Model {
    * @param {Array} purposeUses
    */
   set purposeUses (purposeUse) {
-    throw new Error('Attempt to set deprecated property Return.purposeUses');
+    throw new Error('Attempt to set deprecated property Return.purposeUses')
   }
 
   get purposeUses () {
     return get(this, 'returnRequirement.returnRequirementPurposes', [])
-      .map(returnRequirementPurpose => returnRequirementPurpose.purposeUse);
+      .map(returnRequirementPurpose => returnRequirementPurpose.purposeUse)
   }
 
   /**
@@ -66,12 +66,12 @@ class Return extends Model {
    * @param {Boolean}
    */
   set isSummer (isSummer) {
-    validators.assertIsBoolean(isSummer);
-    this._isSummer = isSummer;
+    validators.assertIsBoolean(isSummer)
+    this._isSummer = isSummer
   }
 
   get isSummer () {
-    return this._isSummer;
+    return this._isSummer
   }
 
   /**
@@ -79,12 +79,12 @@ class Return extends Model {
    * @param {Boolean}
    */
   set isUnderQuery (isUnderQuery) {
-    validators.assertIsBoolean(isUnderQuery);
-    this._isUnderQuery = isUnderQuery;
+    validators.assertIsBoolean(isUnderQuery)
+    this._isUnderQuery = isUnderQuery
   }
 
   get isUnderQuery () {
-    return this._isUnderQuery;
+    return this._isUnderQuery
   }
 
   /**
@@ -93,7 +93,7 @@ class Return extends Model {
    * @param {String}
    */
   set dueDate (dueDate) {
-    this._dueDate = this.getDateOrThrow(dueDate, 'dueDate');
+    this._dueDate = this.getDateOrThrow(dueDate, 'dueDate')
   }
 
   /**
@@ -101,7 +101,7 @@ class Return extends Model {
    * @return {String} YYYY-MM-DD
    */
   get dueDate () {
-    return this._dueDate.format('YYYY-MM-DD');
+    return this._dueDate.format('YYYY-MM-DD')
   }
 
   /**
@@ -110,7 +110,7 @@ class Return extends Model {
    * @param {String}
    */
   set receivedDate (receivedDate) {
-    this._receivedDate = this.getDateTimeFromValue(receivedDate);
+    this._receivedDate = this.getDateTimeFromValue(receivedDate)
   }
 
   /**
@@ -118,7 +118,7 @@ class Return extends Model {
    * @return {String|Null} YYYY-MM-DD
    */
   get receivedDate () {
-    return this._receivedDate ? this._receivedDate.format('YYYY-MM-DD') : null;
+    return this._receivedDate ? this._receivedDate.format('YYYY-MM-DD') : null
   }
 
   /**
@@ -126,7 +126,7 @@ class Return extends Model {
    * @return {String} YYYY-MM-DD
    */
   get dueDateForBilling () {
-    return moment(this._dueDate).add(config.billing.returnsGracePeriod, 'day').format('YYYY-MM-DD');
+    return moment(this._dueDate).add(config.billing.returnsGracePeriod, 'day').format('YYYY-MM-DD')
   }
 
   /**
@@ -135,7 +135,7 @@ class Return extends Model {
    * @return {Boolean}
    */
   get isLateForBilling () {
-    return this._receivedDate && this._receivedDate.isAfter(this.dueDateForBilling, 'day');
+    return this._receivedDate && this._receivedDate.isAfter(this.dueDateForBilling, 'day')
   }
 
   /**
@@ -144,7 +144,7 @@ class Return extends Model {
    * @param {String} [referenceDate] - optional reference date (defaults to now)
    */
   isDueForBilling (referenceDate) {
-    return moment(this.dueDateForBilling).isSameOrBefore(moment(referenceDate), 'day');
+    return moment(this.dueDateForBilling).isSameOrBefore(moment(referenceDate), 'day')
   }
 
   /**
@@ -152,8 +152,8 @@ class Return extends Model {
    * @param {String} status
    */
   set status (status) {
-    validators.assertEnum(status, Object.keys(RETURN_STATUS));
-    this._status = status;
+    validators.assertEnum(status, Object.keys(RETURN_STATUS))
+    this._status = status
   }
 
   /**
@@ -161,7 +161,7 @@ class Return extends Model {
    * @return {String}
    */
   get status () {
-    return this._status;
+    return this._status
   }
 
   /**
@@ -169,12 +169,12 @@ class Return extends Model {
    * @return {Array<ReturnVersion>}
    */
   set returnVersions (returnVersions) {
-    validators.assertIsArrayOfType(returnVersions, ReturnVersion);
-    this._returnVersions = returnVersions;
+    validators.assertIsArrayOfType(returnVersions, ReturnVersion)
+    this._returnVersions = returnVersions
   }
 
   get returnVersions () {
-    return this._returnVersions;
+    return this._returnVersions
   }
 
   /**
@@ -182,7 +182,7 @@ class Return extends Model {
    * @return {ReturnVersion}
    */
   get currentReturnVersion () {
-    return this._returnVersions.find(returnVersion => returnVersion.isCurrentVersion);
+    return this._returnVersions.find(returnVersion => returnVersion.isCurrentVersion)
   }
 
   /**
@@ -190,7 +190,7 @@ class Return extends Model {
    * @return {AbstractionPeriod}
    */
   get abstractionPeriod () {
-    return this._abstractionPeriod;
+    return this._abstractionPeriod
   }
 
   /**
@@ -199,8 +199,8 @@ class Return extends Model {
    * @param {AbstractionPeriod|null}
    */
   set abstractionPeriod (abstractionPeriod) {
-    validators.assertIsNullableInstanceOf(abstractionPeriod, AbstractionPeriod);
-    this._abstractionPeriod = abstractionPeriod;
+    validators.assertIsNullableInstanceOf(abstractionPeriod, AbstractionPeriod)
+    this._abstractionPeriod = abstractionPeriod
   }
 
   /**
@@ -208,14 +208,14 @@ class Return extends Model {
    * @param {ReturnRequirement}
    */
   set returnRequirement (returnRequirement) {
-    validators.assertIsInstanceOf(returnRequirement, ReturnRequirement);
-    this._returnRequirement = returnRequirement;
+    validators.assertIsInstanceOf(returnRequirement, ReturnRequirement)
+    this._returnRequirement = returnRequirement
   }
 
   get returnRequirement () {
-    return this._returnRequirement;
+    return this._returnRequirement
   }
 }
 
-module.exports = Return;
-module.exports.RETURN_STATUS = RETURN_STATUS;
+module.exports = Return
+module.exports.RETURN_STATUS = RETURN_STATUS

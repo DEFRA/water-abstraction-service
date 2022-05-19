@@ -4,29 +4,29 @@ const {
   test,
   beforeEach,
   afterEach
-} = exports.lab = require('@hapi/lab').script();
-const { expect } = require('@hapi/code');
-const sandbox = require('sinon').createSandbox();
+} = exports.lab = require('@hapi/lab').script()
+const { expect } = require('@hapi/code')
+const sandbox = require('sinon').createSandbox()
 
-const eventsService = require('../../../../../src/lib/services/events');
-const csvMapper = require('../../../../../src/modules/charge-versions-upload/lib/mapper');
-const chargeVersionMapper = require('../../../../../src/modules/charge-versions-upload/lib/mapper/chargeVersionMapper');
-const Event = require('../../../../../src/lib/models/event');
+const eventsService = require('../../../../../src/lib/services/events')
+const csvMapper = require('../../../../../src/modules/charge-versions-upload/lib/mapper')
+const chargeVersionMapper = require('../../../../../src/modules/charge-versions-upload/lib/mapper/chargeVersionMapper')
+const Event = require('../../../../../src/lib/models/event')
 
 experiment('returns CSV to JSON mapper', () => {
-  let event;
-  let user;
+  let event
+  let user
 
   beforeEach(() => {
-    event = new Event();
-    user = {};
-    sandbox.stub(chargeVersionMapper, 'mapToChargeVersion');
-    sandbox.stub(eventsService, 'update').resolves({});
-  });
+    event = new Event()
+    user = {}
+    sandbox.stub(chargeVersionMapper, 'mapToChargeVersion')
+    sandbox.stub(eventsService, 'update').resolves({})
+  })
 
   afterEach(async () => {
-    sandbox.restore();
-  });
+    sandbox.restore()
+  })
 
   experiment('returns CSV to JSON mapper', () => {
     experiment('mapCsv', () => {
@@ -49,10 +49,10 @@ experiment('returns CSV to JSON mapper', () => {
   LICENCE/5,B,Row 13
   LICENCE/5,C,Row 14
   LICENCE/5,A,Row 15
-`;
+`
 
-        chargeVersionMapper.mapToChargeVersion = async data => data;
-        const result = await csvMapper.mapCsv(csv, user, event);
+        chargeVersionMapper.mapToChargeVersion = async data => data
+        const result = await csvMapper.mapCsv(csv, user, event)
         expect(result).to.equal([
           [ // LICENCE/1
             [ // Group A
@@ -161,8 +161,8 @@ experiment('returns CSV to JSON mapper', () => {
               }
             ]
           ]
-        ]);
-      });
-    });
-  });
-});
+        ])
+      })
+    })
+  })
+})

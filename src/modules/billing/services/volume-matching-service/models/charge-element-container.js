@@ -1,18 +1,18 @@
-'use strict';
+'use strict'
 
-const Decimal = require('decimal.js-light');
+const Decimal = require('decimal.js-light')
 
 // Models
-const ChargeElement = require('../../../../../lib/models/charge-element');
-const DateRange = require('../../../../../lib/models/date-range');
-const ReturnLine = require('../../../../../lib/models/return-line');
-const BillingVolume = require('../../../../../lib/models/billing-volume');
-const FinancialYear = require('../../../../../lib/models/financial-year');
+const ChargeElement = require('../../../../../lib/models/charge-element')
+const DateRange = require('../../../../../lib/models/date-range')
+const ReturnLine = require('../../../../../lib/models/return-line')
+const BillingVolume = require('../../../../../lib/models/billing-volume')
+const FinancialYear = require('../../../../../lib/models/financial-year')
 
-const { RETURN_SEASONS, CHARGE_SEASON } = require('../../../../../lib/models/constants');
+const { RETURN_SEASONS, CHARGE_SEASON } = require('../../../../../lib/models/constants')
 
-const validators = require('../../../../../lib/models/validators');
-const decimalHelpers = require('../../../../../lib/decimal-helpers');
+const validators = require('../../../../../lib/models/validators')
+const decimalHelpers = require('../../../../../lib/decimal-helpers')
 
 /**
  * Gets a DateRange range for the charge element, taking into account
@@ -24,13 +24,13 @@ const decimalHelpers = require('../../../../../lib/decimal-helpers');
  */
 const getChargeElementRange = (chargeElement, chargePeriod) => {
   if (chargeElement.timeLimitedPeriod) {
-    const rangeA = chargeElement.timeLimitedPeriod.toMomentRange();
-    const rangeB = chargePeriod.toMomentRange();
-    const intersection = rangeA.intersect(rangeB);
-    return intersection ? DateRange.fromMomentRange(intersection) : null;
+    const rangeA = chargeElement.timeLimitedPeriod.toMomentRange()
+    const rangeB = chargePeriod.toMomentRange()
+    const intersection = rangeA.intersect(rangeB)
+    return intersection ? DateRange.fromMomentRange(intersection) : null
   }
-  return chargePeriod;
-};
+  return chargePeriod
+}
 
 /**
  * Creates a BillingVolume model to accept the data for the supplied
@@ -39,14 +39,14 @@ const getChargeElementRange = (chargeElement, chargePeriod) => {
  * @return {BillingVolume}
  */
 const createBillingVolume = (chargeElement, isSummer) => {
-  const billingVolume = new BillingVolume();
+  const billingVolume = new BillingVolume()
   return billingVolume.fromHash({
     chargeElementId: chargeElement.id,
     isSummer,
     volume: 0,
     calculatedVolume: 0
-  });
-};
+  })
+}
 
 /**
  * Allows a ChargeElement to be grouped together with
@@ -61,10 +61,10 @@ class ChargeElementContainer {
    */
   constructor (chargeElement, chargePeriod) {
     if (chargeElement) {
-      this.chargeElement = chargeElement;
+      this.chargeElement = chargeElement
     }
     if (chargePeriod) {
-      this.chargePeriod = chargePeriod;
+      this.chargePeriod = chargePeriod
     }
   }
 
@@ -73,8 +73,8 @@ class ChargeElementContainer {
    */
   _refresh () {
     if (this._chargeElement && this._chargePeriod) {
-      this._dateRange = getChargeElementRange(this._chargeElement, this._chargePeriod);
-      this._abstractionDays = this._dateRange ? this._chargeElement.abstractionPeriod.getDays(this._dateRange) : 0;
+      this._dateRange = getChargeElementRange(this._chargeElement, this._chargePeriod)
+      this._abstractionDays = this._dateRange ? this._chargeElement.abstractionPeriod.getDays(this._dateRange) : 0
     }
   }
 
@@ -83,17 +83,17 @@ class ChargeElementContainer {
    * @param {ChargeElement} chargeElement
    */
   set chargeElement (chargeElement) {
-    validators.assertIsInstanceOf(chargeElement, ChargeElement);
-    this._chargeElement = chargeElement;
+    validators.assertIsInstanceOf(chargeElement, ChargeElement)
+    this._chargeElement = chargeElement
 
     // Initialse a pair of billing volumes - each will hold data for either
     // summer or winter/all year returns
     this._billingVolumes = {
       [RETURN_SEASONS.summer]: createBillingVolume(chargeElement, true),
       [RETURN_SEASONS.winterAllYear]: createBillingVolume(chargeElement, false)
-    };
+    }
 
-    this._refresh();
+    this._refresh()
   }
 
   /**
@@ -101,11 +101,11 @@ class ChargeElementContainer {
    * @return {ChargeElement}
    */
   get chargeElement () {
-    return this._chargeElement;
+    return this._chargeElement
   }
 
   get chargePeriod () {
-    return this._chargePeriod;
+    return this._chargePeriod
   }
 
   /**
@@ -113,9 +113,9 @@ class ChargeElementContainer {
    * @param {DateRange} chargePeriod
    */
   set chargePeriod (chargePeriod) {
-    validators.assertIsInstanceOf(chargePeriod, DateRange);
-    this._chargePeriod = chargePeriod;
-    this._refresh();
+    validators.assertIsInstanceOf(chargePeriod, DateRange)
+    this._chargePeriod = chargePeriod
+    this._refresh()
   }
 
   /**
@@ -123,9 +123,9 @@ class ChargeElementContainer {
    * @param {BillingVolume} billingVolume
    */
   setBillingVolume (billingVolume) {
-    validators.assertIsInstanceOf(billingVolume, BillingVolume);
-    const key = billingVolume.isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
-    this._billingVolumes[key] = billingVolume;
+    validators.assertIsInstanceOf(billingVolume, BillingVolume)
+    const key = billingVolume.isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear
+    this._billingVolumes[key] = billingVolume
   }
 
   /**
@@ -133,7 +133,7 @@ class ChargeElementContainer {
    * @return {Array<BillingVolume>}
    */
   get billingVolumes () {
-    return Object.values(this._billingVolumes);
+    return Object.values(this._billingVolumes)
   }
 
   /**
@@ -141,8 +141,8 @@ class ChargeElementContainer {
    * @param {String} returnSeason
    */
   getBillingVolume (returnSeason) {
-    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
-    return this._billingVolumes[returnSeason];
+    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS))
+    return this._billingVolumes[returnSeason]
   }
 
   /**
@@ -150,7 +150,7 @@ class ChargeElementContainer {
    * @return {Number}
    */
   get abstractionDays () {
-    return this._abstractionDays;
+    return this._abstractionDays
   }
 
   /**
@@ -162,12 +162,12 @@ class ChargeElementContainer {
    * @return {Boolean}
    */
   isReturnLineMatch (returnLine) {
-    validators.assertIsInstanceOf(returnLine, ReturnLine);
+    validators.assertIsInstanceOf(returnLine, ReturnLine)
 
-    const isAbsPeriodMatch = this.chargeElement.abstractionPeriod.isDateRangeOverlapping(returnLine.dateRange);
-    const isDateRangeMatch = this._dateRange && this._dateRange.overlaps(returnLine.dateRange);
+    const isAbsPeriodMatch = this.chargeElement.abstractionPeriod.isDateRangeOverlapping(returnLine.dateRange)
+    const isDateRangeMatch = this._dateRange && this._dateRange.overlaps(returnLine.dateRange)
 
-    return isAbsPeriodMatch && isDateRangeMatch;
+    return isAbsPeriodMatch && isDateRangeMatch
   }
 
   /**
@@ -177,7 +177,7 @@ class ChargeElementContainer {
    */
   get isTwoPartTariffPurpose () {
     return this._chargeElement.purposeUse.isTwoPartTariff &&
-      this._chargeElement.isSection127AgreementEnabled;
+      this._chargeElement.isSection127AgreementEnabled
   }
 
   /**
@@ -186,7 +186,7 @@ class ChargeElementContainer {
    * @return {Boolean}
    */
   get isValidForChargePeriod () {
-    return !!this._dateRange;
+    return !!this._dateRange
   }
 
   /**
@@ -194,7 +194,7 @@ class ChargeElementContainer {
    * @return {Boolean}
    */
   get isSummer () {
-    return this._chargeElement.abstractionPeriod.getChargeSeason() === CHARGE_SEASON.summer;
+    return this._chargeElement.abstractionPeriod.getChargeSeason() === CHARGE_SEASON.summer
   }
 
   /**
@@ -203,24 +203,24 @@ class ChargeElementContainer {
    * @return {Number}
    */
   getScore (returnSeason) {
-    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
+    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS))
 
-    let score = 0;
+    let score = 0
 
     // Give summer elements precedence if matching summer returns
     if (this.isSummer && (returnSeason === RETURN_SEASONS.summer)) {
-      score -= 1000;
+      score -= 1000
     }
 
     // Give supported source precedence
     if (this.chargeElement.source === ChargeElement.sources.supported) {
-      score -= 1000;
+      score -= 1000
     }
 
     // Give elements with fewer abs days precedence
-    score += this.abstractionDays;
+    score += this.abstractionDays
 
-    return score;
+    return score
   }
 
   /**
@@ -229,9 +229,9 @@ class ChargeElementContainer {
    * @param {Number} twoPartTariffStatus
    */
   setTwoPartTariffStatus (returnSeason, twoPartTariffStatus) {
-    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
-    const { volume } = this.chargeElement;
-    this._billingVolumes[returnSeason].setTwoPartTariffStatus(twoPartTariffStatus, volume, this.isSummer);
+    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS))
+    const { volume } = this.chargeElement
+    this._billingVolumes[returnSeason].setTwoPartTariffStatus(twoPartTariffStatus, volume, this.isSummer)
   }
 
   /**
@@ -240,9 +240,9 @@ class ChargeElementContainer {
    */
   getAvailableVolume () {
     const available = new Decimal(this.chargeElement.volume)
-      .minus(this.totalVolume);
+      .minus(this.totalVolume)
 
-    return decimalHelpers.max(new Decimal(0), available);
+    return decimalHelpers.max(new Decimal(0), available)
   }
 
   /**
@@ -250,7 +250,7 @@ class ChargeElementContainer {
    * @return {Decimal|Number}
    */
   get summerVolume () {
-    return this._billingVolumes[RETURN_SEASONS.summer].approvedOrCalculatedVolume || new Decimal(0);
+    return this._billingVolumes[RETURN_SEASONS.summer].approvedOrCalculatedVolume || new Decimal(0)
   }
 
   /**
@@ -258,7 +258,7 @@ class ChargeElementContainer {
    * @return {Decimal|Number}
    */
   get winterAllYearVolume () {
-    return this._billingVolumes[RETURN_SEASONS.winterAllYear].approvedOrCalculatedVolume || new Decimal(0);
+    return this._billingVolumes[RETURN_SEASONS.winterAllYear].approvedOrCalculatedVolume || new Decimal(0)
   }
 
   /**
@@ -266,9 +266,9 @@ class ChargeElementContainer {
    * @return {Decimal}
    */
   get totalVolume () {
-    const a = new Decimal(this.summerVolume);
-    const b = new Decimal(this.winterAllYearVolume);
-    return a.plus(b);
+    const a = new Decimal(this.summerVolume)
+    const b = new Decimal(this.winterAllYearVolume)
+    return a.plus(b)
   }
 
   /**
@@ -277,17 +277,17 @@ class ChargeElementContainer {
    * @return {this}
    */
   flagOverAbstraction (returnSeason) {
-    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
+    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS))
 
     // Summer happens first, so we are either considering summer or summer+winter
-    const volume = returnSeason === RETURN_SEASONS.summer ? this.summerVolume : this.totalVolume;
+    const volume = returnSeason === RETURN_SEASONS.summer ? this.summerVolume : this.totalVolume
 
-    const isOverAbstraction = volume.greaterThan(new Decimal(this.chargeElement.volume));
+    const isOverAbstraction = volume.greaterThan(new Decimal(this.chargeElement.volume))
 
     if (isOverAbstraction) {
-      this._billingVolumes[returnSeason].setTwoPartTariffStatus(BillingVolume.twoPartTariffStatuses.ERROR_OVER_ABSTRACTION);
+      this._billingVolumes[returnSeason].setTwoPartTariffStatus(BillingVolume.twoPartTariffStatuses.ERROR_OVER_ABSTRACTION)
     }
-    return this;
+    return this
   }
 
   /**
@@ -296,10 +296,10 @@ class ChargeElementContainer {
    * @return {this}
    */
   setFinancialYear (financialYear) {
-    validators.assertIsInstanceOf(financialYear, FinancialYear);
-    this._billingVolumes[RETURN_SEASONS.summer].financialYear = financialYear;
-    this._billingVolumes[RETURN_SEASONS.winterAllYear].financialYear = financialYear;
-    return this;
+    validators.assertIsInstanceOf(financialYear, FinancialYear)
+    this._billingVolumes[RETURN_SEASONS.summer].financialYear = financialYear
+    this._billingVolumes[RETURN_SEASONS.winterAllYear].financialYear = financialYear
+    return this
   }
 
   /**
@@ -308,8 +308,8 @@ class ChargeElementContainer {
    * @param {Number} volume
    */
   allocate (returnSeason, volume) {
-    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
-    this._billingVolumes[returnSeason].allocate(volume);
+    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS))
+    this._billingVolumes[returnSeason].allocate(volume)
   }
 
   /**
@@ -318,9 +318,9 @@ class ChargeElementContainer {
    * @param {Number} volume
    */
   deallocate (returnSeason, volume) {
-    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
-    this._billingVolumes[returnSeason].deallocate(volume);
+    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS))
+    this._billingVolumes[returnSeason].deallocate(volume)
   }
 }
 
-module.exports = ChargeElementContainer;
+module.exports = ChargeElementContainer

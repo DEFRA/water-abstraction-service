@@ -1,19 +1,19 @@
-const helpers = require('../helpers');
+const helpers = require('../helpers')
 
 const mapToChangeReason = async () => {
-  const changeReason = await helpers.getChangeReason();
+  const changeReason = await helpers.getChangeReason()
   if (changeReason) {
-    const { changeReasonId, type, description, triggersMinimumCharge, isEnabledForNewChargeVersions } = changeReason;
+    const { changeReasonId, type, description, triggersMinimumCharge, isEnabledForNewChargeVersions } = changeReason
     return {
       type,
       description,
       triggersMinimumCharge,
       isEnabledForNewChargeVersions,
       id: changeReasonId
-    };
+    }
   } else {
-    return {};
+    return {}
   }
-};
+}
 
-exports.mapToChangeReason = mapToChangeReason;
+exports.mapToChangeReason = mapToChangeReason

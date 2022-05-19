@@ -1,8 +1,8 @@
-'use strict';
-const Joi = require('joi');
+'use strict'
+const Joi = require('joi')
 
-const controller = require('./controller');
-const { isAcceptanceTestTarget } = require('../../../config');
+const controller = require('./controller')
+const { isAcceptanceTestTarget } = require('../../../config')
 
 if (isAcceptanceTestTarget) {
   exports.postSetupFromYaml = {
@@ -17,7 +17,7 @@ if (isAcceptanceTestTarget) {
         })
       }
     }
-  };
+  }
 
   exports.postTearDown = {
     method: 'POST',
@@ -26,5 +26,5 @@ if (isAcceptanceTestTarget) {
     config: {
       description: 'Deletes an data created for use with acceptance tests'
     }
-  };
+  }
 }

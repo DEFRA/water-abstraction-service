@@ -2,9 +2,9 @@
  * Scheduler
  * Scheduler defines and reports on tasks
  */
-const HAPIRestAPI = require('@envage/hapi-pg-rest-api');
-const Joi = require('joi');
-const { pool } = require('../lib/connectors/db.js');
+const HAPIRestAPI = require('@envage/hapi-pg-rest-api')
+const Joi = require('joi')
+const { pool } = require('../lib/connectors/db.js')
 
 const ARAnalysisLicences = new HAPIRestAPI({
   table: 'water.ar_analysis_licences',
@@ -27,7 +27,7 @@ const ARAnalysisLicences = new HAPIRestAPI({
     approved_date: Joi.date().iso(),
     contact_correct: Joi.boolean()
   }
-});
+})
 
-module.exports = ARAnalysisLicences.getRoutes();
-module.exports.repository = ARAnalysisLicences.repo;
+module.exports = ARAnalysisLicences.getRoutes()
+module.exports.repository = ARAnalysisLicences.repo

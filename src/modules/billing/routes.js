@@ -3,4 +3,4 @@ module.exports = {
   ...require('./routes/invoices'),
   ...require('./routes/two-part-tariff-review'),
   ...require('./routes/invoice-licences')
-};
+}

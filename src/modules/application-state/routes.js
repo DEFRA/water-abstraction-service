@@ -1,14 +1,14 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
+const Joi = require('joi')
 
-const controller = require('./controller');
+const controller = require('./controller')
 
 exports.getApplicationState = {
   method: 'GET',
   path: '/water/1.0/application-state/{key}',
   handler: controller.getApplicationState
-};
+}
 
 exports.postApplicationState = {
   method: 'POST',
@@ -19,4 +19,4 @@ exports.postApplicationState = {
       payload: Joi.object().required()
     }
   }
-};
+}

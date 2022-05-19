@@ -1,13 +1,13 @@
-'use strict';
+'use strict'
 
-const { isNull } = require('lodash');
+const { isNull } = require('lodash')
 
-const Model = require('./model');
-const DateRange = require('./date-range');
+const Model = require('./model')
+const DateRange = require('./date-range')
 
-const validators = require('./validators');
+const validators = require('./validators')
 
-const { TIME_PERIODS } = require('./constants');
+const { TIME_PERIODS } = require('./constants')
 
 class ReturnLine extends Model {
   /**
@@ -15,12 +15,12 @@ class ReturnLine extends Model {
    * @param {Number} volume
    */
   set volume (volume) {
-    validators.assertNullableQuantity(volume);
-    this._volume = isNull(volume) ? null : parseFloat(volume);
+    validators.assertNullableQuantity(volume)
+    this._volume = isNull(volume) ? null : parseFloat(volume)
   }
 
   get volume () {
-    return this._volume;
+    return this._volume
   }
 
   /**
@@ -28,12 +28,12 @@ class ReturnLine extends Model {
    * @param {DateRange} dateRange
    */
   set dateRange (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    this._dateRange = dateRange;
+    validators.assertIsInstanceOf(dateRange, DateRange)
+    this._dateRange = dateRange
   }
 
   get dateRange () {
-    return this._dateRange;
+    return this._dateRange
   }
 
   /**
@@ -41,12 +41,12 @@ class ReturnLine extends Model {
    * @param {String} timePeriod day|week|month
    */
   set timePeriod (timePeriod) {
-    validators.assertEnum(timePeriod, Object.values(TIME_PERIODS));
-    this._timePeriod = timePeriod;
+    validators.assertEnum(timePeriod, Object.values(TIME_PERIODS))
+    this._timePeriod = timePeriod
   }
 
   get timePeriod () {
-    return this._timePeriod;
+    return this._timePeriod
   }
 
   /**
@@ -56,8 +56,8 @@ class ReturnLine extends Model {
    * @return {Boolean}
    */
   isWithinDateRange (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    return dateRange.includes(this.dateRange.startDate) && dateRange.includes(this.dateRange.endDate);
+    validators.assertIsInstanceOf(dateRange, DateRange)
+    return dateRange.includes(this.dateRange.startDate) && dateRange.includes(this.dateRange.endDate)
   }
 
   /**
@@ -65,8 +65,8 @@ class ReturnLine extends Model {
    * @return {Boolean}
    */
   get isDaily () {
-    return this.timePeriod === TIME_PERIODS.day;
+    return this.timePeriod === TIME_PERIODS.day
   }
 }
 
-module.exports = ReturnLine;
+module.exports = ReturnLine

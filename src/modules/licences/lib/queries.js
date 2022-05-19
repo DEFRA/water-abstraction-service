@@ -1,4 +1,4 @@
-const { pool } = require('../../../lib/connectors/db');
+const { pool } = require('../../../lib/connectors/db')
 
 /**
  * Gets recent communications for given licence number
@@ -6,7 +6,7 @@ const { pool } = require('../../../lib/connectors/db');
  * @return {Promise}              - resolves with array of messages
  */
 const getNotificationsForLicence = async (licenceNumber) => {
-  const params = [`"${licenceNumber}"`];
+  const params = [`"${licenceNumber}"`]
   const query = `
     SELECT n.*, e.metadata as event_metadata, e.issuer
     FROM "water".scheduled_notification  n
@@ -15,13 +15,13 @@ const getNotificationsForLicence = async (licenceNumber) => {
     AND n.notify_status IN ('delivered', 'received')
     AND n.status='sent'
     ORDER BY send_after DESC
-    LIMIT 10`;
+    LIMIT 10`
 
-  const { rows } = await pool.query(query, params);
+  const { rows } = await pool.query(query, params)
 
-  return rows;
-};
+  return rows
+}
 
 module.exports = {
   getNotificationsForLicence
-};
+}

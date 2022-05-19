@@ -1,11 +1,11 @@
-'use strict';
+'use strict'
 
-const { createMapper } = require('../object-mapper');
-const { createModel } = require('./lib/helpers');
+const { createMapper } = require('../object-mapper')
+const { createModel } = require('./lib/helpers')
 
-const DateRange = require('../models/date-range');
-const Document = require('../models/document');
-const roleMapper = require('./role');
+const DateRange = require('../models/date-range')
+const Document = require('../models/document')
+const roleMapper = require('./role')
 
 const crmToModelMapper = createMapper()
   .copy(
@@ -15,8 +15,8 @@ const crmToModelMapper = createMapper()
   .map('documentId').to('id')
   .map(['startDate', 'endDate']).to('dateRange', (startDate, endDate) => new DateRange(startDate, endDate))
   .map('documentRoles').to('roles', documentRoles => documentRoles.map(roleMapper.crmToModel))
-  .map('documentRef').to('licenceNumber');
+  .map('documentRef').to('licenceNumber')
 
-const crmToModel = row => createModel(Document, row, crmToModelMapper);
+const crmToModel = row => createModel(Document, row, crmToModelMapper)
 
-exports.crmToModel = crmToModel;
+exports.crmToModel = crmToModel

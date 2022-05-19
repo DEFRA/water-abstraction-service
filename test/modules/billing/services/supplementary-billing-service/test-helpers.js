@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 const createTransaction = (billingBatchId, id, overrides = {}) => {
   const defaults = {
@@ -50,14 +50,14 @@ const createTransaction = (billingBatchId, id, overrides = {}) => {
     billingBatchId,
     isSummer: false,
     rebillingState: null
-  };
+  }
 
-  return Object.assign(defaults, overrides);
-};
+  return Object.assign(defaults, overrides)
+}
 
 const findTransactionById = (result, id) => result.find(
   transaction => transaction.billingTransactionId === id
-);
+)
 
-exports.createTransaction = createTransaction;
-exports.findTransactionById = findTransactionById;
+exports.createTransaction = createTransaction
+exports.findTransactionById = findTransactionById

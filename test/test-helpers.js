@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const { cloneDeep } = require('lodash');
-const Hapi = require('@hapi/hapi');
+const { cloneDeep } = require('lodash')
+const Hapi = require('@hapi/hapi')
 
-const validate = async () => ({ isValid: true });
+const validate = async () => ({ isValid: true })
 
 /**
  * Creates a HAPI server to allow a single route to be
@@ -15,28 +15,28 @@ const validate = async () => ({ isValid: true });
  * @param {Boolean} [isAuth] Whether to add authentication to the server
  */
 const createServerForRoute = async (route, isAuth = false) => {
-  const server = Hapi.server();
+  const server = Hapi.server()
 
   if (isAuth) {
-    await server.register(require('@hapi/basic'));
-    server.auth.strategy('simple', 'basic', { validate });
-    server.auth.default('simple');
+    await server.register(require('@hapi/basic'))
+    server.auth.strategy('simple', 'basic', { validate })
+    server.auth.default('simple')
   }
 
   // Clone test route and attach dummy handler
-  const testRoute = cloneDeep(route);
-  testRoute.handler = async () => 'ok';
+  const testRoute = cloneDeep(route)
+  testRoute.handler = async () => 'ok'
 
   // Strip pre-handlers
-  const optionsKey = 'options' in testRoute ? 'options' : 'config';
+  const optionsKey = 'options' in testRoute ? 'options' : 'config'
   if (testRoute[optionsKey]) {
-    testRoute[optionsKey].pre = [];
+    testRoute[optionsKey].pre = []
   }
 
   // Register route
-  server.route(testRoute);
+  server.route(testRoute)
 
-  return server;
-};
+  return server
+}
 
-exports.createServerForRoute = createServerForRoute;
+exports.createServerForRoute = createServerForRoute

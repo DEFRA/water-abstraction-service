@@ -1,33 +1,33 @@
-const Lab = require('@hapi/lab');
-const lab = Lab.script();
-const Code = require('@hapi/code');
+const Lab = require('@hapi/lab')
+const lab = Lab.script()
+const Code = require('@hapi/code')
 
-const sinon = require('sinon');
+const sinon = require('sinon')
 
-const contactList = require('../../../../src/lib/contact-list');
-const returns = require('../../../../src/lib/connectors/returns');
+const contactList = require('../../../../src/lib/contact-list')
+const returns = require('../../../../src/lib/connectors/returns')
 
-const { prepareMessageData } = require('../../../../src/modules/returns-notifications/lib/send');
+const { prepareMessageData } = require('../../../../src/modules/returns-notifications/lib/send')
 
-const { data, ret, contact } = require('./test-data');
+const { data, ret, contact } = require('./test-data')
 
-const config = require('../../../../config');
+const config = require('../../../../config')
 
 lab.experiment('Test send', () => {
-  const adminBaseUrl = config.frontEnds.internal.baseUrl;
+  const adminBaseUrl = config.frontEnds.internal.baseUrl
 
   lab.afterEach(async () => {
-    config.frontEnds.internal.baseUrl = adminBaseUrl;
-    returns.returns.findMany.restore();
-    contactList.contactList.restore();
-  });
+    config.frontEnds.internal.baseUrl = adminBaseUrl
+    returns.returns.findMany.restore()
+    contactList.contactList.restore()
+  })
 
   lab.test('It should call enqueue with correct data', async () => {
-    config.frontEnds.internal.baseUrl = 'http://localhost:8005';
-    sinon.stub(returns.returns, 'findMany').resolves({ data: [ret], error: null });
-    sinon.stub(contactList, 'contactList').resolves([contact]);
+    config.frontEnds.internal.baseUrl = 'http://localhost:8005'
+    sinon.stub(returns.returns, 'findMany').resolves({ data: [ret], error: null })
+    sinon.stub(contactList, 'contactList').resolves([contact])
 
-    const result = await prepareMessageData(data);
+    const result = await prepareMessageData(data)
 
     Code.expect(result).to.equal({
       messageRef: 'pdf.testRef',
@@ -55,27 +55,27 @@ lab.experiment('Test send', () => {
       eventId: '27175f42-cae3-4e19-85fa-65e8fbff6125',
       messageType: 'letter',
       metadata: { returnId: 'v1:123:456' }
-    });
-  });
+    })
+  })
 
   lab.test('It should throw an error if contacts API call rejects', async () => {
-    sinon.stub(returns.returns, 'findMany').resolves({ data: [ret], error: null });
-    sinon.stub(contactList, 'contactList').rejects();
+    sinon.stub(returns.returns, 'findMany').resolves({ data: [ret], error: null })
+    sinon.stub(contactList, 'contactList').rejects()
 
-    Code.expect(prepareMessageData(data)).to.reject();
-  });
+    Code.expect(prepareMessageData(data)).to.reject()
+  })
 
   lab.test('It should throw an error if returns API call rejects', async () => {
-    sinon.stub(returns.returns, 'findMany').rejects();
-    sinon.stub(contactList, 'contactList').resolves([contact]);
-    Code.expect(prepareMessageData(data)).to.reject();
-  });
+    sinon.stub(returns.returns, 'findMany').rejects()
+    sinon.stub(contactList, 'contactList').resolves([contact])
+    Code.expect(prepareMessageData(data)).to.reject()
+  })
 
   lab.test('It should throw an error if returns API resolves with error', async () => {
-    sinon.stub(returns.returns, 'findMany').resolves({ data: null, error: 'Some error' });
-    sinon.stub(contactList, 'contactList').resolves([contact]);
-    Code.expect(prepareMessageData(data)).to.reject();
-  });
-});
+    sinon.stub(returns.returns, 'findMany').resolves({ data: null, error: 'Some error' })
+    sinon.stub(contactList, 'contactList').resolves([contact])
+    Code.expect(prepareMessageData(data)).to.reject()
+  })
+})
 
-exports.lab = lab;
+exports.lab = lab

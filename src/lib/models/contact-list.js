@@ -1,13 +1,13 @@
-const { find } = require('lodash');
+const { find } = require('lodash')
 
-const normaliseString = str => (str || '').trim().toLowerCase();
+const normaliseString = str => (str || '').trim().toLowerCase()
 
 const compareRoles = (role1, role2) =>
-  normaliseString(role1) === normaliseString(role2);
+  normaliseString(role1) === normaliseString(role2)
 
 class ContactList {
   constructor (data = []) {
-    this.contacts = data;
+    this.contacts = data
   }
 
   /**
@@ -15,7 +15,7 @@ class ContactList {
    * @param {Contact} contact
    */
   add (contact) {
-    this.contacts.push(contact);
+    this.contacts.push(contact)
   }
 
   /**
@@ -24,7 +24,7 @@ class ContactList {
    * @return {Contact}      - the contact (if found)
    */
   getByRole (role) {
-    return find(this.contacts, contact => compareRoles(contact.role, role));
+    return find(this.contacts, contact => compareRoles(contact.role, role))
   }
 
   /**
@@ -33,7 +33,7 @@ class ContactList {
    * @return {Array<Contact>}      - the contacts (if found)
    */
   getAllByRole (role) {
-    return this.contacts.filter(contact => compareRoles(contact.role, role));
+    return this.contacts.filter(contact => compareRoles(contact.role, role))
   }
 
   /**
@@ -41,8 +41,8 @@ class ContactList {
    * @return {Array}
    */
   toArray () {
-    return this.contacts;
+    return this.contacts
   }
 }
 
-module.exports = ContactList;
+module.exports = ContactList

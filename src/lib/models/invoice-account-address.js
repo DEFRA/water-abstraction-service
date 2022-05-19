@@ -1,13 +1,13 @@
-'use strict';
+'use strict'
 
-const DateRange = require('./date-range');
-const Address = require('./address');
-const Company = require('./company');
-const Contact = require('./contact-v2');
+const DateRange = require('./date-range')
+const Address = require('./address')
+const Company = require('./company')
+const Contact = require('./contact-v2')
 
-const validators = require('./validators');
+const validators = require('./validators')
 
-const Model = require('./model');
+const Model = require('./model')
 
 class InvoiceAccountAddress extends Model {
   /**
@@ -15,21 +15,21 @@ class InvoiceAccountAddress extends Model {
    * @return {DateRange}
    */
   set dateRange (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    this._dateRange = dateRange;
+    validators.assertIsInstanceOf(dateRange, DateRange)
+    this._dateRange = dateRange
   }
 
   get dateRange () {
-    return this._dateRange;
+    return this._dateRange
   }
 
   get invoiceAccountId () {
-    return this._invoiceAccountId;
+    return this._invoiceAccountId
   }
 
   set invoiceAccountId (invoiceAccountId) {
-    validators.assertId(invoiceAccountId);
-    this._invoiceAccountId = invoiceAccountId;
+    validators.assertId(invoiceAccountId)
+    this._invoiceAccountId = invoiceAccountId
   }
 
   /**
@@ -37,8 +37,8 @@ class InvoiceAccountAddress extends Model {
    * @param {Address} address
    */
   set address (address) {
-    validators.assertIsInstanceOf(address, Address);
-    this._address = address;
+    validators.assertIsInstanceOf(address, Address)
+    this._address = address
   }
 
   /**
@@ -46,7 +46,7 @@ class InvoiceAccountAddress extends Model {
    * @return {Address}
    */
   get address () {
-    return this._address;
+    return this._address
   }
 
   /**
@@ -54,8 +54,8 @@ class InvoiceAccountAddress extends Model {
    * @param {Company} company
    */
   set agentCompany (company) {
-    validators.assertIsNullableInstanceOf(company, Company);
-    this._agentCompany = company;
+    validators.assertIsNullableInstanceOf(company, Company)
+    this._agentCompany = company
   }
 
   /**
@@ -63,7 +63,7 @@ class InvoiceAccountAddress extends Model {
    * @return {Company}
    */
   get agentCompany () {
-    return this._agentCompany;
+    return this._agentCompany
   }
 
   /**
@@ -71,8 +71,8 @@ class InvoiceAccountAddress extends Model {
    * @param {Contact} contact
    */
   set contact (contact) {
-    validators.assertIsNullableInstanceOf(contact, Contact);
-    this._contact = contact;
+    validators.assertIsNullableInstanceOf(contact, Contact)
+    this._contact = contact
   }
 
   /**
@@ -80,8 +80,8 @@ class InvoiceAccountAddress extends Model {
    * @return {Contact}
    */
   get contact () {
-    return this._contact;
+    return this._contact
   }
 }
 
-module.exports = InvoiceAccountAddress;
+module.exports = InvoiceAccountAddress

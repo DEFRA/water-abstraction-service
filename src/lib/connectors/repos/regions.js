@@ -1,11 +1,11 @@
-'use strict';
+'use strict'
 
-const Region = require('../bookshelf/Region');
+const Region = require('../bookshelf/Region')
 
 const find = async () => {
-  const regions = await Region.fetchAll();
-  return regions.toJSON();
-};
+  const regions = await Region.fetchAll()
+  return regions.toJSON()
+}
 
 /**
  * Find single region by ID
@@ -15,9 +15,9 @@ const find = async () => {
 const findOne = async regionId => {
   const model = await Region
     .forge({ regionId })
-    .fetch();
-  return model.toJSON();
-};
+    .fetch()
+  return model.toJSON()
+}
 
-exports.find = find;
-exports.findOne = findOne;
+exports.find = find
+exports.findOne = findOne

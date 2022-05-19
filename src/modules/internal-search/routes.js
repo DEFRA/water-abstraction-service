@@ -1,5 +1,5 @@
-const controller = require('./controller');
-const { version } = require('../../../config');
+const controller = require('./controller')
+const { version } = require('../../../config')
 
 module.exports = {
 
@@ -11,4 +11,4 @@ module.exports = {
       description: 'Provides a search API for internal users'
     }
   }
-};
+}

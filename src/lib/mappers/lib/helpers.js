@@ -1,5 +1,5 @@
-'use strict';
-const { chunk } = require('lodash');
+'use strict'
+const { chunk } = require('lodash')
 
 /**
  * Function for combining address lines, when/if necessary
@@ -10,17 +10,17 @@ const { chunk } = require('lodash');
  */
 const combineAddressLines = (lines, maxNumberOfLines = 7) => {
   const minimum = (num, min) =>
-    num < min ? min : num;
+    num < min ? min : num
 
-  const over = minimum(lines.length - maxNumberOfLines, 0);
+  const over = minimum(lines.length - maxNumberOfLines, 0)
 
-  const groupedLines = chunk(lines, 2).map(arr => arr.join(', '));
+  const groupedLines = chunk(lines, 2).map(arr => arr.join(', '))
 
   return [
     ...groupedLines.slice(0, over),
     ...lines.slice(over * 2)
-  ];
-};
+  ]
+}
 
 /**
  * Function for taking a combined address array and turning it into a Pojo
@@ -30,7 +30,7 @@ const combineAddressLines = (lines, maxNumberOfLines = 7) => {
 const getAddressObjectFromArray = (arr, prefix = 'address_line_') => arr.reduce((acc, line, index) => ({
   ...acc,
   [`${prefix}${index + 1}`]: line
-}), {});
+}), {})
 
 /**
  * Convenience function to create a new service model of the supplied class,
@@ -42,12 +42,12 @@ const getAddressObjectFromArray = (arr, prefix = 'address_line_') => arr.reduce(
  * @return {Object}
  */
 const createModel = (ModelClass, data, mapper) => {
-  const model = new ModelClass();
+  const model = new ModelClass()
   return model.fromHash(
     mapper.execute(data)
-  );
-};
+  )
+}
 
-exports.createModel = createModel;
-exports.combineAddressLines = combineAddressLines;
-exports.getAddressObjectFromArray = getAddressObjectFromArray;
+exports.createModel = createModel
+exports.combineAddressLines = combineAddressLines
+exports.getAddressObjectFromArray = getAddressObjectFromArray

@@ -1,13 +1,13 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
+const Joi = require('joi')
 
-const preHandlers = require('../pre-handlers');
-const controller = require('../controllers/batches');
-const config = require('../../../../config');
-const { ROLES: { billing } } = require('../../../lib/roles');
-const BASE_PATH = '/water/1.0/billing/batches';
-const { postApproveReviewBatch: postApproveReviewBatchController } = require('../controllers/two-part-tariff-review');
+const preHandlers = require('../pre-handlers')
+const controller = require('../controllers/batches')
+const config = require('../../../../config')
+const { ROLES: { billing } } = require('../../../lib/roles')
+const BASE_PATH = '/water/1.0/billing/batches'
+const { postApproveReviewBatch: postApproveReviewBatchController } = require('../controllers/two-part-tariff-review')
 
 const getBatches = {
   method: 'GET',
@@ -24,7 +24,7 @@ const getBatches = {
       scope: [billing]
     }
   }
-};
+}
 
 const postCreateBatch = {
   method: 'POST',
@@ -44,7 +44,7 @@ const postCreateBatch = {
       scope: [billing]
     }
   }
-};
+}
 
 const getBatch = {
   method: 'GET',
@@ -63,7 +63,7 @@ const getBatch = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const getBatchInvoices = {
   method: 'GET',
@@ -82,7 +82,7 @@ const getBatchInvoices = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const getBatchInvoicesDetails = {
   method: 'GET',
@@ -101,7 +101,7 @@ const getBatchInvoicesDetails = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const getBatchInvoiceDetail = {
   method: 'GET',
@@ -121,7 +121,7 @@ const getBatchInvoiceDetail = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const deleteBatchInvoice = {
   method: 'DELETE',
@@ -145,7 +145,7 @@ const deleteBatchInvoice = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const deleteBatch = {
   method: 'DELETE',
@@ -164,7 +164,7 @@ const deleteBatch = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const postApproveBatch = {
   method: 'POST',
@@ -183,7 +183,7 @@ const postApproveBatch = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const getInvoiceLicence = {
   method: 'GET',
@@ -199,7 +199,7 @@ const getInvoiceLicence = {
       scope: [billing]
     }
   }
-};
+}
 
 const postApproveReviewBatch = {
   method: 'POST',
@@ -218,7 +218,7 @@ const postApproveReviewBatch = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const getBatchDownloadData = {
   method: 'GET',
@@ -237,7 +237,7 @@ const getBatchDownloadData = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 if (config.featureToggles.deleteAllBillingData) {
   const deleteAllBillingData = {
@@ -250,9 +250,9 @@ if (config.featureToggles.deleteAllBillingData) {
         scope: [billing]
       }
     }
-  };
+  }
 
-  exports.deleteAllBillingData = deleteAllBillingData;
+  exports.deleteAllBillingData = deleteAllBillingData
 }
 
 const postSetBatchStatusToCancel = {
@@ -272,7 +272,7 @@ const postSetBatchStatusToCancel = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const postBatchBillableYears = {
   method: 'POST',
@@ -291,7 +291,7 @@ const postBatchBillableYears = {
       scope: [billing]
     }
   }
-};
+}
 
 module.exports = {
   getBatch,
@@ -308,4 +308,4 @@ module.exports = {
   postApproveReviewBatch,
   getBatchDownloadData,
   postSetBatchStatusToCancel
-};
+}

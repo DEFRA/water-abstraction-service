@@ -1,15 +1,15 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
+const Joi = require('joi')
 
-const controller = require('../controllers/agreements');
-const preHandlers = require('../lib/pre-handlers');
+const controller = require('../controllers/agreements')
+const preHandlers = require('../lib/pre-handlers')
 
-const { ROLES } = require('../../../lib/roles');
+const { ROLES } = require('../../../lib/roles')
 
 const validateHeaders = async values => {
-  Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
-};
+  Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required())
+}
 
 module.exports = {
   getAgreement: {
@@ -106,4 +106,4 @@ module.exports = {
       }
     }
   }
-};
+}

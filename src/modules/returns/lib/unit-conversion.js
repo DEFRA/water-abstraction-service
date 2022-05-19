@@ -1,7 +1,7 @@
 class InvalidUnitError extends Error {
   constructor (...args) {
-    super(...args);
-    Error.captureStackTrace(this, InvalidUnitError);
+    super(...args)
+    Error.captureStackTrace(this, InvalidUnitError)
   }
 }
 
@@ -14,15 +14,15 @@ class InvalidUnitError extends Error {
  */
 const converter = (value, unit, multipliers) => {
   if (value === null) {
-    return null;
+    return null
   }
 
   if (unit in multipliers) {
-    return value * multipliers[unit];
+    return value * multipliers[unit]
   }
 
-  throw new InvalidUnitError(`Unknown unit ${unit}`);
-};
+  throw new InvalidUnitError(`Unknown unit ${unit}`)
+}
 
 /**
  * Convert value to cubic metres
@@ -36,10 +36,10 @@ const convertToCubicMetres = (value, unit) => {
     l: 0.001,
     Ml: 1000,
     gal: 0.00454609
-  };
+  }
 
-  return converter(value, unit, multipliers);
-};
+  return converter(value, unit, multipliers)
+}
 
 /**
  * Convert value from cubic metres back to supplied user unit
@@ -53,13 +53,13 @@ const convertToUserUnit = (value, unit) => {
     l: 1000,
     Ml: 0.001,
     gal: 219.969248299
-  };
+  }
 
-  return converter(value, unit, multipliers);
-};
+  return converter(value, unit, multipliers)
+}
 
 module.exports = {
   convertToCubicMetres,
   convertToUserUnit,
   InvalidUnitError
-};
+}

@@ -1,5 +1,5 @@
-const Event = require('../../../lib/models/event');
-const { uploadStatus } = require('./charge-information-upload');
+const Event = require('../../../lib/models/event')
+const { uploadStatus } = require('./charge-information-upload')
 
 /**
  * Creates the event object that represent the upload
@@ -9,13 +9,13 @@ const { uploadStatus } = require('./charge-information-upload');
  * @returns {Event}
  */
 const createChargeInformationUploadEvent = (uploadUserName, uploadFilename) => {
-  const event = new Event();
+  const event = new Event()
   return event.fromHash({
     metadata: { filename: uploadFilename },
     type: 'charge-information-upload',
     issuer: uploadUserName,
     status: uploadStatus.PROCESSING
-  });
-};
+  })
+}
 
-exports.createChargeInformationUploadEvent = createChargeInformationUploadEvent;
+exports.createChargeInformationUploadEvent = createChargeInformationUploadEvent

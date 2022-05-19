@@ -1,14 +1,14 @@
-const evt = require('../../../lib/event');
-const { contactList } = require('../../../lib/contact-list');
-const licenceLoader = require('./licence-loader');
-const templateRenderer = require('./template-renderer');
-const eventFactory = require('./event-factory');
-const notificationFactory = require('./notification-factory');
+const evt = require('../../../lib/event')
+const { contactList } = require('../../../lib/contact-list')
+const licenceLoader = require('./licence-loader')
+const templateRenderer = require('./template-renderer')
+const eventFactory = require('./event-factory')
+const notificationFactory = require('./notification-factory')
 
-const { enqueue } = require('../../notify');
-const defaultRolePriority = ['document_notifications', 'notifications', 'area_import', 'licence_contact', 'licence_holder'];
+const { enqueue } = require('../../notify')
+const defaultRolePriority = ['document_notifications', 'notifications', 'area_import', 'licence_contact', 'licence_holder']
 
-const { logger } = require('../../../logger');
+const { logger } = require('../../../logger')
 
 /* eslint camelcase: "warn" */
 
@@ -44,14 +44,14 @@ const { logger } = require('../../../logger');
  */
 async function prepareNotification (filter, taskConfig, params, context = {}) {
   // Get a list of de-duped contacts with licences
-  const rolePriority = taskConfig.config.role_priority || defaultRolePriority;
-  const contacts = await contactList(filter, rolePriority);
+  const rolePriority = taskConfig.config.role_priority || defaultRolePriority
+  const contacts = await contactList(filter, rolePriority)
 
   // Load licence data from permit repo, and use NALD licence transformer
   // to transform to same format used in front-end GUI
-  const licenceData = await licenceLoader(contacts);
+  const licenceData = await licenceLoader(contacts)
 
-  return templateRenderer(taskConfig, params, contacts, licenceData, context);
+  return templateRenderer(taskConfig, params, contacts, licenceData, context)
 }
 
 /**
@@ -68,28 +68,28 @@ async function prepareNotification (filter, taskConfig, params, context = {}) {
  */
 async function sendNotification (queueManager, taskConfig, issuer, contactData, ref) {
   // Create event
-  const e = eventFactory(issuer, taskConfig, contactData, ref);
-  await evt.save(e);
+  const e = eventFactory(issuer, taskConfig, contactData, ref)
+  await evt.save(e)
 
-  logger.info(`Sending notification reference ${e.referenceCode} ID ${e.eventId}`);
+  logger.info(`Sending notification reference ${e.referenceCode} ID ${e.eventId}`)
 
   // Schedule messages for sending
   for (const row of contactData) {
-    const n = await notificationFactory(row, taskConfig, e);
+    const n = await notificationFactory(row, taskConfig, e)
 
     try {
-      await enqueue(queueManager, n);
+      await enqueue(queueManager, n)
     } catch (error) {
-      logger.error('Error sending notification', error);
+      logger.error('Error sending notification', error)
     }
   }
 
   // Update event status
-  e.status = 'sent';
-  return evt.save(e);
+  e.status = 'sent'
+  return evt.save(e)
 }
 
 module.exports = {
   prepareNotification,
   sendNotification
-};
+}

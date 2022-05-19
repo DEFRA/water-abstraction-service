@@ -1,8 +1,8 @@
-const { TEST_COMPANY_NAME, ACCEPTANCE_TEST_SOURCE } = require('./constants');
-const documentV1Connector = require('../../../lib/connectors/crm/documents');
-const documentV2Connector = require('../../../lib/connectors/crm-v2/documents');
+const { TEST_COMPANY_NAME, ACCEPTANCE_TEST_SOURCE } = require('./constants')
+const documentV1Connector = require('../../../lib/connectors/crm/documents')
+const documentV2Connector = require('../../../lib/connectors/crm-v2/documents')
 
-const config = require('../../../../config');
+const config = require('../../../../config')
 
 const create = async (companyId, licenceId, licenceRef, companyV2Id, addressId) => {
   const document = {
@@ -37,10 +37,10 @@ const create = async (companyId, licenceId, licenceRef, companyV2Id, addressId) 
         }
       ]
     })
-  };
+  }
 
-  const { data } = await documentV1Connector.create(document);
-  const documentV2 = await documentV2Connector.createDocument(licenceRef, 'current', '2019-01-01', null, true);
+  const { data } = await documentV1Connector.create(document)
+  const documentV2 = await documentV2Connector.createDocument(licenceRef, 'current', '2019-01-01', null, true)
 
   const documentRole = {
     role: 'licenceHolder',
@@ -51,12 +51,12 @@ const create = async (companyId, licenceId, licenceRef, companyV2Id, addressId) 
     contactId: null,
     isTest: true,
     addressId
-  };
+  }
 
-  documentV2Connector.createDocumentRole(documentV2.documentId, documentRole);
+  documentV2Connector.createDocumentRole(documentV2.documentId, documentRole)
 
-  return data;
-};
+  return data
+}
 
-exports.create = create;
-exports.delete = async () => documentV1Connector.deleteAcceptanceTestData();
+exports.create = create
+exports.delete = async () => documentV1Connector.deleteAcceptanceTestData()

@@ -1,7 +1,7 @@
-'use strict';
-const { get } = require('lodash');
-const Repository = require('@envage/hapi-pg-rest-api/src/repository');
-const db = require('../db');
+'use strict'
+const { get } = require('lodash')
+const Repository = require('@envage/hapi-pg-rest-api/src/repository')
+const db = require('../db')
 
 const findByBatchIdQuery = `
   select
@@ -27,7 +27,7 @@ const findByBatchIdQuery = `
       on il.billing_invoice_id = i.billing_invoice_id
 
   where i.billing_batch_id = $1;
-`;
+`
 
 const getInvoiceDetailQuery = `
   select
@@ -78,7 +78,7 @@ const getInvoiceDetailQuery = `
     join water.billing_transactions t
       on il.billing_invoice_licence_id = t.billing_invoice_licence_id
   where i.billing_invoice_id = $1;
-`;
+`
 
 const findOneByTransactionIdQuery = `
   select i.*
@@ -86,7 +86,7 @@ const findOneByTransactionIdQuery = `
     join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
     join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
   where t.billing_transaction_id=$1;
-`;
+`
 
 /**
  * Given a row of data from the data, return an object containing only
@@ -102,18 +102,18 @@ const findOneByTransactionIdQuery = `
  */
 const filterByKeyPrefix = (row, prefix) => {
   return Object.entries(row).reduce((acc, pair) => {
-    const [key, value] = pair;
+    const [key, value] = pair
 
     if (key.startsWith(prefix)) {
-      acc[key.replace(prefix, '')] = value;
+      acc[key.replace(prefix, '')] = value
     }
-    return acc;
-  }, {});
-};
+    return acc
+  }, {})
+}
 
-const mapRowToInvoice = row => filterByKeyPrefix(row, 'invoices.');
-const mapRowToLicence = row => filterByKeyPrefix(row, 'invoice_licence.');
-const mapRowToTransaction = row => filterByKeyPrefix(row, 'transactions.');
+const mapRowToInvoice = row => filterByKeyPrefix(row, 'invoices.')
+const mapRowToLicence = row => filterByKeyPrefix(row, 'invoice_licence.')
+const mapRowToTransaction = row => filterByKeyPrefix(row, 'transactions.')
 
 class BillingInvoiceRepository extends Repository {
   constructor (config = {}) {
@@ -125,16 +125,16 @@ class BillingInvoiceRepository extends Repository {
         fields: ['billing_batch_id', 'invoice_account_id'],
         set: ['date_updated']
       }
-    }, config));
+    }, config))
   }
 
   async findByBatchId (batchId) {
-    const { rows } = await this.dbQuery(findByBatchIdQuery, [batchId]);
-    return rows;
+    const { rows } = await this.dbQuery(findByBatchIdQuery, [batchId])
+    return rows
   };
 
   async getInvoiceDetail (invoiceId) {
-    const { rows } = await this.dbQuery(getInvoiceDetailQuery, [invoiceId]);
+    const { rows } = await this.dbQuery(getInvoiceDetailQuery, [invoiceId])
 
     // turn the row data into a nested object with shape:
     // invoice = {
@@ -144,23 +144,23 @@ class BillingInvoiceRepository extends Repository {
     //   ]
     // }
     return rows.reduce((acc, row) => {
-      const invoice = acc || mapRowToInvoice(row);
-      invoice.licences = invoice.licences || [];
+      const invoice = acc || mapRowToInvoice(row)
+      invoice.licences = invoice.licences || []
 
       // the same licence may appear on muliple results rows
-      let licence = invoice.licences.find(l => l.licence_id === row['invoice_licence.licence_id']);
+      let licence = invoice.licences.find(l => l.licence_id === row['invoice_licence.licence_id'])
 
       if (!licence) {
-        licence = mapRowToLicence(row);
-        invoice.licences.push(licence);
+        licence = mapRowToLicence(row)
+        invoice.licences.push(licence)
       }
 
       // the transaction is unique so can be added straight to the licence
-      licence.transactions = licence.transactions || [];
-      licence.transactions.push(mapRowToTransaction(row));
+      licence.transactions = licence.transactions || []
+      licence.transactions.push(mapRowToTransaction(row))
 
-      return invoice;
-    }, null);
+      return invoice
+    }, null)
   }
 
   /**
@@ -169,10 +169,10 @@ class BillingInvoiceRepository extends Repository {
    * @return {Promise<Object>}
    */
   async findOneByTransactionId (transactionId) {
-    const result = await this.dbQuery(findOneByTransactionIdQuery, [transactionId]);
-    return get(result, 'rows.0', null);
+    const result = await this.dbQuery(findOneByTransactionIdQuery, [transactionId])
+    return get(result, 'rows.0', null)
   }
 }
 
-module.exports = BillingInvoiceRepository;
-module.exports._findOneByTransactionIdQuery = findOneByTransactionIdQuery;
+module.exports = BillingInvoiceRepository
+module.exports._findOneByTransactionIdQuery = findOneByTransactionIdQuery

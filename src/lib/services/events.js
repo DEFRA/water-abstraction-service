@@ -1,11 +1,11 @@
-'use strict';
+'use strict'
 
-const repo = require('../connectors/repos');
-const camelCase = require('../camel-case-keys');
+const repo = require('../connectors/repos')
+const camelCase = require('../camel-case-keys')
 
-const eventMapper = require('../mappers/event');
-const notificationEventMapper = require('../mappers/notification-event');
-const Pagination = require('../models/pagination');
+const eventMapper = require('../mappers/event')
+const notificationEventMapper = require('../mappers/notification-event')
+const Pagination = require('../models/pagination')
 
 /**
  * Creates an Event model object
@@ -13,10 +13,10 @@ const Pagination = require('../models/pagination');
  * @returns {Event} Event model object
  */
 const create = async (eventModel) => {
-  const data = eventMapper.modelToDb(eventModel);
-  const result = await repo.events.create(data);
-  return eventMapper.dbToModel(result);
-};
+  const data = eventMapper.modelToDb(eventModel)
+  const result = await repo.events.create(data)
+  return eventMapper.dbToModel(result)
+}
 
 /**
  * Fetches an event with the specified ID from the DB
@@ -24,9 +24,9 @@ const create = async (eventModel) => {
  * @returns {Event} Event  model object
  */
 const findOne = async (eventId) => {
-  const result = await repo.events.findOne(eventId);
-  return eventMapper.dbToModel(result);
-};
+  const result = await repo.events.findOne(eventId)
+  return eventMapper.dbToModel(result)
+}
 
 /**
  * Persists event to DB
@@ -35,9 +35,9 @@ const findOne = async (eventId) => {
  * @returns {Event} Event model object
  */
 const update = async (eventModel) => {
-  const result = await repo.events.update(eventModel.id, eventMapper.modelToDb(eventModel));
-  return eventMapper.dbToModel(result);
-};
+  const result = await repo.events.update(eventModel.id, eventMapper.modelToDb(eventModel))
+  return eventMapper.dbToModel(result)
+}
 
 /**
  * Updates an events status value to the supplied value
@@ -48,25 +48,25 @@ const update = async (eventModel) => {
  * @returns {Event} Event model object
  */
 const updateStatus = async (eventId, status) => {
-  const result = await repo.events.update(eventId, { status });
-  return eventMapper.dbToModel(result);
-};
+  const result = await repo.events.update(eventId, { status })
+  return eventMapper.dbToModel(result)
+}
 
 const getMostRecentReturnsInvitationByLicence = async licenceRef => {
-  return repo.events.getMostRecentReturnsInvitationByLicence(licenceRef);
-};
+  return repo.events.getMostRecentReturnsInvitationByLicence(licenceRef)
+}
 
-const nullIfEmpty = (arr = []) => arr.length ? arr : null;
+const nullIfEmpty = (arr = []) => arr.length ? arr : null
 
 const getKPIReturnsMonthly = async () => {
-  const result = await repo.events.getKPIReturnsMonthlyData();
-  return nullIfEmpty(camelCase(result.rows));
-};
+  const result = await repo.events.getKPIReturnsMonthlyData()
+  return nullIfEmpty(camelCase(result.rows))
+}
 
 const getKPILicenceNames = async () => {
-  const result = await repo.events.getKPILicenceNamesData();
-  return nullIfEmpty(camelCase(result.rows));
-};
+  const result = await repo.events.getKPILicenceNamesData()
+  return nullIfEmpty(camelCase(result.rows))
+}
 
 /**
  * Gets paginated notification events
@@ -81,7 +81,7 @@ const getNotificationEvents = async (page = 1, categories = '', sender = '') => 
     .fromHash({
       page,
       perPage: 50
-    });
+    })
 
   // Find and map data to NotificationEvent service models
   const { rows } = await repo.events.findNotifications({
@@ -89,26 +89,26 @@ const getNotificationEvents = async (page = 1, categories = '', sender = '') => 
     offset: pagination.startIndex,
     categories,
     sender
-  });
+  })
   const data = rows
     .map(camelCase)
-    .map(notificationEventMapper.dbToModel);
+    .map(notificationEventMapper.dbToModel)
 
   // Update pagination with total rows
   const { rows: [{ count: totalRows }] } = await repo.events.findNotificationsCount({
     categories,
     sender
-  });
-  pagination.totalRows = totalRows;
+  })
+  pagination.totalRows = totalRows
 
-  return { pagination, data };
-};
+  return { pagination, data }
+}
 
-exports.create = create;
-exports.findOne = findOne;
-exports.update = update;
-exports.updateStatus = updateStatus;
-exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitationByLicence;
-exports.getKPIReturnsMonthly = getKPIReturnsMonthly;
-exports.getKPILicenceNames = getKPILicenceNames;
-exports.getNotificationEvents = getNotificationEvents;
+exports.create = create
+exports.findOne = findOne
+exports.update = update
+exports.updateStatus = updateStatus
+exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitationByLicence
+exports.getKPIReturnsMonthly = getKPIReturnsMonthly
+exports.getKPILicenceNames = getKPILicenceNames
+exports.getNotificationEvents = getNotificationEvents

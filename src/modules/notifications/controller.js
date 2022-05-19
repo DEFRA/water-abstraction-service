@@ -2,12 +2,12 @@
  * Controller methods to send/preview notifications
  * @module src/modules/notifications/controller
  */
-const { pick, get } = require('lodash');
-const { prepareNotification, sendNotification } = require('./lib');
-const taskConfigLoader = require('./lib/task-config-loader');
-const generateReference = require('../../lib/reference-generator');
-const eventsService = require('../../lib/services/events');
-const scheduledNotificationsService = require('../../lib/services/scheduled-notifications');
+const { pick, get } = require('lodash')
+const { prepareNotification, sendNotification } = require('./lib')
+const taskConfigLoader = require('./lib/task-config-loader')
+const generateReference = require('../../lib/reference-generator')
+const eventsService = require('../../lib/services/events')
+const scheduledNotificationsService = require('../../lib/services/scheduled-notifications')
 
 /**
  * @param { Object } request.payload.filter - standard filter
@@ -15,10 +15,10 @@ const scheduledNotificationsService = require('../../lib/services/scheduled-noti
  * @param { Number } request.payload.taskConfigId - the ID of the notification task in the task_config table *
  */
 async function postPreview (request, reply) {
-  const { filter, taskConfigId, params } = request.payload;
-  const taskConfig = await taskConfigLoader(taskConfigId);
-  const data = await prepareNotification(filter, taskConfig, params, { ref: 'SAMPLE' });
-  return { error: null, data };
+  const { filter, taskConfigId, params } = request.payload
+  const taskConfig = await taskConfigLoader(taskConfigId)
+  const data = await prepareNotification(filter, taskConfig, params, { ref: 'SAMPLE' })
+  return { error: null, data }
 }
 
 /**
@@ -52,12 +52,12 @@ async function postPreview (request, reply) {
  * @param {Number} request.payload.taskConfigId - the ID of the notification task in the task_config table
  */
 async function postSend (request, reply) {
-  const { filter, taskConfigId, params, sender } = request.payload;
-  const taskConfig = await taskConfigLoader(taskConfigId);
-  const ref = generateReference(taskConfig.config.prefix);
-  const data = await prepareNotification(filter, taskConfig, params, { ref });
-  await sendNotification(request.queueManager, taskConfig, sender, data, ref);
-  return { error: null, data };
+  const { filter, taskConfigId, params, sender } = request.payload
+  const taskConfig = await taskConfigLoader(taskConfigId)
+  const ref = generateReference(taskConfig.config.prefix)
+  const data = await prepareNotification(filter, taskConfig, params, { ref })
+  await sendNotification(request.queueManager, taskConfig, sender, data, ref)
+  return { error: null, data }
 }
 
 const mapNotificationEvent = notification => ({
@@ -65,48 +65,48 @@ const mapNotificationEvent = notification => ({
   name: get(notification, 'metadata.name'),
   options: get(notification, 'metadata.options', {}),
   recipientCount: get(notification, 'metadata.recipients')
-});
+})
 
 /**
  * Gets a paginated list of sent notifications.
  * These are stored in the water.events table with a type of 'notification'
  */
 const getNotifications = async request => {
-  const { page, categories, sender } = request.query;
-  const { data, pagination } = await eventsService.getNotificationEvents(page, categories, sender);
+  const { page, categories, sender } = request.query
+  const { data, pagination } = await eventsService.getNotificationEvents(page, categories, sender)
 
   return {
     data: data.map(mapNotificationEvent),
     pagination
-  };
-};
+  }
+}
 
 /**
  * Get a single notification including the event and messages
  */
-const getNotification = async request => mapNotificationEvent(request.pre.event);
+const getNotification = async request => mapNotificationEvent(request.pre.event)
 
 /**
  * Get a list of scheduled_notifications messages for the specified
  * notification event
  */
 const getNotificationMessages = async request => {
-  const { eventId } = request.params;
-  const messages = await scheduledNotificationsService.getByEventId(eventId);
+  const { eventId } = request.params
+  const messages = await scheduledNotificationsService.getByEventId(eventId)
   return {
     data: messages
-  };
-};
+  }
+}
 
 const getNotificationMessage = async request => {
-  const { id } = request.params;
-  const message = await scheduledNotificationsService.getScheduledNotificationById(id);
+  const { id } = request.params
+  const message = await scheduledNotificationsService.getScheduledNotificationById(id)
   return {
     data: message
-  };
-};
+  }
+}
 
-const getNotificationCategories = () => scheduledNotificationsService.getNotificationCategories();
+const getNotificationCategories = () => scheduledNotificationsService.getNotificationCategories()
 
 module.exports = {
   postPreview,
@@ -116,4 +116,4 @@ module.exports = {
   getNotificationMessages,
   getNotificationMessage,
   getNotificationCategories
-};
+}

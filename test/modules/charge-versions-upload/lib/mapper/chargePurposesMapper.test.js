@@ -4,21 +4,21 @@ const {
   test,
   beforeEach,
   afterEach
-} = exports.lab = require('@hapi/lab').script();
-const { expect } = require('@hapi/code');
-const sandbox = require('sinon').createSandbox();
+} = exports.lab = require('@hapi/lab').script()
+const { expect } = require('@hapi/code')
+const sandbox = require('sinon').createSandbox()
 
-const uuid = require('uuid/v4');
+const uuid = require('uuid/v4')
 
-const helpers = require('../../../../../src/modules/charge-versions-upload/lib/helpers');
+const helpers = require('../../../../../src/modules/charge-versions-upload/lib/helpers')
 
-const { mapToChargePurposes } = require('../../../../../src/modules/charge-versions-upload/lib/mapper/chargePurposesMapper');
-const CHARGE_ELEMENT_DESCRIPTION = 'Valid Charge Element Description';
-const PURPOSE_USE_DESCRIPTION = 'Valid Purpose Use Description';
-const PURPOSE_USE_ID = uuid();
-const PURPOSE_PRIMARY_ID = uuid();
-const PURPOSE_SECONDARY_ID = uuid();
-const PURPOSE_USE_LEGACY_ID = '1234';
+const { mapToChargePurposes } = require('../../../../../src/modules/charge-versions-upload/lib/mapper/chargePurposesMapper')
+const CHARGE_ELEMENT_DESCRIPTION = 'Valid Charge Element Description'
+const PURPOSE_USE_DESCRIPTION = 'Valid Purpose Use Description'
+const PURPOSE_USE_ID = uuid()
+const PURPOSE_PRIMARY_ID = uuid()
+const PURPOSE_SECONDARY_ID = uuid()
+const PURPOSE_USE_LEGACY_ID = '1234'
 
 experiment('mapToPurposeUses', () => {
   beforeEach(() => {
@@ -38,15 +38,15 @@ experiment('mapToPurposeUses', () => {
         legacyId: PURPOSE_USE_LEGACY_ID,
         description: PURPOSE_USE_DESCRIPTION
       }
-    }]);
-  });
+    }])
+  })
 
   afterEach(() => {
-    sandbox.restore();
-  });
+    sandbox.restore()
+  })
 
   test('when mapping purpose use', async () => {
-    const mapperFunction = mapToChargePurposes();
+    const mapperFunction = mapToChargePurposes()
     expect(await mapperFunction({
       chargeElementDescription: CHARGE_ELEMENT_DESCRIPTION,
       chargeElementPurpose: PURPOSE_USE_DESCRIPTION,
@@ -76,6 +76,6 @@ experiment('mapToPurposeUses', () => {
         name: PURPOSE_USE_DESCRIPTION
       },
       description: CHARGE_ELEMENT_DESCRIPTION
-    });
-  });
-});
+    })
+  })
+})

@@ -1,52 +1,52 @@
-'use strict';
+'use strict'
 
 const {
   experiment,
   test,
   beforeEach
-} = exports.lab = require('@hapi/lab').script();
-const { expect } = require('@hapi/code');
-const uuid = require('uuid/v4');
+} = exports.lab = require('@hapi/lab').script()
+const { expect } = require('@hapi/code')
+const uuid = require('uuid/v4')
 
-const supplementaryBillingProcessor = require('../../../../../src/modules/billing/services/supplementary-billing-service/supplementary-processor');
-const { actions } = require('../../../../../src/modules/billing/services/supplementary-billing-service/constants');
+const supplementaryBillingProcessor = require('../../../../../src/modules/billing/services/supplementary-billing-service/supplementary-processor')
+const { actions } = require('../../../../../src/modules/billing/services/supplementary-billing-service/constants')
 
-const batchId = uuid();
+const batchId = uuid()
 
-const { createTransaction, findTransactionById } = require('./test-helpers');
+const { createTransaction, findTransactionById } = require('./test-helpers')
 
 experiment('modules/billing/services/supplementary-billing-service/supplementary-processor', () => {
-  let result;
+  let result
 
   experiment('when there are no historical transactions', () => {
     beforeEach(async () => {
       const transactions = [
         createTransaction(batchId, uuid())
-      ];
-      result = supplementaryBillingProcessor.processBatch(batchId, transactions);
-    });
+      ]
+      result = supplementaryBillingProcessor.processBatch(batchId, transactions)
+    })
 
     test('no action is taken on the transaction', async () => {
-      expect(result[0].action).to.be.null();
-    });
-  });
+      expect(result[0].action).to.be.null()
+    })
+  })
 
   experiment('when there are no current batch transactions', () => {
     experiment('and there is 1 historical transaction', () => {
       beforeEach(async () => {
         const transactions = [
           createTransaction('historical-batch', uuid())
-        ];
-        result = supplementaryBillingProcessor.processBatch(batchId, transactions);
-      });
+        ]
+        result = supplementaryBillingProcessor.processBatch(batchId, transactions)
+      })
 
       test('the transaction is marked for reversal', async () => {
-        expect(result[0].action).to.equal(actions.reverseTransaction);
-      });
-    });
+        expect(result[0].action).to.equal(actions.reverseTransaction)
+      })
+    })
 
     experiment('when there are two historical transactions which sum to net zero', () => {
-      const ids = [uuid(), uuid()];
+      const ids = [uuid(), uuid()]
 
       beforeEach(async () => {
         const transactions = [
@@ -58,18 +58,18 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
             dateCreated: '2020-04-02 12:00:00',
             isCredit: true
           })
-        ];
-        result = supplementaryBillingProcessor.processBatch(batchId, transactions);
-      });
+        ]
+        result = supplementaryBillingProcessor.processBatch(batchId, transactions)
+      })
 
       test('none of the transactions are reversed', async () => {
-        expect(findTransactionById(result, ids[0]).action).to.be.null();
-        expect(findTransactionById(result, ids[1]).action).to.be.null();
-      });
-    });
+        expect(findTransactionById(result, ids[0]).action).to.be.null()
+        expect(findTransactionById(result, ids[1]).action).to.be.null()
+      })
+    })
 
     experiment('when there are several historical transactions, some of which sum to net zero', () => {
-      const ids = [uuid(), uuid(), uuid(), uuid(), uuid()];
+      const ids = [uuid(), uuid(), uuid(), uuid(), uuid()]
 
       beforeEach(async () => {
         const transactions = [
@@ -97,23 +97,23 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
             volume: 0,
             isTwoPartSecondPartCharge: true
           })
-        ];
-        result = supplementaryBillingProcessor.processBatch(batchId, transactions);
-      });
+        ]
+        result = supplementaryBillingProcessor.processBatch(batchId, transactions)
+      })
 
       test('only the most recent transaction is reversed to get to a net zero position', async () => {
-        expect(findTransactionById(result, ids[0]).action).to.be.null();
-        expect(findTransactionById(result, ids[1]).action).to.be.null();
-        expect(findTransactionById(result, ids[2]).action).to.equal(actions.reverseTransaction);
+        expect(findTransactionById(result, ids[0]).action).to.be.null()
+        expect(findTransactionById(result, ids[1]).action).to.be.null()
+        expect(findTransactionById(result, ids[2]).action).to.equal(actions.reverseTransaction)
         // these two transactions should cancel each other out
-        expect(findTransactionById(result, ids[3]).action).to.equal(actions.deleteTransaction);
-        expect(findTransactionById(result, ids[4]).action).to.be.null();
-      });
-    });
-  });
+        expect(findTransactionById(result, ids[3]).action).to.equal(actions.deleteTransaction)
+        expect(findTransactionById(result, ids[4]).action).to.be.null()
+      })
+    })
+  })
 
   experiment('when there are current and historical transactions', () => {
-    const ids = [uuid(), uuid(), uuid()];
+    const ids = [uuid(), uuid(), uuid()]
 
     experiment('and there are annual transactions which have net zero billable days', () => {
       beforeEach(async () => {
@@ -130,19 +130,19 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
             billableDays: 345,
             isCredit: false
           })
-        ];
-        result = supplementaryBillingProcessor.processBatch(batchId, transactions);
-      });
+        ]
+        result = supplementaryBillingProcessor.processBatch(batchId, transactions)
+      })
 
       test('the historical transactions are not reversed', async () => {
-        expect(findTransactionById(result, ids[0]).action).to.be.null();
-        expect(findTransactionById(result, ids[1]).action).to.be.null();
-      });
+        expect(findTransactionById(result, ids[0]).action).to.be.null()
+        expect(findTransactionById(result, ids[1]).action).to.be.null()
+      })
 
       test('the current batch transaction is deleted', async () => {
-        expect(findTransactionById(result, ids[2]).action).to.equal(actions.deleteTransaction);
-      });
-    });
+        expect(findTransactionById(result, ids[2]).action).to.equal(actions.deleteTransaction)
+      })
+    })
 
     experiment('and there are annual transactions which do not have net zero billable days', () => {
       beforeEach(async () => {
@@ -159,19 +159,19 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
             billableDays: 355,
             isCredit: false
           })
-        ];
-        result = supplementaryBillingProcessor.processBatch(batchId, transactions);
-      });
+        ]
+        result = supplementaryBillingProcessor.processBatch(batchId, transactions)
+      })
 
       test('the historical transactions are reversed', async () => {
-        expect(findTransactionById(result, ids[0]).action).to.equal(actions.reverseTransaction);
-        expect(findTransactionById(result, ids[1]).action).to.equal(actions.reverseTransaction);
-      });
+        expect(findTransactionById(result, ids[0]).action).to.equal(actions.reverseTransaction)
+        expect(findTransactionById(result, ids[1]).action).to.equal(actions.reverseTransaction)
+      })
 
       test('the current batch transaction is not deleted', async () => {
-        expect(findTransactionById(result, ids[2]).action).to.be.null();
-      });
-    });
+        expect(findTransactionById(result, ids[2]).action).to.be.null()
+      })
+    })
 
     experiment('and there are TPT transactions which have net zero volume', () => {
       beforeEach(async () => {
@@ -191,19 +191,19 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
             isTwoPartSecondPartCharge: true,
             isCredit: false
           })
-        ];
-        result = supplementaryBillingProcessor.processBatch(batchId, transactions);
-      });
+        ]
+        result = supplementaryBillingProcessor.processBatch(batchId, transactions)
+      })
 
       test('the historical transactions are not reversed', async () => {
-        expect(findTransactionById(result, ids[0]).action).to.be.null();
-        expect(findTransactionById(result, ids[1]).action).to.be.null();
-      });
+        expect(findTransactionById(result, ids[0]).action).to.be.null()
+        expect(findTransactionById(result, ids[1]).action).to.be.null()
+      })
 
       test('the current batch transaction is deleted', async () => {
-        expect(findTransactionById(result, ids[2]).action).to.equal(actions.deleteTransaction);
-      });
-    });
+        expect(findTransactionById(result, ids[2]).action).to.equal(actions.deleteTransaction)
+      })
+    })
 
     experiment('and there are TPT transactions which do not have a net zero volume', () => {
       beforeEach(async () => {
@@ -223,18 +223,18 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
             isTwoPartSecondPartCharge: true,
             isCredit: false
           })
-        ];
-        result = supplementaryBillingProcessor.processBatch(batchId, transactions);
-      });
+        ]
+        result = supplementaryBillingProcessor.processBatch(batchId, transactions)
+      })
 
       test('the historical transactions are reversed', async () => {
-        expect(findTransactionById(result, ids[0]).action).to.equal(actions.reverseTransaction);
-        expect(findTransactionById(result, ids[1]).action).to.equal(actions.reverseTransaction);
-      });
+        expect(findTransactionById(result, ids[0]).action).to.equal(actions.reverseTransaction)
+        expect(findTransactionById(result, ids[1]).action).to.equal(actions.reverseTransaction)
+      })
 
       test('the current batch transaction is not deleted', async () => {
-        expect(findTransactionById(result, ids[2]).action).to.be.null();
-      });
-    });
-  });
-});
+        expect(findTransactionById(result, ids[2]).action).to.be.null()
+      })
+    })
+  })
+})

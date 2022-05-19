@@ -1,14 +1,14 @@
-const { expect } = require('@hapi/code');
-const { experiment, test } = exports.lab = require('@hapi/lab').script();
+const { expect } = require('@hapi/code')
+const { experiment, test } = exports.lab = require('@hapi/lab').script()
 
-const extractConditions = require('../../../../src/modules/licences/lib/extractConditions');
+const extractConditions = require('../../../../src/modules/licences/lib/extractConditions')
 
 experiment('extractConditions', () => {
   test('returns an empty array for a licence with no current version', async () => {
-    const licence = {};
-    const conditions = extractConditions(licence);
-    expect(conditions).to.equal([]);
-  });
+    const licence = {}
+    const conditions = extractConditions(licence)
+    expect(conditions).to.equal([])
+  })
 
   test('returns the conditions when a licence has a single purpose', async () => {
     const licence = {
@@ -33,12 +33,12 @@ experiment('extractConditions', () => {
           }
         ]
       }]
-    };
+    }
 
-    const conditions = extractConditions(licence);
+    const conditions = extractConditions(licence)
 
-    expect(conditions.length).to.equal(2);
-  });
+    expect(conditions.length).to.equal(2)
+  })
 
   test('returns the conditions for multiple purposes', async () => {
     const licence = {
@@ -78,9 +78,9 @@ experiment('extractConditions', () => {
           ]
         }
       ]
-    };
+    }
 
-    const conditions = extractConditions(licence);
+    const conditions = extractConditions(licence)
     expect(conditions).to.equal([
       {
         id: 'nald://conditions/3/1',
@@ -112,6 +112,6 @@ experiment('extractConditions', () => {
         parameter2: 'two/3 - p2',
         purposeText: 'purpose two'
       }
-    ]);
-  });
-});
+    ])
+  })
+})

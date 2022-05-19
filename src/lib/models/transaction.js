@@ -1,15 +1,15 @@
-'use strict';
+'use strict'
 
-const { isNull, identity } = require('lodash');
-const { titleCase } = require('title-case');
+const { isNull, identity } = require('lodash')
+const { titleCase } = require('title-case')
 
-const Model = require('./model');
-const Agreement = require('./agreement');
-const DateRange = require('./date-range');
-const ChargeElement = require('./charge-element');
-const BillingVolume = require('./billing-volume');
+const Model = require('./model')
+const Agreement = require('./agreement')
+const DateRange = require('./date-range')
+const ChargeElement = require('./charge-element')
+const BillingVolume = require('./billing-volume')
 
-const validators = require('./validators');
+const validators = require('./validators')
 
 /**
  * @constant {Object} statuses - transaction statuses
@@ -24,11 +24,11 @@ const statuses = {
   chargeCreated: 'charge_created',
   approved: 'approved',
   error: 'error'
-};
+}
 
 const getDescriptionFromChargeElement = chargeElement => {
-  return chargeElement.description || chargeElement.purposeUse.name;
-};
+  return chargeElement.description || chargeElement.purposeUse.name
+}
 
 /**
  * Removes the part of the purpose use description after the hyphen
@@ -38,44 +38,44 @@ const getDescriptionFromChargeElement = chargeElement => {
  * @returns {String}
  */
 const getPurposeUseDescription = purposeUse => {
-  return purposeUse.name.split('-')[0].trim();
-};
+  return purposeUse.name.split('-')[0].trim()
+}
 
 const getTwoPartTariffTransactionDescription = transaction => {
-  const prefix = transaction.isTwoPartSecondPartCharge ? 'Second' : 'First';
-  const purposeUseDescription = getPurposeUseDescription(transaction.chargeElement.purposeUse);
-  const { description } = transaction.chargeElement;
+  const prefix = transaction.isTwoPartSecondPartCharge ? 'Second' : 'First'
+  const purposeUseDescription = getPurposeUseDescription(transaction.chargeElement.purposeUse)
+  const { description } = transaction.chargeElement
 
   return [prefix, 'Part', purposeUseDescription, 'Charge', description]
     .filter(identity)
-    .join(' ');
-};
+    .join(' ')
+}
 
 class Transaction extends Model {
   constructor (id, value, isCredit = false, isCreditedBack = false) {
-    super(id);
-    this.value = value;
-    this.isCredit = isCredit;
-    this._isCreditedBack = isCreditedBack;
-    this._agreements = [];
-    this.status = statuses.candidate;
+    super(id)
+    this.value = value
+    this.isCredit = isCredit
+    this._isCreditedBack = isCreditedBack
+    this._agreements = []
+    this.status = statuses.candidate
   }
 
   get value () {
-    return this._value;
+    return this._value
   }
 
   set value (value) {
-    this._value = value;
+    this._value = value
   }
 
   get isCredit () {
-    return this._isCredit;
+    return this._isCredit
   }
 
   set isCredit (isCredit) {
-    validators.assertIsBoolean(isCredit);
-    this._isCredit = isCredit;
+    validators.assertIsBoolean(isCredit)
+    this._isCredit = isCredit
   }
 
   /**
@@ -84,12 +84,12 @@ class Transaction extends Model {
    * @return {Number}
    */
   get authorisedDays () {
-    return this._authorisedDays;
+    return this._authorisedDays
   }
 
   set authorisedDays (days) {
-    validators.assertDaysInYear(days);
-    this._authorisedDays = days;
+    validators.assertDaysInYear(days)
+    this._authorisedDays = days
   }
 
   /**
@@ -98,12 +98,12 @@ class Transaction extends Model {
    * @return {Number}
    */
   get billableDays () {
-    return this._billableDays;
+    return this._billableDays
   }
 
   set billableDays (days) {
-    validators.assertDaysInYear(days);
-    this._billableDays = days;
+    validators.assertDaysInYear(days)
+    this._billableDays = days
   }
 
   /**
@@ -113,12 +113,12 @@ class Transaction extends Model {
    * @return {Array}
    */
   get agreements () {
-    return this._agreements;
+    return this._agreements
   }
 
   set agreements (agreements) {
-    validators.assertIsArrayOfType(agreements, Agreement);
-    this._agreements = agreements;
+    validators.assertIsArrayOfType(agreements, Agreement)
+    this._agreements = agreements
   }
 
   /**
@@ -127,7 +127,7 @@ class Transaction extends Model {
    * @return {Agreement}
    */
   getAgreementByCode (code) {
-    return this._agreements.find(agreement => agreement.code === code);
+    return this._agreements.find(agreement => agreement.code === code)
   }
 
   /**
@@ -136,12 +136,12 @@ class Transaction extends Model {
    * @return {DateRange}
    */
   get chargePeriod () {
-    return this._chargePeriod;
+    return this._chargePeriod
   }
 
   set chargePeriod (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    this._chargePeriod = dateRange;
+    validators.assertIsInstanceOf(dateRange, DateRange)
+    this._chargePeriod = dateRange
   }
 
   /**
@@ -149,12 +149,12 @@ class Transaction extends Model {
    * @return {Boolean}
    */
   get isCompensationCharge () {
-    return this._isCompensationCharge;
+    return this._isCompensationCharge
   }
 
   set isCompensationCharge (isCompensationCharge) {
-    validators.assertIsBoolean(isCompensationCharge);
-    this._isCompensationCharge = isCompensationCharge;
+    validators.assertIsBoolean(isCompensationCharge)
+    this._isCompensationCharge = isCompensationCharge
   }
 
   /**
@@ -163,12 +163,12 @@ class Transaction extends Model {
    * @return {String}
    */
   get description () {
-    return this._description;
+    return this._description
   }
 
   set description (description) {
-    validators.assertString(description);
-    this._description = description;
+    validators.assertString(description)
+    this._description = description
   }
 
   /**
@@ -177,7 +177,7 @@ class Transaction extends Model {
    * @return {String}
    */
   get chargeElementPurposeUseCode () {
-    return this.chargeElement.purposeUse.code;
+    return this.chargeElement.purposeUse.code
   }
 
   /**
@@ -185,21 +185,21 @@ class Transaction extends Model {
    * @return {ChargeElement}
    */
   get chargeElement () {
-    return this._chargeElement;
+    return this._chargeElement
   }
 
   set chargeElement (chargeElement) {
-    validators.assertIsInstanceOf(chargeElement, ChargeElement);
-    this._chargeElement = chargeElement;
+    validators.assertIsInstanceOf(chargeElement, ChargeElement)
+    this._chargeElement = chargeElement
   }
 
   get status () {
-    return this._status;
+    return this._status
   }
 
   set status (status) {
-    validators.assertEnum(status, Object.values(statuses));
-    this._status = status;
+    validators.assertEnum(status, Object.values(statuses))
+    this._status = status
   }
 
   /**
@@ -207,13 +207,13 @@ class Transaction extends Model {
    * @return {Number}
    */
   get volume () {
-    return this._volume;
+    return this._volume
   }
 
   set volume (volume) {
-    validators.assertNullableQuantity(volume);
+    validators.assertNullableQuantity(volume)
     if (isNull(volume)) {
-      this._volume = volume;
+      this._volume = volume
     } else {
       /* Important note
       The volume in the transactions table for historic nald
@@ -223,7 +223,7 @@ class Transaction extends Model {
       */
       this._volume = parseFloat(volume) > parseFloat(this.chargeElement.maxAnnualQuantity)
         ? this.chargeElement.maxAnnualQuantity
-        : volume;
+        : volume
     }
   }
 
@@ -232,12 +232,12 @@ class Transaction extends Model {
  * @return {BillingVolume}
  */
   get billingVolume () {
-    return this._billingVolume;
+    return this._billingVolume
   }
 
   set billingVolume (billingVolume) {
-    validators.assertIsNullableInstanceOf(billingVolume, BillingVolume);
-    this._billingVolume = billingVolume;
+    validators.assertIsNullableInstanceOf(billingVolume, BillingVolume)
+    this._billingVolume = billingVolume
   }
 
   /**
@@ -246,12 +246,12 @@ class Transaction extends Model {
  * @return {Boolean}
  */
   get isNewLicence () {
-    return this._isNewLicence;
+    return this._isNewLicence
   }
 
   set isNewLicence (isNewLicence) {
-    validators.assertIsBoolean(isNewLicence);
-    this._isNewLicence = isNewLicence;
+    validators.assertIsBoolean(isNewLicence)
+    this._isNewLicence = isNewLicence
   }
 
   /**
@@ -261,21 +261,21 @@ class Transaction extends Model {
   * @return {Boolean}
   */
   get isMinimumCharge () {
-    return this._isMinimumCharge;
+    return this._isMinimumCharge
   }
 
   set isMinimumCharge (isMinimumCharge) {
-    validators.assertIsBoolean(isMinimumCharge);
-    this._isMinimumCharge = isMinimumCharge;
+    validators.assertIsBoolean(isMinimumCharge)
+    this._isMinimumCharge = isMinimumCharge
   }
 
   get externalId () {
-    return this._externalId;
+    return this._externalId
   }
 
   set externalId (externalId) {
-    validators.assertNullableId(externalId);
-    this._externalId = externalId;
+    validators.assertNullableId(externalId)
+    this._externalId = externalId
   }
 
   /**
@@ -298,7 +298,7 @@ class Transaction extends Model {
       licenceNumber: licence.licenceNumber,
       regionCode: batch.region.code,
       isTwoPartTariff: this.isTwoPartSecondPartCharge
-    };
+    }
   }
 
   /**
@@ -306,12 +306,12 @@ class Transaction extends Model {
    * @return {Boolean}
    */
   get isTwoPartSecondPartCharge () {
-    return this._isTwoPartSecondPartCharge;
+    return this._isTwoPartSecondPartCharge
   }
 
   set isTwoPartSecondPartCharge (isTwoPartSecondPartCharge) {
-    validators.assertIsBoolean(isTwoPartSecondPartCharge);
-    this._isTwoPartSecondPartCharge = isTwoPartSecondPartCharge;
+    validators.assertIsBoolean(isTwoPartSecondPartCharge)
+    this._isTwoPartSecondPartCharge = isTwoPartSecondPartCharge
   }
 
   /**
@@ -320,17 +320,17 @@ class Transaction extends Model {
    */
   createDescription () {
     if (this.isCompensationCharge) {
-      this.description = 'Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element';
-      return this.description;
+      this.description = 'Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element'
+      return this.description
     }
 
-    const isTwoPartTariff = !!this.getAgreementByCode('S127');
+    const isTwoPartTariff = !!this.getAgreementByCode('S127')
     const description = isTwoPartTariff
       ? getTwoPartTariffTransactionDescription(this)
-      : getDescriptionFromChargeElement(this.chargeElement);
+      : getDescriptionFromChargeElement(this.chargeElement)
 
-    this.description = titleCase(description);
-    return this.description;
+    this.description = titleCase(description)
+    return this.description
   }
 
   /**
@@ -339,84 +339,84 @@ class Transaction extends Model {
    * @param {Boolean}
    */
   set isDeMinimis (isDeMinimis) {
-    validators.assertIsBoolean(isDeMinimis);
-    this._isDeMinimis = isDeMinimis;
+    validators.assertIsBoolean(isDeMinimis)
+    this._isDeMinimis = isDeMinimis
   }
 
   get isDeMinimis () {
-    return this._isDeMinimis;
+    return this._isDeMinimis
   }
 
   set calcSourceFactor (calcSourceFactor) {
-    validators.assertNullableNumeric(calcSourceFactor);
-    this._calcSourceFactor = calcSourceFactor;
+    validators.assertNullableNumeric(calcSourceFactor)
+    this._calcSourceFactor = calcSourceFactor
   }
 
   get calcSourceFactor () {
-    return this._calcSourceFactor;
+    return this._calcSourceFactor
   }
 
   set calcSeasonFactor (calcSeasonFactor) {
-    validators.assertNullableNumeric(calcSeasonFactor);
-    this._calcSeasonFactor = calcSeasonFactor;
+    validators.assertNullableNumeric(calcSeasonFactor)
+    this._calcSeasonFactor = calcSeasonFactor
   }
 
   get calcSeasonFactor () {
-    return this._calcSeasonFactor;
+    return this._calcSeasonFactor
   }
 
   set calcLossFactor (calcLossFactor) {
-    validators.assertNullableNumeric(calcLossFactor);
-    this._calcLossFactor = calcLossFactor;
+    validators.assertNullableNumeric(calcLossFactor)
+    this._calcLossFactor = calcLossFactor
   }
 
   get calcLossFactor () {
-    return this._calcLossFactor;
+    return this._calcLossFactor
   }
 
   set calcSucFactor (calcSucFactor) {
-    validators.assertNullableNumeric(calcSucFactor);
-    this._calcSucFactor = calcSucFactor;
+    validators.assertNullableNumeric(calcSucFactor)
+    this._calcSucFactor = calcSucFactor
   }
 
   get calcSucFactor () {
-    return this._calcSucFactor;
+    return this._calcSucFactor
   }
 
   set calcS126Factor (calcS126Factor) {
-    validators.assertNullableFactorWithPrefix(calcS126Factor);
-    this._calcS126Factor = calcS126Factor;
+    validators.assertNullableFactorWithPrefix(calcS126Factor)
+    this._calcS126Factor = calcS126Factor
   }
 
   get calcS126Factor () {
-    return this._calcS126Factor;
+    return this._calcS126Factor
   }
 
   set calcS127Factor (calcS127Factor) {
-    validators.assertNullableFactorWithPrefix(calcS127Factor);
-    this._calcS127Factor = calcS127Factor;
+    validators.assertNullableFactorWithPrefix(calcS127Factor)
+    this._calcS127Factor = calcS127Factor
   }
 
   get calcS127Factor () {
-    return this._calcS127Factor;
+    return this._calcS127Factor
   }
 
   set calcEiucFactor (calcEiucFactor) {
-    validators.assertNullableNumeric(calcEiucFactor);
-    this._calcEiucFactor = calcEiucFactor;
+    validators.assertNullableNumeric(calcEiucFactor)
+    this._calcEiucFactor = calcEiucFactor
   }
 
   get calcEiucFactor () {
-    return this._calcEiucFactor;
+    return this._calcEiucFactor
   }
 
   set calcEiucSourceFactor (calcEiucSourceFactor) {
-    validators.assertNullableNumeric(calcEiucSourceFactor);
-    this._calcEiucSourceFactor = calcEiucSourceFactor;
+    validators.assertNullableNumeric(calcEiucSourceFactor)
+    this._calcEiucSourceFactor = calcEiucSourceFactor
   }
 
   get calcEiucSourceFactor () {
-    return this._calcEiucSourceFactor;
+    return this._calcEiucSourceFactor
   }
 
   set calcWinterDiscountFactor (value) {
@@ -451,7 +451,7 @@ class Transaction extends Model {
    * @return {Boolean}
    */
   get isErrorStatus () {
-    return this.status === statuses.error;
+    return this.status === statuses.error
   }
 
   /**
@@ -460,12 +460,12 @@ class Transaction extends Model {
    * @param {Boolean}
    */
   set isCreditedBack (value) {
-    validators.assertIsBoolean(value);
-    this._isCreditedBack = value;
+    validators.assertIsBoolean(value)
+    this._isCreditedBack = value
   }
 
   get isCreditedBack () {
-    return this._isCreditedBack;
+    return this._isCreditedBack
   }
 
   set isWaterCompanyCharge (value) {
@@ -487,5 +487,5 @@ class Transaction extends Model {
   }
 }
 
-module.exports = Transaction;
-module.exports.statuses = statuses;
+module.exports = Transaction
+module.exports.statuses = statuses

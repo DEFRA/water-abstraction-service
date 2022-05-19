@@ -1,7 +1,7 @@
-const checkStatus = require('./lib/jobs/check-status');
-const sendMessages = require('./lib/jobs/send-message');
-const refreshEvents = require('./lib/jobs/refresh-event');
-const getRecipients = require('./lib/jobs/get-recipients');
+const checkStatus = require('./lib/jobs/check-status')
+const sendMessages = require('./lib/jobs/send-message')
+const refreshEvents = require('./lib/jobs/refresh-event')
+const getRecipients = require('./lib/jobs/get-recipients')
 
 module.exports = {
   name: 'batch-notifications',
@@ -11,10 +11,10 @@ module.exports = {
       .register(checkStatus)
       .register(sendMessages)
       .register(refreshEvents)
-      .register(getRecipients);
+      .register(getRecipients)
 
-    server.queueManager.add(checkStatus.jobName);
-    server.queueManager.add(sendMessages.jobName);
-    server.queueManager.add(refreshEvents.jobName);
+    server.queueManager.add(checkStatus.jobName)
+    server.queueManager.add(sendMessages.jobName)
+    server.queueManager.add(refreshEvents.jobName)
   }
-};
+}

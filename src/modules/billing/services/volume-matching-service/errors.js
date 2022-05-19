@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
 class ChargeElementMatchingError extends Error {
   constructor (message) {
-    super(message);
-    this.name = 'ChargeElementMatchingError';
+    super(message)
+    this.name = 'ChargeElementMatchingError'
   }
 }
 
-exports.ChargeElementMatchingError = ChargeElementMatchingError;
+exports.ChargeElementMatchingError = ChargeElementMatchingError

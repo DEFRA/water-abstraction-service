@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-const Agreement = require('../models/agreement');
-const { createMapper } = require('../object-mapper');
-const helpers = require('./lib/helpers');
+const Agreement = require('../models/agreement')
+const { createMapper } = require('../object-mapper')
+const helpers = require('./lib/helpers')
 
 const dbToModelMapper = createMapper()
   .map('financialAgreementTypeId').to('id')
@@ -11,7 +11,7 @@ const dbToModelMapper = createMapper()
     'dateCreated',
     'dateUpdated',
     'dateDeleted'
-  );
+  )
 
 /**
  * Maps row from water.financial_agreement_types to Agreement service model
@@ -19,6 +19,6 @@ const dbToModelMapper = createMapper()
  * @return {Agreement}
  */
 const dbToModel = row =>
-  helpers.createModel(Agreement, row, dbToModelMapper);
+  helpers.createModel(Agreement, row, dbToModelMapper)
 
-exports.dbToModel = dbToModel;
+exports.dbToModel = dbToModel

@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const got = require('./lib/got-cm');
+const got = require('./lib/got-cm')
 
 /**
  * Creates a bill run in the CM for the specified region code
@@ -8,7 +8,7 @@ const got = require('./lib/got-cm');
  * @return {Promise<Object>} response payload
  */
 const create = (region, ruleset) =>
-  got.post('v3/wrls/bill-runs', { json: { region, ruleset } });
+  got.post('v3/wrls/bill-runs', { json: { region, ruleset } })
 
 /**
  * Adds a transaction to the specified bill run
@@ -17,7 +17,7 @@ const create = (region, ruleset) =>
  * @return {Promise<Object>} response payload
  */
 const addTransaction = (billRunId, transaction) =>
-  got.post(`v3/wrls/bill-runs/${billRunId}/transactions`, { json: transaction, retries: 0 });
+  got.post(`v3/wrls/bill-runs/${billRunId}/transactions`, { json: transaction, retries: 0 })
 
 /**
  * Approves the spefified CM bill run
@@ -25,7 +25,7 @@ const addTransaction = (billRunId, transaction) =>
  * @return {Promise<Object>} response payload
  */
 const approve = billRunId =>
-  got.patch(`v3/wrls/bill-runs/${billRunId}/approve`);
+  got.patch(`v3/wrls/bill-runs/${billRunId}/approve`)
 
 /**
  * Sends the specified CM bill run
@@ -33,7 +33,7 @@ const approve = billRunId =>
  * @return {Promise<Object>} response payload
  */
 const send = billRunId =>
-  got.patch(`v3/wrls/bill-runs/${billRunId}/send`);
+  got.patch(`v3/wrls/bill-runs/${billRunId}/send`)
 
 /**
  * Deletes a specified invoice from a given bill run
@@ -42,7 +42,7 @@ const send = billRunId =>
  * @return {Promise<Object>} response payload
  */
 const deleteInvoiceFromBillRun = (billRunId, invoiceId) =>
-  got.delete(`v3/wrls/bill-runs/${billRunId}/invoices/${invoiceId}`);
+  got.delete(`v3/wrls/bill-runs/${billRunId}/invoices/${invoiceId}`)
 
 /**
  * Deletes entire bill run
@@ -50,7 +50,7 @@ const deleteInvoiceFromBillRun = (billRunId, invoiceId) =>
  * @return {Promise<Object>} response payload
  */
 const deleteBillRun = billRunId =>
-  got.delete(`v3/wrls/bill-runs/${billRunId}`);
+  got.delete(`v3/wrls/bill-runs/${billRunId}`)
 
 /**
  * Gets bill run including summary data
@@ -58,7 +58,7 @@ const deleteBillRun = billRunId =>
  * @return {Promise<Object>} response payload
  */
 const get = billRunId =>
-  got.get(`v3/wrls/bill-runs/${billRunId}`);
+  got.get(`v3/wrls/bill-runs/${billRunId}`)
 
 /**
    * Gets transactions in given bill run for a particular invoice.
@@ -66,30 +66,30 @@ const get = billRunId =>
    * @param {String} invoiceId
    */
 const getInvoiceTransactions = (billRunId, invoiceId) =>
-  got.get(`v3/wrls/bill-runs/${billRunId}/invoices/${invoiceId}`);
+  got.get(`v3/wrls/bill-runs/${billRunId}/invoices/${invoiceId}`)
 
 const generate = CMBillRunId =>
-  got.patch(`v3/wrls/bill-runs/${CMBillRunId}/generate`);
+  got.patch(`v3/wrls/bill-runs/${CMBillRunId}/generate`)
 
 const rebillInvoice = async (billRunId, invoiceId) =>
-  got.patch(`v3/wrls/bill-runs/${billRunId}/invoices/${invoiceId}/rebill`);
+  got.patch(`v3/wrls/bill-runs/${billRunId}/invoices/${invoiceId}/rebill`)
 
 const getStatus = async billRunId =>
-  got.get(`v3/wrls/bill-runs/${billRunId}/status`);
+  got.get(`v3/wrls/bill-runs/${billRunId}/status`)
 
 const deleteLicence = async (billRunId, licenceId) =>
-  got.delete(`v3/wrls/bill-runs/${billRunId}/licences/${licenceId}`);
+  got.delete(`v3/wrls/bill-runs/${billRunId}/licences/${licenceId}`)
 
-exports.addTransaction = addTransaction;
-exports.approve = approve;
-exports.create = create;
-exports.delete = deleteBillRun;
-exports.get = get;
-exports.deleteBillRun = deleteBillRun;
-exports.send = send;
-exports.getInvoiceTransactions = getInvoiceTransactions;
-exports.deleteInvoiceFromBillRun = deleteInvoiceFromBillRun;
-exports.generate = generate;
-exports.rebillInvoice = rebillInvoice;
-exports.deleteLicence = deleteLicence;
-exports.getStatus = getStatus;
+exports.addTransaction = addTransaction
+exports.approve = approve
+exports.create = create
+exports.delete = deleteBillRun
+exports.get = get
+exports.deleteBillRun = deleteBillRun
+exports.send = send
+exports.getInvoiceTransactions = getInvoiceTransactions
+exports.deleteInvoiceFromBillRun = deleteInvoiceFromBillRun
+exports.generate = generate
+exports.rebillInvoice = rebillInvoice
+exports.deleteLicence = deleteLicence
+exports.getStatus = getStatus

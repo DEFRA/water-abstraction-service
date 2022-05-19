@@ -1,26 +1,26 @@
-'use strict';
+'use strict'
 
 const {
   experiment,
   test,
   beforeEach,
   afterEach
-} = exports.lab = require('@hapi/lab').script();
+} = exports.lab = require('@hapi/lab').script()
 
-const { expect } = require('@hapi/code');
-const sandbox = require('sinon').createSandbox();
-const uuid = require('uuid/v4');
+const { expect } = require('@hapi/code')
+const sandbox = require('sinon').createSandbox()
+const uuid = require('uuid/v4')
 
-const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
-const createBillRunJob = require('../../../../src/modules/billing/jobs/create-bill-run');
+const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job')
+const createBillRunJob = require('../../../../src/modules/billing/jobs/create-bill-run')
 
 // Services
-const batchService = require('../../../../src/modules/billing/services/batch-service');
+const batchService = require('../../../../src/modules/billing/services/batch-service')
 
 // Models
-const Batch = require('../../../../src/lib/models/batch');
+const Batch = require('../../../../src/lib/models/batch')
 
-const batchId = uuid();
+const batchId = uuid()
 
 const data = {
   eventId: 'test-event-id',
@@ -28,42 +28,42 @@ const data = {
     id: batchId,
     type: Batch.BATCH_TYPE.annual
   }
-};
+}
 
 experiment('modules/billing/jobs/create-bill-run', () => {
-  let batch, queueManager;
+  let batch, queueManager
 
   beforeEach(async () => {
-    sandbox.stub(batchJob, 'logHandling');
-    sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
-    sandbox.stub(batchJob, 'logOnCompleteError');
-    sandbox.stub(batchJob, 'logOnComplete');
-    sandbox.stub(batchJob, 'logHandlingError');
+    sandbox.stub(batchJob, 'logHandling')
+    sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus')
+    sandbox.stub(batchJob, 'logOnCompleteError')
+    sandbox.stub(batchJob, 'logOnComplete')
+    sandbox.stub(batchJob, 'logHandlingError')
 
-    batch = new Batch();
-    batch.fromHash(data.batch);
+    batch = new Batch()
+    batch.fromHash(data.batch)
 
-    sandbox.stub(batchService, 'createChargeModuleBillRun').resolves(batch);
-    sandbox.stub(batchService, 'setErrorStatus').resolves(batch);
+    sandbox.stub(batchService, 'createChargeModuleBillRun').resolves(batch)
+    sandbox.stub(batchService, 'setErrorStatus').resolves(batch)
 
     queueManager = {
       add: sandbox.stub()
-    };
-  });
+    }
+  })
 
   afterEach(async () => {
-    sandbox.restore();
-  });
+    sandbox.restore()
+  })
 
   test('exports the expected job name', async () => {
-    expect(createBillRunJob.jobName).to.equal('billing.create-bill-run');
-  });
+    expect(createBillRunJob.jobName).to.equal('billing.create-bill-run')
+  })
 
   experiment('.createMessage', () => {
     test('creates the expected message array', async () => {
       const message = createBillRunJob.createMessage(
         batchId
-      );
+      )
 
       expect(message).to.equal([
         'billing.create-bill-run',
@@ -73,37 +73,37 @@ experiment('modules/billing/jobs/create-bill-run', () => {
         {
           jobId: `billing.create-bill-run.${batchId}`
         }
-      ]);
-    });
-  });
+      ])
+    })
+  })
 
   experiment('.handler', () => {
-    let result, job;
+    let result, job
 
     experiment('when there is no error', () => {
       beforeEach(async () => {
         job = {
           data: {
-            batchId: batchId
+            batchId
           }
-        };
-        result = await createBillRunJob.handler(job);
-      });
+        }
+        result = await createBillRunJob.handler(job)
+      })
 
       test('batchService.createChargeModuleBillRun is called with the correct batch ID', async () => {
         expect(batchService.createChargeModuleBillRun.calledWith(
           batchId
-        )).to.be.true();
-      });
+        )).to.be.true()
+      })
 
       test('resolves with batch type', async () => {
-        expect(result.type).to.equal(data.batch.type);
-      });
-    });
+        expect(result.type).to.equal(data.batch.type)
+      })
+    })
 
     experiment('when there is an error', () => {
-      let error;
-      const err = new Error('oops!');
+      let error
+      const err = new Error('oops!')
 
       beforeEach(async () => {
         job = {
@@ -111,24 +111,24 @@ experiment('modules/billing/jobs/create-bill-run', () => {
             batch: data.batch,
             eventId: data.eventId
           }
-        };
-        batchService.createChargeModuleBillRun.rejects(err);
-        const func = () => createBillRunJob.handler(job);
-        error = await expect(func()).to.reject();
-      });
+        }
+        batchService.createChargeModuleBillRun.rejects(err)
+        const func = () => createBillRunJob.handler(job)
+        error = await expect(func()).to.reject()
+      })
 
       test('the error is logged and batch marked as error status', async () => {
-        const { args } = batchJob.logHandlingErrorAndSetBatchStatus.lastCall;
-        expect(args[0]).to.equal(job);
-        expect(args[1] instanceof Error).to.be.true();
-        expect(args[2]).to.equal(Batch.BATCH_ERROR_CODE.failedToCreateBillRun);
-      });
+        const { args } = batchJob.logHandlingErrorAndSetBatchStatus.lastCall
+        expect(args[0]).to.equal(job)
+        expect(args[1] instanceof Error).to.be.true()
+        expect(args[2]).to.equal(Batch.BATCH_ERROR_CODE.failedToCreateBillRun)
+      })
 
       test('re-throws the error', async () => {
-        expect(error).to.equal(err);
-      });
-    });
-  });
+        expect(error).to.equal(err)
+      })
+    })
+  })
 
   experiment('.onComplete', () => {
     experiment('for an annual batch', () => {
@@ -139,29 +139,29 @@ experiment('modules/billing/jobs/create-bill-run', () => {
         returnvalue: {
           type: Batch.BATCH_TYPE.annual
         }
-      };
+      }
 
       experiment('when publishing the next job succeeds', () => {
         test('the next job is published', async () => {
-          await createBillRunJob.onComplete(job, queueManager);
+          await createBillRunJob.onComplete(job, queueManager)
           expect(queueManager.add.calledWith(
             'billing.populate-batch-charge-versions',
             batchId
-          )).to.be.true();
-        });
-      });
+          )).to.be.true()
+        })
+      })
 
       experiment('when publishing the next job fails', () => {
         beforeEach(async () => {
-          queueManager.add.rejects();
-        });
+          queueManager.add.rejects()
+        })
 
         test('a message is logged', async () => {
-          await createBillRunJob.onComplete(job, queueManager);
-          expect(batchJob.logOnCompleteError.calledWith(job)).to.be.true();
-        });
-      });
-    });
+          await createBillRunJob.onComplete(job, queueManager)
+          expect(batchJob.logOnCompleteError.calledWith(job)).to.be.true()
+        })
+      })
+    })
 
     experiment('for a two-part tariff batch', () => {
       const job = {
@@ -171,18 +171,18 @@ experiment('modules/billing/jobs/create-bill-run', () => {
         returnvalue: {
           type: Batch.BATCH_TYPE.twoPartTariff
         }
-      };
+      }
 
       experiment('when publishing the next job succeeds', () => {
         test('the next job is published', async () => {
-          await createBillRunJob.onComplete(job, queueManager);
+          await createBillRunJob.onComplete(job, queueManager)
           expect(queueManager.add.calledWith(
             'billing.populate-batch-charge-versions',
             batchId
-          )).to.be.true();
-        });
-      });
-    });
+          )).to.be.true()
+        })
+      })
+    })
 
     experiment('for a supplementary batch', () => {
       const job = {
@@ -192,17 +192,17 @@ experiment('modules/billing/jobs/create-bill-run', () => {
         returnvalue: {
           type: Batch.BATCH_TYPE.supplementary
         }
-      };
+      }
 
       experiment('when publishing the next job succeeds', () => {
         test('the rebilling job is published', async () => {
-          await createBillRunJob.onComplete(job, queueManager);
+          await createBillRunJob.onComplete(job, queueManager)
           expect(queueManager.add.calledWith(
             'billing.rebilling',
             batchId
-          )).to.be.true();
-        });
-      });
-    });
-  });
-});
+          )).to.be.true()
+        })
+      })
+    })
+  })
+})

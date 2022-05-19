@@ -1,19 +1,19 @@
-'use strict';
+'use strict'
 
 const {
   experiment,
   test,
   beforeEach
-} = exports.lab = require('@hapi/lab').script();
+} = exports.lab = require('@hapi/lab').script()
 
-const { expect } = require('@hapi/code');
+const { expect } = require('@hapi/code')
 
-const NaldTransformer = require('../../../src/lib/licence-transformer/nald-transformer');
+const NaldTransformer = require('../../../src/lib/licence-transformer/nald-transformer')
 
 experiment('lib/licence-transformer/nald-transformer', () => {
   experiment('export', () => {
-    let data;
-    let exported;
+    let data
+    let exported
 
     beforeEach(async () => {
       data = {
@@ -42,19 +42,19 @@ experiment('lib/licence-transformer/nald-transformer', () => {
             }
           ]
         }
-      };
+      }
 
-      const transformer = new NaldTransformer();
-      await transformer.load(data);
-      exported = transformer.export();
-    });
+      const transformer = new NaldTransformer()
+      await transformer.load(data)
+      exported = transformer.export()
+    })
 
     test('sets the regionCode', async () => {
-      expect(exported.regionCode).to.equal(1);
-    });
+      expect(exported.regionCode).to.equal(1)
+    })
 
     test('sets the licenceNumber', async () => {
-      expect(exported.licenceNumber).to.equal('123');
-    });
-  });
-});
+      expect(exported.licenceNumber).to.equal('123')
+    })
+  })
+})

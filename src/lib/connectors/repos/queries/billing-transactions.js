@@ -38,7 +38,7 @@ and t.licence_ref IN (
     where bbcvy.billing_batch_id=:batchId
       )
 order by t.date_created asc
-`;
+`
 
 exports.findByBatchId = `
 select t.*, il.licence_id, il.licence_ref, i.invoice_account_number, i.financial_year_ending, i.invoice_account_id, 
@@ -48,7 +48,7 @@ join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billin
 join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
 join water.billing_batches b on i.billing_batch_id=b.billing_batch_id
 where b.billing_batch_id=:batchId;
-`;
+`
 
 exports.findStatusCountsByBatchId = `
 select t.status, count(t.status)
@@ -58,7 +58,7 @@ select t.status, count(t.status)
   join water.billing_transactions t on t.billing_invoice_licence_id=il.billing_invoice_licence_id
   where b.billing_batch_id=:batchId
   group by t.status;
-`;
+`
 
 exports.deleteByBatchId = `
   delete
@@ -67,7 +67,7 @@ exports.deleteByBatchId = `
   where il.billing_invoice_licence_id = tx.billing_invoice_licence_id
   and i.billing_invoice_id = il.billing_invoice_id
   and i.billing_batch_id = :batchId;
-`;
+`
 
 exports.deleteByInvoiceId = `
 delete from water.billing_transactions t
@@ -75,7 +75,7 @@ delete from water.billing_transactions t
   where 
     t.billing_invoice_licence_id=l.billing_invoice_licence_id 
     and l.billing_invoice_id=:billingInvoiceId
-`;
+`
 
 exports.countByBatchId = `
   select count(t.billing_transaction_id) 
@@ -83,7 +83,7 @@ exports.countByBatchId = `
     join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
     join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
     where i.billing_batch_id=:billingBatchId
-`;
+`
 
 exports.updateIsCredited = `
 update water.billing_transactions t1
@@ -96,4 +96,4 @@ where billing_transaction_id IN
     join water.billing_batches b on i.billing_batch_id = b.billing_batch_id
     where b.region_id=:regionId and t2.is_credit = true and t2.source_transaction_id is not null)
 and t1.is_credited_back = false;
-`;
+`

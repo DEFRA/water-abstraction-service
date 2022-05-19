@@ -1,13 +1,13 @@
-'use strict';
+'use strict'
 
-const DateRange = require('./date-range');
-const Address = require('./address');
+const DateRange = require('./date-range')
+const Address = require('./address')
 
-const validators = require('./validators');
+const validators = require('./validators')
 
-const Model = require('./model');
+const Model = require('./model')
 
-const ROLE_NAMES = require('./constants').ROLE_NAMES;
+const ROLE_NAMES = require('./constants').ROLE_NAMES
 
 class CompanyAddress extends Model {
   /**
@@ -15,21 +15,21 @@ class CompanyAddress extends Model {
    * @return {DateRange}
    */
   set dateRange (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    this._dateRange = dateRange;
+    validators.assertIsInstanceOf(dateRange, DateRange)
+    this._dateRange = dateRange
   }
 
   get dateRange () {
-    return this._dateRange;
+    return this._dateRange
   }
 
   get companyId () {
-    return this._companyId;
+    return this._companyId
   }
 
   set companyId (companyId) {
-    validators.assertId(companyId);
-    this._companyId = companyId;
+    validators.assertId(companyId)
+    this._companyId = companyId
   }
 
   /**
@@ -37,8 +37,8 @@ class CompanyAddress extends Model {
    * @param {Address} address
    */
   set address (address) {
-    validators.assertIsInstanceOf(address, Address);
-    this._address = address;
+    validators.assertIsInstanceOf(address, Address)
+    this._address = address
   }
 
   /**
@@ -46,27 +46,27 @@ class CompanyAddress extends Model {
    * @return {Address}
    */
   get address () {
-    return this._address;
+    return this._address
   }
 
   set roleName (roleName) {
-    validators.assertEnum(roleName, Object.values(ROLE_NAMES));
-    this._roleName = roleName;
+    validators.assertEnum(roleName, Object.values(ROLE_NAMES))
+    this._roleName = roleName
   }
 
   get roleName () {
-    return this._roleName;
+    return this._roleName
   }
 
   set isDefault (isDefault) {
-    validators.assertIsBoolean(isDefault);
-    this._isDefault = isDefault;
+    validators.assertIsBoolean(isDefault)
+    this._isDefault = isDefault
   }
 
   get isDefault () {
-    return this._isDefault;
+    return this._isDefault
   }
 }
 
-module.exports = CompanyAddress;
-module.exports.ROLE_NAMES = Object.values(ROLE_NAMES);
+module.exports = CompanyAddress
+module.exports.ROLE_NAMES = Object.values(ROLE_NAMES)

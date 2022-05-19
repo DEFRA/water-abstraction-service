@@ -1,5 +1,5 @@
-const Joi = require('joi');
-const controller = require('./controller');
+const Joi = require('joi')
+const controller = require('./controller')
 
 module.exports = {
   getRenderNotification: {
@@ -15,4 +15,4 @@ module.exports = {
       }
     }
   }
-};
+}

@@ -1,5 +1,5 @@
-const repos = require('../../../lib/connectors/repository');
-const mappers = require('../mappers');
+const repos = require('../../../lib/connectors/repository')
+const mappers = require('../mappers')
 
 /**
  * Gets a single charge element model by ID
@@ -7,8 +7,8 @@ const mappers = require('../mappers');
  * @return {Promise<ChargeElement>}
  */
 const getById = async chargeElementId => {
-  const data = await repos.chargeElements.findOneById(chargeElementId);
-  return mappers.chargeElement.dbToModel(data);
-};
+  const data = await repos.chargeElements.findOneById(chargeElementId)
+  return mappers.chargeElement.dbToModel(data)
+}
 
-exports.getById = getById;
+exports.getById = getById

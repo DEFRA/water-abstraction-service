@@ -1,20 +1,20 @@
-'use strict';
+'use strict'
 
 /**
  * Creates a unique id by including the NALD type, region code and
  * id into a single string. This is because historically each region had
  * a different database and therefore the ids are not unique.
  */
-const createUniqueId = (type, regionCode, id) => `nald://${type}/${regionCode}/${id}`;
+const createUniqueId = (type, regionCode, id) => `nald://${type}/${regionCode}/${id}`
 
 /**
  * Takes the unique id in the format created by the `createUniqueId`
  * function and extracts the type, id and region code
  */
 const parseUniqueId = uniqueId => {
-  const [type, regionCode, ...rest] = uniqueId.replace(/^nald:\/\//, '').split('/');
-  return { type, regionCode, id: rest.join('/') };
-};
+  const [type, regionCode, ...rest] = uniqueId.replace(/^nald:\/\//, '').split('/')
+  return { type, regionCode, id: rest.join('/') }
+}
 
 /**
  * Gets full name for a NALD contact
@@ -25,9 +25,9 @@ const parseUniqueId = uniqueId => {
  * @return {String}      full licence holder name
  */
 const getFullName = (salutation, initials, firstName, lastName) => {
-  const parts = [salutation, initials || firstName, lastName];
-  return parts.filter(x => x).join(' ');
-};
+  const parts = [salutation, initials || firstName, lastName]
+  return parts.filter(x => x).join(' ')
+}
 
 /**
  * Gets an array of aggregate quantities for a given purpose
@@ -40,20 +40,20 @@ const getAggregateQuantities = (purpose) => {
     DAILY_QTY: 'cubic metres per day',
     HOURLY_QTY: 'cubic metres per hour',
     INST_QTY: 'litres per second'
-  };
+  }
 
   return Object.keys(names).reduce((acc, key) => {
     if (purpose[key] !== null) {
       acc.push({
         name: names[key],
         value: purpose[key]
-      });
+      })
     }
-    return acc;
-  }, []);
-};
+    return acc
+  }, [])
+}
 
-exports.createUniqueId = createUniqueId;
-exports.parseUniqueId = parseUniqueId;
-exports.getFullName = getFullName;
-exports.getAggregateQuantities = getAggregateQuantities;
+exports.createUniqueId = createUniqueId
+exports.parseUniqueId = parseUniqueId
+exports.getFullName = getFullName
+exports.getAggregateQuantities = getAggregateQuantities

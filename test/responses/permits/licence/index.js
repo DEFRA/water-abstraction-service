@@ -1,9 +1,9 @@
-const { cloneDeep } = require('lodash');
+const { cloneDeep } = require('lodash')
 
-const licenceDataValue = require('./licence-data.json');
+const licenceDataValue = require('./licence-data.json')
 const emptyActions = {
   actions: []
-};
+}
 
 const licences = {
   data: [{
@@ -21,7 +21,7 @@ const licences = {
     metadata: null
   }],
   error: null
-};
+}
 
 const abstractionReformActions = () => ({
   status: 'In progress',
@@ -41,30 +41,30 @@ const abstractionReformActions = () => ({
     user: { id: 2392, email: 'markswaffer.defra@gmail.com' },
     timestamp: 1550148602230
   }
-});
+})
 
 const emptyAbstractionReform = () => {
-  const shell = cloneDeep(licences);
-  shell.data[0].licence_data_value = emptyActions;
-  return shell;
-};
+  const shell = cloneDeep(licences)
+  shell.data[0].licence_data_value = emptyActions
+  return shell
+}
 
 const abstractionReformLicence = () => {
-  const shell = cloneDeep(licences);
-  shell.data[0].licence_data_value = abstractionReformActions();
-  return shell;
-};
+  const shell = cloneDeep(licences)
+  shell.data[0].licence_data_value = abstractionReformActions()
+  return shell
+}
 
 const getWaterLicence = () => {
-  const shell = cloneDeep(licences);
-  return shell.data[0];
-};
+  const shell = cloneDeep(licences)
+  return shell.data[0]
+}
 
 const getExpiringLicence = () => {
-  const shell = cloneDeep(licences);
-  shell.data[0].licence_end_dt = '01/01/2021';
-  return shell;
-};
+  const shell = cloneDeep(licences)
+  shell.data[0].licence_end_dt = '01/01/2021'
+  return shell
+}
 
 module.exports = {
   licences: () => cloneDeep(licences),
@@ -72,4 +72,4 @@ module.exports = {
   abstractionReformLicence,
   getWaterLicence,
   getExpiringLicence
-};
+}

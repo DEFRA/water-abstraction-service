@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
+const Joi = require('joi')
 
-const controller = require('../controllers/invoices');
+const controller = require('../controllers/invoices')
 
 module.exports = {
   getLicenceInvoices: {
@@ -21,4 +21,4 @@ module.exports = {
       }
     }
   }
-};
+}

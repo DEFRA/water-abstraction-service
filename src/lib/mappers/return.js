@@ -1,11 +1,11 @@
-'use strict';
+'use strict'
 
-const { get } = require('lodash');
+const { get } = require('lodash')
 
-const AbstractionPeriod = require('../models/abstraction-period');
-const Return = require('../models/return');
-const DateRange = require('../models/date-range');
-const { transformNull } = require('@envage/water-abstraction-helpers').nald;
+const AbstractionPeriod = require('../models/abstraction-period')
+const Return = require('../models/return')
+const DateRange = require('../models/date-range')
+const { transformNull } = require('@envage/water-abstraction-helpers').nald
 
 /**
  * Maps data from the `nald` property of the returns metadata to either an
@@ -14,22 +14,22 @@ const { transformNull } = require('@envage/water-abstraction-helpers').nald;
  * @return {AbstractionPeriod|null}
  */
 const mapAbsPeriod = ({ periodStartDay, periodStartMonth, periodEndDay, periodEndMonth }) => {
-  const values = [periodStartDay, periodStartMonth, periodEndDay, periodEndMonth];
+  const values = [periodStartDay, periodStartMonth, periodEndDay, periodEndMonth]
   if (values.includes(null)) {
-    return null;
+    return null
   }
   return new AbstractionPeriod().fromHash({
     startDay: periodStartDay,
     startMonth: periodStartMonth,
     endDay: periodEndDay,
     endMonth: periodEndMonth
-  });
-};
+  })
+}
 
 const returnsServiceToModel = (ret, returnRequirement) => {
-  const nald = transformNull(ret.metadata.nald);
+  const nald = transformNull(ret.metadata.nald)
 
-  const r = new Return(ret.return_id);
+  const r = new Return(ret.return_id)
   r.fromHash({
     dateRange: new DateRange(ret.start_date, ret.end_date),
     isUnderQuery: ret.under_query,
@@ -38,12 +38,12 @@ const returnsServiceToModel = (ret, returnRequirement) => {
     receivedDate: ret.received_date,
     status: ret.status,
     abstractionPeriod: mapAbsPeriod(nald)
-  });
+  })
 
   if (returnRequirement) {
-    r.returnRequirement = returnRequirement;
+    r.returnRequirement = returnRequirement
   }
-  return r;
-};
+  return r
+}
 
-exports.returnsServiceToModel = returnsServiceToModel;
+exports.returnsServiceToModel = returnsServiceToModel

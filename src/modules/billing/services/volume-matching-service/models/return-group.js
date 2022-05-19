@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
-const { identity } = require('lodash');
+const { identity } = require('lodash')
 
-const validators = require('../../../../../lib/models/validators');
-const Return = require('../../../../../lib/models/return');
-const { RETURN_STATUS } = require('../../../../../lib/models/return');
+const validators = require('../../../../../lib/models/validators')
+const Return = require('../../../../../lib/models/return')
+const { RETURN_STATUS } = require('../../../../../lib/models/return')
 const {
   ERROR_NO_RETURNS_FOR_MATCHING,
   ERROR_NO_RETURNS_SUBMITTED,
@@ -13,24 +13,24 @@ const {
   ERROR_UNDER_QUERY,
   ERROR_RECEIVED,
   ERROR_NOT_DUE_FOR_BILLING
-} = require('../../../../../lib/models/billing-volume').twoPartTariffStatuses;
+} = require('../../../../../lib/models/billing-volume').twoPartTariffStatuses
 
 const getErrorIfSome = (arr, predicate, error) => {
-  return arr.some(predicate) ? error : null;
-};
+  return arr.some(predicate) ? error : null
+}
 
 const getErrorIfEvery = (arr, predicate, error) => {
-  return arr.every(predicate) ? error : null;
-};
+  return arr.every(predicate) ? error : null
+}
 
 // Predicates
-const isDueStatus = ret => ret.status === RETURN_STATUS.due;
-const isReceivedStatus = ret => ret.status === RETURN_STATUS.received;
-const isLateForBilling = ret => ret.isLateForBilling;
-const isUnderQuery = ret => ret.isUnderQuery;
-const isNotDueForBilling = ret => !ret.isDueForBilling();
+const isDueStatus = ret => ret.status === RETURN_STATUS.due
+const isReceivedStatus = ret => ret.status === RETURN_STATUS.received
+const isLateForBilling = ret => ret.isLateForBilling
+const isUnderQuery = ret => ret.isUnderQuery
+const isNotDueForBilling = ret => !ret.isDueForBilling()
 
-const getReturnSortKey = ret => `${ret.endDate}_${ret.id}`;
+const getReturnSortKey = ret => `${ret.endDate}_${ret.id}`
 
 class ReturnGroup {
   /**
@@ -38,9 +38,9 @@ class ReturnGroup {
    * @param {Array<Return>} returns
    */
   constructor (returns) {
-    this._returns = [];
+    this._returns = []
     if (returns) {
-      this.returns = returns;
+      this.returns = returns
     }
   }
 
@@ -49,8 +49,8 @@ class ReturnGroup {
    * @param {Array<Return>}
    */
   set returns (returns) {
-    validators.assertIsArrayOfType(returns, Return);
-    this._returns = returns.sort(getReturnSortKey);
+    validators.assertIsArrayOfType(returns, Return)
+    this._returns = returns.sort(getReturnSortKey)
   }
 
   /**
@@ -58,11 +58,11 @@ class ReturnGroup {
    * @return {Array<Return>}
    */
   get returns () {
-    return this._returns;
+    return this._returns
   }
 
   getReturnsWithCurrentVersion () {
-    return this._returns.filter(ret => !!ret.currentReturnVersion);
+    return this._returns.filter(ret => !!ret.currentReturnVersion)
   }
 
   /**
@@ -71,8 +71,8 @@ class ReturnGroup {
    * @return {ReturnGroup}
    */
   createForTwoPartTariff () {
-    const returns = this.returns.filter(ret => ret.purposeUses.some(purposeUse => purposeUse.isTwoPartTariff));
-    return new ReturnGroup(returns);
+    const returns = this.returns.filter(ret => ret.purposeUses.some(purposeUse => purposeUse.isTwoPartTariff))
+    return new ReturnGroup(returns)
   }
 
   /**
@@ -89,9 +89,9 @@ class ReturnGroup {
       getErrorIfSome(this._returns, isUnderQuery, ERROR_UNDER_QUERY),
       getErrorIfSome(this._returns, isReceivedStatus, ERROR_RECEIVED),
       getErrorIfSome(this._returns, isNotDueForBilling, ERROR_NOT_DUE_FOR_BILLING)
-    ];
-    return errors.filter(identity).shift();
+    ]
+    return errors.filter(identity).shift()
   }
 }
 
-module.exports = ReturnGroup;
+module.exports = ReturnGroup

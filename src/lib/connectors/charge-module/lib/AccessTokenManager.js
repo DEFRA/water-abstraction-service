@@ -1,16 +1,16 @@
-'use strict';
+'use strict'
 
-const moment = require('moment');
-const gotWithProxy = require('./got-with-proxy');
-const urlJoin = require('url-join');
+const moment = require('moment')
+const gotWithProxy = require('./got-with-proxy')
+const urlJoin = require('url-join')
 
-const { logger } = require('../../../../logger');
-const config = require('../../../../../config.js');
+const { logger } = require('../../../../logger')
+const config = require('../../../../../config.js')
 
 class AccessTokenManager {
   constructor () {
-    this.accessToken = null;
-    this.expiresAt = null;
+    this.accessToken = null
+    this.expiresAt = null
   }
 
   /**
@@ -18,9 +18,9 @@ class AccessTokenManager {
    * @returns
    */
   async refreshAccessToken (refDate) {
-    logger.info('Getting a new Cognito token');
-    const uri = urlJoin(config.chargeModule.cognito.host, '/oauth2/token');
-    const buff = Buffer.from(`${config.chargeModule.cognito.username}:${config.chargeModule.cognito.password}`);
+    logger.info('Getting a new Cognito token')
+    const uri = urlJoin(config.chargeModule.cognito.host, '/oauth2/token')
+    const buff = Buffer.from(`${config.chargeModule.cognito.username}:${config.chargeModule.cognito.password}`)
     const options = {
       searchParams: {
         grant_type: 'client_credentials'
@@ -29,17 +29,17 @@ class AccessTokenManager {
         'content-type': 'application/x-www-form-urlencoded',
         authorization: `Basic ${buff.toString('base64')}`
       }
-    };
+    }
 
     // Make got request
-    const { access_token: accessToken, expires_in: expiresIn } = await gotWithProxy.post(uri, options);
+    const { access_token: accessToken, expires_in: expiresIn } = await gotWithProxy.post(uri, options)
 
     // Update this instance with the access token and expiry time
-    this.accessToken = accessToken;
-    this.expiresAt = moment(refDate).add(expiresIn, 'second');
-    logger.info(`Obtained a new Cognito token. It expires at ${this.expiresAt.format()}`);
+    this.accessToken = accessToken
+    this.expiresAt = moment(refDate).add(expiresIn, 'second')
+    logger.info(`Obtained a new Cognito token. It expires at ${this.expiresAt.format()}`)
 
-    return this.accessToken;
+    return this.accessToken
   }
 
   /**
@@ -50,16 +50,16 @@ class AccessTokenManager {
   isTokenValid () {
     // Token missing
     if (!this.accessToken) {
-      logger.info('No cognito token found');
-      return false;
+      logger.info('No cognito token found')
+      return false
     }
     // Token expires
     if (moment().isSameOrAfter(this.expiresAt)) {
-      logger.info('Cognito token expired');
-      return false;
+      logger.info('Cognito token expired')
+      return false
     }
-    return true;
+    return true
   }
 }
 
-module.exports = AccessTokenManager;
+module.exports = AccessTokenManager

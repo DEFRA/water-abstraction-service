@@ -1,22 +1,22 @@
-const { get } = require('lodash');
-const ExtendableError = require('es6-error');
-const { throwIfError } = require('@envage/hapi-pg-rest-api');
+const { get } = require('lodash')
+const ExtendableError = require('es6-error')
+const { throwIfError } = require('@envage/hapi-pg-rest-api')
 
-const permit = require('../../../lib/connectors/permit');
-const { logger } = require('../../../logger');
-const { licence, abstractionReform } = require('../../../../config');
-const { mapLicenceToTableRow } = require('./licence-row-mapper');
-const arAnalysis = require('../../../controllers/ar-analysis-licences.js');
+const permit = require('../../../lib/connectors/permit')
+const { logger } = require('../../../logger')
+const { licence, abstractionReform } = require('../../../../config')
+const { mapLicenceToTableRow } = require('./licence-row-mapper')
+const arAnalysis = require('../../../controllers/ar-analysis-licences.js')
 
 class NotFoundError extends ExtendableError {};
 
 const getLicenceTypeFilter = (config) => {
-  const { regimeId, typeId } = config;
+  const { regimeId, typeId } = config
   return {
     licence_regime_id: regimeId,
     licence_type_id: typeId
-  };
-};
+  }
+}
 
 /**
  * Gets permit repo filter
@@ -30,8 +30,8 @@ const getPermitFilter = (licenceRef, config) => {
   return {
     ...getLicenceTypeFilter(config),
     licence_ref: licenceRef
-  };
-};
+  }
+}
 
 /**
  * Gets a licence from the permit repo API
@@ -42,17 +42,17 @@ const getPermitFilter = (licenceRef, config) => {
  * @return {Promise} resolves with licence data
  */
 const getLicence = async (licenceRef, config) => {
-  const filter = getPermitFilter(licenceRef, config);
-  const { error, data: [row] } = await permit.licences.findMany(filter);
-  throwIfError(error);
+  const filter = getPermitFilter(licenceRef, config)
+  const { error, data: [row] } = await permit.licences.findMany(filter)
+  throwIfError(error)
   if (!row) {
-    throw new NotFoundError(`Licence ${licenceRef} with ${JSON.stringify(config)} not found`);
+    throw new NotFoundError(`Licence ${licenceRef} with ${JSON.stringify(config)} not found`)
   }
-  return row;
-};
+  return row
+}
 
 const hasAbstractionReformActions = licence =>
-  get(licence, 'licence_data_value.actions', []).length > 0;
+  get(licence, 'licence_data_value.actions', []).length > 0
 
 /**
  * Updates the licence analysis table
@@ -61,43 +61,43 @@ const hasAbstractionReformActions = licence =>
  */
 const updateLicenceRow = async (licenceRef) => {
   // Get base and AR licences
-  const ar = await getLicence(licenceRef, abstractionReform);
+  const ar = await getLicence(licenceRef, abstractionReform)
 
   if (!hasAbstractionReformActions(ar)) {
-    return { error: null, data: 'No AR for licence yet', licenceRef };
+    return { error: null, data: 'No AR for licence yet', licenceRef }
   }
 
-  const base = await getLicence(licenceRef, licence);
+  const base = await getLicence(licenceRef, licence)
 
   // Map data to analysis row
-  const regionCode = get(base, 'licence_data_value.FGAC_REGION_CODE');
-  const arAnalysisRow = mapLicenceToTableRow(regionCode, licenceRef, ar.licence_data_value);
+  const regionCode = get(base, 'licence_data_value.FGAC_REGION_CODE')
+  const arAnalysisRow = mapLicenceToTableRow(regionCode, licenceRef, ar.licence_data_value)
 
   // Persist to DB analysis table
-  const result = await arAnalysis.repository.create(arAnalysisRow);
-  return result.rowCount ? arAnalysisRow : undefined;
-};
+  const result = await arAnalysis.repository.create(arAnalysisRow)
+  return result.rowCount ? arAnalysisRow : undefined
+}
 
 /**
  * Updates the analysis table for all AR licences
  * @return {Promise} resolves when done
  */
 const updateAllLicences = async () => {
-  const filter = getLicenceTypeFilter(abstractionReform);
-  const results = await permit.licences.findAll(filter, {}, ['licence_ref']);
+  const filter = getLicenceTypeFilter(abstractionReform)
+  const results = await permit.licences.findAll(filter, {}, ['licence_ref'])
   for (const row of results) {
-    const { licence_ref: licenceNumber } = row;
+    const { licence_ref: licenceNumber } = row
     try {
-      await updateLicenceRow(licenceNumber);
+      await updateLicenceRow(licenceNumber)
     } catch (error) {
-      logger.error('Error updating all licences', error, { row });
+      logger.error('Error updating all licences', error, { row })
     }
   }
-};
+}
 
 module.exports = {
   getPermitFilter,
   getLicence,
   updateLicenceRow,
   updateAllLicences
-};
+}

@@ -1,12 +1,12 @@
-const { parseBool } = require('../helpers');
-const { SCHEME } = require('../../../../lib/models/constants');
-const adjustmentsMapper = require('./adjustmentsMapper');
-const additionalChargesMapper = require('./additionalChargesMapper');
+const { parseBool } = require('../helpers')
+const { SCHEME } = require('../../../../lib/models/constants')
+const adjustmentsMapper = require('./adjustmentsMapper')
+const additionalChargesMapper = require('./additionalChargesMapper')
 
-const { sroc } = SCHEME;
+const { sroc } = SCHEME
 
 const mapToChargeElement = async (data, licence, chargeCategory, chargePurposes) => {
-  const source = parseBool(data.chargeReferenceDetailsSource) ? 'tidal' : 'non-tidal';
+  const source = parseBool(data.chargeReferenceDetailsSource) ? 'tidal' : 'non-tidal'
   return {
     source,
     chargeCategory,
@@ -22,7 +22,7 @@ const mapToChargeElement = async (data, licence, chargeCategory, chargePurposes)
     isRestrictedSource: parseBool(data.chargeReferenceDetailsWaterAvailability),
     isSection127AgreementEnabled: parseBool(data.chargeReferenceDetailsTwoPartTariffAgreementApplies),
     adjustments: adjustmentsMapper.mapToAdjustments(data)
-  };
-};
+  }
+}
 
-exports.mapToChargeElement = mapToChargeElement;
+exports.mapToChargeElement = mapToChargeElement

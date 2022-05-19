@@ -7,7 +7,7 @@ const notFound = () => ({
     totalRows: 0,
     pageCount: 0
   }
-});
+})
 
 const singleResponse = () => ({
   data: [
@@ -64,7 +64,7 @@ const singleResponse = () => ({
     perPage: 100,
     totalRows: 1
   }
-});
+})
 
 const multipleDocumentUsers = () => {
   return {
@@ -85,11 +85,11 @@ const multipleDocumentUsers = () => {
       }
     ],
     error: null
-  };
-};
+  }
+}
 
 module.exports = {
   singleResponse,
   notFound,
   multipleDocumentUsers
-};
+}

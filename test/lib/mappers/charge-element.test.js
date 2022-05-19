@@ -1,24 +1,24 @@
-'use strict';
+'use strict'
 
-const uuid = require('uuid/v4');
+const uuid = require('uuid/v4')
 
 const {
   experiment,
   test,
   beforeEach
-} = exports.lab = require('@hapi/lab').script();
-const { expect } = require('@hapi/code');
+} = exports.lab = require('@hapi/lab').script()
+const { expect } = require('@hapi/code')
 
-const ChargeElement = require('../../../src/lib/models/charge-element');
-const ChargeVersion = require('../../../src/lib/models/charge-version');
+const ChargeElement = require('../../../src/lib/models/charge-element')
+const ChargeVersion = require('../../../src/lib/models/charge-version')
 
-const DateRange = require('../../../src/lib/models/date-range');
-const Purpose = require('../../../src/lib/models/purpose');
-const PurposeUse = require('../../../src/lib/models/purpose-use');
-const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
+const DateRange = require('../../../src/lib/models/date-range')
+const Purpose = require('../../../src/lib/models/purpose')
+const PurposeUse = require('../../../src/lib/models/purpose-use')
+const { CHARGE_SEASON } = require('../../../src/lib/models/constants')
 
-const chargeElementsMapper = require('../../../src/lib/mappers/charge-element');
-const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
+const chargeElementsMapper = require('../../../src/lib/mappers/charge-element')
+const AbstractionPeriod = require('../../../src/lib/models/abstraction-period')
 
 const data = {
   chargeElement: {
@@ -60,75 +60,75 @@ const data = {
       dateUpdated: '2000-01-01'
     }
   }
-};
+}
 
 experiment('lib/mappers/charge-element', () => {
-  let result;
+  let result
 
   experiment('.dbToModel', () => {
     beforeEach(async () => {
-      result = chargeElementsMapper.dbToModel(data.dbRow);
-    });
+      result = chargeElementsMapper.dbToModel(data.dbRow)
+    })
 
     test('returns an instance of ChargeElement', async () => {
-      expect(result instanceof ChargeElement).to.be.true();
-    });
+      expect(result instanceof ChargeElement).to.be.true()
+    })
 
     test('sets the .id property', async () => {
-      expect(result.id).to.equal(data.chargeElement.chargeElementId);
-    });
+      expect(result.id).to.equal(data.chargeElement.chargeElementId)
+    })
 
     test('sets the .source property', async () => {
-      expect(result.source).to.equal(data.chargeElement.source);
-    });
+      expect(result.source).to.equal(data.chargeElement.source)
+    })
 
     test('sets the .season property', async () => {
-      expect(result.season).to.equal(data.chargeElement.season);
-    });
+      expect(result.season).to.equal(data.chargeElement.season)
+    })
 
     test('sets the .loss property', async () => {
-      expect(result.loss).to.equal(data.chargeElement.loss);
-    });
+      expect(result.loss).to.equal(data.chargeElement.loss)
+    })
 
     test('sets the .chargeVersionId property', async () => {
-      expect(result.chargeVersionId).to.equal(data.chargeElement.chargeVersionId);
-    });
+      expect(result.chargeVersionId).to.equal(data.chargeElement.chargeVersionId)
+    })
 
     test('sets the .isFactorsOverridden property', async () => {
-      expect(result.isFactorsOverridden).to.equal(data.chargeElement.isFactorsOverridden);
-    });
+      expect(result.isFactorsOverridden).to.equal(data.chargeElement.isFactorsOverridden)
+    })
 
     experiment('when the database row does not contain a purpose use', () => {
       test('the purposeUse property is not set', async () => {
-        expect(result.purposeUse).to.be.undefined();
-      });
-    });
+        expect(result.purposeUse).to.be.undefined()
+      })
+    })
 
     experiment('when the database row contains a purpose use', () => {
       beforeEach(async () => {
-        result = chargeElementsMapper.dbToModel(data.dbRowWithPurposeUse);
-      });
+        result = chargeElementsMapper.dbToModel(data.dbRowWithPurposeUse)
+      })
 
       test('the purposeUse property is set', async () => {
-        expect(result.purposeUse instanceof PurposeUse).to.be.true();
-      });
-    });
+        expect(result.purposeUse instanceof PurposeUse).to.be.true()
+      })
+    })
 
     experiment('when the database row contains time-limited dates', () => {
       beforeEach(async () => {
-        result = chargeElementsMapper.dbToModel(data.timeLimitedChargeElement);
-      });
+        result = chargeElementsMapper.dbToModel(data.timeLimitedChargeElement)
+      })
 
       test('the timeLimitedPeriod property is set', async () => {
-        expect(result.timeLimitedPeriod instanceof DateRange).to.be.true();
-        expect(result.timeLimitedPeriod.startDate).to.equal(data.timeLimitedChargeElement.timeLimitedStartDate);
-        expect(result.timeLimitedPeriod.endDate).to.equal(data.timeLimitedChargeElement.timeLimitedEndDate);
-      });
-    });
-  });
+        expect(result.timeLimitedPeriod instanceof DateRange).to.be.true()
+        expect(result.timeLimitedPeriod.startDate).to.equal(data.timeLimitedChargeElement.timeLimitedStartDate)
+        expect(result.timeLimitedPeriod.endDate).to.equal(data.timeLimitedChargeElement.timeLimitedEndDate)
+      })
+    })
+  })
 
   experiment('.pojoToModel', () => {
-    let data, model;
+    let data, model
     beforeEach(async () => {
       data = {
         id: uuid(),
@@ -145,62 +145,62 @@ experiment('lib/mappers/charge-element', () => {
         purposeUse: {
           id: uuid()
         }
-      };
-      model = chargeElementsMapper.pojoToModel(data);
-    });
+      }
+      model = chargeElementsMapper.pojoToModel(data)
+    })
 
     test('returns a ChargeElement model', async () => {
-      expect(model).to.be.an.instanceof(ChargeElement);
-    });
+      expect(model).to.be.an.instanceof(ChargeElement)
+    })
 
     test('maps charge element properties', async () => {
-      expect(model.id).to.equal(data.id);
-      expect(model.source).to.equal(data.source);
-      expect(model.season).to.equal(data.season);
-      expect(model.loss).to.equal(data.loss);
-    });
+      expect(model.id).to.equal(data.id)
+      expect(model.source).to.equal(data.source)
+      expect(model.season).to.equal(data.season)
+      expect(model.loss).to.equal(data.loss)
+    })
 
     test('maps the abstraction period', async () => {
-      expect(model.abstractionPeriod).to.be.an.instanceof(AbstractionPeriod);
-      expect(model.abstractionPeriod.startDay).to.equal(1);
-      expect(model.abstractionPeriod.startMonth).to.equal(1);
-      expect(model.abstractionPeriod.endDay).to.equal(31);
-      expect(model.abstractionPeriod.endMonth).to.equal(12);
-    });
+      expect(model.abstractionPeriod).to.be.an.instanceof(AbstractionPeriod)
+      expect(model.abstractionPeriod.startDay).to.equal(1)
+      expect(model.abstractionPeriod.startMonth).to.equal(1)
+      expect(model.abstractionPeriod.endDay).to.equal(31)
+      expect(model.abstractionPeriod.endMonth).to.equal(12)
+    })
 
     test('maps the purpose use', async () => {
-      expect(model.purposeUse).to.be.an.instanceof(PurposeUse);
-      expect(model.purposeUse.id).to.equal(data.purposeUse.id);
-    });
+      expect(model.purposeUse).to.be.an.instanceof(PurposeUse)
+      expect(model.purposeUse.id).to.equal(data.purposeUse.id)
+    })
 
     test('the abstraction period is undefined if not specified in the data', async () => {
-      delete data.abstractionPeriod;
-      model = chargeElementsMapper.pojoToModel(data);
-      expect(model.abstractionPeriod).to.be.undefined();
-    });
+      delete data.abstractionPeriod
+      model = chargeElementsMapper.pojoToModel(data)
+      expect(model.abstractionPeriod).to.be.undefined()
+    })
 
     test('the purpose use is undefined if not specified in the data', async () => {
-      delete data.purposeUse;
-      model = chargeElementsMapper.pojoToModel(data);
-      expect(model.purposeUse).to.be.undefined();
-    });
-  });
+      delete data.purposeUse
+      model = chargeElementsMapper.pojoToModel(data)
+      expect(model.purposeUse).to.be.undefined()
+    })
+  })
 
   experiment('.modelToDb', () => {
-    let model, result, chargeVersion;
+    let model, result, chargeVersion
 
     beforeEach(async () => {
-      chargeVersion = new ChargeVersion(uuid());
+      chargeVersion = new ChargeVersion(uuid())
 
-      const abstractionPeriod = new AbstractionPeriod();
+      const abstractionPeriod = new AbstractionPeriod()
       abstractionPeriod.fromHash({
         startDay: 1,
         startMonth: 3,
         endDay: 31,
         endMonth: 10
-      });
+      })
 
-      model = new ChargeElement();
+      model = new ChargeElement()
       model.fromHash({
         id: uuid(),
         source: 'supported',
@@ -217,13 +217,13 @@ experiment('lib/mappers/charge-element', () => {
         isFactorsOverridden: false,
         isSection127AgreementEnabled: true,
         scheme: 'alcs'
-      });
-    });
+      })
+    })
 
     experiment('when there are time-limited dates', () => {
       beforeEach(async () => {
-        result = chargeElementsMapper.modelToDb(model, chargeVersion);
-      });
+        result = chargeElementsMapper.modelToDb(model, chargeVersion)
+      })
 
       test('the properties are mapped correctly to the database fields', async () => {
         expect(result).to.equal(
@@ -250,25 +250,25 @@ experiment('lib/mappers/charge-element', () => {
             factorsOverridden: model.isFactorsOverridden,
             isSection127AgreementEnabled: true
           }
-        );
-      });
-    });
+        )
+      })
+    })
 
     experiment('when there is no charge version supplied', () => {
       beforeEach(async () => {
-        result = chargeElementsMapper.modelToDb(model);
-      });
+        result = chargeElementsMapper.modelToDb(model)
+      })
 
       test('the .chargeVersionId property is not set', async () => {
-        expect(Object.keys(result)).to.not.include('chargeVersionId');
-      });
-    });
+        expect(Object.keys(result)).to.not.include('chargeVersionId')
+      })
+    })
 
     experiment('when there are no time-limited dates', () => {
       beforeEach(async () => {
-        model.timeLimitedPeriod = null;
-        result = chargeElementsMapper.modelToDb(model, chargeVersion);
-      });
+        model.timeLimitedPeriod = null
+        result = chargeElementsMapper.modelToDb(model, chargeVersion)
+      })
 
       test('the properties are mapped correctly to the database fields', async () => {
         expect(result).to.equal(
@@ -295,8 +295,8 @@ experiment('lib/mappers/charge-element', () => {
             factorsOverridden: model.isFactorsOverridden,
             isSection127AgreementEnabled: true
           }
-        );
-      });
-    });
-  });
-});
+        )
+      })
+    })
+  })
+})

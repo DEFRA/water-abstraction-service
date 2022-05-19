@@ -1,36 +1,36 @@
-'use strict';
+'use strict'
 
 const {
   experiment,
   test,
   beforeEach,
   afterEach
-} = exports.lab = require('@hapi/lab').script();
+} = exports.lab = require('@hapi/lab').script()
 
-const { expect } = require('@hapi/code');
-const sandbox = require('sinon').createSandbox();
+const { expect } = require('@hapi/code')
+const sandbox = require('sinon').createSandbox()
 
-const { getRecipients } = require('../../../../../../src/modules/batch-notifications/config/paper-returns/lib/get-recipients');
-const returnsService = require('../../../../../../src/lib/services/returns/api-connector');
-const scheduledNotificationService = require('../../../../../../src/lib/services/scheduled-notifications');
+const { getRecipients } = require('../../../../../../src/modules/batch-notifications/config/paper-returns/lib/get-recipients')
+const returnsService = require('../../../../../../src/lib/services/returns/api-connector')
+const scheduledNotificationService = require('../../../../../../src/lib/services/scheduled-notifications')
 
-const eventHelpers = require('../../../../../../src/modules/batch-notifications/lib/event-helpers');
-const sendBatch = require('../../../../../../src/modules/batch-notifications/lib/send-batch');
+const eventHelpers = require('../../../../../../src/modules/batch-notifications/lib/event-helpers')
+const sendBatch = require('../../../../../../src/modules/batch-notifications/lib/send-batch')
 
 experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients', () => {
   beforeEach(async () => {
-    sandbox.stub(eventHelpers, 'markAsProcessed');
-    sandbox.stub(sendBatch, 'send');
-  });
+    sandbox.stub(eventHelpers, 'markAsProcessed')
+    sandbox.stub(sendBatch, 'send')
+  })
 
   afterEach(async () => {
-    sandbox.restore();
-  });
+    sandbox.restore()
+  })
 
   experiment('getRecipients', () => {
     experiment('for two recipients and three returns', () => {
-      let eventData;
-      let returnData;
+      let eventData
+      let returnData
 
       beforeEach(async () => {
         returnData = {
@@ -91,7 +91,7 @@ experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients'
           due_date: '2001-01-01',
           under_query: false,
           under_query_comment: null
-        };
+        }
 
         eventData = {
           ev: {
@@ -155,134 +155,134 @@ experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients'
               }
             }
           }
-        };
+        }
 
-        sandbox.stub(returnsService, 'getReturnById').resolves(returnData);
-        sandbox.stub(scheduledNotificationService, 'createScheduledNotification').resolves();
+        sandbox.stub(returnsService, 'getReturnById').resolves(returnData)
+        sandbox.stub(scheduledNotificationService, 'createScheduledNotification').resolves()
 
-        await getRecipients(eventData);
-      });
+        await getRecipients(eventData)
+      })
 
       test('three notifications are saved', async () => {
-        expect(scheduledNotificationService.createScheduledNotification.callCount).to.equal(3);
-      });
+        expect(scheduledNotificationService.createScheduledNotification.callCount).to.equal(3)
+      })
 
       experiment('the notifications have', () => {
         test('the expected message ref', async () => {
-          const [notification] = scheduledNotificationService.createScheduledNotification.lastCall.args;
-          expect(notification.messageRef).to.equal('pdf.return_form');
-        });
+          const [notification] = scheduledNotificationService.createScheduledNotification.lastCall.args
+          expect(notification.messageRef).to.equal('pdf.return_form')
+        })
 
         test('the expected message type', async () => {
-          const [notification] = scheduledNotificationService.createScheduledNotification.lastCall.args;
-          expect(notification.messageType).to.equal('letter');
-        });
+          const [notification] = scheduledNotificationService.createScheduledNotification.lastCall.args
+          expect(notification.messageType).to.equal('letter')
+        })
 
         test('the event id from the event data', async () => {
-          const [notification] = scheduledNotificationService.createScheduledNotification.lastCall.args;
-          expect(notification.eventId).to.equal(eventData.ev.id);
-        });
+          const [notification] = scheduledNotificationService.createScheduledNotification.lastCall.args
+          expect(notification.eventId).to.equal(eventData.ev.id)
+        })
 
         experiment('a personalisation object which contains', () => {
-          let personalisation;
+          let personalisation
 
           beforeEach(async () => {
-            const [notification] = scheduledNotificationService.createScheduledNotification.lastCall.args;
-            personalisation = notification.personalisation;
-          });
+            const [notification] = scheduledNotificationService.createScheduledNotification.lastCall.args
+            personalisation = notification.personalisation
+          })
 
           test('address_line_1', async () => {
-            expect(personalisation.address_line_1).to.equal('FAO test-contact-salutation test-contact-first-name test-contact-last-name, test-company-name');
-          });
+            expect(personalisation.address_line_1).to.equal('FAO test-contact-salutation test-contact-first-name test-contact-last-name, test-company-name')
+          })
 
           test('address_line_2', async () => {
-            expect(personalisation.address_line_2).to.equal('add-line-1, add-line-2');
-          });
+            expect(personalisation.address_line_2).to.equal('add-line-1, add-line-2')
+          })
 
           test('address_line_3', async () => {
-            expect(personalisation.address_line_3).to.equal('add-line-3, add-line-4');
-          });
+            expect(personalisation.address_line_3).to.equal('add-line-3, add-line-4')
+          })
 
           test('address_line_4', async () => {
-            expect(personalisation.address_line_4).to.equal('test-town');
-          });
+            expect(personalisation.address_line_4).to.equal('test-town')
+          })
 
           test('address_line_5', async () => {
-            expect(personalisation.address_line_5).to.equal('test-county');
-          });
+            expect(personalisation.address_line_5).to.equal('test-county')
+          })
 
           test('address_line_6', async () => {
-            expect(personalisation.address_line_6).to.equal('test-post-code');
-          });
+            expect(personalisation.address_line_6).to.equal('test-post-code')
+          })
 
           test('address_line_7', async () => {
-            expect(personalisation.address_line_7).to.equal('test-country');
-          });
+            expect(personalisation.address_line_7).to.equal('test-country')
+          })
 
           test('area_code', async () => {
-            expect(personalisation.area_code).to.equal('test-area-code');
-          });
+            expect(personalisation.area_code).to.equal('test-area-code')
+          })
 
           test('due_date', async () => {
-            expect(personalisation.due_date).to.equal('2001-01-01');
-          });
+            expect(personalisation.due_date).to.equal('2001-01-01')
+          })
 
           test('end_date', async () => {
-            expect(personalisation.end_date).to.equal('2100-01-01');
-          });
+            expect(personalisation.end_date).to.equal('2100-01-01')
+          })
 
           test('format_id', async () => {
-            expect(personalisation.format_id).to.equal(12345678);
-          });
+            expect(personalisation.format_id).to.equal(12345678)
+          })
 
           test('is_two_part_tariff', async () => {
-            expect(personalisation.is_two_part_tariff).to.equal(false);
-          });
+            expect(personalisation.is_two_part_tariff).to.equal(false)
+          })
 
           test('licence_ref', async () => {
-            expect(personalisation.licence_ref).to.equal('123/123');
-          });
+            expect(personalisation.licence_ref).to.equal('123/123')
+          })
 
           test('purpose', async () => {
-            expect(personalisation.purpose).to.equal('test-purpose-1-tertiary-desc, test-purpose-2-tertiary-desc');
-          });
+            expect(personalisation.purpose).to.equal('test-purpose-1-tertiary-desc, test-purpose-2-tertiary-desc')
+          })
 
           test('qr_url', async () => {
-            expect(personalisation.qr_url).to.equal('return-one');
-          });
+            expect(personalisation.qr_url).to.equal('return-one')
+          })
 
           test('region_code', async () => {
-            expect(personalisation.region_code).to.equal(1);
-          });
+            expect(personalisation.region_code).to.equal(1)
+          })
 
           test('returns_frequency', async () => {
-            expect(personalisation.returns_frequency).to.equal('day');
-          });
+            expect(personalisation.returns_frequency).to.equal('day')
+          })
 
           test('site_description', async () => {
-            expect(personalisation.site_description).to.equal('test-desc');
-          });
+            expect(personalisation.site_description).to.equal('test-desc')
+          })
 
           test('start_date', async () => {
-            expect(personalisation.start_date).to.equal('2000-01-01');
-          });
-        });
-      });
+            expect(personalisation.start_date).to.equal('2000-01-01')
+          })
+        })
+      })
 
       test('the event is updated with the affected licence numbers and recipient count', async () => {
         expect(eventHelpers.markAsProcessed.calledWith(
           '11111111-1111-1111-1111-111111111111',
           ['123/123', '123/123', '123/123'],
           3
-        )).to.be.true();
-      });
+        )).to.be.true()
+      })
 
       test('the batch is sent', async () => {
         expect(sendBatch.send.calledWith(
           '11111111-1111-1111-1111-111111111111',
           'mail@example.com'
-        )).to.be.true();
-      });
-    });
-  });
-});
+        )).to.be.true()
+      })
+    })
+  })
+})

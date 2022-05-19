@@ -19,4 +19,4 @@ licence_version_id is not null)
 and licence_id not in (select licence_id from water.charge_versions cv 
 join water.billing_batch_charge_version_years bbcvy on cv.charge_version_id = bbcvy.charge_version_id 
 join water.billing_batches bb on bb.billing_batch_id = bbcvy.billing_batch_id 
-where bb.status in ('review', 'ready'));`;
+where bb.status in ('review', 'ready'));`

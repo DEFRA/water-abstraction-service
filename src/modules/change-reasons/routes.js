@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const controller = require('./controller');
+const controller = require('./controller')
 
 module.exports = {
 
@@ -10,4 +10,4 @@ module.exports = {
     handler: controller.getChangeReasons
   }
 
-};
+}

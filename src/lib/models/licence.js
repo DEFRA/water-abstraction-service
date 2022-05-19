@@ -1,19 +1,19 @@
-'use strict';
-const { compact, orderBy } = require('lodash');
-const moment = require('moment');
-const Model = require('./model');
-const { assertLicenceNumber, assertIsInstanceOf, assertDate, assertNullableDate, assertIsArrayOfType } = require('./validators');
-const Region = require('./region');
-const LicenceAgreement = require('./licence-agreement');
+'use strict'
+const { compact, orderBy } = require('lodash')
+const moment = require('moment')
+const Model = require('./model')
+const { assertLicenceNumber, assertIsInstanceOf, assertDate, assertNullableDate, assertIsArrayOfType } = require('./validators')
+const Region = require('./region')
+const LicenceAgreement = require('./licence-agreement')
 
 class Licence extends Model {
   set licenceNumber (licenceNumber) {
-    assertLicenceNumber(licenceNumber);
-    this._licenceNumber = licenceNumber;
+    assertLicenceNumber(licenceNumber)
+    this._licenceNumber = licenceNumber
   }
 
   get licenceNumber () {
-    return this._licenceNumber;
+    return this._licenceNumber
   }
 
   /**
@@ -21,12 +21,12 @@ class Licence extends Model {
    * @return {Region}
    */
   get region () {
-    return this._region;
+    return this._region
   }
 
   set region (region) {
-    assertIsInstanceOf(region, Region);
-    this._region = region;
+    assertIsInstanceOf(region, Region)
+    this._region = region
   }
 
   /**
@@ -34,12 +34,12 @@ class Licence extends Model {
    * @return {Region}
    */
   get historicalArea () {
-    return this._historicalArea;
+    return this._historicalArea
   }
 
   set historicalArea (region) {
-    assertIsInstanceOf(region, Region);
-    this._historicalArea = region;
+    assertIsInstanceOf(region, Region)
+    this._historicalArea = region
   }
 
   /**
@@ -47,12 +47,12 @@ class Licence extends Model {
    * @return {Region}
    */
   get regionalChargeArea () {
-    return this._regionalChargeArea;
+    return this._regionalChargeArea
   }
 
   set regionalChargeArea (region) {
-    assertIsInstanceOf(region, Region);
-    this._regionalChargeArea = region;
+    assertIsInstanceOf(region, Region)
+    this._regionalChargeArea = region
   }
 
   /**
@@ -60,12 +60,12 @@ class Licence extends Model {
    * @return {String}
    */
   get startDate () {
-    return this._startDate;
+    return this._startDate
   }
 
   set startDate (startDate) {
-    assertDate(startDate);
-    this._startDate = startDate;
+    assertDate(startDate)
+    this._startDate = startDate
   }
 
   /**
@@ -73,12 +73,12 @@ class Licence extends Model {
    * @return {String|null}
    */
   get expiredDate () {
-    return this._expiredDate;
+    return this._expiredDate
   }
 
   set expiredDate (expiredDate) {
-    assertNullableDate(expiredDate);
-    this._expiredDate = expiredDate;
+    assertNullableDate(expiredDate)
+    this._expiredDate = expiredDate
   }
 
   /**
@@ -86,12 +86,12 @@ class Licence extends Model {
    * @return {String|null}
    */
   get lapsedDate () {
-    return this._lapsedDate;
+    return this._lapsedDate
   }
 
   set lapsedDate (lapsedDate) {
-    assertNullableDate(lapsedDate);
-    this._lapsedDate = lapsedDate;
+    assertNullableDate(lapsedDate)
+    this._lapsedDate = lapsedDate
   }
 
   /**
@@ -99,12 +99,12 @@ class Licence extends Model {
    * @return {String|null}
    */
   get revokedDate () {
-    return this._revokedDate;
+    return this._revokedDate
   }
 
   set revokedDate (revokedDate) {
-    assertNullableDate(revokedDate);
-    this._revokedDate = revokedDate;
+    assertNullableDate(revokedDate)
+    this._revokedDate = revokedDate
   }
 
   /**
@@ -112,9 +112,9 @@ class Licence extends Model {
    * @return {String|null}
    */
   get endDate () {
-    const dates = compact([this.expiredDate, this.lapsedDate, this.revokedDate]);
-    const sorted = orderBy(dates, date => moment(date).unix());
-    return sorted[0] || null;
+    const dates = compact([this.expiredDate, this.lapsedDate, this.revokedDate])
+    const sorted = orderBy(dates, date => moment(date).unix())
+    return sorted[0] || null
   }
 
   /**
@@ -122,7 +122,7 @@ class Licence extends Model {
    * @return {Boolean}
    */
   get isFutureDated () {
-    return moment(this.startDate).isAfter(moment(), 'day');
+    return moment(this.startDate).isAfter(moment(), 'day')
   }
 
   /**
@@ -134,25 +134,25 @@ class Licence extends Model {
       { key: 'expiredDate', date: this.expiredDate },
       { key: 'lapsedDate', date: this.lapsedDate },
       { key: 'revokedDate', date: this.revokedDate }
-    ];
+    ]
 
     const sortedDates = orderBy(
       dates.filter(row => !!row.date),
       row => moment(row.date).unix()
-    );
+    )
 
-    return sortedDates[0] ? sortedDates[0].key : null;
+    return sortedDates[0] ? sortedDates[0].key : null
   }
 
   get isActive () {
     if (this.isFutureDated) {
-      return false;
+      return false
     }
     if (!this.endDate) {
-      return true;
+      return true
     }
-    const now = moment();
-    return !moment(this.endDate).isBefore(now, 'day');
+    const now = moment()
+    return !moment(this.endDate).isBefore(now, 'day')
   }
 
   /**
@@ -160,12 +160,12 @@ class Licence extends Model {
    * @return {Array<LicenceAgreement>}
    */
   get licenceAgreements () {
-    return this._licenceAgreements;
+    return this._licenceAgreements
   }
 
   set licenceAgreements (licenceAgreements) {
-    assertIsArrayOfType(licenceAgreements, LicenceAgreement);
-    this._licenceAgreements = licenceAgreements;
+    assertIsArrayOfType(licenceAgreements, LicenceAgreement)
+    this._licenceAgreements = licenceAgreements
   }
 
   toJSON () {
@@ -175,8 +175,8 @@ class Licence extends Model {
       endDate: this.endDate,
       endDateReason: this.endDateReason,
       isActive: this.isActive
-    };
+    }
   }
 }
 
-module.exports = Licence;
+module.exports = Licence

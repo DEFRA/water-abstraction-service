@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const { ChargePurpose } = require('../bookshelf');
+const { ChargePurpose } = require('../bookshelf')
 
-const helpers = require('./lib/helpers');
+const helpers = require('./lib/helpers')
 
-const create = data => helpers.create(ChargePurpose, data);
+const create = data => helpers.create(ChargePurpose, data)
 
-exports.create = create;
+exports.create = create

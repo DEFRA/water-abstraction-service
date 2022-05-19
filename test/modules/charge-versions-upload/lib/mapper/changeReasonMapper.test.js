@@ -4,18 +4,18 @@ const {
   test,
   beforeEach,
   afterEach
-} = exports.lab = require('@hapi/lab').script();
-const { expect } = require('@hapi/code');
-const sandbox = require('sinon').createSandbox();
+} = exports.lab = require('@hapi/lab').script()
+const { expect } = require('@hapi/code')
+const sandbox = require('sinon').createSandbox()
 
-const uuid = require('uuid/v4');
+const uuid = require('uuid/v4')
 
-const helpers = require('../../../../../src/modules/charge-versions-upload/lib/helpers');
-const { mapToChangeReason } = require('../../../../../src/modules/charge-versions-upload/lib/mapper/changeReasonMapper');
+const helpers = require('../../../../../src/modules/charge-versions-upload/lib/helpers')
+const { mapToChangeReason } = require('../../../../../src/modules/charge-versions-upload/lib/mapper/changeReasonMapper')
 
-const CHANGE_REASON_DESCRIPTION = 'Valid Charge Reason Description';
-const CHANGE_REASON_ID = uuid();
-const CHANGE_REASON_TYPE = 'Valid Charge Reason Type';
+const CHANGE_REASON_DESCRIPTION = 'Valid Charge Reason Description'
+const CHANGE_REASON_ID = uuid()
+const CHANGE_REASON_TYPE = 'Valid Charge Reason Type'
 
 experiment('mapToChangeReasons', () => {
   beforeEach(() => {
@@ -26,12 +26,12 @@ experiment('mapToChangeReasons', () => {
       isEnabledForNewChargeVersions: true,
       triggersMinimumCharge: false,
       isTwoPartTariff: false
-    });
-  });
+    })
+  })
 
   afterEach(async () => {
-    sandbox.restore();
-  });
+    sandbox.restore()
+  })
 
   test('when mapping purpose use', async () => {
     expect(await mapToChangeReason({
@@ -42,6 +42,6 @@ experiment('mapToChangeReasons', () => {
       isEnabledForNewChargeVersions: true,
       triggersMinimumCharge: false,
       description: CHANGE_REASON_DESCRIPTION
-    });
-  });
-});
+    })
+  })
+})

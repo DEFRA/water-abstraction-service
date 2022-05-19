@@ -1,17 +1,17 @@
-'use strict';
+'use strict'
 
-const Model = require('./model');
+const Model = require('./model')
 
-const validators = require('./validators');
+const validators = require('./validators')
 
 const eventTypes = {
   notification: 'notification'
-};
+}
 
 class Event extends Model {
   constructor (id) {
-    super(id);
-    this._licences = [];
+    super(id)
+    this._licences = []
   }
 
   /**
@@ -19,7 +19,7 @@ class Event extends Model {
    * @param {String} referenceCode
    */
   set referenceCode (referenceCode) {
-    this._referenceCode = referenceCode;
+    this._referenceCode = referenceCode
   }
 
   /**
@@ -27,7 +27,7 @@ class Event extends Model {
    * @return {String}
    */
   get referenceCode () {
-    return this._referenceCode;
+    return this._referenceCode
   }
 
   /**
@@ -36,8 +36,8 @@ class Event extends Model {
    * @param {String} type
    */
   set type (type) {
-    validators.assertString(type);
-    this._type = type;
+    validators.assertString(type)
+    this._type = type
   }
 
   /**
@@ -45,7 +45,7 @@ class Event extends Model {
    * @return {String}
    */
   get type () {
-    return this._type;
+    return this._type
   }
 
   /**
@@ -53,8 +53,8 @@ class Event extends Model {
    * @param {String} subtype
    */
   set subtype (subtype) {
-    validators.assertNullableString(subtype);
-    this._subtype = subtype;
+    validators.assertNullableString(subtype)
+    this._subtype = subtype
   }
 
   /**
@@ -62,7 +62,7 @@ class Event extends Model {
    * @return {String}
    */
   get subtype () {
-    return this._subtype;
+    return this._subtype
   }
 
   /**
@@ -70,8 +70,8 @@ class Event extends Model {
      * @param {String} issuer
      */
   set issuer (issuer) {
-    validators.assertNullableString(issuer);
-    this._issuer = issuer;
+    validators.assertNullableString(issuer)
+    this._issuer = issuer
   }
 
   /**
@@ -79,7 +79,7 @@ class Event extends Model {
    * @return {String}
    */
   get issuer () {
-    return this._issuer;
+    return this._issuer
   }
 
   /**
@@ -87,8 +87,8 @@ class Event extends Model {
      * @param {Licence} Licence
      */
   set licences (licences) {
-    validators.assertIsArrayOfNullableStrings(licences);
-    this._licences = licences;
+    validators.assertIsArrayOfNullableStrings(licences)
+    this._licences = licences
   }
 
   /**
@@ -96,7 +96,7 @@ class Event extends Model {
     * @return {String}
     */
   get licences () {
-    return this._licences;
+    return this._licences
   }
 
   /**
@@ -104,8 +104,8 @@ class Event extends Model {
      * @param {Object} entities
      */
   set entities (entities) {
-    validators.assertIsNullableInstanceOf(entities, Object);
-    this._entities = entities;
+    validators.assertIsNullableInstanceOf(entities, Object)
+    this._entities = entities
   }
 
   /**
@@ -113,7 +113,7 @@ class Event extends Model {
     * @return {Object}
     */
   get entities () {
-    return this._entities;
+    return this._entities
   }
 
   /**
@@ -121,8 +121,8 @@ class Event extends Model {
    * @param {String} comment
    */
   set comment (comment) {
-    validators.assertNullableString(comment);
-    this._comment = comment;
+    validators.assertNullableString(comment)
+    this._comment = comment
   }
 
   /**
@@ -130,7 +130,7 @@ class Event extends Model {
    * @return {String}
    */
   get comment () {
-    return this._comment;
+    return this._comment
   }
 
   /**
@@ -138,8 +138,8 @@ class Event extends Model {
    * @param {Object} metadata
    */
   set metadata (metadata) {
-    validators.assertIsNullableInstanceOf(metadata, Object);
-    this._metadata = metadata;
+    validators.assertIsNullableInstanceOf(metadata, Object)
+    this._metadata = metadata
   }
 
   /**
@@ -147,7 +147,7 @@ class Event extends Model {
    * @return {Object}
    */
   get metadata () {
-    return this._metadata;
+    return this._metadata
   }
 
   /**
@@ -155,8 +155,8 @@ class Event extends Model {
    * @param {String} status
    */
   set status (status) {
-    validators.assertNullableString(status);
-    this._status = status;
+    validators.assertNullableString(status)
+    this._status = status
   }
 
   /**
@@ -164,7 +164,7 @@ class Event extends Model {
    * @return {String}
    */
   get status () {
-    return this._status;
+    return this._status
   }
 
   /**
@@ -172,7 +172,7 @@ class Event extends Model {
    * @param {string} created
    */
   set created (created) {
-    this._created = this.getDateTimeFromValue(created);
+    this._created = this.getDateTimeFromValue(created)
   }
 
   /**
@@ -180,7 +180,7 @@ class Event extends Model {
    * @return {string}
    */
   get created () {
-    return this._created;
+    return this._created
   }
 
   /**
@@ -188,7 +188,7 @@ class Event extends Model {
    * @param {string} modified
    */
   set modified (modified) {
-    this._modified = this.getDateTimeFromValue(modified);
+    this._modified = this.getDateTimeFromValue(modified)
   }
 
   /**
@@ -196,9 +196,9 @@ class Event extends Model {
    * @return {string}
    */
   get modified () {
-    return this._modified;
+    return this._modified
   }
 }
 
-module.exports = Event;
-module.exports.eventTypes = eventTypes;
+module.exports = Event
+module.exports.eventTypes = eventTypes

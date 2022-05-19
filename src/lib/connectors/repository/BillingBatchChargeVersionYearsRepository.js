@@ -1,5 +1,5 @@
-const Repository = require('@envage/hapi-pg-rest-api/src/repository');
-const db = require('../db');
+const Repository = require('@envage/hapi-pg-rest-api/src/repository')
+const db = require('../db')
 
 class BillingBatchChargeVersionYearsRepository extends Repository {
   constructor (config = {}) {
@@ -7,8 +7,8 @@ class BillingBatchChargeVersionYearsRepository extends Repository {
       connection: db.pool,
       table: 'water.billing_batch_charge_version_years',
       primaryKey: 'billing_batch_charge_version_year_id'
-    }, config));
+    }, config))
   }
 }
 
-module.exports = BillingBatchChargeVersionYearsRepository;
+module.exports = BillingBatchChargeVersionYearsRepository

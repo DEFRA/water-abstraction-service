@@ -1,21 +1,21 @@
-'use strict';
+'use strict'
 
 /**
  * @module syncs the charge module invoices/licences/transactions
  * to the local WRLS DB
  */
-const { get } = require('lodash');
-const errors = require('../../../lib/errors');
+const { get } = require('lodash')
+const errors = require('../../../lib/errors')
 
-const messageQueue = require('../../../lib/message-queue-v2');
-const { jobNames } = require('../../../lib/constants');
+const messageQueue = require('../../../lib/message-queue-v2')
+const { jobNames } = require('../../../lib/constants')
 
-const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
+const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs')
 
 // Services
-const batchService = require('./batch-service');
+const batchService = require('./batch-service')
 
-const isCMGeneratingSummary = cmResponse => ['pending', 'sending'].includes(get(cmResponse, 'billRun.status'));
+const isCMGeneratingSummary = cmResponse => ['pending', 'sending'].includes(get(cmResponse, 'billRun.status'))
 
 /**
  * Updates the batch with the given batch ID
@@ -25,16 +25,16 @@ const isCMGeneratingSummary = cmResponse => ['pending', 'sending'].includes(get(
  */
 const updateBatch = async batchId => {
   // Fetch WRLS batch
-  const batch = await batchService.getBatchById(batchId);
+  const batch = await batchService.getBatchById(batchId)
   if (!batch) {
-    throw new errors.NotFoundError(`CM refresh failed, batch ${batchId} not found`);
+    throw new errors.NotFoundError(`CM refresh failed, batch ${batchId} not found`)
   }
 
   // Get CM bill run summary
-  const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
+  const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId)
 
   if (isCMGeneratingSummary(cmResponse)) {
-    return false;
+    return false
   }
 
   // Update invoices in batch
@@ -42,11 +42,11 @@ const updateBatch = async batchId => {
   // for a batch containing only re-billing, there are >0 transactions
   // in the batch before calculating the new batch status
 
-  messageQueue.getQueueManager().add(jobNames.updateInvoices, { batch, cmResponse });
+  messageQueue.getQueueManager().add(jobNames.updateInvoices, { batch, cmResponse })
 
-  await batchService.updateWithCMSummary(batch.id, cmResponse);
+  await batchService.updateWithCMSummary(batch.id, cmResponse)
 
-  return true;
-};
+  return true
+}
 
-exports.updateBatch = updateBatch;
+exports.updateBatch = updateBatch

@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
-const Lab = require('@hapi/lab');
-const { experiment, test, beforeEach, afterEach } = exports.lab = Lab.script();
-const { expect } = require('@hapi/code');
-const sandbox = require('sinon').createSandbox();
-const repos = require('../../../src/lib/connectors/repos');
+const Lab = require('@hapi/lab')
+const { experiment, test, beforeEach, afterEach } = exports.lab = Lab.script()
+const { expect } = require('@hapi/code')
+const sandbox = require('sinon').createSandbox()
+const repos = require('../../../src/lib/connectors/repos')
 
 const chargeCategories = [{
   billingChargeCategoryId: '3e920b4f-5563-4c7a-8583-5e1c66ab4f83',
@@ -20,21 +20,21 @@ const chargeCategories = [{
   lossFactor: 'Low',
   modelTier: 'No model',
   restrictedSource: false
-}];
+}]
 
-const controller = require('../../../src/modules/charge-categories/controller');
+const controller = require('../../../src/modules/charge-categories/controller')
 
 experiment('./src/modules/change-reasons/controller.js', () => {
   beforeEach(async () => {
-    sandbox.stub(repos.chargeCategories, 'findOneByProperties').resolves(chargeCategories);
-  });
+    sandbox.stub(repos.chargeCategories, 'findOneByProperties').resolves(chargeCategories)
+  })
 
   afterEach(async () => {
-    sandbox.restore();
-  });
+    sandbox.restore()
+  })
 
   experiment('.getChargeCategoryByProperties', () => {
-    let response;
+    let response
 
     beforeEach(async () => {
       const request = {
@@ -45,17 +45,17 @@ experiment('./src/modules/change-reasons/controller.js', () => {
           availability: 'Available',
           model: 'Tier 1'
         }
-      };
-      response = await controller.getChargeCategoryByProperties(request);
-    });
+      }
+      response = await controller.getChargeCategoryByProperties(request)
+    })
 
     test('calls change reasons repo', async () => {
-      expect(repos.chargeCategories.findOneByProperties.called).to.be.true();
-    });
+      expect(repos.chargeCategories.findOneByProperties.called).to.be.true()
+    })
 
     test('returns change reasons array mapped to model', async () => {
-      expect(response[0].id).to.equal(chargeCategories[0].changeReasonId);
-      expect(response[0].description).to.equal(chargeCategories[0].description);
-    });
-  });
-});
+      expect(response[0].id).to.equal(chargeCategories[0].changeReasonId)
+      expect(response[0].description).to.equal(chargeCategories[0].description)
+    })
+  })
+})

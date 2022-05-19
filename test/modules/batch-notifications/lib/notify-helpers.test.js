@@ -1,12 +1,12 @@
-const { expect } = require('@hapi/code');
+const { expect } = require('@hapi/code')
 const {
   experiment,
   test
-} = exports.lab = require('@hapi/lab').script();
+} = exports.lab = require('@hapi/lab').script()
 
 const { mapContactAddress } =
- require('../../../../src/modules/batch-notifications/lib/notify-helpers');
-const Contact = require('../../../../src/lib/models/contact');
+ require('../../../../src/modules/batch-notifications/lib/notify-helpers')
+const Contact = require('../../../../src/lib/models/contact')
 
 experiment('mapContactAddress', () => {
   test('should map an individual address to Notify personalisation fields', async () => {
@@ -24,8 +24,8 @@ experiment('mapContactAddress', () => {
       county: 'Testshire',
       country: 'England',
       postcode: 'TT1 1TT'
-    });
-    const personalisation = mapContactAddress(contact);
+    })
+    const personalisation = mapContactAddress(contact)
     expect(personalisation).to.equal({
       address_line_1: 'Viscount J Doe',
       address_line_2: 'Daisy Farm, Daisy Cottage',
@@ -34,8 +34,8 @@ experiment('mapContactAddress', () => {
       address_line_5: 'Testshire',
       address_line_6: 'England',
       postcode: 'TT1 1TT'
-    });
-  });
+    })
+  })
 
   test('should map a company address to Notify personalisation fields', async () => {
     const contact = new Contact({
@@ -52,8 +52,8 @@ experiment('mapContactAddress', () => {
       county: 'Testshire',
       country: 'England',
       postcode: 'TT1 1TT'
-    });
-    const personalisation = mapContactAddress(contact);
+    })
+    const personalisation = mapContactAddress(contact)
     expect(personalisation).to.equal({
       address_line_1: 'Umami Cheese Co',
       address_line_2: 'Daisy Farm, Daisy Cottage',
@@ -62,6 +62,6 @@ experiment('mapContactAddress', () => {
       address_line_5: 'Testshire',
       address_line_6: 'England',
       postcode: 'TT1 1TT'
-    });
-  });
-});
+    })
+  })
+})

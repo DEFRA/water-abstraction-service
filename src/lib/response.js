@@ -1,4 +1,4 @@
-const camelCaseKeys = require('./camel-case-keys');
+const camelCaseKeys = require('./camel-case-keys')
 
 /**
  * Takes some data and/or an error and returns a consistent response object shape
@@ -10,9 +10,9 @@ const camelCaseKeys = require('./camel-case-keys');
 const envelope = (data, camelCaseData = false, error = null) => ({
   data: camelCaseData ? camelCaseKeys(data) : data,
   error
-});
+})
 
-const errorEnvelope = (error = null) => envelope(null, false, error);
+const errorEnvelope = (error = null) => envelope(null, false, error)
 
-exports.envelope = envelope;
-exports.errorEnvelope = errorEnvelope;
+exports.envelope = envelope
+exports.errorEnvelope = errorEnvelope

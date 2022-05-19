@@ -1,18 +1,18 @@
-'use strict';
+'use strict'
 
 const {
   experiment,
   test,
   beforeEach
-} = exports.lab = require('@hapi/lab').script();
+} = exports.lab = require('@hapi/lab').script()
 
-const { expect } = require('@hapi/code');
-const mapper = require('../../../src/lib/mappers/notification-event');
-const NotificationEvent = require('../../../src/lib/models/notification-event');
+const { expect } = require('@hapi/code')
+const mapper = require('../../../src/lib/mappers/notification-event')
+const NotificationEvent = require('../../../src/lib/models/notification-event')
 
-const { MESSAGE_STATUSES, NOTIFY_STATUSES } = require('../../../src/lib/models/scheduled-notification');
+const { MESSAGE_STATUSES, NOTIFY_STATUSES } = require('../../../src/lib/models/scheduled-notification')
 
-const DATE_FORMAT = 'YYYY-MM-DD';
+const DATE_FORMAT = 'YYYY-MM-DD'
 
 const row = {
   recipientCount: 10,
@@ -90,24 +90,24 @@ const row = {
       count: 377
     }
   ]
-};
+}
 
 experiment('modules/billing/mappers/notification-event', () => {
   experiment('.dbToModel', () => {
-    let result;
+    let result
 
     experiment('when there is a statuses array', () => {
       beforeEach(async () => {
-        result = mapper.dbToModel(row);
-      });
+        result = mapper.dbToModel(row)
+      })
 
       test('returns a NotificationEvent model', async () => {
-        expect(result instanceof NotificationEvent).to.be.true();
-      });
+        expect(result instanceof NotificationEvent).to.be.true()
+      })
 
       test('maps id', async () => {
-        expect(result.id).to.equal(row.eventId);
-      });
+        expect(result.id).to.equal(row.eventId)
+      })
 
       const copiedProperties = [
         'recipientCount',
@@ -116,51 +116,51 @@ experiment('modules/billing/mappers/notification-event', () => {
         'subtype',
         'metadata',
         'referenceCode'
-      ];
+      ]
 
       copiedProperties.forEach(property => {
         test(`maps ${property}`, async () => {
-          expect(result[property]).to.equal(row[property]);
-        });
-      });
+          expect(result[property]).to.equal(row[property])
+        })
+      })
 
       test('maps .created to a moment', async () => {
-        expect(result.created.format(DATE_FORMAT)).to.equal(row.created);
-      });
+        expect(result.created.format(DATE_FORMAT)).to.equal(row.created)
+      })
 
       test('maps .modified to a moment', async () => {
-        expect(result.modified.format(DATE_FORMAT)).to.equal(row.modified);
-      });
+        expect(result.modified.format(DATE_FORMAT)).to.equal(row.modified)
+      })
 
       test('maps the statuses array to a single error count', async () => {
-        expect(result.errorCount).to.equal(505);
-      });
-    });
+        expect(result.errorCount).to.equal(505)
+      })
+    })
 
     experiment('when the statuses are null', () => {
       beforeEach(async () => {
         result = mapper.dbToModel({
           ...row,
           statuses: null
-        });
-      });
+        })
+      })
 
       test('the errorCount is null', async () => {
-        expect(result.errorCount).to.be.null();
-      });
-    });
+        expect(result.errorCount).to.be.null()
+      })
+    })
 
     experiment('when the recipient count is null', () => {
       beforeEach(async () => {
         result = mapper.dbToModel({
           ...row,
           recipientCount: null
-        });
-      });
+        })
+      })
 
       test('the recipientCount is null', async () => {
-        expect(result.recipientCount).to.be.null();
-      });
-    });
-  });
-});
+        expect(result.recipientCount).to.be.null()
+      })
+    })
+  })
+})

@@ -1,6 +1,6 @@
-'use strict';
-const { truncate, identity, pick } = require('lodash');
-const { combineAddressLines, getAddressObjectFromArray } = require('./lib/helpers');
+'use strict'
+const { truncate, identity, pick } = require('lodash')
+const { combineAddressLines, getAddressObjectFromArray } = require('./lib/helpers')
 
 /**
  * @module maps service models to charge module expected schema
@@ -13,23 +13,23 @@ const { combineAddressLines, getAddressObjectFromArray } = require('./lib/helper
  * @return {Object} mapped customer object
  */
 const mapInvoiceAccountToChargeModuleCustomer = invoiceAccount => {
-  const { lastInvoiceAccountAddress, company } = invoiceAccount;
+  const { lastInvoiceAccountAddress, company } = invoiceAccount
   if (!lastInvoiceAccountAddress) {
-    return new Error('Could not retrieve lastInvoiceAccountAddress');
+    return new Error('Could not retrieve lastInvoiceAccountAddress')
   }
-  const { address, agentCompany } = lastInvoiceAccountAddress;
-  const customerName = extractCustomerName(company, agentCompany);
-  const fao = extractFAO(lastInvoiceAccountAddress);
+  const { address, agentCompany } = lastInvoiceAccountAddress
+  const customerName = extractCustomerName(company, agentCompany)
+  const fao = extractFAO(lastInvoiceAccountAddress)
 
-  const parsedAddress = extractAddress(address, fao);
+  const parsedAddress = extractAddress(address, fao)
 
   return {
     region: invoiceAccount.accountNumber.charAt(0), // Region code is always assumed to be the first letter of the account number,
     customerReference: invoiceAccount.accountNumber,
-    customerName: customerName,
+    customerName,
     ...parsedAddress
-  };
-};
+  }
+}
 
 const extractAddress = (address, fao = null) => {
   /**
@@ -51,55 +51,55 @@ const extractAddress = (address, fao = null) => {
     *  concatenated with a comma, the FAO and the address lines are smoshed into
     */
 
-  const lines = [];
+  const lines = []
   if (fao) {
-    lines.push(`FAO ${fao}`);
+    lines.push(`FAO ${fao}`)
   }
   const addressLines = Object.values(
     pick(address, 'addressLine1', 'addressLine2', 'addressLine3', 'addressLine4')
-  ).filter(identity);
+  ).filter(identity)
 
-  lines.push(...addressLines);
+  lines.push(...addressLines)
 
-  const arr = combineAddressLines(lines, 4);
+  const arr = combineAddressLines(lines, 4)
 
-  const parsedAddress = getAddressObjectFromArray(arr, 'addressLine');
+  const parsedAddress = getAddressObjectFromArray(arr, 'addressLine')
 
-  const response = {};
+  const response = {}
 
   for (const [key, value] of Object.entries(parsedAddress)) {
-    response[key] = truncate(value, { length: 240 });
+    response[key] = truncate(value, { length: 240 })
   }
 
-  let line6 = '';
+  let line6 = ''
   if (address.county && address.country) {
-    line6 = `${address.county}, ${address.country}`;
+    line6 = `${address.county}, ${address.country}`
   } else {
     if (address.county) {
-      line6 = address.county;
+      line6 = address.county
     } else {
-      line6 = address.country;
+      line6 = address.country
     }
   }
 
-  response.addressLine5 = truncate(address.town, { length: 60 });
-  response.addressLine6 = truncate(line6, { length: 60 });
-  response.postcode = truncate(address.postcode, { length: 60 });
+  response.addressLine5 = truncate(address.town, { length: 60 })
+  response.addressLine6 = truncate(line6, { length: 60 })
+  response.postcode = truncate(address.postcode, { length: 60 })
 
-  return response;
-};
+  return response
+}
 
-const extractCustomerName = (company = {}, agentCompany = {}) => agentCompany.name ? agentCompany.name : company.name;
+const extractCustomerName = (company = {}, agentCompany = {}) => agentCompany.name ? agentCompany.name : company.name
 
 const extractFAO = invoiceAccount => {
   if (invoiceAccount.contact) {
-    return invoiceAccount.contact.fullName;
+    return invoiceAccount.contact.fullName
   } else {
-    return null;
+    return null
   }
-};
+}
 
-exports.mapInvoiceAccountToChargeModuleCustomer = mapInvoiceAccountToChargeModuleCustomer;
-exports.extractCustomerName = extractCustomerName;
-exports.extractFAO = extractFAO;
-exports.extractAddress = extractAddress;
+exports.mapInvoiceAccountToChargeModuleCustomer = mapInvoiceAccountToChargeModuleCustomer
+exports.extractCustomerName = extractCustomerName
+exports.extractFAO = extractFAO
+exports.extractAddress = extractAddress

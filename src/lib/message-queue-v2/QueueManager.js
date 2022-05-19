@@ -1,28 +1,28 @@
-'use strict';
+'use strict'
 
-const bull = require('bullmq');
-const { logger } = require('../../logger');
+const bull = require('bullmq')
+const { logger } = require('../../logger')
 
-const STATUS_COMPLETED = 'completed';
-const STATUS_FAILED = 'failed';
+const STATUS_COMPLETED = 'completed'
+const STATUS_FAILED = 'failed'
 
 const jobDefaults = {
   removeOnComplete: true,
   removeOnFail: 500
-};
+}
 
 const closeWorker = async (jobName, worker) => {
   try {
-    await worker.close();
+    await worker.close()
   } catch (err) {
-    logger.error(`Error shutting down worker ${jobName}`, err);
+    logger.error(`Error shutting down worker ${jobName}`, err)
   }
-};
+}
 
 class QueueManager {
   constructor (connection) {
-    this._connection = connection;
-    this._queues = new Map();
+    this._connection = connection
+    this._queues = new Map()
   }
 
   /**
@@ -31,15 +31,15 @@ class QueueManager {
    * @param  {...any} args
    */
   add (jobName, ...args) {
-    logger.info(`Attempting to queue a BullMQ job: ${jobName}`);
-    const queueContainer = this._queues.get(jobName);
-    const { createMessage } = queueContainer.jobContainer;
-    const [name, data, options] = createMessage(...args);
+    logger.info(`Attempting to queue a BullMQ job: ${jobName}`)
+    const queueContainer = this._queues.get(jobName)
+    const { createMessage } = queueContainer.jobContainer
+    const [name, data, options] = createMessage(...args)
 
     return queueContainer.queue.add(name, data, {
       ...jobDefaults,
       ...options
-    });
+    })
   }
 
   /**
@@ -53,33 +53,33 @@ class QueueManager {
    * @param {Object} [jobContainer.workerOptions] - options to pass to the worker constructor
    */
   register (jobContainer) {
-    const { _connection: connection } = this;
+    const { _connection: connection } = this
 
     // Create queue
-    const queue = new bull.Queue(jobContainer.jobName, { connection });
+    const queue = new bull.Queue(jobContainer.jobName, { connection })
 
     // Create worker with handler
     const workerOpts = {
       ...(jobContainer.workerOptions || {}),
       connection
-    };
+    }
 
-    logger.info(`Registering job: ${jobContainer.jobName}`);
+    logger.info(`Registering job: ${jobContainer.jobName}`)
 
-    const worker = new bull.Worker(jobContainer.jobName, jobContainer.handler, workerOpts);
+    const worker = new bull.Worker(jobContainer.jobName, jobContainer.handler, workerOpts)
 
     // Create scheduler - this is only set up if the hasScheduler flag is set.
     // This is needed if the job makes use of Bull features such as retry/cron
     const scheduler = jobContainer.hasScheduler
       ? new bull.QueueScheduler(jobContainer.jobName, { connection })
-      : null;
+      : null
 
     // Register onComplete handler if defined
     if (jobContainer.onComplete) {
-      worker.on(STATUS_COMPLETED, job => jobContainer.onComplete(job, this));
+      worker.on(STATUS_COMPLETED, job => jobContainer.onComplete(job, this))
     }
     // An onFailed handler must always be defined
-    worker.on(STATUS_FAILED, jobContainer.onFailed);
+    worker.on(STATUS_FAILED, jobContainer.onFailed)
 
     // Register all the details in the map
     this._queues.set(jobContainer.jobName, {
@@ -87,34 +87,34 @@ class QueueManager {
       queue,
       worker,
       scheduler
-    });
+    })
 
-    return this;
+    return this
   }
 
   deleteKeysByPattern (pattern) {
-    const { _connection: connection } = this;
+    const { _connection: connection } = this
 
     return new Promise((resolve, reject) => {
       const stream = connection.scanStream({
         match: pattern
-      });
+      })
       stream.on('data', keys => {
         if (keys.length) {
-          const pipeline = connection.pipeline();
+          const pipeline = connection.pipeline()
           keys.forEach(key => {
-            pipeline.del(key);
-          });
-          pipeline.exec();
+            pipeline.del(key)
+          })
+          pipeline.exec()
         }
-      });
+      })
       stream.on('end', () => {
-        resolve();
-      });
+        resolve()
+      })
       stream.on('error', e => {
-        reject(e);
-      });
-    });
+        reject(e)
+      })
+    })
   }
 
   /**
@@ -122,11 +122,11 @@ class QueueManager {
    */
   async stop () {
     for (const [jobName, { worker }] of this._queues) {
-      await closeWorker(jobName, worker);
+      await closeWorker(jobName, worker)
     }
   }
 }
 
-module.exports = QueueManager;
-module.exports.STATUS_COMPLETED = STATUS_COMPLETED;
-module.exports.STATUS_FAILED = STATUS_FAILED;
+module.exports = QueueManager
+module.exports.STATUS_COMPLETED = STATUS_COMPLETED
+module.exports.STATUS_FAILED = STATUS_FAILED

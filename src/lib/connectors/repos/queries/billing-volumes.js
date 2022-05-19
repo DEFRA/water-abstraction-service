@@ -5,7 +5,7 @@ exports.deleteByInvoiceLicenceAndBatchId = `
   where bv.charge_element_id = tx.charge_element_id
     and tx.billing_invoice_licence_id = :invoiceLicenceId
     and bv.billing_batch_id = :batchId;
-`;
+`
 
 exports.deleteByBatchAndInvoiceId = `
   delete
@@ -16,7 +16,7 @@ exports.deleteByBatchAndInvoiceId = `
     and v.is_approved=false
     and v.billing_batch_id=:batchId
     and l.billing_invoice_id=:billingInvoiceId;
-    `;
+    `
 
 exports.findByBatchIdAndLicenceId = `
 select v.*, cv.invoice_account_id
@@ -26,7 +26,7 @@ select v.*, cv.invoice_account_id
   join water.licences l on cv.licence_ref=l.licence_ref
   where v.billing_batch_id=:billingBatchId
   and l.licence_id=:licenceId
-`;
+`
 
 exports.deleteByBatchIdAndLicenceId = `
 delete from water.billing_volumes v
@@ -36,7 +36,7 @@ delete from water.billing_volumes v
     and cv.licence_ref=l.licence_ref
     and l.licence_id=:licenceId
     and v.billing_batch_id=:billingBatchId
-`;
+`
 
 exports.findByChargeVersionFinancialYearAndSeason = `
 select bv.* from water.charge_elements ce
@@ -44,7 +44,7 @@ join water.billing_volumes bv on
   ce.charge_element_id=bv.charge_element_id 
   and bv.financial_year=:financialYearEnding 
   and bv.is_summer=:isSummer 
-where ce.charge_version_id=:chargeVersionId`;
+where ce.charge_version_id=:chargeVersionId`
 
 exports.findByChargeVersionAndFinancialYear = `
 select bv.*, bb.source 
@@ -55,7 +55,7 @@ and ce.charge_version_id=:chargeVersionId
 and bv.financial_year=:financialYearEnding
 and bv.is_approved=true 
 and bv.errored_on is null
-`;
+`
 
 exports.deleteByFinancialYearEnding = `
  DELETE FROM water.billing_volumes bv
@@ -65,4 +65,4 @@ exports.deleteByFinancialYearEnding = `
  and cv.licence_id =:licenceId 
  and bv.financial_year =:financialYearEnding
  and bv.billing_batch_id =:batchId;
-`;
+`

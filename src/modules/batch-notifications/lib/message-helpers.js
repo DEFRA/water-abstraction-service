@@ -1,8 +1,8 @@
-const moment = require('moment');
-const { get } = require('lodash');
-const scheduledNotifications = require('../../../controllers/notifications');
+const moment = require('moment')
+const { get } = require('lodash')
+const scheduledNotifications = require('../../../controllers/notifications')
 const { MESSAGE_STATUS_SENDING, MESSAGE_STATUS_SENT, MESSAGE_STATUS_ERROR } =
-  require('./message-statuses');
+  require('./message-statuses')
 
 /**
  * Updates all messages relating to a particular event
@@ -13,15 +13,15 @@ const { MESSAGE_STATUS_SENDING, MESSAGE_STATUS_SENT, MESSAGE_STATUS_ERROR } =
 const updateMessageStatuses = (eventId, status) => {
   const filter = {
     event_id: eventId
-  };
+  }
   const data = {
     status
-  };
-  if (status === MESSAGE_STATUS_SENDING) {
-    data.send_after = moment().format();
   }
-  return scheduledNotifications.repository.update(filter, data);
-};
+  if (status === MESSAGE_STATUS_SENDING) {
+    data.send_after = moment().format()
+  }
+  return scheduledNotifications.repository.update(filter, data)
+}
 
 /**
  * Loads message from table by GUID
@@ -29,10 +29,10 @@ const updateMessageStatuses = (eventId, status) => {
  * @return {Promise}           resolves with row of data (if found)
  */
 const getMessageById = async (messageId) => {
-  const filter = { id: messageId };
-  const { rows: [message] } = await scheduledNotifications.repository.find(filter);
-  return message;
-};
+  const filter = { id: messageId }
+  const { rows: [message] } = await scheduledNotifications.repository.find(filter)
+  return message
+}
 
 /**
  * Marks message as sent
@@ -41,16 +41,16 @@ const getMessageById = async (messageId) => {
  * @return {Promise}                resolves when message record updated
  */
 const markMessageAsSent = (messageId, notifyResponse) => {
-  const notifyId = get(notifyResponse, 'body.id', null);
-  const plainText = get(notifyResponse, 'body.content.body', '');
-  const filter = { id: messageId };
+  const notifyId = get(notifyResponse, 'body.id', null)
+  const plainText = get(notifyResponse, 'body.content.body', '')
+  const filter = { id: messageId }
   const data = {
     status: MESSAGE_STATUS_SENT,
     notify_id: notifyId,
     plaintext: plainText
-  };
-  return scheduledNotifications.repository.update(filter, data);
-};
+  }
+  return scheduledNotifications.repository.update(filter, data)
+}
 
 /**
  * Marks message as errored
@@ -59,17 +59,17 @@ const markMessageAsSent = (messageId, notifyResponse) => {
  * @return {Promise} resolves when message record updated
  */
 const markMessageAsErrored = (messageId, error) => {
-  const filter = { id: messageId };
+  const filter = { id: messageId }
   const data = {
     status: MESSAGE_STATUS_ERROR,
     log: JSON.stringify({ error: 'Notify error', message: error.toString() })
-  };
-  return scheduledNotifications.repository.update(filter, data);
-};
+  }
+  return scheduledNotifications.repository.update(filter, data)
+}
 
 module.exports = {
   updateMessageStatuses,
   getMessageById,
   markMessageAsSent,
   markMessageAsErrored
-};
+}

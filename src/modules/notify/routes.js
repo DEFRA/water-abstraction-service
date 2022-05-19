@@ -1,6 +1,6 @@
-const Joi = require('joi');
-const controller = require('./controller');
-const version = '1.0';
+const Joi = require('joi')
+const controller = require('./controller')
+const version = '1.0'
 
 module.exports = {
   sendMessage: {
@@ -80,4 +80,4 @@ module.exports = {
       }
     }
   }
-};
+}

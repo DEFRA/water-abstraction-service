@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const { MessageTypeError } = require('./errors');
-const notifyConnector = require('../connectors/notify');
-const scheduledNotificationService = require('../services/scheduled-notifications');
-const pdfGenerator = require('../services/pdf-generation/pdf');
+const { MessageTypeError } = require('./errors')
+const notifyConnector = require('../connectors/notify')
+const scheduledNotificationService = require('../services/scheduled-notifications')
+const pdfGenerator = require('../services/pdf-generation/pdf')
 
 /**
  * A function to get the notify key
@@ -17,16 +17,16 @@ const pdfGenerator = require('../services/pdf-generation/pdf');
  * @return {String} notify key
  */
 function getNotifyKey (key) {
-  const lKey = key.toLowerCase();
+  const lKey = key.toLowerCase()
   const keys = {
     test: process.env.TEST_NOTIFY_KEY,
     whitelist: process.env.WHITELIST_NOTIFY_KEY,
     live: process.env.LIVE_NOTIFY_KEY
-  };
-  if (lKey in keys) {
-    return keys[lKey];
   }
-  return key;
+  if (lKey in keys) {
+    return keys[lKey]
+  }
+  return key
 }
 
 /**
@@ -35,10 +35,10 @@ function getNotifyKey (key) {
  * @return {Promise} resolves with message status
  */
 const getStatus = async (notifyId) => {
-  const client = notifyConnector.getClient();
-  const { body: { status } } = await client.getNotificationById(notifyId);
-  return status;
-};
+  const client = notifyConnector.getClient()
+  const { body: { status } } = await client.getNotificationById(notifyId)
+  return status
+}
 
 /**
  * @param {Object} notifyTemplate - the data from the "water"."notify_templates" table
@@ -46,29 +46,29 @@ const getStatus = async (notifyId) => {
  * @param {String} recipient - for SMS/email only
  */
 async function send (notifyTemplate, personalisation, recipient) {
-  const { template_id: templateId } = notifyTemplate;
+  const { template_id: templateId } = notifyTemplate
 
   const template = await notifyConnector
     .getClient()
-    .getTemplateById(templateId);
+    .getTemplateById(templateId)
 
-  const { type } = template.body;
+  const { type } = template.body
 
   switch (type) {
     case 'sms':
       return notifyConnector.getClient(notifyConnector.messageTypes.sms)
-        .sendSms(templateId, recipient, { personalisation });
+        .sendSms(templateId, recipient, { personalisation })
 
     case 'email':
       return notifyConnector.getClient(notifyConnector.messageTypes.email)
-        .sendEmail(templateId, recipient, { personalisation });
+        .sendEmail(templateId, recipient, { personalisation })
 
     case 'letter':
       return notifyConnector.getClient(notifyConnector.messageTypes.letter)
-        .sendLetter(templateId, { personalisation });
+        .sendLetter(templateId, { personalisation })
 
     default:
-      throw new MessageTypeError(`Message type ${type} not found`);
+      throw new MessageTypeError(`Message type ${type} not found`)
   }
 }
 
@@ -79,11 +79,11 @@ async function send (notifyTemplate, personalisation, recipient) {
  * @return {Promise} resolves with notify response
  */
 async function preview (notifyTemplate, personalisation) {
-  const { template_id: templateId } = notifyTemplate;
+  const { template_id: templateId } = notifyTemplate
 
   return notifyConnector
     .getClient()
-    .previewTemplateById(templateId, personalisation);
+    .previewTemplateById(templateId, personalisation)
 }
 
 /**
@@ -93,10 +93,10 @@ async function preview (notifyTemplate, personalisation) {
  */
 const getPdfNotifyKey = (env) => {
   if (env.NODE_ENV === 'production') {
-    return env.LIVE_NOTIFY_KEY;
+    return env.LIVE_NOTIFY_KEY
   }
-  return env.TEST_NOTIFY_KEY;
-};
+  return env.TEST_NOTIFY_KEY
+}
 
 /**
  * Sends a PDF as a letter via Notify
@@ -105,23 +105,23 @@ const getPdfNotifyKey = (env) => {
  * @return {Promise} resolves with Notify response
  */
 const sendPdf = async (notificationId, notifyId) => {
-  const notification = await scheduledNotificationService.getScheduledNotificationById(notificationId);
-  const pdf = await pdfGenerator.createPdfFromScheduledNotification(notification);
+  const notification = await scheduledNotificationService.getScheduledNotificationById(notificationId)
+  const pdf = await pdfGenerator.createPdfFromScheduledNotification(notification)
 
   return notifyConnector
     .getClient(notifyConnector.messageTypes.letter)
-    .sendPrecompiledLetter(notifyId, pdf);
-};
+    .sendPrecompiledLetter(notifyId, pdf)
+}
 
 const sendEmail = async (notifyTemplateId, recipient, personalisation) => {
   return notifyConnector.getClient(notifyConnector.messageTypes.email)
-    .sendEmail(notifyTemplateId, recipient, { personalisation });
-};
+    .sendEmail(notifyTemplateId, recipient, { personalisation })
+}
 
-exports.sendEmail = sendEmail;
-exports.getNotifyKey = getNotifyKey;
-exports.getStatus = getStatus;
-exports.preview = preview;
-exports.send = send;
-exports.getPdfNotifyKey = getPdfNotifyKey;
-exports.sendPdf = sendPdf;
+exports.sendEmail = sendEmail
+exports.getNotifyKey = getNotifyKey
+exports.getStatus = getStatus
+exports.preview = preview
+exports.send = send
+exports.getPdfNotifyKey = getPdfNotifyKey
+exports.sendPdf = sendPdf

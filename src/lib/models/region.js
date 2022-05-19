@@ -1,18 +1,18 @@
-'use strict';
+'use strict'
 
-const Model = require('./model');
+const Model = require('./model')
 
 const {
   assertString,
   assertPositiveInteger,
   assertEnum
-} = require('./validators');
+} = require('./validators')
 
 const validTypes = {
   region: 'region',
   environmentAgencyArea: 'EAAR',
   regionalChargeArea: 'regionalChargeArea'
-};
+}
 
 /**
  * @classdesc a generic region class used to categorise a licence geographically
@@ -23,19 +23,19 @@ class Region extends Model {
    * @param {String} [type] - must match one of the above types
    */
   constructor (id, type) {
-    super(id);
+    super(id)
     if (type) {
-      this.type = type;
+      this.type = type
     }
   }
 
   get type () {
-    return this._type;
+    return this._type
   }
 
   set type (type) {
-    assertEnum(type, Object.values(validTypes));
-    this._type = type;
+    assertEnum(type, Object.values(validTypes))
+    this._type = type
   }
 
   /**
@@ -43,21 +43,21 @@ class Region extends Model {
    * @return {String}
    */
   get name () {
-    return this._name;
+    return this._name
   }
 
   set name (name) {
-    assertString(name);
-    this._name = name;
+    assertString(name)
+    this._name = name
   }
 
   get displayName () {
-    return this._displayName;
+    return this._displayName
   }
 
   set displayName (displayName) {
-    assertString(displayName);
-    this._displayName = displayName;
+    assertString(displayName)
+    this._displayName = displayName
   }
 
   /**
@@ -65,12 +65,12 @@ class Region extends Model {
    * @return {String}
    */
   get code () {
-    return this._code;
+    return this._code
   }
 
   set code (code) {
-    assertString(code);
-    this._code = code;
+    assertString(code)
+    this._code = code
   }
 
   /**
@@ -78,14 +78,14 @@ class Region extends Model {
    * @return {Number}
    */
   get numericCode () {
-    return this._numericCode;
+    return this._numericCode
   }
 
   set numericCode (numericCode) {
-    assertPositiveInteger(numericCode);
-    this._numericCode = numericCode;
+    assertPositiveInteger(numericCode)
+    this._numericCode = numericCode
   }
 }
 
-module.exports = Region;
-module.exports.types = validTypes;
+module.exports = Region
+module.exports.types = validTypes
