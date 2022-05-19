@@ -1,21 +1,21 @@
-'use strict';
+'use strict'
 
-const FixtureLoader = require('./fixture-loader/FixtureLoader');
-const AsyncAdapter = require('./fixture-loader/adapters/AsyncAdapter');
+const FixtureLoader = require('./fixture-loader/FixtureLoader')
+const AsyncAdapter = require('./fixture-loader/adapters/AsyncAdapter')
 
-const { serviceRequest } = require('@envage/water-abstraction-helpers');
-const config = require('../../../config');
-const urlJoin = require('url-join');
-const createPermitsUrl = (...parts) => urlJoin(config.services.permits, ...parts);
-const { getLicenceData } = require('./permit-helpers');
+const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const config = require('../../../config')
+const urlJoin = require('url-join')
+const createPermitsUrl = (...parts) => urlJoin(config.services.permits, ...parts)
+const { getLicenceData } = require('./permit-helpers')
 // Resolve path to fixtures directory
-const path = require('path');
-const dir = path.resolve(__dirname, '../fixtures');
-const moment = require('moment');
+const path = require('path')
+const dir = path.resolve(__dirname, '../fixtures')
+const moment = require('moment')
 
 const create = () => {
   // Create IDM fixture loader
-  const asyncAdapter = new AsyncAdapter();
+  const asyncAdapter = new AsyncAdapter()
 
   asyncAdapter
     .add('Licence', async (body) => {
@@ -29,11 +29,11 @@ const create = () => {
           licence_data_value: JSON.stringify(getLicenceData(body.licenceRef, moment(body.startDate), moment(body.startDate).add(1, 'year'))),
           metadata: JSON.stringify({ source: 'acceptance-test-setup' })
         }
-      });
-      return newPermit.data;
-    });
+      })
+      return newPermit.data
+    })
 
-  return new FixtureLoader(asyncAdapter, dir);
-};
+  return new FixtureLoader(asyncAdapter, dir)
+}
 
-module.exports = create;
+module.exports = create

@@ -1,11 +1,11 @@
-'use strict';
+'use strict'
 
-const { cloneDeep } = require('lodash');
+const { cloneDeep } = require('lodash')
 
-const waterHelpers = require('@envage/water-abstraction-helpers');
+const waterHelpers = require('@envage/water-abstraction-helpers')
 
-const startDate = '2018-11-01';
-const endDate = '2019-03-01';
+const startDate = '2018-11-01'
+const endDate = '2019-03-01'
 
 const createTestReturnId = existingReturn => {
   return waterHelpers.returns.getReturnId(
@@ -14,8 +14,8 @@ const createTestReturnId = existingReturn => {
     existingReturn.return_requirement,
     startDate,
     endDate
-  );
-};
+  )
+}
 
 /**
  * Creates a new return object based on the existing return, but certain
@@ -28,26 +28,26 @@ const createTestReturnId = existingReturn => {
  * @returns {Object} The modified test return
  */
 const create = existingReturn => {
-  const returnId = createTestReturnId(existingReturn, startDate, endDate);
+  const returnId = createTestReturnId(existingReturn, startDate, endDate)
 
-  const testReturn = cloneDeep(existingReturn);
+  const testReturn = cloneDeep(existingReturn)
 
-  testReturn.return_id = returnId;
-  testReturn.status = 'due';
-  testReturn.start_date = startDate;
-  testReturn.end_date = endDate;
-  testReturn.metadata.version = 1;
-  testReturn.metadata.isCurrent = true;
-  testReturn.metadata.copiedForTesting = true;
-  testReturn.received_date = null;
-  testReturn.due_date = '2019-04-01';
-  testReturn.under_query = false;
+  testReturn.return_id = returnId
+  testReturn.status = 'due'
+  testReturn.start_date = startDate
+  testReturn.end_date = endDate
+  testReturn.metadata.version = 1
+  testReturn.metadata.isCurrent = true
+  testReturn.metadata.copiedForTesting = true
+  testReturn.received_date = null
+  testReturn.due_date = '2019-04-01'
+  testReturn.under_query = false
 
-  delete testReturn.created_at;
-  delete testReturn.updated_at;
-  delete testReturn.under_query_comment;
+  delete testReturn.created_at
+  delete testReturn.updated_at
+  delete testReturn.under_query_comment
 
-  return testReturn;
-};
+  return testReturn
+}
 
-exports.create = create;
+exports.create = create

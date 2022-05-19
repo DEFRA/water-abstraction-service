@@ -1,18 +1,18 @@
-'use strict';
+'use strict'
 
 /**
  * Bookshelf yaml fixture loader
  * Inspired by https://github.com/tomi77/node-bookshelf-fixture-loader
  */
 
-const YAML = require('yamljs');
-const path = require('path');
-const { mapValues, isString } = require('lodash');
-const { getFinancialDateRange } = require('../lib/financial-date-range');
-const moment = require('moment');
-const Uuid = require('uuid');
+const YAML = require('yamljs')
+const path = require('path')
+const { mapValues, isString } = require('lodash')
+const { getFinancialDateRange } = require('../lib/financial-date-range')
+const moment = require('moment')
+const Uuid = require('uuid')
 
-const refRegex = /^(\$[^.]+)\.([a-z0-9-_]+)$/i;
+const refRegex = /^(\$[^.]+)\.([a-z0-9-_]+)$/i
 
 /**
  * Gets a referenced value if one is available
@@ -22,16 +22,16 @@ const refRegex = /^(\$[^.]+)\.([a-z0-9-_]+)$/i;
  */
 const mapValue = (value, refs) => {
   if (!isString(value)) {
-    return value;
+    return value
   }
 
   // Check for ref match
-  const match = value.toString().match(refRegex);
+  const match = value.toString().match(refRegex)
   if (!match) {
-    return value;
+    return value
   }
-  return refs.get(match[1])[match[2]];
-};
+  return refs.get(match[1])[match[2]]
+}
 
 /**
  * Calculates the value if the input value is a reference to a calculation
@@ -42,31 +42,31 @@ const mapValue = (value, refs) => {
 const calcValue = (value, index = 0, startDate = '01-04-2023') => {
   const previousYearsDateLessIndex = moment(startDate)
     .subtract(1, 'year') // previous year
-    .subtract(index, 'year'); // less the index
+    .subtract(index, 'year') // less the index
 
-  const previousYearsLessIndexFinancialDateRange = getFinancialDateRange(previousYearsDateLessIndex);
+  const previousYearsLessIndexFinancialDateRange = getFinancialDateRange(previousYearsDateLessIndex)
 
   switch (value) {
     case '$previousYearsDateLessIndex': {
-      return previousYearsDateLessIndex.format('YYYY-MM-DD');
+      return previousYearsDateLessIndex.format('YYYY-MM-DD')
     }
     case '$previousStartDateLessIndex': {
-      return previousYearsLessIndexFinancialDateRange.startDate.format('YYYY-MM-DD');
+      return previousYearsLessIndexFinancialDateRange.startDate.format('YYYY-MM-DD')
     }
     case '$previousEndDateLessIndex': {
-      return previousYearsLessIndexFinancialDateRange.endDate.format('YYYY-MM-DD');
+      return previousYearsLessIndexFinancialDateRange.endDate.format('YYYY-MM-DD')
     }
     case '$previousYearLessIndex': {
-      return previousYearsLessIndexFinancialDateRange.endDate.year();
+      return previousYearsLessIndexFinancialDateRange.endDate.year()
     }
-    case '$annualInvoice': return `TEST00${index}1`;
-    case '$2PT2Invoice': return `TEST00${index}2`;
-    case '$uuid': return Uuid.v4();
-    case '$billRunNumber': return String(new Date().getMilliseconds()).padStart(4, '0') + index;
+    case '$annualInvoice': return `TEST00${index}1`
+    case '$2PT2Invoice': return `TEST00${index}2`
+    case '$uuid': return Uuid.v4()
+    case '$billRunNumber': return String(new Date().getMilliseconds()).padStart(4, '0') + index
     default:
-      return value;
+      return value
   }
-};
+}
 
 /**
  * Substitutes all config values within the data where the prop is found as $$[prop]
@@ -77,12 +77,12 @@ const calcValue = (value, index = 0, startDate = '01-04-2023') => {
 const applyConfig = (data, config) => {
   if (config) {
     return JSON.parse(Object.entries(config).reduce((dataString, [prop, value = '']) => {
-      return dataString.split(`$$[${prop}]`).join(calcValue(value, config.index, config.startFinancialYear));
-    }, JSON.stringify(data)));
+      return dataString.split(`$$[${prop}]`).join(calcValue(value, config.index, config.startFinancialYear))
+    }, JSON.stringify(data)))
   } else {
-    return data;
+    return data
   }
-};
+}
 
 class FixtureLoader {
   /**
@@ -92,19 +92,19 @@ class FixtureLoader {
    * @param {Object} refs
    */
   constructor (adapter, dir, refs = null) {
-    this._adapter = adapter;
-    this._dir = dir || __dirname;
+    this._adapter = adapter
+    this._dir = dir || __dirname
 
     // Tracks references
-    this._refs = new Map();
+    this._refs = new Map()
 
     // add custom calculated data as a reference
     if (refs) {
-      this.setRef(refs.name, refs.obj);
+      this.setRef(refs.name, refs.obj)
     }
 
     // Tracks created models
-    this._models = [];
+    this._models = []
   }
 
   /**
@@ -116,7 +116,7 @@ class FixtureLoader {
    * @param {Object} obj - key/value pairs
    */
   setRef (refName, obj) {
-    return this._refs.set(refName, obj);
+    return this._refs.set(refName, obj)
   }
 
   /**
@@ -124,8 +124,8 @@ class FixtureLoader {
    * @param {Map} refs
    */
   setRefs (refs) {
-    this._refs = refs;
-    return this;
+    this._refs = refs
+    return this
   }
 
   /**
@@ -133,8 +133,8 @@ class FixtureLoader {
    * @param {Map} refs
    */
   addRefs (refs) {
-    this._refs = new Map([...this._refs, ...refs]);
-    return this;
+    this._refs = new Map([...this._refs, ...refs])
+    return this
   }
 
   /**
@@ -142,7 +142,7 @@ class FixtureLoader {
    * @return {Promise<Map>} - refs
    */
   getRefs () {
-    return this._refs;
+    return this._refs
   }
 
   /**
@@ -150,7 +150,7 @@ class FixtureLoader {
    * @param {String} key
    */
   getRef (key) {
-    return this._refs.get(key);
+    return this._refs.get(key)
   }
 
   /**
@@ -160,30 +160,30 @@ class FixtureLoader {
    * @return {Promise<Array>} created Bookshelf models
    */
   async load (yamlFile, config) {
-    const file = path.resolve(this._dir, yamlFile);
-    const data = applyConfig(YAML.load(file), config);
-    const { _refs } = this;
+    const file = path.resolve(this._dir, yamlFile)
+    const data = applyConfig(YAML.load(file), config)
+    const { _refs } = this
 
     if (config) {
-      console.log(data);
+      console.log(data)
     }
 
     for (const config of data) {
       // Pre-process field data to include references to previously inserted models
       // Models are processed sequentially
-      const data = mapValues(config.fields, val => mapValue(val, _refs));
+      const data = mapValues(config.fields, val => mapValue(val, _refs))
 
       // Create new model using adapter
-      const model = await this._adapter.create(config, data);
+      const model = await this._adapter.create(config, data)
 
       // Store in refs
       if (config.ref) {
-        this.setRef(config.ref, model);
+        this.setRef(config.ref, model)
       }
 
-      this._models.push(model);
+      this._models.push(model)
     }
   }
 }
 
-module.exports = FixtureLoader;
+module.exports = FixtureLoader

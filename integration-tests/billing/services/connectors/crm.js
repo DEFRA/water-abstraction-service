@@ -1,12 +1,12 @@
-'use strict';
+'use strict'
 
-const { serviceRequest } = require('@envage/water-abstraction-helpers');
-const config = require('../../../../config');
-const urlJoin = require('url-join');
+const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const config = require('../../../../config')
+const urlJoin = require('url-join')
 
 const createCrmUrl = (...parts) => {
-  return urlJoin(config.services.crm_v2, ...parts);
-};
+  return urlJoin(config.services.crm_v2, ...parts)
+}
 
 /**
  * Creates a company in the CRM
@@ -19,12 +19,12 @@ const createCompany = data => {
       ...data,
       isTest: true
     }
-  };
-  return serviceRequest.post(createCrmUrl('companies'), options);
-};
+  }
+  return serviceRequest.post(createCrmUrl('companies'), options)
+}
 
 const createCompanyAddress = (companyId, addressId, startDate, endDate, roleName) => {
-  const url = createCrmUrl('companies', companyId, 'addresses');
+  const url = createCrmUrl('companies', companyId, 'addresses')
   const options = {
     body: {
       addressId,
@@ -34,9 +34,9 @@ const createCompanyAddress = (companyId, addressId, startDate, endDate, roleName
       endDate,
       isTest: true
     }
-  };
-  return serviceRequest.post(url, options);
-};
+  }
+  return serviceRequest.post(url, options)
+}
 
 /**
  * Creates an invoice account in the CRM
@@ -51,9 +51,9 @@ const createInvoiceAccount = (companyId, data) => {
       ...data,
       isTest: true
     }
-  };
-  return serviceRequest.post(createCrmUrl('invoice-accounts'), options);
-};
+  }
+  return serviceRequest.post(createCrmUrl('invoice-accounts'), options)
+}
 
 /**
  * Creates an address in the CRM
@@ -66,9 +66,9 @@ const createAddress = data => {
       ...data,
       isTest: true
     }
-  };
-  return serviceRequest.post(createCrmUrl('addresses'), options);
-};
+  }
+  return serviceRequest.post(createCrmUrl('addresses'), options)
+}
 
 /**
  * Adds an address to an invoice account
@@ -79,7 +79,7 @@ const createAddress = data => {
  * @return {Promise<Object>} CRM invoice account address entity
  */
 const createInvoiceAccountAddress = (invoiceAccountId, addressId, startDate, endDate) => {
-  const url = createCrmUrl('invoice-accounts', invoiceAccountId, 'addresses');
+  const url = createCrmUrl('invoice-accounts', invoiceAccountId, 'addresses')
   const options = {
     body: {
       addressId,
@@ -89,10 +89,10 @@ const createInvoiceAccountAddress = (invoiceAccountId, addressId, startDate, end
       agentCompanyId: null,
       isTest: true
     }
-  };
+  }
 
-  return serviceRequest.post(url, options);
-};
+  return serviceRequest.post(url, options)
+}
 
 /**
  * Creates CRM document
@@ -100,7 +100,7 @@ const createInvoiceAccountAddress = (invoiceAccountId, addressId, startDate, end
  * @return {Promise<Object>} CRM document entity
  */
 const createDocument = data => {
-  const url = createCrmUrl('documents');
+  const url = createCrmUrl('documents')
   const options = {
     body: {
       ...data,
@@ -108,9 +108,9 @@ const createDocument = data => {
       documentType: 'abstraction_licence',
       isTest: true
     }
-  };
-  return serviceRequest.post(url, options);
-};
+  }
+  return serviceRequest.post(url, options)
+}
 
 /**
  * Creates CRM document role
@@ -119,15 +119,15 @@ const createDocument = data => {
  * @return {Promise<Object>}
  */
 const createDocumentRole = (documentId, data) => {
-  const url = createCrmUrl('documents', documentId, 'roles');
+  const url = createCrmUrl('documents', documentId, 'roles')
   const options = {
     body: {
       ...data,
       isTest: true
     }
-  };
-  return serviceRequest.post(url, options);
-};
+  }
+  return serviceRequest.post(url, options)
+}
 
 /**
  * Creates CRM contact
@@ -140,32 +140,32 @@ const createContact = data => {
       ...data,
       isTest: true
     }
-  };
-  return serviceRequest.post(createCrmUrl('contacts'), options);
-};
+  }
+  return serviceRequest.post(createCrmUrl('contacts'), options)
+}
 
 const getRole = roleName => {
-  const url = createCrmUrl('roles', roleName);
-  return serviceRequest.get(url);
-};
+  const url = createCrmUrl('roles', roleName)
+  return serviceRequest.get(url)
+}
 
 /**
  * Deletes all test data in CRM
  * @return {Promise}
  */
 const tearDown = () => {
-  return serviceRequest.delete(createCrmUrl('test-data'));
-};
+  return serviceRequest.delete(createCrmUrl('test-data'))
+}
 
-exports.createAddress = createAddress;
-exports.createCompany = createCompany;
-exports.createCompanyAddress = createCompanyAddress;
-exports.createContact = createContact;
-exports.createDocument = createDocument;
-exports.createDocumentRole = createDocumentRole;
-exports.createInvoiceAccount = createInvoiceAccount;
-exports.createInvoiceAccountAddress = createInvoiceAccountAddress;
+exports.createAddress = createAddress
+exports.createCompany = createCompany
+exports.createCompanyAddress = createCompanyAddress
+exports.createContact = createContact
+exports.createDocument = createDocument
+exports.createDocumentRole = createDocumentRole
+exports.createInvoiceAccount = createInvoiceAccount
+exports.createInvoiceAccountAddress = createInvoiceAccountAddress
 
-exports.getRole = getRole;
+exports.getRole = getRole
 
-exports.tearDown = tearDown;
+exports.tearDown = tearDown

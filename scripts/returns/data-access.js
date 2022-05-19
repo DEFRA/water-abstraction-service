@@ -1,4 +1,4 @@
-const returnsConnector = require('../../src/lib/connectors/returns');
+const returnsConnector = require('../../src/lib/connectors/returns')
 
 /**
  * Gets all returns that have the copiedForTesting flag in the metadata.
@@ -8,8 +8,8 @@ const returnsConnector = require('../../src/lib/connectors/returns');
 const getAllTestReturns = () => {
   return returnsConnector.returns.findAll({
     'metadata->>copiedForTesting': 'true'
-  });
-};
+  })
+}
 
 /**
  * Gets all versions for the return id
@@ -17,7 +17,7 @@ const getAllTestReturns = () => {
  * @returns {Promise} Promise that will resolve with any versions
  */
 const loadReturnVersions = returnId =>
-  returnsConnector.versions.findAll({ return_id: returnId });
+  returnsConnector.versions.findAll({ return_id: returnId })
 
 /**
  * Deletes all return lines that have the given version ids.
@@ -31,8 +31,8 @@ const deleteLines = versionIds => {
     version_id: {
       $in: versionIds
     }
-  });
-};
+  })
+}
 
 /**
  * Deletes all return versions that have the given version ids.
@@ -45,8 +45,8 @@ const deleteVersions = versionIds => {
     version_id: {
       $in: versionIds
     }
-  });
-};
+  })
+}
 
 /**
  * Finds any test returns and deletes them
@@ -54,10 +54,10 @@ const deleteVersions = versionIds => {
  * @returns {Promise}
  */
 const deleteAllReturns = async () => {
-  const allTestReturns = await getAllTestReturns();
-  const promises = allTestReturns.map(ret => deleteReturn(ret.return_id));
-  return Promise.all(promises);
-};
+  const allTestReturns = await getAllTestReturns()
+  const promises = allTestReturns.map(ret => deleteReturn(ret.return_id))
+  return Promise.all(promises)
+}
 
 /**
  * Deletes the return, and any child versions and lines
@@ -66,24 +66,24 @@ const deleteAllReturns = async () => {
  * @returns {Promse} Resolves to contain an object with the deleted return id, and the number of versions and lines that were deleted.
  */
 const deleteReturn = async returnId => {
-  validateDeletion(returnId);
+  validateDeletion(returnId)
 
-  const output = { returnId };
-  const versions = await loadReturnVersions(returnId);
-  const versionIds = versions.map(v => v.version_id);
+  const output = { returnId }
+  const versions = await loadReturnVersions(returnId)
+  const versionIds = versions.map(v => v.version_id)
 
   if (versionIds.length) {
-    const lines = await deleteLines(versionIds);
-    const versions = await deleteVersions(versionIds);
-    output.lines = (lines || []).length;
-    output.versions = (versions || []).length;
+    const lines = await deleteLines(versionIds)
+    const versions = await deleteVersions(versionIds)
+    output.lines = (lines || []).length
+    output.versions = (versions || []).length
   }
 
-  await returnsConnector.returns.delete({ return_id: returnId });
-  return output;
-};
+  await returnsConnector.returns.delete({ return_id: returnId })
+  return output
+}
 
-const loadReturn = returnId => returnsConnector.returns.findOne(returnId);
+const loadReturn = returnId => returnsConnector.returns.findOne(returnId)
 
 /**
  * Saves a test return, deleting any existing return with the same
@@ -93,10 +93,10 @@ const loadReturn = returnId => returnsConnector.returns.findOne(returnId);
  * @returns {Promise} Resolve to the created test return
  */
 const saveReturn = async ret => {
-  await deleteReturn(ret.return_id);
-  ret.metadata = JSON.stringify(ret.metadata);
-  return returnsConnector.returns.create(ret);
-};
+  await deleteReturn(ret.return_id)
+  ret.metadata = JSON.stringify(ret.metadata)
+  return returnsConnector.returns.create(ret)
+}
 
 /**
  * Ensures that a return is a test return by checking for the
@@ -107,18 +107,18 @@ const saveReturn = async ret => {
  * @param {string} returnId The id of the return to validate
  */
 const validateDeletion = async returnId => {
-  const { data: ret } = await loadReturn(returnId);
+  const { data: ret } = await loadReturn(returnId)
 
   if (ret !== null && ret.metadata.copiedForTesting !== true) {
-    throw new Error('Not a test return, so will not delete');
+    throw new Error('Not a test return, so will not delete')
   }
-};
+}
 
-exports.getAllTestReturns = getAllTestReturns;
-exports.loadReturnVersions = loadReturnVersions;
-exports.deleteLines = deleteLines;
-exports.deleteVersions = deleteVersions;
-exports.deleteAllReturns = deleteAllReturns;
-exports.deleteReturn = deleteReturn;
-exports.loadReturn = loadReturn;
-exports.saveReturn = saveReturn;
+exports.getAllTestReturns = getAllTestReturns
+exports.loadReturnVersions = loadReturnVersions
+exports.deleteLines = deleteLines
+exports.deleteVersions = deleteVersions
+exports.deleteAllReturns = deleteAllReturns
+exports.deleteReturn = deleteReturn
+exports.loadReturn = loadReturn
+exports.saveReturn = saveReturn

@@ -16,8 +16,8 @@
     "migrate:local-test": "DATABASE_URL=postgres://water_user:password@localhost:5432/permits node scripts/create-schema && DATABASE_URL=postgres://water_user:password@localhost:5432/permits db-migrate up --verbose && DATABASE_URL=postgres://water_user:password@localhost:5432/permits node scripts/migrate-task-config",
     "migrate:down": "db-migrate down --verbose",
     "migrate:create": "db-migrate create --sql-file --",
-    "lint": "standard \"src/**/*.js\" \"test/**/*.js\"",
-    "lint:fix": "standard --fix \"src/**/*.js\" \"test/**/*.js\"",
+    "lint": "standard ",
+    "lint:fix": "standard --fix",
     "version": "auto-changelog -p --commit-limit false && git add CHANGELOG.md"
   },
   "engines": {
@@ -100,10 +100,5 @@
     "url-join": "^4.0.1",
     "uuid": "^3.4.0",
     "yamljs": "^0.3.0"
-  },
-  "standard": {
-    "rules": {
-      "no-unused-vars": "off"
-    }
   }
 }

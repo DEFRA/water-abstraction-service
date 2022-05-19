@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
-const { pick } = require('lodash');
+const { pick } = require('lodash')
 
 class BookshelfAdapter {
   constructor (bookshelf) {
-    this._bookshelf = bookshelf;
+    this._bookshelf = bookshelf
   }
 
   /**
@@ -17,17 +17,17 @@ class BookshelfAdapter {
   async create ({ model: modelName, constraints, ref }, data) {
     // Attempt insert
     try {
-      let timeStamps;
+      let timeStamps
       // Allow date_created to be overridden if set
       if (data.dateCreated) {
-        timeStamps = { date_created: new Date(data.dateCreated) };
+        timeStamps = { date_created: new Date(data.dateCreated) }
       }
       const model = await this._bookshelf
         .model(modelName)
         .forge(data)
-        .save(timeStamps);
+        .save(timeStamps)
 
-      return model.toJSON();
+      return model.toJSON()
     } catch (err) {
       // Handle unique constraint violation allowing previously inserted models
       // to be referenced
@@ -35,14 +35,14 @@ class BookshelfAdapter {
         const model = await this._bookshelf
           .model(modelName)
           .forge(pick(data, constraints[err.constraint]))
-          .fetch();
+          .fetch()
 
-        return model.toJSON();
+        return model.toJSON()
       } else {
-        throw err;
+        throw err
       }
     }
   }
 }
 
-module.exports = BookshelfAdapter;
+module.exports = BookshelfAdapter
