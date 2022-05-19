@@ -17,7 +17,6 @@
     "migrate:down": "db-migrate down --verbose",
     "migrate:create": "db-migrate create --sql-file --",
     "lint": "standard ",
-    "lint:fix": "standard --fix",
     "version": "auto-changelog -p --commit-limit false && git add CHANGELOG.md"
   },
   "engines": {
