@@ -206,14 +206,17 @@ const postSetBatchStatusToCancel = async (request, h) => {
 // TODO: We also need to filter out years which don't have a licence or anything recorded against it as there's no point
 // in creating a batch
 const getBatchBillableYears = async (request, h) => {
-  const { regionId, batchType, isSummer } = request.payload;
+  const { regionId, isSummer, currentFinancialYear } = request.payload;
+
+  let configYear = 3;
+  let localCurrentFinYear = currentFinancialYear;
 
   const existingBatches = await BillingBatch
     .where({
       region_id: regionId,
-      batch_type: batchType,
+      batch_type: 'two_part_tariff',
       is_summer: isSummer
-    })
+       })
     .where('status', 'in', [
       BATCH_STATUS.sent,
       BATCH_STATUS.processing,
@@ -222,24 +225,18 @@ const getBatchBillableYears = async (request, h) => {
     ])
     .fetchAll({ columns: ['to_financial_year_ending'] });
 
-  const allPossibleCycles = returns.date.createReturnCycles();
+    const batchFinancialYears = existingBatches.toJSON().map(batch => batch.toFinancialYearEnding)
 
-  const allPossibleEndDates = allPossibleCycles
-    .filter(cycle => cycle.isSummer === isSummer)
-    .map(cycle => {
-      return {
-        financialYear: charging.getFinancialYear(cycle.endDate),
-        isCurrent: moment(cycle.dueDate).isBefore(moment(), 'day')
+    const response = []
+
+    for (let index = 0; index < configYear; index++) {
+      if (!batchFinancialYears.includes(localCurrentFinYear)) {
+        response.push(localCurrentFinYear)
       }
-    })
-    .sort((a, b) => b - a);
+      localCurrentFinYear--
+    }
 
-  const existingBatchYears = existingBatches.toJSON().map(item => item.toFinancialYearEnding);
-
-  const remainingYears = allPossibleEndDates
-    .filter(possibleDate => !existingBatchYears.includes(possibleDate.financialYear));
-
-  return h.response({ unsentYears: remainingYears }).code(200);
+  return h.response({ unsentYears: response }).code(200);
 };
 
 module.exports = {
@@ -257,4 +254,5 @@ module.exports = {
   deleteAllBillingData,
   postSetBatchStatusToCancel,
   getBatchBillableYears
+
 };
