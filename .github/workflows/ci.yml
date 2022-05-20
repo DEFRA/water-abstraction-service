@@ -86,22 +86,6 @@ jobs:
           name: coverage
           path: coverage/
 
-  Code-Climate:
-    needs: [test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-      - name: Upload to Code Climate
-        uses: paambaati/codeclimate-action@v3.0.0
-        env:
-          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-        with:
-          coverageLocations: |
-            ${{github.workspace}}/coverage/*.lcov:lcov
-
   Code-Cov:
     needs: [test]
     runs-on: ubuntu-latest
