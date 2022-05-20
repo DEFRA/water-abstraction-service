@@ -21,7 +21,7 @@ const { logger } = require('../../../../src/logger')
 const returnsConnector = require('../../../../src/lib/connectors/returns')
 const { uploadStatus } = require('../../../../src/modules/returns/lib/returns-upload')
 
-const uuidv4Regex = '/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i'
+const uuidv4Regex = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i
 const UUIDV4_REGEX = new RegExp(uuidv4Regex)
 
 const testEventId = 'f6378a83-015b-4afd-8de1-d7eb2ce8e032'
@@ -55,7 +55,7 @@ const requestFactory = (returnId, lines = []) => {
   }
 }
 
-experiment('modules/returns/controllers/csv-upload', () => {
+experiment.only('modules/returns/controllers/csv-upload', () => {
   experiment('.postUpload', () => {
     let request
     let h
