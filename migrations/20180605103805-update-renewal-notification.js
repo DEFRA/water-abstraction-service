@@ -1,8 +1,5 @@
 'use strict'
 
-let dbm
-let type // eslint-disable-line no-unused-vars
-let seed // eslint-disable-line no-unused-vars
 const fs = require('fs')
 const path = require('path')
 let Promise
