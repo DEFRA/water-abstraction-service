@@ -1,7 +1,6 @@
 'use strict';
 
 const Boom = require('@hapi/boom');
-const moment = require('moment');
 
 const { flatMap, uniq } = require('lodash');
 const { envelope } = require('../../../lib/response');
@@ -26,7 +25,9 @@ const { jobName: approveBatchJobName } = require('../jobs/approve-batch');
 const batchStatus = require('../jobs/lib/batch-status');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 const { BillingBatch } = require('../../../lib/connectors/bookshelf');
-const { returns, charging } = require('@envage/water-abstraction-helpers');
+
+const YEARS_TO_GO_BACK_FOR_UNSENT_BATCHES = 3;
+
 /**
  * Resource that will create a new batch skeleton which will
  * then be asynchronously populated with charge versions by a
@@ -208,15 +209,12 @@ const postSetBatchStatusToCancel = async (request, h) => {
 const getBatchBillableYears = async (request, h) => {
   const { regionId, isSummer, currentFinancialYear } = request.payload;
 
-  let configYear = 3;
-  let localCurrentFinYear = currentFinancialYear;
-
   const existingBatches = await BillingBatch
     .where({
       region_id: regionId,
       batch_type: 'two_part_tariff',
       is_summer: isSummer
-       })
+    })
     .where('status', 'in', [
       BATCH_STATUS.sent,
       BATCH_STATUS.processing,
@@ -225,19 +223,25 @@ const getBatchBillableYears = async (request, h) => {
     ])
     .fetchAll({ columns: ['to_financial_year_ending'] });
 
-    const batchFinancialYears = existingBatches.toJSON().map(batch => batch.toFinancialYearEnding)
+  const batchFinancialYears = existingBatches.toJSON().map(batch => batch.toFinancialYearEnding);
 
-    const response = []
+  const unsentYears = _determineUnsentYears(currentFinancialYear, batchFinancialYears);
 
-    for (let index = 0; index < configYear; index++) {
-      if (!batchFinancialYears.includes(localCurrentFinYear)) {
-        response.push(localCurrentFinYear)
-      }
-      localCurrentFinYear--
-    }
-
-  return h.response({ unsentYears: response }).code(200);
+  return h.response({ unsentYears }).code(200);
 };
+
+function _determineUnsentYears (currentFinancialYear, batchFinancialYears) {
+  const unsentYears = [];
+
+  for (let index = 0; index < YEARS_TO_GO_BACK_FOR_UNSENT_BATCHES; index++) {
+    const yearToTest = currentFinancialYear - index;
+    if (!batchFinancialYears.includes(yearToTest)) {
+      unsentYears.push(yearToTest);
+    }
+  }
+
+  return unsentYears;
+}
 
 module.exports = {
   getBatch,
@@ -254,5 +258,4 @@ module.exports = {
   deleteAllBillingData,
   postSetBatchStatusToCancel,
   getBatchBillableYears
-
 };
