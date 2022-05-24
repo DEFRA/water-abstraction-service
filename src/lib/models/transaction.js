@@ -74,7 +74,7 @@ class Transaction extends Model {
   }
 
   set isCredit (isCredit) {
-    validators.assertIsBoolean(isCredit);
+    // validators.assertIsBoolean(isCredit);
     this._isCredit = isCredit;
   }
 
@@ -439,6 +439,15 @@ class Transaction extends Model {
 
   get isCreditedBack () {
     return this._isCreditedBack;
+  }
+
+  set isWaterCompanyCharge (value) {
+    validators.assertIsBoolean(value);
+    this._isWaterCompanyCharge = value;
+  }
+
+  get isWaterCompanyCharge () {
+    return this._isWaterCompanyCharge;
   }
 }
 
