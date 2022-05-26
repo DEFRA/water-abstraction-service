@@ -2,7 +2,7 @@
   model: Region
   fields:
     chargeRegionId: A
-    naldRegionId: 1
+    naldRegionId: 9
     name: Test Region
     displayName: Test Region
     isTest: true
@@ -147,6 +147,3 @@
     purposeUseId: $purposeUse.purposeUseId
     purposeAlias: SPRAY IRRIGATION STORAGE
     externalId: 1:12345679:A:AGR:420
-
-
-
