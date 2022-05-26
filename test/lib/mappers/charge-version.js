@@ -130,7 +130,7 @@ experiment('lib/mappers/charge-version', () => {
             regionId: uuid(),
             name: 'Test Region',
             chargeRegionId: 'T',
-            naldRegionId: 7,
+            naldRegionId: 9,
             displayName: 'Test Region'
           },
           regions: {
