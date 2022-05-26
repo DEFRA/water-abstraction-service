@@ -88,5 +88,4 @@
     purposeSecondaryId : $purposeSecondary.purposeSecondaryId
     purposeUseId : $purposeUse.purposeUseId
     description : CE3
-    factorsOverridden : false
     isTest: true

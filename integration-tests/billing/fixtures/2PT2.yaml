@@ -110,7 +110,6 @@
     purposeSecondaryId : $purposeSecondary.purposeSecondaryId
     purposeUseId : $purposeUse.purposeUseId
     description: CE5
-    factorsOverridden: false
     isTest: true
 
 - ref: $returnVersion
