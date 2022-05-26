@@ -20,7 +20,7 @@ experiment('modules/billing/mappers/region', () => {
         regionId: uuid(),
         name: 'Test Region',
         chargeRegionId: 'A',
-        naldRegionId: 1,
+        naldRegionId: 9,
         displayName: 'Display Region'
       };
 
