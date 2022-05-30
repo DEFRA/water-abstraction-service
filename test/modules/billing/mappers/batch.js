@@ -134,6 +134,12 @@ experiment('modules/billing/mappers/batch', () => {
       test('the creditNoteValue is set', async () => {
         expect(batch.creditNoteValue).to.equal(-55);
       });
+      test('the endYear is set', async () => {
+        expect(batch.endYear.yearEnding).to.equal(2020);
+      });
+      test('the startYear is set', async () => {
+        expect(batch.startYear.yearEnding).to.equal(2019);
+      });
     });
 
     experiment('when there are billing invoices', () => {

@@ -116,13 +116,15 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
     };
 
   return {
-    abstractionPeriod: absPeriod[0], // todo can't send min start and max end what if there are two abs periods that do not overlap
+    isCredit: false,
+    purposes: JSON.stringify(chargeElement.chargePurposes.map(chargePurpose => chargePurpose.toJSON())), // todo can't send min start and max end what if there are two abs periods that do not overlap
     chargeElementId: chargeElement.id,
     startDate: chargePeriod.startDate,
     endDate: chargePeriod.endDate,
     loss: chargeElement.loss,
     chargeType: flags.isCompensationCharge ? 'compensation' : 'standard',
     authorisedQuantity: chargeElement.volume,
+    billableQuantity: chargeElement.volume,
     authorisedDays: getBillableDays(absPeriod, financialYear.start.format(DATE_FORMAT), financialYear.end.format(DATE_FORMAT), flags.isTwoPartSecondPartCharge),
     billableDays: getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate, flags.isTwoPartSecondPartCharge),
     status: 'candidate',
@@ -251,13 +253,13 @@ const createTwoPartTariffTransactions = (elementChargePeriod, chargeElement, agr
 const createAnnualAndCompensationTransactions = (elementChargePeriod, chargeElement, agreements, financialYear, additionalData) => {
   const { chargeVersion } = additionalData;
   const isMinimumCharge = doesMinimumChargeApply(elementChargePeriod, chargeVersion);
-
   const transactions = [];
+  let flags = { isMinimumCharge };
   if (chargeVersion.scheme === 'alcs') {
-    transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isMinimumCharge }));
+    transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, flags));
 
     if (isCompensationChargesNeeded(chargeVersion)) {
-      const flags = {
+      flags = {
         isMinimumCharge,
         isCompensationCharge: true
       };
@@ -265,7 +267,7 @@ const createAnnualAndCompensationTransactions = (elementChargePeriod, chargeElem
         createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, flags));
     }
   } else {
-    const flags = {
+    flags = {
       isMinimumCharge,
       isWaterUndertaker: chargeVersion.licence.isWaterUndertaker,
       isTwoPartSecondPartCharge: false
@@ -274,7 +276,7 @@ const createAnnualAndCompensationTransactions = (elementChargePeriod, chargeElem
     transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, flags));
 
     if (isCompensationChargesNeeded(chargeVersion)) {
-      const flags = {
+      flags = {
         isMinimumCharge,
         isCompensationCharge: true,
         isWaterUndertaker: chargeVersion.licence.isWaterUndertaker

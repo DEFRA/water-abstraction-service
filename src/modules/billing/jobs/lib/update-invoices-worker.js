@@ -75,8 +75,12 @@ const updateTransactions = async (invoice, cmTransactions) => {
     const invoiceLicence = invoice.getInvoiceLicenceByLicenceNumber(cmTransaction.licenceNumber);
 
     const { WRLSChargingResponse } = cmTransaction.calculation;
-    WRLSChargingResponse.s127Agreement = WRLSChargingResponse.s127Agreement.replace('Two-part Tariff', 's127') || '';
-    WRLSChargingResponse.s130Agreement = WRLSChargingResponse.s130Agreement.replace('CRT', 's130') || '';
+    WRLSChargingResponse.s127Agreement = WRLSChargingResponse.s127Agreement
+      ? WRLSChargingResponse.s127Agreement.replace('Two-part Tariff', 's127')
+      : null;
+    WRLSChargingResponse.s130Agreement = WRLSChargingResponse.s130Agreement
+      ? WRLSChargingResponse.s130Agreement.replace('CRT', 's130')
+      : null;
 
     const transaction = mapTransaction(transactionMap, cmTransaction);
 
