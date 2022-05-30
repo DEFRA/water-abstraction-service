@@ -305,7 +305,7 @@ const modelToChargeModuleAlcs = (batch, invoice, invoiceLicence, transaction) =>
  * can be used to generate a charge
  * @param transaction bookshelf object with related data
  */
-const modelToChargeModuleSroc = (transaction) => {
+const modelToChargeModuleSroc = transaction => {
   const periodStart = mapChargeModuleDate(transaction.startDate);
   const periodEnd = mapChargeModuleDate(transaction.endDate);
   const licence = transaction.billingInvoiceLicence.licence;
@@ -319,7 +319,7 @@ const modelToChargeModuleSroc = (transaction) => {
     abatementFactor: parseFloat(transaction.section126Factor),
     adjustmentFactor: parseFloat(transaction.adjustmentFactor),
     authorisedVolume: parseFloat(transaction.chargeElement.volume),
-    // ToDo: For 2PartTariff SROC Bill run, the actualVolume should be the allocated return amount stored in the billing volume table
+    // @TODO: For 2PartTariff SROC Bill run, the actualVolume should be the allocated return amount stored in the billing volume table
     actualVolume: parseFloat(transaction.chargeElement.volume),
     aggregateProportion: parseFloat(transaction.aggregateFactor),
     areaCode: licence.regions.historicalAreaCode,

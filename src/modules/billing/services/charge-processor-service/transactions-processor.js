@@ -73,7 +73,9 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
 
 const createSrocTransactionDescription = (chargeElement, flags) => {
   if (flags.isCompensationCharge) {
-    return 'Compensation charge: calculated from the charge reference, activity description and regional environmental improvement charge; excludes any supported source additional charge and two-part tariff charge agreement';
+    return `Compensation charge: calculated from the charge reference, 
+    activity description and regional environmental improvement charge; 
+    excludes any supported source additional charge and two-part tariff charge agreement`;
   }
   // if it is a two part tarriff bill run then all transactions are 2nd part charges
   if (flags.isTwoPartSecondPartCharge) {
@@ -255,14 +257,29 @@ const createAnnualAndCompensationTransactions = (elementChargePeriod, chargeElem
     transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isMinimumCharge }));
 
     if (isCompensationChargesNeeded(chargeVersion)) {
-      transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true, isMinimumCharge }));
+      const flags = {
+        isMinimumCharge,
+        isCompensationCharge: true
+      };
+      transactions.push(
+        createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, flags));
     }
   } else {
+    const flags = {
+      isMinimumCharge,
+      isWaterUndertaker: chargeVersion.licence.isWaterUndertaker,
+      isTwoPartSecondPartCharge: false
+    };
     // set isTwoPartSecondPartCharge flag to false because all annual billing transactions are 1st part charges
-    transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, { isMinimumCharge, isWaterUndertaker: chargeVersion.licence.isWaterUndertaker, isTwoPartSecondPartCharge: false }));
+    transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, flags));
 
     if (isCompensationChargesNeeded(chargeVersion)) {
-      transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, { isCompensationCharge: true, isMinimumCharge, isWaterUndertaker: chargeVersion.licence.isWaterUndertaker }));
+      const flags = {
+        isMinimumCharge,
+        isCompensationCharge: true,
+        isWaterUndertaker: chargeVersion.licence.isWaterUndertaker
+      };
+      transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, flags));
     }
   }
 
