@@ -294,7 +294,6 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
 
 const createChargeModuleBillRun = async batchId => {
   const batch = await getBatchById(batchId);
-  console.log(batch.toJSON());
 
   // Create CM batch
   const { billRun: cmBillRun } = await chargeModuleBillRunConnector.create(batch.region.code, batch.scheme === SCHEME.alcs ? 'presroc' : batch.scheme);

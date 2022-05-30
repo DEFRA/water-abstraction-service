@@ -34,10 +34,11 @@ const agreementAppliesToTransaction = (agreement, chargeElement) => {
   return isCanalApplied || isTwoPartTariffApplied(agreement, chargeElement);
 };
 
-const getBillableDays = (absPeriod, startDate, endDate, isTwoPartSecondPartCharge) =>
-  isTwoPartSecondPartCharge
+const getBillableDays = (absPeriod, startDate, endDate, isTwoPartSecondPartCharge) => {
+  return isTwoPartSecondPartCharge
     ? 0
     : helpers.charging.getBillableDays(absPeriod, startDate, endDate);
+};
 
 /**
  * Creates a Transaction model
@@ -70,6 +71,25 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
   return transaction;
 };
 
+const createSrocTransactionDescription = (chargeElement, flags) => {
+  if (flags.isCompensationCharge) {
+    return 'Compensation charge: calculated from the charge reference, activity description and regional environmental improvement charge; excludes any supported source additional charge and two-part tariff charge agreement';
+  }
+  // if it is a two part tarriff bill run then all transactions are 2nd part charges
+  if (flags.isTwoPartSecondPartCharge) {
+    return `Two-part tariff supplementary water abstraction charge: ${chargeElement.description}`;
+  } else { // annual or 1st part charge description
+    return chargeElement.adjustments.s127
+      ? `Two-part tariff basic water abstraction charge: ${chargeElement.description}`
+      : `Water abstraction charge: ${chargeElement.description}`;
+  }
+};
+
+// produce array of date ranges
+// sort the array of date ranges in asccending order
+// loop through the date ranges and if they overlap then merge the two date ranges
+// loop though the list again to calculate the number of days for each date range and add it to the sum
+
 /**
  * Creates a Transaction model
  * @param {DateRange} chargePeriod - charge period for this charge element - taking time-limits into account
@@ -82,7 +102,7 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
  * @return {Transaction}
  */
 const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags = {}) => {
-  const absPeriod = chargeElement.chargePurposes[0].abstractionPeriod.toJSON();
+  const absPeriod = chargeElement.chargePurposes.map(chargePurpose => chargePurpose.abstractionPeriod.toJSON());
   const additionalCharges = chargeElement.additionalCharges
     ? {
       supportedSource: chargeElement.additionalCharges.supportedSource || { name: null },
@@ -94,7 +114,7 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
     };
 
   return {
-    abstractionPeriod: absPeriod,
+    abstractionPeriod: absPeriod[0], // todo can't send min start and max end what if there are two abs periods that do not overlap
     chargeElementId: chargeElement.id,
     startDate: chargePeriod.startDate,
     endDate: chargePeriod.endDate,
@@ -104,17 +124,17 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
     authorisedDays: getBillableDays(absPeriod, financialYear.start.format(DATE_FORMAT), financialYear.end.format(DATE_FORMAT), flags.isTwoPartSecondPartCharge),
     billableDays: getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate, flags.isTwoPartSecondPartCharge),
     status: 'candidate',
-    description: chargeElement.description,
+    description: createSrocTransactionDescription(chargeElement, flags),
     volume: chargeElement.volume, // ToDo this should be the acutal reported volume entered in 2PT review process
-    section126Factor: chargeElement.adjustments.s126 || 1.0,
-    section127Agreement: chargeElement.adjustments.s127,
-    section130Agreement: chargeElement.adjustments.s130,
+    section126Factor: chargeElement.adjustments.s126 || 1,
+    section127Agreement: !!chargeElement.adjustments.s127,
+    section130Agreement: !!chargeElement.adjustments.s130,
     isWinterOnly: !!chargeElement.adjustments.winter,
     scheme: 'sroc',
     season: 'all year',
     source: chargeElement.source ? 'supported' : 'unsupported',
-    aggregateFactor: chargeElement.adjustments.aggregate || 1.0,
-    adjustmentFactor: chargeElement.adjustments.charge || 1.0,
+    aggregateFactor: chargeElement.adjustments.aggregate || 1,
+    adjustmentFactor: chargeElement.adjustments.charge || 1,
     chargeCategoryCode: chargeElement.chargeCategory.reference,
     chargeCategoryDescription: chargeElement.chargeCategory.shortDescription,
     isSupportedSource: !!additionalCharges.supportedSource.name,
@@ -238,7 +258,8 @@ const createAnnualAndCompensationTransactions = (elementChargePeriod, chargeElem
       transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true, isMinimumCharge }));
     }
   } else {
-    transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, { isMinimumCharge, isWaterUndertaker: chargeVersion.licence.isWaterUndertaker }));
+    // set isTwoPartSecondPartCharge flag to false because all annual billing transactions are 1st part charges
+    transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, { isMinimumCharge, isWaterUndertaker: chargeVersion.licence.isWaterUndertaker, isTwoPartSecondPartCharge: false }));
 
     if (isCompensationChargesNeeded(chargeVersion)) {
       transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, { isCompensationCharge: true, isMinimumCharge, isWaterUndertaker: chargeVersion.licence.isWaterUndertaker }));

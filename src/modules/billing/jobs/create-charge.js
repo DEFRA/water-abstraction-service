@@ -78,7 +78,6 @@ const handler = async job => {
     // Map data to charge module transaction
     const [cmTransaction] = batchMapper.modelToChargeModule(batch);
 
-    console.log(cmTransaction);
     // Create transaction in Charge Module
     const cmBatchId = batch.externalId || batch.billingInvoiceLicence.billingInvoice.billingBatch.externalId;
     const response = await chargeModuleBillRunConnector.addTransaction(cmBatchId, cmTransaction);

@@ -2,7 +2,7 @@
 
 const moment = require('moment');
 const { titleCase } = require('title-case');
-const { identity, get, isNull } = require('lodash');
+const { identity, get, isNull, trim } = require('lodash');
 const helpers = require('@envage/water-abstraction-helpers').charging;
 
 const DateRange = require('../../../lib/models/date-range');
@@ -303,20 +303,12 @@ const modelToChargeModuleAlcs = (batch, invoice, invoiceLicence, transaction) =>
 /**
  * Maps service models to Charge Module transaction data that
  * can be used to generate a charge
- * @param {Batch} batch
- * @param {Invoice} invoice
- * @param {InvoiceLicence} invoiceLicence
- * @param {Transaction} transaction
- * @return {Object}
+ * @param transaction bookshelf object with related data
  */
 const modelToChargeModuleSroc = (transaction) => {
   const periodStart = mapChargeModuleDate(transaction.startDate);
   const periodEnd = mapChargeModuleDate(transaction.endDate);
   const licence = transaction.billingInvoiceLicence.licence;
-
-  // const chargeElement.adjustments = {
-  //   charge: 0.5 todo
-  // };
 
   return {
     periodStart,
@@ -327,13 +319,13 @@ const modelToChargeModuleSroc = (transaction) => {
     abatementFactor: parseFloat(transaction.section126Factor),
     adjustmentFactor: parseFloat(transaction.adjustmentFactor),
     authorisedVolume: parseFloat(transaction.chargeElement.volume),
-    // ToDo: For 2PartTariff SROC Bill run, the billing volume should be used for actualVolume instead of chargeElement volume
+    // ToDo: For 2PartTariff SROC Bill run, the actualVolume should be the allocated return amount stored in the billing volume table
     actualVolume: parseFloat(transaction.chargeElement.volume),
     aggregateProportion: parseFloat(transaction.aggregateFactor),
     areaCode: licence.regions.historicalAreaCode,
     authorisedDays: transaction.authorisedDays,
     batchNumber: transaction.billingInvoiceLicence.billingInvoice.billingBatchId,
-    billableDays: transaction.billableDays,
+    billableDays: transaction.authorisedDays, // billable days is set the same
     chargeCategoryCode: transaction.chargeElement.chargeCategory.reference,
     chargeCategoryDescription: transaction.chargeElement.chargeCategory.shortDescription,
     chargePeriod: `${periodStart} - ${periodEnd}`,
@@ -346,10 +338,10 @@ const modelToChargeModuleSroc = (transaction) => {
     region: licence.region.chargeRegionId,
     regionalChargingArea: licence.regions.regionalChargeArea,
     section127Agreement: transaction.section127Agreement,
-    section130Agreement: transaction.section130Agreement === 'true ', // todo
+    section130Agreement: trim(transaction.section130Agreement) === 'true',
     supportedSource: !!transaction.isSupportedSource,
     supportedSourceName: transaction.supportedSourceName || '',
-    twoPartTariff: false, // todo - transaction.isTwoPartSecondPartCharge this will indicate to the CM it is the 2nd part charge for 2PT licence
+    twoPartTariff: transaction.isTwoPartSecondPartCharge,
     waterCompanyCharge: transaction.isWaterCompanyCharge,
     waterUndertaker: transaction.isWaterUndertaker,
     winterOnly: !!transaction.chargeElement.adjustments.winter,

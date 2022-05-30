@@ -17,13 +17,11 @@ const { jobName: twoPartTariffMatchingJobName } = require('./two-part-tariff-mat
 const createMessage = partial(helpers.createMessage, JOB_NAME);
 
 const handler = async job => {
-  console.log('handling!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
   batchJob.logHandling(job);
   const batchId = get(job, 'data.batchId');
 
   try {
     const batch = await batchService.getBatchById(batchId);
-    console.log(batch.toJSON());
 
     // Populate water.billing_batch_charge_version_years
     await chargeVersionService.createForBatch(batch);
