@@ -47,16 +47,18 @@ const dbToModel = row =>
  * @return {Array<Object>} array of transactions to POST to charge module
  */
 const modelToChargeModule = batch => {
-  return batch.scheme === 'alcs'
-    ? batch.invoices.reduce((acc, invoice) => {
+  if (batch.scheme === 'alcs') {
+    return batch.invoices.reduce((acc, invoice) => {
       invoice.invoiceLicences.forEach(invoiceLicence => {
         invoiceLicence.transactions.forEach(transaction => {
           acc.push(transactionMapper.modelToChargeModule(batch, invoice, invoiceLicence, transaction));
         });
-        return acc;
-      }, []);
-    })
-    : [transactionMapper.modelToChargeModuleSroc(batch)];
+      });
+      return acc;
+    }, []);
+  } else {
+    return [transactionMapper.modelToChargeModuleSroc(batch)];
+  }
 };
 
 exports.dbToModel = dbToModel;

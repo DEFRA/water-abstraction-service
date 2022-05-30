@@ -140,6 +140,7 @@ experiment('modules/billing/services/charge-version-year', () => {
     beforeEach(async () => {
       chargeVersionYear = new ChargeVersionYear();
       batch = new Batch();
+      batch.scheme = 'alcs';
       chargeVersionYear.batch = batch;
       chargeVersionYear.isChargeable = true;
       result = await chargeVersionYearService.processChargeVersionYear(chargeVersionYear);

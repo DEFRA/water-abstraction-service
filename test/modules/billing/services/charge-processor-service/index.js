@@ -138,7 +138,7 @@ experiment('modules/billing/services/charge-processor-service/index.js', () => {
 
     beforeEach(async () => {
       // Create batch and charge version data
-      batch = data.createBatch('annual');
+      batch = data.createBatch('supplementary', { scheme: 'alcs' });
       financialYear = data.createFinancialYear();
     });
 

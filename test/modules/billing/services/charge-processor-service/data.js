@@ -80,7 +80,8 @@ const createChargeElement = (overrides = {}) => {
     billableAnnualQuantity: 8.43,
     abstractionPeriod,
     purposeUse: purpose,
-    isSection127AgreementEnabled: true
+    isSection127AgreementEnabled: true,
+    scheme: 'alcs'
   });
 };
 

@@ -74,7 +74,7 @@ class Transaction extends Model {
   }
 
   set isCredit (isCredit) {
-    // validators.assertIsBoolean(isCredit);
+    validators.assertIsBoolean(isCredit);
     this._isCredit = isCredit;
   }
 

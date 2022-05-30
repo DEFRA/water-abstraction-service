@@ -83,7 +83,7 @@ const getRebillingStateLabels = invoice => {
   return invoice;
 };
 
-const mapAddress = (invoice, scheme) => {
+const mapAddress = (invoice, scheme = 'alcs') => {
   if (scheme === 'alcs') {
     return invoice.address ? omit(invoice.address.toJSON(), 'id') : {};
   } else {

@@ -167,6 +167,7 @@ experiment('modules/billing/mappers/batch', () => {
         new Transaction(),
         new Transaction()
       ];
+      batch.scheme = 'alcs';
       cmTransactions = batchMapper.modelToChargeModule(batch);
     });
 

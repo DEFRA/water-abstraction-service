@@ -68,12 +68,13 @@ experiment('lib/connectors/repos/billing-transactions', () => {
       const [params] = stub.fetch.lastCall.args;
       expect(params.withRelated).to.equal([
         'chargeElement',
+        'chargeElement.chargeCategory',
+        'chargeElement.chargePurposes',
         'billingInvoiceLicence',
         'billingInvoiceLicence.licence',
         'billingInvoiceLicence.licence.region',
         'billingInvoiceLicence.billingInvoice',
         'billingInvoiceLicence.billingInvoice.billingBatch'
-        // 'billingInvoiceLicence.billingInvoice.billingBatch.region'
       ]);
     });
 
@@ -108,12 +109,13 @@ experiment('lib/connectors/repos/billing-transactions', () => {
       const [params] = stub.fetch.lastCall.args;
       expect(params.withRelated).to.equal([
         'chargeElement',
+        'chargeElement.chargeCategory',
+        'chargeElement.chargePurposes',
         'billingInvoiceLicence',
         'billingInvoiceLicence.licence',
         'billingInvoiceLicence.licence.region',
         'billingInvoiceLicence.billingInvoice',
         'billingInvoiceLicence.billingInvoice.billingBatch'
-        // 'billingInvoiceLicence.billingInvoice.billingBatch.region'
       ]);
     });
 
