@@ -94,6 +94,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         expect(transactions[0].aggregateFactor).to.be.equal(1);
         expect(transactions[0].adjustmentFactor).to.be.equal(1);
         expect(transactions[0].isTwoPartSecondPartCharge).to.be.false();
+        expect(transactions[0].source).to.equal('tidal');
       });
 
       test('a compensation charge transaction is created for the first element', async () => {
@@ -110,6 +111,12 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         expect(transactions[2].isTwoPartSecondPartCharge).to.equal(false);
         expect(transactions[2].description)
           .to.equal('Water abstraction charge: Test description');
+        expect(transactions[2].section126Factor).to.equal(0.7);
+        expect(transactions[2].aggregateFactor).to.equal(0.8);
+        expect(transactions[2].adjustmentFactor).to.equal(0.9);
+        expect(transactions[2].source).to.equal('unsupported');
+        expect(transactions[2].isSupportedSource).to.equal(true);
+        expect(transactions[2].supportedSourceName).to.equal('test-source-name');
       });
 
       test('a compensation charge transaction is created for the first element', async () => {

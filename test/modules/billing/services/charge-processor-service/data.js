@@ -103,6 +103,7 @@ const createChargeElement = (overrides = {}) => {
   if (overrides.scheme === 'sroc') {
     chargeElement.chargePurposes = [chargePurpose];
     chargeElement.adjustments = { s127: true };
+    chargeElement.source = 'tidal';
   }
   return chargeElement;
 };
@@ -148,7 +149,17 @@ const createChargeVersionWithTwoPartTariff = (overrides = {}) => {
 const createSrocChargeVersion = (overrides = {}) => {
   const cv = createChargeVersion({ scheme: 'sroc', ...overrides });
   const chargeElement = createChargeElement({ scheme: 'sroc', isSprayIrrigation: true });
-  chargeElement.adjustments = { s127: false };
+  chargeElement.adjustments = {
+    s127: false,
+    s126: 0.7,
+    aggregate: 0.8,
+    charge: 0.9
+  };
+  chargeElement.additionalCharges = {
+    supportedSource: { name: 'test-source-name' },
+    isSupplyPublicWater: true
+  };
+  chargeElement.source = 'unsupported';
   cv.chargeElements.push(chargeElement);
   cv.licence = createLicence();
   return cv;

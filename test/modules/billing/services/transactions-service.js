@@ -36,6 +36,7 @@ experiment('modules/billing/services/transactions-service', () => {
     sandbox.stub(repos.billingTransactions, 'update').resolves(transactionDBRow);
     sandbox.stub(repos.billingTransactions, 'delete');
     sandbox.stub(repos.billingTransactions, 'findByBatchId');
+    sandbox.stub(repos.billingTransactions, 'findOne');
     sandbox.stub(repos.billingTransactions, 'findHistoryByBatchId').resolves([transactionDBRow]);
     sandbox.stub(repos.billingBatchChargeVersionYears, 'findByBatchId');
 
@@ -108,6 +109,35 @@ experiment('modules/billing/services/transactions-service', () => {
         billingInvoiceLicenceId: 'test-invoice-licence-id',
         scheme: 'sroc'
       });
+    });
+  });
+  experiment('.getById sroc', () => {
+    let result;
+    beforeEach(async () => {
+      repos.billingTransactions.findOne.resolves({ scheme: 'sroc', test: 'data' });
+      result = await transactionsService.getById('test-id');
+    });
+
+    test('the finOne() method is called on the repo', async () => {
+      expect(repos.billingTransactions.findOne.called).to.be.true();
+    });
+    test('the raw data is returned', async () => {
+      expect(result).to.equal({ scheme: 'sroc', test: 'data' });
+    });
+  });
+
+  experiment('.getById sroc', () => {
+    let result;
+    beforeEach(async () => {
+      repos.billingTransactions.findOne.resolves({ scheme: 'sroc', test: 'data' });
+      result = await transactionsService.getById('test-id');
+    });
+
+    test('the finOne() method is called on the repo', async () => {
+      expect(repos.billingTransactions.findOne.called).to.be.true();
+    });
+    test('the raw data is returned', async () => {
+      expect(result).to.equal({ scheme: 'sroc', test: 'data' });
     });
   });
 

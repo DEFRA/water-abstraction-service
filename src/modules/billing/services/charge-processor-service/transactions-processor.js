@@ -134,7 +134,7 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
     isWinterOnly: !!chargeElement.adjustments.winter,
     scheme: 'sroc',
     season: 'all year',
-    source: chargeElement.source ? 'supported' : 'unsupported',
+    source: chargeElement.source === 'unsupported' ? 'unsupported' : chargeElement.source,
     aggregateFactor: chargeElement.adjustments.aggregate || 1,
     adjustmentFactor: chargeElement.adjustments.charge || 1,
     chargeCategoryCode: chargeElement.chargeCategory.reference,
