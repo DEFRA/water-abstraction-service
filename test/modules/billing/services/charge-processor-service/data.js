@@ -100,7 +100,10 @@ const createChargeElement = (overrides = {}) => {
     scheme: overrides.scheme || 'alcs',
     chargeCategory
   });
-  chargeElement.chargePurposes = chargePurpose ? [chargePurpose] : [];
+  if (overrides.scheme === 'sroc') {
+    chargeElement.chargePurposes = [chargePurpose];
+    chargeElement.adjustments = { s127: true };
+  }
   return chargeElement;
 };
 
@@ -143,7 +146,10 @@ const createChargeVersionWithTwoPartTariff = (overrides = {}) => {
 };
 
 const createSrocChargeVersion = (overrides = {}) => {
-  const cv = createChargeVersion(overrides);
+  const cv = createChargeVersion({ scheme: 'sroc', ...overrides });
+  const chargeElement = createChargeElement({ scheme: 'sroc', isSprayIrrigation: true });
+  chargeElement.adjustments = { s127: false };
+  cv.chargeElements.push(chargeElement);
   cv.licence = createLicence();
   return cv;
 };

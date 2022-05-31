@@ -18,7 +18,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
 
     experiment('for an annual transaction type', () => {
       beforeEach(async () => {
-        batch = data.createBatch('annual');
+        batch = data.createBatch('annual', { scheme: 'sroc' });
         chargeVersion = data.createChargeVersionWithTwoPartTariff();
         chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
         const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
@@ -63,6 +63,62 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         expect(transactions[3].agreements[0].code).to.equal('S127');
         expect(transactions[3].isTwoPartSecondPartCharge).to.equal(false);
         expect(transactions[3].description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
+      });
+    });
+
+    experiment('for an annual SROC transaction type', () => {
+      beforeEach(async () => {
+        batch = data.createBatch('annual', { scheme: 'sroc' });
+        chargeVersion = data.createSrocChargeVersion();
+        chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
+        const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
+        transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
+      });
+
+      test('4 transactions are created', async () => {
+        expect(transactions.length).to.equal(4);
+      });
+
+      test('a standard charge transaction is created for the first element', async () => {
+        expect(transactions[0].chargeType).to.equal('standard');
+        expect(transactions[0].isNewLicence).to.equal(true);
+        expect(transactions[0].isTwoPartSecondPartCharge).to.equal(false);
+        expect(transactions[0].description)
+          .to.equal('Two-part tariff basic water abstraction charge: Test description');
+        expect(transactions[0].isSupportedSource).to.equal(false);
+        expect(transactions[0].supportedSourceName).to.equal(null);
+        expect(transactions[0].isWaterCompanyCharge).to.be.false();
+        expect(transactions[0].isTwoPartSecondPartCharge).to.be.false();
+        expect(transactions[0].isWaterUndertaker).to.be.false();
+        expect(transactions[0].section126Factor).to.be.equal(1);
+        expect(transactions[0].aggregateFactor).to.be.equal(1);
+        expect(transactions[0].adjustmentFactor).to.be.equal(1);
+        expect(transactions[0].isTwoPartSecondPartCharge).to.be.false();
+      });
+
+      test('a compensation charge transaction is created for the first element', async () => {
+        expect(transactions[1].chargeType).to.equal('compensation');
+        expect(transactions[1].isNewLicence).to.equal(true);
+        expect(transactions[1].isTwoPartSecondPartCharge).to.equal(false);
+        expect(transactions[1].description).to.equal(
+          'Compensation charge: calculated from the charge reference, activity description and regional environmental improvement charge; excludes any supported source additional charge and two-part tariff charge agreement'
+        );
+      });
+      test('a standard charge transaction is created for the first element', async () => {
+        expect(transactions[2].chargeType).to.equal('standard');
+        expect(transactions[2].isNewLicence).to.equal(true);
+        expect(transactions[2].isTwoPartSecondPartCharge).to.equal(false);
+        expect(transactions[2].description)
+          .to.equal('Water abstraction charge: Test description');
+      });
+
+      test('a compensation charge transaction is created for the first element', async () => {
+        expect(transactions[3].chargeType).to.equal('compensation');
+        expect(transactions[3].isNewLicence).to.equal(true);
+        expect(transactions[3].isTwoPartSecondPartCharge).to.equal(false);
+        expect(transactions[3].description).to.equal(
+          'Compensation charge: calculated from the charge reference, activity description and regional environmental improvement charge; excludes any supported source additional charge and two-part tariff charge agreement'
+        );
       });
     });
 

@@ -73,9 +73,7 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
 
 const createSrocTransactionDescription = (chargeElement, flags) => {
   if (flags.isCompensationCharge) {
-    return `Compensation charge: calculated from the charge reference, 
-    activity description and regional environmental improvement charge; 
-    excludes any supported source additional charge and two-part tariff charge agreement`;
+    return 'Compensation charge: calculated from the charge reference, activity description and regional environmental improvement charge; excludes any supported source additional charge and two-part tariff charge agreement';
   }
   // if it is a two part tarriff bill run then all transactions are 2nd part charges
   if (flags.isTwoPartSecondPartCharge) {
