@@ -257,6 +257,39 @@ experiment('modules/billing/jobs/create-charge', () => {
       });
     });
 
+    experiment('when it is an sroc transaction', () => {
+      beforeEach(async () => {
+        batch = {
+          scheme: 'sroc',
+          status: 'candidate',
+          billingInvoiceLicence: {
+            billingInvoice: {
+              billingBatch: {
+                externalId: 'cm-batch-id'
+              }
+            }
+          }
+        };
+        batch.status = Transaction.statuses.candidate;
+        transactionService.getById.resolves(batch);
+        result = await createChargeJob.handler(job);
+      });
+
+      test('the transaction is loaded within the context of its batch', async () => {
+        expect(transactionService.getById.calledWith(transactionId)).to.be.true();
+      });
+
+      test('the charge module is never called', async () => {
+        const args = chargeModuleBillRunConnector.addTransaction.lastCall.args;
+        expect(args[0]).to.equal('cm-batch-id');
+        expect(chargeModuleBillRunConnector.addTransaction.called).to.be.true();
+      });
+
+      test('the transaction is never updated', async () => {
+        expect(transactionService.updateWithChargeModuleResponse.called).to.be.true();
+      });
+    });
+
     experiment('when there is an empty batch', () => {
       beforeEach(async () => {
         batchService.getTransactionStatusCounts.resolves({

@@ -84,11 +84,10 @@ const getRebillingStateLabels = invoice => {
 };
 
 const mapAddress = (invoice, scheme = 'alcs') => {
-  if (scheme === 'alcs') {
-    return invoice.address ? omit(invoice.address.toJSON(), 'id') : {};
-  } else {
-    return invoice.address ? omit(invoice.address, 'id') : {};
-  }
+  return scheme === 'alcs'
+    ? omit(invoice.address.toJSON(), 'id')
+    // sroc invoices are not mapped to the internal models so does not hhave the toJSON function.
+    : omit(invoice.address, 'id');
 };
 
 /**
@@ -101,7 +100,7 @@ const modelToDb = (invoice, scheme) => ({
   externalId: invoice.externalId || null,
   invoiceAccountId: invoice.invoiceAccount.id,
   invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
-  address: mapAddress(invoice, scheme),
+  address: invoice.address ? mapAddress(invoice, scheme) : {},
   financialYearEnding: invoice.financialYear.endYear,
   invoiceNumber: invoice.invoiceNumber || null,
   isCredit: isNull(invoice.netTotal) ? null : invoice.netTotal < 0,

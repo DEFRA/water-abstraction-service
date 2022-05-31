@@ -66,7 +66,7 @@ const handler = async job => {
   const batchId = get(job, 'data.batchId');
 
   // Create batch model from loaded data
-  const batch = await transactionsService.getById(transactionId, true);
+  const batch = await transactionsService.getById(transactionId);
 
   try {
     // Skip CM call if transaction is already processed
