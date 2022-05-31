@@ -76,11 +76,13 @@ const processChargeVersionYear = async (chargeVersionYear) => {
     return invoice;
   } else {
     const transactions = await createTransactions(chargeVersionYear);
-    const rawInvoice = invoice.toJSON();
-    const rawInvoiceLicence = invoiceLicence.toJSON();
-    rawInvoice.invoiceLicences = [rawInvoiceLicence];
-    rawInvoice.invoiceLicences[0].transactions = transactions;
-    return rawInvoice;
+    return {
+      ...invoice.toJSON(),
+      invoiceLicences: [{
+        ...invoiceLicence.toJSON(),
+        transactions
+      }]
+    };
   }
 };
 
