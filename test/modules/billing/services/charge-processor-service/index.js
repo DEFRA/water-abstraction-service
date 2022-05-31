@@ -258,7 +258,7 @@ experiment('modules/billing/services/charge-processor-service/index.js', () => {
         });
 
         test('the Invoice model returned has an array of transactions', async () => {
-          expect(invoice.invoiceLicences[0].transactions).to.be.an.array().length(2);
+          expect(invoice.invoiceLicences[0].transactions).to.be.an.array().length(4);
         });
       });
 
