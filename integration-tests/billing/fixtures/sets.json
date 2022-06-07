@@ -323,5 +323,35 @@
       "service": "returns",
       "file": "test-bulk-returns.yaml"
     }
+  ],
+  "single-set": [
+    {
+      "service": "idm",
+      "file": "internal-users.yaml"
+    },
+    {
+      "service": "idm",
+      "file": "external-users.yaml"
+    },
+    {
+      "service": "permits",
+      "file": "single-set-permits.yaml"
+    },
+    {
+      "service": "crmV1",
+      "file": "single-set-crm-v1.yaml"
+    },
+    {
+      "service": "crmV2",
+      "file": "single-set-crm-v2.yaml"
+    },
+    {
+      "service": "water",
+      "file": "single-set-licences.yaml"
+    },
+    {
+      "service": "returns",
+      "file": "single-set-returns.yaml"
+    }
   ]
 }
