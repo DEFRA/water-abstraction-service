@@ -1,0 +1,225 @@
+#### Do not use this for re-billing tests as transactions will not exist in the charge module
+# Licence L1
+- ref: $$$[batchType]FirstPartTransactionL1$$[index]
+  model: BillingTransaction
+  fields:
+    billingInvoiceLicenceId: $$$[batchType]InvoiceLicenceL1$$[index].billingInvoiceLicenceId
+    chargeElementId: $chargeElementL1.chargeElementId
+    startDate: '$$[startDate]'
+    endDate: '$$[endDate]'
+    abstractionPeriod: '{"endDay": 31, "endMonth": 10, "startDay": 1, "startMonth": 4}'
+    source: unsupported
+    season: summer
+    loss: high
+    netAmount: 55020
+    isCredit: false
+    chargeType: standard
+    authorisedQuantity: 30
+    billableQuantity: 25
+    authorisedDays: 214
+    billableDays: 214
+    section126Factor: null
+    section127Agreement: true
+    section130Agreement: null
+    status: charge_created
+    description: First Part Spray Irrigation Charge L1
+    volume: 25
+    isNewLicence: true
+    isDeMinimis: false
+    calcSourceFactor: 1
+    calcSeasonFactor: 1.6
+    calcLossFactor: 1
+    calcSucFactor: 19.23
+    calcEiucFactor: 0
+    calcEiucSourceFactor: 0
+    isCreditedBack: false
+    isTwoPartSecondPartCharge: false
+    metadata: { source: "acceptance-test-setup" }
+    dateCreated: '$$[batchDate] 10:00:00.000000'
+
+- ref: $$$[batchType]CompensationTransactionL1$$[index]
+  model: BillingTransaction
+  fields:
+    billingInvoiceLicenceId: $$$[batchType]InvoiceLicenceL1$$[index].billingInvoiceLicenceId
+    chargeElementId: $chargeElementL1.chargeElementId
+    startDate: '$$[startDate]'
+    endDate: '$$[endDate]'
+    abstractionPeriod: '{"endDay": 31, "endMonth": 10, "startDay": 1, "startMonth": 4}'
+    source: unsupported
+    season: summer
+    loss: high
+    netAmount: 0
+    isCredit: false
+    chargeType: compensation
+    authorisedQuantity: 30
+    billableQuantity: 25
+    authorisedDays: 214
+    billableDays: 214
+    section126Factor: null
+    section127Agreement: true
+    section130Agreement: null
+    status: charge_created
+    description: Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element
+    volume: 25
+    isNewLicence: true
+    isDeMinimis: false
+    calcSourceFactor: 0
+    calcSeasonFactor: 1.6
+    calcLossFactor: 1
+    calcSucFactor: 0
+    calcEiucFactor: 0
+    calcEiucSourceFactor: 1
+    isCreditedBack: false
+    isTwoPartSecondPartCharge: false
+    metadata: { source: "acceptance-test-setup" }
+    dateCreated: '$$[batchDate] 10:00:00.000000'
+
+# Licence L2
+- ref: $$$[batchType]FirstPartTransactionL2$$[index]
+  model: BillingTransaction
+  fields:
+    billingInvoiceLicenceId: $$$[batchType]InvoiceLicenceL2$$[index].billingInvoiceLicenceId
+    chargeElementId: $chargeElementL2.chargeElementId
+    startDate: '$$[startDate]'
+    endDate: '$$[endDate]'
+    abstractionPeriod: '{"endDay": 31, "endMonth": 10, "startDay": 1, "startMonth": 4}'
+    source: unsupported
+    season: winter
+    loss: high
+    netAmount: 55020
+    isCredit: false
+    chargeType: standard
+    authorisedQuantity: 30
+    billableQuantity: 25
+    authorisedDays: 214
+    billableDays: 214
+    section126Factor: null
+    section127Agreement: true
+    section130Agreement: null
+    status: charge_created
+    description: First Part Spray Irrigation Charge L2
+    volume: 25
+    isNewLicence: true
+    isDeMinimis: false
+    calcSourceFactor: 1
+    calcSeasonFactor: 1.6
+    calcLossFactor: 1
+    calcSucFactor: 19.23
+    calcEiucFactor: 0
+    calcEiucSourceFactor: 0
+    isCreditedBack: false
+    isTwoPartSecondPartCharge: false
+    metadata: { source: "acceptance-test-setup" }
+    dateCreated: '$$[batchDate] 10:00:00.000000'
+
+- ref: $$$[batchType]CompensationTransactionL2$$[index]
+  model: BillingTransaction
+  fields:
+    billingInvoiceLicenceId: $$$[batchType]InvoiceLicenceL2$$[index].billingInvoiceLicenceId
+    chargeElementId: $chargeElementL2.chargeElementId
+    startDate: '$$[startDate]'
+    endDate: '$$[endDate]'
+    abstractionPeriod: '{"endDay": 31, "endMonth": 10, "startDay": 1, "startMonth": 4}'
+    source: unsupported
+    season: summer
+    loss: high
+    netAmount: 0
+    isCredit: false
+    chargeType: compensation
+    authorisedQuantity: 30
+    billableQuantity: 25
+    authorisedDays: 214
+    billableDays: 214
+    section126Factor: null
+    section127Agreement: true
+    section130Agreement: null
+    status: charge_created
+    description: Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element
+    volume: 25
+    isNewLicence: true
+    isDeMinimis: false
+    calcSourceFactor: 0
+    calcSeasonFactor: 1.6
+    calcLossFactor: 1
+    calcSucFactor: 0
+    calcEiucFactor: 0
+    calcEiucSourceFactor: 1
+    isCreditedBack: false
+    isTwoPartSecondPartCharge: false
+    metadata: { source: "acceptance-test-setup" }
+    dateCreated: '$$[batchDate] 10:00:00.000000'
+
+# Licence L3
+- ref: $$$[batchType]FirstPartTransactionL3$$[index]
+  model: BillingTransaction
+  fields:
+    billingInvoiceLicenceId: $$$[batchType]InvoiceLicenceL3$$[index].billingInvoiceLicenceId
+    chargeElementId: $chargeElementL3.chargeElementId
+    startDate: '$$[startDate]'
+    endDate: '$$[endDate]'
+    abstractionPeriod: '{"endDay": 31, "endMonth": 10, "startDay": 1, "startMonth": 4}'
+    source: unsupported
+    season: summer
+    loss: high
+    netAmount: 55020
+    isCredit: false
+    chargeType: standard
+    authorisedQuantity: 30
+    billableQuantity: 25
+    authorisedDays: 214
+    billableDays: 214
+    section126Factor: null
+    section127Agreement: false
+    section130Agreement: null
+    status: charge_created
+    description: Spray Irrigation Charge L3
+    volume: 25
+    isNewLicence: true
+    isDeMinimis: false
+    calcSourceFactor: 1
+    calcSeasonFactor: 1.6
+    calcLossFactor: 1
+    calcSucFactor: 19.23
+    calcEiucFactor: 0
+    calcEiucSourceFactor: 0
+    isCreditedBack: false
+    isTwoPartSecondPartCharge: false
+    metadata: { source: "acceptance-test-setup" }
+    dateCreated: '$$[batchDate] 10:00:00.000000'
+
+- ref: $$$[batchType]CompensationTransactionL3$$[index]
+  model: BillingTransaction
+  fields:
+    billingInvoiceLicenceId: $$$[batchType]InvoiceLicenceL3$$[index].billingInvoiceLicenceId
+    chargeElementId: $chargeElementL3.chargeElementId
+    startDate: '$$[startDate]'
+    endDate: '$$[endDate]'
+    abstractionPeriod: '{"endDay": 31, "endMonth": 10, "startDay": 1, "startMonth": 4}'
+    source: unsupported
+    season: summer
+    loss: high
+    netAmount: 0
+    isCredit: false
+    chargeType: compensation
+    authorisedQuantity: 30
+    billableQuantity: 25
+    authorisedDays: 214
+    billableDays: 214
+    section126Factor: null
+    section127Agreement: true
+    section130Agreement: null
+    status: charge_created
+    description: Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element
+    volume: 25
+    isNewLicence: true
+    isDeMinimis: false
+    calcSourceFactor: 0
+    calcSeasonFactor: 1.6
+    calcLossFactor: 1
+    calcSucFactor: 0
+    calcEiucFactor: 0
+    calcEiucSourceFactor: 1
+    isCreditedBack: false
+    isTwoPartSecondPartCharge: false
+    metadata: { source: "acceptance-test-setup" }
+    dateCreated: '$$[batchDate] 10:00:00.000000'

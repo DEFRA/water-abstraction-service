@@ -112,10 +112,10 @@
     contactId: $contact.contactId
     isTest: true
 
-- ref: $invoiceAccount
+- ref: $invoiceAccountL1
   model: InvoiceAccount
   fields:
-    invoiceAccountNumber: A99999999A
+    invoiceAccountNumber: A99999991A
     startDate: '2008-04-01'
     endDate: null
     companyId: $company.companyId
@@ -123,7 +123,45 @@
 
 - model: InvoiceAccountAddress
   fields:
-    invoiceAccountId: $invoiceAccount.invoiceAccountId
+    invoiceAccountId: $invoiceAccountL1.invoiceAccountId
+    addressId: $address.addressId
+    agentCompanyId: null
+    contactId: null
+    startDate: '2008-04-01'
+    endDate: null
+    isTest: true
+
+- ref: $invoiceAccountL2
+  model: InvoiceAccount
+  fields:
+    invoiceAccountNumber: A99999992A
+    startDate: '2008-04-01'
+    endDate: null
+    companyId: $company.companyId
+    isTest: true
+
+- model: InvoiceAccountAddress
+  fields:
+    invoiceAccountId: $invoiceAccountL2.invoiceAccountId
+    addressId: $address.addressId
+    agentCompanyId: null
+    contactId: null
+    startDate: '2008-04-01'
+    endDate: null
+    isTest: true
+
+- ref: $invoiceAccountL3
+  model: InvoiceAccount
+  fields:
+    invoiceAccountNumber: A99999993A
+    startDate: '2008-04-01'
+    endDate: null
+    companyId: $company.companyId
+    isTest: true
+
+- model: InvoiceAccountAddress
+  fields:
+    invoiceAccountId: $invoiceAccountL3.invoiceAccountId
     addressId: $address.addressId
     agentCompanyId: null
     contactId: null

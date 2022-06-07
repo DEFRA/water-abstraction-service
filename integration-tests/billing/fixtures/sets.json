@@ -352,6 +352,62 @@
     {
       "service": "returns",
       "file": "single-set-returns.yaml"
+    },
+    {
+      "repeat": {
+        "count": 4,
+        "data": [
+          {
+            "service": "water",
+            "file": "single-set-historic-billing-batch.yaml",
+            "config": {
+              "batchDate": "$previousYearsDateLessIndex",
+              "billingYear": "$previousYearLessIndex",
+              "batchType": "annual",
+              "invoiceNumberL1": "$annualInvoiceL1",
+              "invoiceNumberL2": "$annualInvoiceL2",
+              "invoiceNumberL3": "$annualInvoiceL3",
+              "externalId": "$uuid",
+              "billRunNumber": "$billRunNumber"
+            }
+          },
+          {
+            "service": "water",
+            "file": "single-set-historic-billing-annual-trans.yaml",
+            "config": {
+              "batchDate": "$previousYearsDateLessIndex",
+              "billingYear": "$previousYearLessIndex",
+              "startDate": "$previousStartDateLessIndex",
+              "endDate": "$previousEndDateLessIndex",
+              "batchType": "annual"
+            }
+          },
+          {
+            "service": "water",
+            "file": "single-set-historic-billing-batch-2pt.yaml",
+            "config": {
+              "batchDate": "$previousYearsDateLessIndex",
+              "billingYear": "$previousYearLessIndex",
+              "batchType": "two_part_tariff",
+              "invoiceNumberL1": "$2PT2InvoicL1",
+              "invoiceNumberL2": "$2PT2InvoicL2",
+              "externalId": "$uuid",
+              "billRunNumber": "$billRunNumber"
+            }
+          },
+          {
+            "service": "water",
+            "file": "single-set-historic-billing-2nd-part-trans.yaml",
+            "config": {
+              "batchDate": "$previousYearsDateLessIndex",
+              "billingYear": "$previousYearLessIndex",
+              "startDate": "$previousStartDateLessIndex",
+              "endDate": "$previousEndDateLessIndex",
+              "batchType": "two_part_tariff"
+            }
+          }
+        ]
+      }
     }
   ]
 }

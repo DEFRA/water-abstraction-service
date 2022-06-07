@@ -67,8 +67,8 @@
     endDate: null
     source: nald
     isTest: true
-    companyId: $invoiceAccount.companyId
-    invoiceAccountId: $invoiceAccount.invoiceAccountId
+    companyId: $invoiceAccountL1.companyId
+    invoiceAccountId: $invoiceAccountL1.invoiceAccountId
     regionCode: $region.naldRegionId
     licenceId: $licenceL1.licenceId
 
@@ -244,8 +244,8 @@
     endDate: null
     source: nald
     isTest: true
-    companyId: $invoiceAccount.companyId
-    invoiceAccountId: $invoiceAccount.invoiceAccountId
+    companyId: $invoiceAccountL2.companyId
+    invoiceAccountId: $invoiceAccountL2.invoiceAccountId
     regionCode: $region.naldRegionId
     licenceId: $licenceL2.licenceId
 
@@ -346,8 +346,8 @@
     endDate: null
     source: nald
     isTest: true
-    companyId: $invoiceAccount.companyId
-    invoiceAccountId: $invoiceAccount.invoiceAccountId
+    companyId: $invoiceAccountL3.companyId
+    invoiceAccountId: $invoiceAccountL3.invoiceAccountId
     regionCode: $region.naldRegionId
     licenceId: $licenceL3.licenceId
 
