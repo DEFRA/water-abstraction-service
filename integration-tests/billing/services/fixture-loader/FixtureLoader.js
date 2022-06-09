@@ -59,11 +59,8 @@ const calcValue = (value, index = 0) => {
     case '$previousYearLessIndex': {
       return previousYearsLessIndexFinancialDateRange.endDate.year();
     }
-    case '$annualInvoiceL1': return `TEST00${index}1`;
-    case '$annualInvoiceL2': return `TEST00${index}2`;
-    case '$annualInvoiceL3': return `TEST00${index}3`;
-    case '$2PT2InvoiceL1': return `TEST00${index}4`;
-    case '$2PT2InvoiceL2': return `TEST00${index}5`;
+    case '$annualInvoice': return `TEST00${index}1`;
+    case '$2PT2Invoice': return `TEST00${index}2`;
     case '$uuid': return Uuid.v4();
     case '$billRunNumber': return String(new Date().getMilliseconds()).padStart(4, '0') + index;
     default:
