@@ -141,10 +141,10 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
     chargeCategoryDescription: chargeElement.chargeCategory.shortDescription,
     isSupportedSource: !!additionalCharges.supportedSource.name,
     supportedSourceName: additionalCharges.supportedSource.name,
-    isWaterCompanyCharge: additionalCharges.isSupplyPublicWater,
     isTwoPartSecondPartCharge: flags.isTwoPartSecondPartCharge || false,
     isNewLicence: flags.isMinimumCharge || false,
-    isWaterUndertaker: additionalCharges.isSupplyPublicWater // flags.isWaterUndertaker
+    isWaterUndertaker: flags.isWaterUndertaker || false, // if this is false then isWaterCompanyCharge can not be true
+    isWaterCompanyCharge: additionalCharges.isSupplyPublicWater // this value is set in the UI when assigning a charge category
   };
 };
 
