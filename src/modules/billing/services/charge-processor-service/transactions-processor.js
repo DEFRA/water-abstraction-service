@@ -115,7 +115,7 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
 
   return {
     isCredit: false,
-    purposes: JSON.stringify(chargeElement.chargePurposes.map(chargePurpose => chargePurpose.toJSON())), // todo can't send min start and max end what if there are two abs periods that do not overlap
+    purposes: JSON.stringify(chargeElement.chargePurposes.map(chargePurpose => chargePurpose.toJSON())),
     chargeElementId: chargeElement.id,
     startDate: chargePeriod.startDate,
     endDate: chargePeriod.endDate,
@@ -127,7 +127,7 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
     billableDays: getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate, flags.isTwoPartSecondPartCharge),
     status: 'candidate',
     description: createSrocTransactionDescription(chargeElement, flags),
-    volume: chargeElement.volume, // ToDo this should be the acutal reported volume entered in 2PT review process
+    volume: chargeElement.volume, // @TODO this should be the acutal reported volume entered in 2PT review process
     section126Factor: chargeElement.adjustments.s126 || 1,
     section127Agreement: !!chargeElement.adjustments.s127,
     section130Agreement: !!chargeElement.adjustments.s130,

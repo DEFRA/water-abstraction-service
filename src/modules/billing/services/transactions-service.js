@@ -29,7 +29,7 @@ const saveTransactionToDB = (invoiceLicence, transaction) => {
  * @param {String} transactionId
  * @return {Promise<Batch>}
  */
-const getById = async (transactionId) => {
+const getById = async transactionId => {
   const data = await newRepos.billingTransactions.findOne(transactionId);
   if (data.scheme === 'sroc') {
     return data;

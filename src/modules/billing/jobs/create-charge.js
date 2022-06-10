@@ -66,6 +66,9 @@ const handler = async job => {
   const batchId = get(job, 'data.batchId');
 
   // Create batch model from loaded data
+  // the batch contains all lower level related objects for pre-sroc
+  // but for sroc we don't map all the related objects that is not needed
+  // where it will slow down performance and the batch variable is then mainly transaction data
   const batch = await transactionsService.getById(transactionId);
 
   try {

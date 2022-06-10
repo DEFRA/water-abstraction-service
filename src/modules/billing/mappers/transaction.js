@@ -380,9 +380,7 @@ const cmToModelMapper = createMapper()
   .map('calculation.WRLSChargingResponse.abatementAdjustment').to('calcS126Factor')
   .map('calculation.WRLSChargingResponse.s127Agreement').to('calcS127Factor')
   .map('calculation.WRLSChargingResponse.eiucFactor').to('calcEiucFactor')
-  .map('calculation.WRLSChargingResponse.eiucSourceFactor').to('calcEiucSourceFactor')
-  .map('calculation.WRLSChargingResponse.winterOnlyAdjustment').to('calcWinterDiscountFactor')
-  .map('calculation.WRLSChargingResponse.adjustmentFactor').to('calcAdjustmentFactor');
+  .map('calculation.WRLSChargingResponse.eiucSourceFactor').to('calcEiucSourceFactor');
 
 /**
  * Converts Minimum Charge transaction returned from the CM
