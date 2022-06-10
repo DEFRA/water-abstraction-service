@@ -17,6 +17,7 @@ alter table water.billing_transactions
     drop column purposes,
     drop column calc_adjustment_factor,
     drop column calc_winter_discount_factor,
+    drop column gross_values_calculated,
     add constraint season_check check (
     charge_type='minimum_charge' or season is not null
     ),

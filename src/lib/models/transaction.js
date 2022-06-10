@@ -437,6 +437,15 @@ class Transaction extends Model {
     return this._calcAdjustmentFactor;
   }
 
+  set grossValuesCalculated (value) {
+    validators.assertNullableObject(value);
+    this._grossValuesCalculated = value;
+  }
+
+  get grossValuesCalculated () {
+    return this._grossValuesCalculated;
+  }
+
   /**
    * Checks if the transaction is in error status
    * @return {Boolean}

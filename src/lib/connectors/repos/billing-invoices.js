@@ -37,6 +37,9 @@ const findOne = async id => {
         'billingInvoiceLicences.billingTransactions',
         'billingInvoiceLicences.billingTransactions.billingVolume',
         'billingInvoiceLicences.billingTransactions.chargeElement',
+        'billingInvoiceLicences.billingTransactions.chargeElement.chargeCategory',
+        'billingInvoiceLicences.billingTransactions.chargeElement.chargePurposes',
+        'billingInvoiceLicences.billingTransactions.chargeElement.chargePurposes.purposeUse',
         'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse',
         'linkedBillingInvoices',
         'originalBillingInvoice'

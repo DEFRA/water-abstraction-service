@@ -15,7 +15,7 @@
     regions:
       historicalAreaCode: 'SAAR'
       regionalChargeArea: 'Southern'
-    isWaterUndertaker: false
+    isWaterUndertaker: true
     startDate: '2020-01-01'
     isTest: true
 
@@ -55,7 +55,7 @@
     startDate: '2020-01-01'
     isTest: true
 
-- ref: $licenceVersion
+- ref: $dailyLicenceVersion
   model: LicenceVersion
   fields:
     licenceId: $dailyLicence.licenceId
@@ -65,6 +65,30 @@
     startDate: '2020-01-01'
     endDate: null
     externalId: 6:1234:1:0
+    isTest: true
+
+- ref: $monthlyLicenceALicenceVersion
+  model: LicenceVersion
+  fields:
+    licenceId: $monthlyLicenceA.licenceId
+    issue : 1
+    increment: 0
+    status: 'current'
+    startDate: '2020-01-01'
+    endDate: null
+    externalId: 6:1235:1:0
+    isTest: true
+
+- ref: $monthlyLicenceBLicenceVersion
+  model: LicenceVersion
+  fields:
+    licenceId: $monthlyLicenceB.licenceId
+    issue : 1
+    increment: 0
+    status: 'current'
+    startDate: '2020-01-01'
+    endDate: null
+    externalId: 6:1236:1:0
     isTest: true
 
 - ref: $primaryPurpose
@@ -100,7 +124,7 @@
 - ref: $dailyLicenceVersionPurposes
   model: LicenceVersionPurpose
   fields:
-    licenceVersionId: $licenceVersion.licenceVersionId
+    licenceVersionId: $dailyLicenceVersion.licenceVersionId
     purposePrimaryId: $primaryPurpose.purposePrimaryId
     purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
     purposeUseId: $purposeUse.purposeUseId
@@ -112,6 +136,40 @@
     timeLimitedEndDate: null
     annualQuantity: 1554
     externalId: 6:1234
+    isTest: true
+
+- ref: $monthlyLicenceALicenceVersionPurposes
+  model: LicenceVersionPurpose
+  fields:
+    licenceVersionId: $monthlyLicenceALicenceVersion.licenceVersionId
+    purposePrimaryId: $primaryPurpose.purposePrimaryId
+    purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 4
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 3
+    timeLimitedStartDate: null
+    timeLimitedEndDate: null
+    annualQuantity: 1554
+    externalId: 6:1235
+    isTest: true
+
+- ref: $monthlyLicenceBLicenceVersionPurposes
+  model: LicenceVersionPurpose
+  fields:
+    licenceVersionId: $monthlyLicenceBLicenceVersion.licenceVersionId
+    purposePrimaryId: $primaryPurpose.purposePrimaryId
+    purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 4
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 3
+    timeLimitedStartDate: null
+    timeLimitedEndDate: null
+    annualQuantity: 1554
+    externalId: 6:1236
     isTest: true
 
 - ref: $monthlyLicenceBReturnVersionA

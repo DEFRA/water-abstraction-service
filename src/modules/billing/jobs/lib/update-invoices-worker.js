@@ -49,7 +49,8 @@ const mapTransaction = (transactionMap, cmTransaction, scheme) => {
       chargeType: cmTransaction.compensationCharge ? 'compensation' : 'standard',
       calcS127Factor: srocTransaction.calcS127Factor ? (srocTransaction.calcS127Factor.trim()).split('x')[1] || null : null,
       calcS126Factor: srocTransaction.calcS126Factor ? (srocTransaction.calcS126Factor.trim()).split('x')[1] || null : null,
-      calcWinterDiscountFactor: srocTransaction.calcWinterDiscountFactor ? (srocTransaction.calcWinterDiscountFactor.trim()).split('x')[1] || null : null
+      calcWinterDiscountFactor: srocTransaction.calcWinterDiscountFactor ? (srocTransaction.calcWinterDiscountFactor.trim()).split('x')[1] || null : null,
+      grossValuesCalculated: cmTransaction.calculation.WRLSChargingResponse.decisionPoints
     };
   } else {
     const transaction = transactionMap.has(cmTransaction.id)

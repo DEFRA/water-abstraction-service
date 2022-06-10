@@ -118,7 +118,8 @@ const dbToModelMapperSroc = createMapper()
     'isWaterCompanyCharge',
     'isSupportedSource',
     'supportedSourceName',
-    'isWaterUndertaker'
+    'isWaterUndertaker',
+    'grossValuesCalculated'
   )
   .map('calcS126Factor').to('calcS126FactorValue')
   .map('calcS127Factor').to('calcS127FactorValue')
