@@ -204,9 +204,7 @@ const postSetBatchStatusToCancel = async (request, h) => {
   }
 };
 
-// TODO: We also need to filter out years which don't have a licence or anything recorded against it as there's no point
-// in creating a batch
-const getBatchBillableYears = async (request, h) => {
+const postBatchBillableYears = async (request, h) => {
   const { regionId, isSummer, currentFinancialYear } = request.payload;
 
   const existingBatches = await BillingBatch
@@ -257,5 +255,5 @@ module.exports = {
   postCreateBatch,
   deleteAllBillingData,
   postSetBatchStatusToCancel,
-  getBatchBillableYears
+  postBatchBillableYears
 };

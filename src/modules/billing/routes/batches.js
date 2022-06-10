@@ -274,10 +274,10 @@ const postSetBatchStatusToCancel = {
   }
 };
 
-const getBatchBillableYears = {
+const postBatchBillableYears = {
   method: 'POST',
   path: `${BASE_PATH}/billable-years`,
-  handler: controller.getBatchBillableYears,
+  handler: controller.postBatchBillableYears,
   config: {
     validate: {
       payload: Joi.object().keys({
@@ -286,15 +286,14 @@ const getBatchBillableYears = {
         isSummer: Joi.boolean().default(false),
         currentFinancialYear: Joi.number().required()
       })
+    },
+    auth: {
+      scope: [billing]
     }
-    // auth: {
-    //   scope: [billing]
-    // }
   }
 };
 
 module.exports = {
-  getBatchBillableYears,
   getBatch,
   getBatches,
   getBatchInvoices,
@@ -304,6 +303,7 @@ module.exports = {
   deleteBatchInvoice,
   deleteBatch,
   postApproveBatch,
+  postBatchBillableYears,
   postCreateBatch,
   postApproveReviewBatch,
   getBatchDownloadData,
