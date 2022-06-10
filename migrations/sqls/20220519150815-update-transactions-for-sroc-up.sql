@@ -15,6 +15,8 @@ alter table water.billing_transactions
     add column is_water_undertaker boolean default false,
     add column purposes jsonb null,
     add column winter_discount_factor numeric null,
+    add column calc_adjustment_factor numeric null,
+    add column calc_winter_discount_factor numeric null,
     alter column season drop not null;
 
     alter table water.billing_transactions

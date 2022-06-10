@@ -119,7 +119,6 @@ const dbToModelMapperSroc = createMapper()
     'isSupportedSource',
     'supportedSourceName',
     'isWaterUndertaker'
-
   )
   .map('calcS126Factor').to('calcS126FactorValue')
   .map('calcS127Factor').to('calcS127FactorValue')
@@ -177,6 +176,7 @@ const modelToDbMapper = createMapper()
     'calcSucFactor',
     'calcEiucFactor',
     'calcEiucSourceFactor',
+    'calcAdjustmentFactor',
     'isCreditedBack'
   )
   .map('chargeElement.id').to('chargeElementId')
@@ -194,6 +194,7 @@ const modelToDbMapper = createMapper()
   .map('agreements').to('section130Agreement', getSection130Agreement)
   .map('calcS126Factor').to('calcS126Factor', value => value ? value.split(' x ')[1] || null : null)
   .map('calcS127Factor').to('calcS127Factor', value => value ? value.split(' x ')[1] || null : null)
+  .map('calcWinterDiscountFactor').to('calcWinterDiscountFactor', value => value ? value.split(' x ')[1] || null : null)
   .map('value').to('netAmount');
 
 /**
@@ -378,7 +379,9 @@ const cmToModelMapper = createMapper()
   .map('calculation.WRLSChargingResponse.abatementAdjustment').to('calcS126Factor')
   .map('calculation.WRLSChargingResponse.s127Agreement').to('calcS127Factor')
   .map('calculation.WRLSChargingResponse.eiucFactor').to('calcEiucFactor')
-  .map('calculation.WRLSChargingResponse.eiucSourceFactor').to('calcEiucSourceFactor');
+  .map('calculation.WRLSChargingResponse.eiucSourceFactor').to('calcEiucSourceFactor')
+  .map('calculation.WRLSChargingResponse.winterOnlyAdjustment').to('calcWinterDiscountFactor')
+  .map('calculation.WRLSChargingResponse.adjustmentFactor').to('calcAdjustmentFactor');
 
 /**
  * Converts Minimum Charge transaction returned from the CM

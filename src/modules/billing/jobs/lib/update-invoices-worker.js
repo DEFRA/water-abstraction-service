@@ -1,5 +1,5 @@
 const Bluebird = require('bluebird');
-const { isNull, difference } = require('lodash');
+const { isNull, difference, omit } = require('lodash');
 
 // Models
 const Transaction = require('../../../../lib/models/transaction');
@@ -38,12 +38,25 @@ const invoiceMaps = (invoices, cmResponse) => ({
   cm: createMap(cmResponse.billRun.invoices, getCMInvoiceKey)
 });
 
-const mapTransaction = (transactionMap, cmTransaction) => {
-  const transaction = transactionMap.has(cmTransaction.id)
-    ? transactionMap.get(cmTransaction.id)
-    : new Transaction();
-
-  return transaction.fromHash(transactionMapper.cmToPojo(cmTransaction));
+const mapTransaction = (transactionMap, cmTransaction, scheme) => {
+  if (scheme === 'sroc') {
+    const srocTransaction = transactionMapper.cmToPojo(cmTransaction);
+    return {
+      ...(omit(srocTransaction, ['id', 'value', 'isCompensationCharge'])),
+      scheme: 'sroc',
+      billingTransactionId: cmTransaction.clientId,
+      netAmount: cmTransaction.chargeValue,
+      chargeType: cmTransaction.compensationCharge ? 'compensation' : 'standard',
+      calcS127Factor: srocTransaction.calcS127Factor ? (srocTransaction.calcS127Factor.trim()).split('x')[1] || null : null,
+      calcS126Factor: srocTransaction.calcS126Factor ? (srocTransaction.calcS126Factor.trim()).split('x')[1] || null : null,
+      calcWinterDiscountFactor: srocTransaction.calcWinterDiscountFactor ? (srocTransaction.calcWinterDiscountFactor.trim()).split('x')[1] || null : null
+    };
+  } else {
+    const transaction = transactionMap.has(cmTransaction.id)
+      ? transactionMap.get(cmTransaction.id)
+      : new Transaction();
+    return transaction.fromHash(transactionMapper.cmToPojo(cmTransaction));
+  }
 };
 
 const getTransactionMap = invoice => {
@@ -66,24 +79,13 @@ const deleteTransactions = (cmTransactions, transactionMap) => {
   return transactionService.deleteById(deleteIds);
 };
 
-const updateTransactions = async (invoice, cmTransactions) => {
+const updateTransactions = async (invoice, cmTransactions, scheme) => {
   // Index WRLS transactions by external ID
   const transactionMap = getTransactionMap(invoice);
-
   // Create/update transactions
   for (const cmTransaction of cmTransactions) {
     const invoiceLicence = invoice.getInvoiceLicenceByLicenceNumber(cmTransaction.licenceNumber);
-
-    const { WRLSChargingResponse } = cmTransaction.calculation;
-    WRLSChargingResponse.s127Agreement = WRLSChargingResponse.s127Agreement
-      ? WRLSChargingResponse.s127Agreement.replace('Two-part Tariff', 's127')
-      : null;
-    WRLSChargingResponse.s130Agreement = WRLSChargingResponse.s130Agreement
-      ? WRLSChargingResponse.s130Agreement.replace('CRT', 's130')
-      : null;
-
-    const transaction = mapTransaction(transactionMap, cmTransaction);
-
+    const transaction = mapTransaction(transactionMap, cmTransaction, scheme);
     await transactionService.saveTransactionToDB(invoiceLicence, transaction);
   }
 
@@ -130,7 +132,7 @@ process.on('message', async data => {
 
         // Persist invoice and transactions to DB
         await invoiceService.updateInvoiceModel(invoice);
-        await updateTransactions(invoice, cmTransactions);
+        await updateTransactions(invoice, cmTransactions, data.batch.scheme);
       }
     });
   } catch (e) {

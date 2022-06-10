@@ -419,6 +419,24 @@ class Transaction extends Model {
     return this._calcEiucSourceFactor;
   }
 
+  set calcWinterDiscountFactor (value) {
+    validators.assertNullableString(value);
+    this._calcWinterDiscountFactor = value;
+  }
+
+  get calcWinterDiscountFactor () {
+    return this._calcWinterDiscountFactor;
+  }
+
+  set calcAdjustmentFactor (value) {
+    validators.assertNullableString(value);
+    this._calcAdjustmentFactor = value;
+  }
+
+  get calcAdjustmentFactor () {
+    return this._calcAdjustmentFactor;
+  }
+
   /**
    * Checks if the transaction is in error status
    * @return {Boolean}
@@ -448,6 +466,15 @@ class Transaction extends Model {
 
   get isWaterCompanyCharge () {
     return this._isWaterCompanyCharge;
+  }
+
+  set section126Factor (value) {
+    validators.assertIsBoolean(value);
+    this._section126Factor = value;
+  }
+
+  get section126Factor () {
+    return this._section126Factor;
   }
 }
 

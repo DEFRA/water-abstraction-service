@@ -18,9 +18,9 @@ const saveTransactionToDB = (invoiceLicence, transaction) => {
   const data = transaction.scheme === 'sroc'
     ? { ...transaction, billingInvoiceLicenceId: invoiceLicence.id }
     : mappers.transaction.modelToDb(invoiceLicence, transaction);
-
-  return transaction.id
-    ? newRepos.billingTransactions.update(transaction.id, data)
+  const transactionId = transaction.id || transaction.billingTransactionId;
+  return transactionId
+    ? newRepos.billingTransactions.update(transactionId, data)
     : newRepos.billingTransactions.create(data);
 };
 
