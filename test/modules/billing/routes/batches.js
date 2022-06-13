@@ -592,7 +592,7 @@ experiment('modules/billing/routes', () => {
     });
   });
 
-  experiment.only('postBatchBillableYears', () => {
+  experiment('postBatchBillableYears', () => {
     let request;
     let server;
 
