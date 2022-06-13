@@ -139,7 +139,7 @@
   fields:
     returnVersionId: $returnVersion.returnVersionId
     returnsFrequency: month
-    isSummer: true
+    isSummer: false
     isUpload: false
     abstractionPeriodStartDay: 1
     abstractionPeriodStartMonth: 12

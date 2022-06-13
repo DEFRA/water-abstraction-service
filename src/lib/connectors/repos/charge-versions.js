@@ -79,10 +79,11 @@ const create = async data => {
  * @param {Number} financialYearEnding
  * @param {Boolean} isSupplementaryBatch
  */
-const findValidInRegionAndFinancialYear = (regionId, financialYearEnding, isSupplementaryBatch) => {
+const findValidInRegionAndFinancialYear = (regionId, financialYearEnding, isSupplementaryBatch, scheme) => {
   const params = {
     regionId,
-    financialYearEnding
+    financialYearEnding,
+    scheme
   };
   return isSupplementaryBatch
     ? raw.multiRow(queries.findValidInRegionAndFinancialYearSupplementary, params)

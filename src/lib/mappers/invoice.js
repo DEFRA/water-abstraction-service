@@ -8,7 +8,7 @@ const FinancialYear = require('../models/financial-year');
 
 const invoiceAccount = require('./invoice-account');
 const invoiceLicence = require('../../modules/billing/mappers/invoice-licence');
-const batchMapper = require('../../modules/billing/mappers/batch');
+const batchMapper = require('../../lib/mappers/batch');
 
 const { createMapper } = require('../object-mapper');
 const { createModel } = require('./lib/helpers');
@@ -83,8 +83,12 @@ const getRebillingStateLabels = invoice => {
   return invoice;
 };
 
-const mapAddress = invoice =>
-  invoice.address ? omit(invoice.address.toJSON(), 'id') : {};
+const mapAddress = (invoice, scheme = 'alcs') => {
+  return scheme === 'alcs'
+    ? omit(invoice.address.toJSON(), 'id')
+    // sroc invoices are not mapped to the internal models so does not hhave the toJSON function.
+    : omit(invoice.address, 'id');
+};
 
 /**
  * Maps data from an Invoice model to the correct shape for water.billing_invoices
@@ -92,11 +96,11 @@ const mapAddress = invoice =>
  * @param {Invoice} invoice
  * @return {Object}
  */
-const modelToDb = invoice => ({
+const modelToDb = (invoice, scheme) => ({
   externalId: invoice.externalId || null,
   invoiceAccountId: invoice.invoiceAccount.id,
   invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
-  address: mapAddress(invoice),
+  address: invoice.address ? mapAddress(invoice, scheme) : {},
   financialYearEnding: invoice.financialYear.endYear,
   invoiceNumber: invoice.invoiceNumber || null,
   isCredit: isNull(invoice.netTotal) ? null : invoice.netTotal < 0,

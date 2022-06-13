@@ -284,7 +284,8 @@ experiment('modules/billing/mappers/transaction', () => {
       volume: '11.76',
       section126Factor: null,
       section127Agreement: false,
-      section130Agreement: null
+      section130Agreement: null,
+      scheme: 'alcs'
     };
     beforeEach(async () => {
       result = transactionMapper.dbToModel(dbRow);
@@ -450,7 +451,7 @@ experiment('modules/billing/mappers/transaction', () => {
             chargeElementId: '29328315-9b24-473b-bde7-02c60e881501',
             waterUndertaker: true,
             regionalChargingArea: 'Anglian',
-            ruleset: 'sroc',
+            ruleset: 'presroc',
             licenceNumber: '01/123/ABC',
             region: 'A',
             areaCode: 'ARCA',

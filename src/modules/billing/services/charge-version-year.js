@@ -60,7 +60,9 @@ const processChargeVersionYear = async chargeVersionYear => {
   const { batch, isChargeable } = chargeVersionYear;
   if (isChargeable) {
     const invoice = await chargeProcessorService.processChargeVersionYear(chargeVersionYear);
-    batch.invoices = [invoice];
+    const batchData = batch.scheme === 'alcs' ? batch : batch.toJSON();
+    batchData.invoices = [invoice];
+    return batchData;
   }
   return batch;
 };

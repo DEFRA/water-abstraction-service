@@ -39,8 +39,8 @@ const mapValue = (value, refs) => {
  * @param {Integer} index
  * @return {Any | Integer | String} value
  */
-const calcValue = (value, index = 0) => {
-  const previousYearsDateLessIndex = moment('01-04-2022')
+const calcValue = (value, index = 0, startDate = '01-04-2023') => {
+  const previousYearsDateLessIndex = moment(startDate)
     .subtract(1, 'year') // previous year
     .subtract(index, 'year'); // less the index
 
@@ -77,7 +77,7 @@ const calcValue = (value, index = 0) => {
 const applyConfig = (data, config) => {
   if (config) {
     return JSON.parse(Object.entries(config).reduce((dataString, [prop, value = '']) => {
-      return dataString.split(`$$[${prop}]`).join(calcValue(value, config.index));
+      return dataString.split(`$$[${prop}]`).join(calcValue(value, config.index, config.startFinancialYear));
     }, JSON.stringify(data)));
   } else {
     return data;

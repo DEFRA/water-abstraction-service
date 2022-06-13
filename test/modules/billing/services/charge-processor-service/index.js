@@ -12,7 +12,6 @@ const chargeProcessorService = require('../../../../../src/modules/billing/servi
 const chargeVersionService = require('../../../../../src/lib/services/charge-versions');
 const batchService = require('../../../../../src/modules/billing/services/batch-service');
 const billingVolumeService = require('../../../../../src/modules/billing/services/billing-volumes-service');
-
 const invoiceAccountsConnector = require('../../../../../src/lib/connectors/crm-v2/invoice-accounts');
 
 const data = require('./data');
@@ -133,12 +132,12 @@ experiment('modules/billing/services/charge-processor-service/index.js', () => {
     sandbox.restore();
   });
 
-  experiment('.processChargeVersionYear', () => {
+  experiment('.processChargeVersionYear alcs', () => {
     let invoice, batch, financialYear, chargeVersion, chargeVersionYear;
 
     beforeEach(async () => {
       // Create batch and charge version data
-      batch = data.createBatch('annual');
+      batch = data.createBatch('supplementary', { scheme: 'alcs' });
       financialYear = data.createFinancialYear();
     });
 
@@ -193,6 +192,73 @@ experiment('modules/billing/services/charge-processor-service/index.js', () => {
           invoice.invoiceLicences[0].transactions.forEach(transaction => {
             expect(transaction instanceof Transaction).to.be.true();
           });
+        });
+      });
+
+      experiment('when creating two part tariff transactions', () => {
+        test('the billing volumes are fetched', async () => {
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear, { transactionType: 'two_part_tariff' });
+          await chargeProcessorService.processChargeVersionYear(chargeVersionYear);
+          expect(billingVolumeService.getVolumesForChargeElements.calledWith(
+            chargeVersion.chargeElements, financialYear
+          )).to.be.true();
+        });
+      });
+    });
+  });
+
+  experiment('.processChargeVersionYear sroc', () => {
+    let invoice, batch, financialYear, chargeVersion, chargeVersionYear;
+
+    beforeEach(async () => {
+      // Create batch and charge version data
+      batch = data.createBatch('annual', { scheme: 'sroc' });
+      financialYear = data.createFinancialYear();
+    });
+
+    experiment('when all charge version/CRM data is found', () => {
+      beforeEach(async () => {
+        chargeVersion = data.createSrocChargeVersion({ scheme: 'sroc' });
+        chargeVersion.chargeElements[0].adjustments = { s127: true };
+        chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
+
+        // Run charge processor
+        invoice = await chargeProcessorService.processChargeVersionYear(chargeVersionYear);
+      });
+
+      experiment('when creating annual transactions', () => {
+        test('the invoice account for the charge version is loaded', async () => {
+          expect(invoiceAccountsConnector.getInvoiceAccountById.calledWith(
+            chargeVersion.invoiceAccount.id
+          )).to.be.true();
+        });
+
+        test('the billing volumes are not fetched', async () => {
+          expect(billingVolumeService.getVolumesForChargeElements.called).to.be.false();
+        });
+
+        test('the Invoice returned has correct invoice account details from CRM', async () => {
+          const { invoiceAccount } = invoice;
+          expect(invoiceAccount.id).to.equal(crmData.invoiceAccount.invoiceAccountId);
+          expect(invoiceAccount.accountNumber).to.equal(crmData.invoiceAccount.invoiceAccountNumber);
+        });
+
+        test('the Invoice has the most recent address on the invoice account', async () => {
+          const { address } = invoice;
+          const { address: crmAddress } = crmData.invoiceAccount.invoiceAccountAddresses[1];
+          expect(address.id).to.equal(crmAddress.addressId);
+          expect(address.addressLine1).to.equal(crmAddress.address1);
+          expect(address.addressLine2).to.equal(crmAddress.address2);
+          expect(address.addressLine3).to.equal(crmAddress.address3);
+          expect(address.addressLine4).to.equal(crmAddress.address4);
+          expect(address.town).to.equal(crmAddress.town);
+          expect(address.county).to.equal(crmAddress.county);
+          expect(address.postcode).to.equal(crmAddress.postcode);
+          expect(address.country).to.equal(crmAddress.country);
+        });
+
+        test('the Invoice model returned has an array of transactions', async () => {
+          expect(invoice.invoiceLicences[0].transactions).to.be.an.array().length(4);
         });
       });
 

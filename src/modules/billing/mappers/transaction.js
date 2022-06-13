@@ -2,7 +2,7 @@
 
 const moment = require('moment');
 const { titleCase } = require('title-case');
-const { identity, get, isNull } = require('lodash');
+const { identity, get, isNull, trim } = require('lodash');
 const helpers = require('@envage/water-abstraction-helpers').charging;
 
 const DateRange = require('../../../lib/models/date-range');
@@ -103,13 +103,46 @@ const dbToModelMapper = createMapper()
     (billingVolume, endDate, season) => billingVolume ? getBillingVolumeForTransaction({ billingVolume, endDate, season }) : null)
   .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel);
 
+const dbToModelMapperSroc = createMapper()
+  .copy(
+    'status',
+    'isCredit',
+    'authorisedDays',
+    'billableDays',
+    'description',
+    'externalId',
+    'isTwoPartSecondPartCharge',
+    'isDeMinimis',
+    'isNewLicence',
+    'isCreditedBack',
+    'isWaterCompanyCharge',
+    'isSupportedSource',
+    'supportedSourceName',
+    'isWaterUndertaker',
+    'grossValuesCalculated'
+  )
+  .map('calcS126Factor').to('calcS126FactorValue')
+  .map('calcS127Factor').to('calcS127FactorValue')
+  .map('netAmount').to('value')
+  .map('billingTransactionId').to('id')
+  .map('batchType').to('type')
+  .map(['startDate', 'endDate']).to('chargePeriod', (startDate, endDate) => new DateRange(startDate, endDate))
+  .map('chargeType').to('isCompensationCharge', isValueEqualTo('compensation'))
+  .map('chargeType').to('isMinimumCharge', isValueEqualTo('minimum_charge'))
+  .map('chargeElement').to('chargeElement', chargeElementMapper.dbToModel)
+  .map('volume').to('volume', volume => isNull(volume) ? null : parseFloat(volume))
+  .map('abstractionPeriod').to('abstractionPeriod', abstractionPeriodMapper.pojoToModel);
+
 /**
  * Converts DB representation to a Transaction service model
  * @param {Object} row
  * @return {Transaction}
  */
-const dbToModel = row =>
-  createModel(Transaction, row, dbToModelMapper);
+const dbToModel = row => {
+  return row.scheme === 'alcs'
+    ? createModel(Transaction, row, dbToModelMapper)
+    : createModel(Transaction, row, dbToModelMapperSroc);
+};
 
 const mapChargeType = (isCompensationCharge, isMinimumCharge) => {
   if (isCompensationCharge) {
@@ -144,6 +177,7 @@ const modelToDbMapper = createMapper()
     'calcSucFactor',
     'calcEiucFactor',
     'calcEiucSourceFactor',
+    'calcAdjustmentFactor',
     'isCreditedBack'
   )
   .map('chargeElement.id').to('chargeElementId')
@@ -161,6 +195,7 @@ const modelToDbMapper = createMapper()
   .map('agreements').to('section130Agreement', getSection130Agreement)
   .map('calcS126Factor').to('calcS126Factor', value => value ? value.split(' x ')[1] || null : null)
   .map('calcS127Factor').to('calcS127Factor', value => value ? value.split(' x ')[1] || null : null)
+  .map('calcWinterDiscountFactor').to('calcWinterDiscountFactor', value => value ? value.split(' x ')[1] || null : null)
   .map('value').to('netAmount');
 
 /**
@@ -241,12 +276,12 @@ const mapLicenceToChargeElementTransaction = licence => ({
  * @param {Transaction} transaction
  * @return {Object}
  */
-const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
+const modelToChargeModuleAlcs = (batch, invoice, invoiceLicence, transaction) => {
   const periodStart = mapChargeModuleDate(transaction.chargePeriod.startDate);
   const periodEnd = mapChargeModuleDate(transaction.chargePeriod.endDate);
 
   return {
-    ruleset: batch.scheme === SCHEME.alcs ? 'presroc' : SCHEME.sroc,
+    ruleset: 'presroc',
     clientId: transaction.id,
     periodStart,
     periodEnd,
@@ -264,6 +299,55 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     ...mapChargeElementToChargeModuleTransaction(transaction.chargeElement),
     ...mapLicenceToChargeElementTransaction(invoiceLicence.licence),
     subjectToMinimumCharge: !transaction.isTwoPartSecondPartCharge
+  };
+};
+
+/**
+ * Maps service models to Charge Module transaction data that
+ * can be used to generate a charge
+ * @param transaction bookshelf object with related data
+ */
+const modelToChargeModuleSroc = transaction => {
+  const periodStart = mapChargeModuleDate(transaction.startDate);
+  const periodEnd = mapChargeModuleDate(transaction.endDate);
+  const licence = transaction.billingInvoiceLicence.licence;
+
+  return {
+    periodStart,
+    periodEnd,
+    ruleset: SCHEME.sroc,
+    regime: 'wrls',
+    credit: !!transaction.isCredit,
+    abatementFactor: parseFloat(transaction.section126Factor),
+    adjustmentFactor: parseFloat(transaction.adjustmentFactor),
+    authorisedVolume: parseFloat(transaction.chargeElement.volume),
+    // @TODO: For 2PartTariff SROC Bill run, the actualVolume should be the allocated return amount stored in the billing volume table
+    actualVolume: parseFloat(transaction.chargeElement.volume),
+    aggregateProportion: parseFloat(transaction.aggregateFactor),
+    areaCode: licence.regions.historicalAreaCode,
+    authorisedDays: transaction.authorisedDays,
+    batchNumber: transaction.billingInvoiceLicence.billingInvoice.billingBatchId,
+    billableDays: transaction.authorisedDays, // billable days is set the same
+    chargeCategoryCode: transaction.chargeElement.chargeCategory.reference,
+    chargeCategoryDescription: transaction.chargeElement.chargeCategory.shortDescription,
+    chargePeriod: `${periodStart} - ${periodEnd}`,
+    clientId: transaction.billingTransactionId,
+    compensationCharge: transaction.chargeType === 'compensation',
+    customerReference: transaction.billingInvoiceLicence.billingInvoice.invoiceAccountNumber,
+    licenceNumber: licence.licenceRef,
+    lineDescription: transaction.description,
+    loss: transaction.chargeElement.loss,
+    region: licence.region.chargeRegionId,
+    regionalChargingArea: licence.regions.regionalChargeArea,
+    section127Agreement: transaction.section127Agreement,
+    section130Agreement: trim(transaction.section130Agreement) === 'true',
+    supportedSource: !!transaction.isSupportedSource,
+    supportedSourceName: transaction.supportedSourceName || '',
+    twoPartTariff: transaction.isTwoPartSecondPartCharge,
+    waterCompanyCharge: transaction.isWaterCompanyCharge,
+    waterUndertaker: transaction.isWaterUndertaker,
+    winterOnly: !!transaction.chargeElement.adjustments.winter,
+    chargeElementId: transaction.chargeElement.chargeElementId
   };
 };
 
@@ -322,7 +406,8 @@ const inverseCreditNoteSign = transaction => {
 
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
-exports.modelToChargeModule = modelToChargeModule;
+exports.modelToChargeModule = modelToChargeModuleAlcs;
+exports.modelToChargeModuleSroc = modelToChargeModuleSroc;
 exports.cmToModel = cmToModel;
 exports.cmToPojo = cmToPojo;
 exports.cmToDb = cmToDb;
