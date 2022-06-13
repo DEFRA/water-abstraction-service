@@ -221,8 +221,7 @@ const postBatchBillableYears = async (request, h) => {
     ])
     .fetchAll({ columns: ['to_financial_year_ending'] });
 
-  const batchFinancialYears = existingBatches.toJSON().map(batch => batch.toFinancialYearEnding);
-
+  const batchFinancialYears = await existingBatches.toJSON().map(batch => batch.toFinancialYearEnding);
   const unsentYears = _determineUnsentYears(currentFinancialYear, batchFinancialYears);
 
   return h.response({ unsentYears }).code(200);
