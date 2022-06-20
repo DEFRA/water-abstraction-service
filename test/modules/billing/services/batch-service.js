@@ -660,12 +660,14 @@ experiment('modules/billing/services/batch-service', () => {
           {
             billingBatchId: '11111111-0000-0000-0000-000000000000',
             batchType: 'supplementary',
+            toFinancialYearEnding: 2020,
             isSummer: false,
             status: 'sent'
           },
           {
             billingBatchId: '33333333-0000-0000-0000-000000000000',
             batchType: 'supplementary',
+            toFinancialYearEnding: 2020,
             isSummer: false,
             status: 'processing'
           }
@@ -897,19 +899,20 @@ experiment('modules/billing/services/batch-service', () => {
         newRepos.billingBatches.findByRegionId.resolves([{
           billingBatchId: existingBatchId,
           batchType: 'supplementary',
+          toFinancialYearEnding: 2022,
           isSummer: false,
           status: 'processing'
         }]);
       });
 
       test('the function rejects', async () => {
-        const func = () => batchService.create(regionId, 'supplementary', 2019, false);
+        const func = () => batchService.create(regionId, 'supplementary', 2022, false);
         expect(func()).to.reject();
       });
 
       test('a Boom Conflict error is thrown with expected message and batch', async () => {
         try {
-          await batchService.create(regionId, 'supplementary', 2019, false);
+          await batchService.create(regionId, 'supplementary', 2022, false);
           fail();
         } catch (err) {
           expect(err.isBoom).to.be.true();
