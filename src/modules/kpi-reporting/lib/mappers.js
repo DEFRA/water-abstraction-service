@@ -30,10 +30,14 @@ const mapReturnsDataMonthly = data => {
  * @param {string} key string value to identify which property of the object in the aray to work with
  */
 const percentChange = (data, index, key) => {
-  return index < (data.length + 1)
-    ? (data[[index]][key] - data[(index + 1)][key]) /
-            (data[(index + 1)][key] < 1 ? 1 : data[(index + 1)][key]) * 100
-    : 0
+  let result = 0
+
+  if (index < (data.length + 1)) {
+    result = (data[[index]][key] - data[(index + 1)][key]) /
+      (data[(index + 1)][key] < 1 ? 1 : data[(index + 1)][key]) * 100
+  }
+
+  return result
 }
 
 const mapLicenceNamesData = data => {
