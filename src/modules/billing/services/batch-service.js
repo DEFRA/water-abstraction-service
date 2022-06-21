@@ -55,31 +55,31 @@ const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
 
 const mapBatch = batch => batch ? mappers.batch.dbToModel(batch) : null;
 
-const getExistingBatch = batches => {
+const getExistingBatch = (batches, toFinancialYearEnding) => {
   const liveStatuses = [
     BATCH_STATUS.processing,
     BATCH_STATUS.ready,
     BATCH_STATUS.review
   ];
 
-  const existingBatch = batches.find(b => liveStatuses.includes(b.status));
+  const existingBatch = batches.find(batch => liveStatuses.includes(batch.status) && batch.toFinancialYearEnding === toFinancialYearEnding);
   return mapBatch(existingBatch);
 };
 
 const getDuplicateSentBatch = (batches, batchType, toFinancialYearEnding, isSummer, scheme) => {
-  const duplicateSentBatch = batches.find(b =>
-    b.status === BATCH_STATUS.sent &&
-      b.batchType === batchType &&
-      b.toFinancialYearEnding === toFinancialYearEnding &&
-      b.isSummer === isSummer &&
-      b.scheme === scheme);
+  const duplicateSentBatch = batches.find(batch =>
+    batch.status === BATCH_STATUS.sent &&
+      batch.batchType === batchType &&
+      batch.toFinancialYearEnding === toFinancialYearEnding &&
+      batch.isSummer === isSummer &&
+      batch.scheme === scheme);
   return mapBatch(duplicateSentBatch);
 };
 
 const getExistingAndDuplicateBatchesForRegion = async (regionId, batchType, toFinancialYearEnding, isSummer, scheme) => {
   const batches = await newRepos.billingBatches.findByRegionId(regionId);
   return {
-    existingBatch: getExistingBatch(batches),
+    existingBatch: getExistingBatch(batches, toFinancialYearEnding),
     duplicateSentBatch: getDuplicateSentBatch(batches, batchType, toFinancialYearEnding, isSummer, scheme)
   };
 };

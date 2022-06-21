@@ -25,6 +25,7 @@ const transactionsService = require('../../../../src/modules/billing/services/tr
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
 const importConnector = require('../../../../src/lib/connectors/import');
 const chargeVersionService = require('../../../../src/lib/services/charge-versions');
+const { BillingBatch } = require('../../../../src/lib/connectors/bookshelf');
 
 const controller = require('../../../../src/modules/billing/controllers/batches');
 const mappers = require('../../../../src/modules/billing/mappers');
@@ -1130,6 +1131,44 @@ experiment('modules/billing/controller', () => {
       batchService.setStatus.rejects(err);
       const result = await controller.postSetBatchStatusToCancel(request, h);
       expect(result).to.equal(err);
+    });
+  });
+
+  experiment('.postBatchBillableYears', () => {
+    let model, request;
+    beforeEach(async () => {
+      request = {
+        payload: {
+          regionId: '054517f2-be00-4505-a3cc-df65a89cd8e1',
+          isSummer: true,
+          currentFinancialYear: 2022
+        }
+      };
+
+      model = {
+        toJSON: function () {
+          return JSON.parse('[{"toFinancialYearEnding":2022}]');
+        }
+      };
+
+      sandbox.stub(BillingBatch, 'where').returnsThis();
+      sandbox.stub(BillingBatch, 'fetchAll').resolves(model);
+
+      await controller.postBatchBillableYears(request, h);
+    });
+
+    afterEach(async () => {
+      sandbox.restore();
+    });
+
+    test('returns an array of years that require billing', async () => {
+      const [{ unsentYears }] = h.response.lastCall.args;
+      expect(unsentYears).to.equal([2021, 2020]);
+    });
+
+    test('returns 200 code when request has succeeded', async () => {
+      const [code] = hapiResponseStub.code.lastCall.args;
+      expect(code).to.equal(200);
     });
   });
 });

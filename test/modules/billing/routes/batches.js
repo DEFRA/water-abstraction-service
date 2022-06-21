@@ -591,4 +591,81 @@ experiment('modules/billing/routes', () => {
       expect(pre[0].assign).to.equal('batch');
     });
   });
+
+  experiment('postBatchBillableYears', () => {
+    let request;
+    let server;
+
+    beforeEach(async () => {
+      server = await getServer(routes.postBatchBillableYears);
+
+      request = {
+        method: 'POST',
+        url: '/water/1.0/billing/batches/billable-years',
+        payload: {
+          userEmail: 'charging@example.com',
+          regionId: '054517f2-be00-4505-a3cc-df65a89cd8e1',
+          isSummer: true,
+          currentFinancialYear: 2022
+        },
+        auth
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the userEmail is not a valid email', async () => {
+      request.payload.userEmail = 'a string';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the userEmail is omitted', async () => {
+      delete request.payload.userEmail;
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the regionId is not a uuid', async () => {
+      request.payload.regionId = 'a string';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the regionId is omitted', async () => {
+      delete request.payload.regionId;
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the currentFinancialYear is not a number', async () => {
+      request.payload.currentFinancialYear = false;
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the currentFinancialYear is omitted', async () => {
+      delete request.payload.currentFinancialYear;
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the isSummer is an unexpected value', async () => {
+      request.payload.isSummer = 'nope';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 200 if the isSummer is omitted (defaults to false)', async () => {
+      delete request.payload.isSummer;
+
+      const response = await server.inject(request);
+
+      expect(response.statusCode).to.equal(200);
+      expect(response.request.payload.isSummer).to.equal(false);
+    });
+  });
 });

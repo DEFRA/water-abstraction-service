@@ -24,6 +24,10 @@ const { jobName: refreshTotalsJobName } = require('../jobs/refresh-totals');
 const { jobName: approveBatchJobName } = require('../jobs/approve-batch');
 const batchStatus = require('../jobs/lib/batch-status');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
+const { BillingBatch } = require('../../../lib/connectors/bookshelf');
+
+const YEARS_TO_GO_BACK_FOR_UNSENT_BATCHES = 3;
+
 /**
  * Resource that will create a new batch skeleton which will
  * then be asynchronously populated with charge versions by a
@@ -200,18 +204,55 @@ const postSetBatchStatusToCancel = async (request, h) => {
   }
 };
 
-exports.getBatch = getBatch;
-exports.getBatches = getBatches;
-exports.getBatchDownloadData = getBatchDownloadData;
-exports.getBatchInvoices = getBatchInvoices;
-exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
-exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
-exports.getInvoiceLicenceWithTransactions = getInvoiceLicenceWithTransactions;
-exports.deleteBatchInvoice = deleteBatchInvoice;
-exports.deleteBatch = deleteBatch;
+const postBatchBillableYears = async (request, h) => {
+  const { regionId, isSummer, currentFinancialYear } = request.payload;
 
-exports.postApproveBatch = postApproveBatch;
-exports.postCreateBatch = postCreateBatch;
+  const existingBatches = await BillingBatch
+    .where({
+      region_id: regionId,
+      batch_type: 'two_part_tariff',
+      is_summer: isSummer
+    })
+    .where('status', 'in', [
+      BATCH_STATUS.sent,
+      BATCH_STATUS.processing,
+      BATCH_STATUS.ready,
+      BATCH_STATUS.review
+    ])
+    .fetchAll({ columns: ['to_financial_year_ending'] });
 
-exports.deleteAllBillingData = deleteAllBillingData;
-exports.postSetBatchStatusToCancel = postSetBatchStatusToCancel;
+  const batchFinancialYears = await existingBatches.toJSON().map(batch => batch.toFinancialYearEnding);
+  const unsentYears = _determineUnsentYears(currentFinancialYear, batchFinancialYears);
+
+  return h.response({ unsentYears }).code(200);
+};
+
+function _determineUnsentYears (currentFinancialYear, batchFinancialYears) {
+  const unsentYears = [];
+
+  for (let index = 0; index < YEARS_TO_GO_BACK_FOR_UNSENT_BATCHES; index++) {
+    const yearToTest = currentFinancialYear - index;
+    if (!batchFinancialYears.includes(yearToTest)) {
+      unsentYears.push(yearToTest);
+    }
+  }
+
+  return unsentYears;
+}
+
+module.exports = {
+  getBatch,
+  getBatches,
+  getBatchDownloadData,
+  getBatchInvoices,
+  getBatchInvoiceDetail,
+  getBatchInvoicesDetails,
+  getInvoiceLicenceWithTransactions,
+  deleteBatchInvoice,
+  deleteBatch,
+  postApproveBatch,
+  postCreateBatch,
+  deleteAllBillingData,
+  postSetBatchStatusToCancel,
+  postBatchBillableYears
+};
