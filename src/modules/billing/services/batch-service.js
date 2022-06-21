@@ -62,17 +62,17 @@ const getExistingBatch = (batches, toFinancialYearEnding) => {
     BATCH_STATUS.review
   ];
 
-  const existingBatch = batches.find(b => liveStatuses.includes(b.status) && b.toFinancialYearEnding === toFinancialYearEnding);
+  const existingBatch = batches.find(batch => liveStatuses.includes(batch.status) && batch.toFinancialYearEnding === toFinancialYearEnding);
   return mapBatch(existingBatch);
 };
 
 const getDuplicateSentBatch = (batches, batchType, toFinancialYearEnding, isSummer, scheme) => {
-  const duplicateSentBatch = batches.find(b =>
-    b.status === BATCH_STATUS.sent &&
-      b.batchType === batchType &&
-      b.toFinancialYearEnding === toFinancialYearEnding &&
-      b.isSummer === isSummer &&
-      b.scheme === scheme);
+  const duplicateSentBatch = batches.find(batch =>
+    batch.status === BATCH_STATUS.sent &&
+      batch.batchType === batchType &&
+      batch.toFinancialYearEnding === toFinancialYearEnding &&
+      batch.isSummer === isSummer &&
+      batch.scheme === scheme);
   return mapBatch(duplicateSentBatch);
 };
 
