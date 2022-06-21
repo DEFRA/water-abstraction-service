@@ -5,6 +5,8 @@ const raw = require('./lib/raw');
 
 const withRelated = [
   'chargeElement',
+  'chargeElement.chargeCategory',
+  'chargeElement.chargePurposes',
   'billingInvoiceLicence',
   'billingInvoiceLicence.licence',
   'billingInvoiceLicence.licence.region',

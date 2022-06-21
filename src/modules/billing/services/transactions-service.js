@@ -15,9 +15,12 @@ const moment = require('moment');
  * @return {Promise}
  */
 const saveTransactionToDB = (invoiceLicence, transaction) => {
-  const data = mappers.transaction.modelToDb(invoiceLicence, transaction);
-  return transaction.id
-    ? newRepos.billingTransactions.update(transaction.id, data)
+  const data = transaction.scheme === 'sroc'
+    ? { ...transaction, billingInvoiceLicenceId: invoiceLicence.id }
+    : mappers.transaction.modelToDb(invoiceLicence, transaction);
+  const transactionId = transaction.id || transaction.billingTransactionId;
+  return transactionId
+    ? newRepos.billingTransactions.update(transactionId, data)
     : newRepos.billingTransactions.create(data);
 };
 
@@ -28,7 +31,9 @@ const saveTransactionToDB = (invoiceLicence, transaction) => {
  */
 const getById = async transactionId => {
   const data = await newRepos.billingTransactions.findOne(transactionId);
-
+  if (data.scheme === 'sroc') {
+    return data;
+  }
   // Create models
   const batch = mappers.batch.dbToModel(data.billingInvoiceLicence.billingInvoice.billingBatch);
   const invoice = mappers.invoice.dbToModel(data.billingInvoiceLicence.billingInvoice);

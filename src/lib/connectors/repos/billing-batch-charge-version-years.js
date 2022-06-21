@@ -26,6 +26,8 @@ const findOne = async id => {
     'chargeVersion.chargeElements',
     // 'chargeVersion.chargeElements.purposePrimary',
     // 'chargeVersion.chargeElements.purposeSecondary',
+    'chargeVersion.chargeElements.chargeCategory',
+    'chargeVersion.chargeElements.chargePurposes',
     'chargeVersion.chargeElements.purposeUse',
     'chargeVersion.licence',
     'chargeVersion.licence.licenceAgreements',

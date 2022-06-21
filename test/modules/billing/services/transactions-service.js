@@ -36,6 +36,7 @@ experiment('modules/billing/services/transactions-service', () => {
     sandbox.stub(repos.billingTransactions, 'update').resolves(transactionDBRow);
     sandbox.stub(repos.billingTransactions, 'delete');
     sandbox.stub(repos.billingTransactions, 'findByBatchId');
+    sandbox.stub(repos.billingTransactions, 'findOne');
     sandbox.stub(repos.billingTransactions, 'findHistoryByBatchId').resolves([transactionDBRow]);
     sandbox.stub(repos.billingBatchChargeVersionYears, 'findByBatchId');
 
@@ -48,7 +49,7 @@ experiment('modules/billing/services/transactions-service', () => {
     sandbox.restore();
   });
 
-  experiment('.saveTransactionToDB', () => {
+  experiment('.saveTransactionToDB alcs', () => {
     let invoiceLicence;
 
     beforeEach(async () => {
@@ -80,6 +81,63 @@ experiment('modules/billing/services/transactions-service', () => {
         'billableDays',
         'description'
       ]);
+    });
+  });
+
+  experiment('.saveTransactionToDB sroc', () => {
+    let invoiceLicence, transaction;
+
+    beforeEach(async () => {
+      invoiceLicence = { id: 'test-invoice-licence-id' };
+      transaction = { scheme: 'sroc' };
+      await transactionsService.saveTransactionToDB(invoiceLicence, transaction);
+    });
+
+    test('the create() method is called on the repo', async () => {
+      expect(repos.billingTransactions.create.called).to.be.true();
+    });
+
+    test('the update() method is called on the repo', async () => {
+      await transactionsService.saveTransactionToDB(invoiceLicence, { id: 'test-id', ...transaction });
+      expect(repos.billingTransactions.update.called).to.be.true();
+    });
+
+    test('an object of the correct shape is passed to the create() method of the repo', async () => {
+      const [data] = repos.billingTransactions.create.lastCall.args;
+      expect(data).to.be.an.object();
+      expect(data).to.equal({
+        billingInvoiceLicenceId: 'test-invoice-licence-id',
+        scheme: 'sroc'
+      });
+    });
+  });
+  experiment('.getById sroc', () => {
+    let result;
+    beforeEach(async () => {
+      repos.billingTransactions.findOne.resolves({ scheme: 'sroc', test: 'data' });
+      result = await transactionsService.getById('test-id');
+    });
+
+    test('the finOne() method is called on the repo', async () => {
+      expect(repos.billingTransactions.findOne.called).to.be.true();
+    });
+    test('the raw data is returned', async () => {
+      expect(result).to.equal({ scheme: 'sroc', test: 'data' });
+    });
+  });
+
+  experiment('.getById sroc', () => {
+    let result;
+    beforeEach(async () => {
+      repos.billingTransactions.findOne.resolves({ scheme: 'sroc', test: 'data' });
+      result = await transactionsService.getById('test-id');
+    });
+
+    test('the finOne() method is called on the repo', async () => {
+      expect(repos.billingTransactions.findOne.called).to.be.true();
+    });
+    test('the raw data is returned', async () => {
+      expect(result).to.equal({ scheme: 'sroc', test: 'data' });
     });
   });
 
@@ -213,21 +271,18 @@ experiment('modules/billing/services/transactions-service', () => {
         chargeVersionYear = { chargeVersion: { licenceId, startDate: '2019-04-01', endDate: '2020-03-31' }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
         repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
         const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
-        console.log(testResult);
         expect(testResult.includes(secondPartTrx)).to.be.true();
       });
       test('the 2nd part are not filtered out - charge version year transaction types = annual, no agreement, charge version end date is null', async () => {
         chargeVersionYear = { chargeVersion: { licenceId, startDate: '2019-04-01', endDate: null }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
         repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
         const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
-        console.log(testResult);
         expect(testResult.includes(secondPartTrx)).to.be.true();
       });
       test('the 2nd part are not filtered out - charge version year transaction types = annual, no agreement, charge version end date is null', async () => {
         chargeVersionYear = { chargeVersion: { licenceId, startDate: '2016-04-01', endDate: undefined }, financialYearEnding: 2020, hasTwoPartAgreement: false, transactionType: 'annual', isChargeable: true };
         repos.billingBatchChargeVersionYears.findByBatchId.resolves([chargeVersionYear]);
         const testResult = await transactionsService.getBatchTransactionHistory(batch.id);
-        console.log(testResult);
         expect(testResult.includes(secondPartTrx)).to.be.true();
       });
       test('the 2nd part are filtered out - charge version year transaction types = annual, no agreement, transaction dates does not overlap with charge version', async () => {

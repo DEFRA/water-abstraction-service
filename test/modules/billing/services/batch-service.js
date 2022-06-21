@@ -933,7 +933,8 @@ experiment('modules/billing/services/batch-service', () => {
           batchType: 'annual',
           toFinancialYearEnding: 2022,
           isSummer: false,
-          status: 'sent'
+          status: 'sent',
+          scheme: 'sroc'
         }]);
       });
 
@@ -969,7 +970,7 @@ experiment('modules/billing/services/batch-service', () => {
 
       experiment('and the batch type is annual with scheme alcs', () => {
         beforeEach(async () => {
-          result = await batchService.create(regionId, 'annual', 2019, 'all-year');
+          result = await batchService.create(regionId, 'annual', 2023, 'all-year');
         });
 
         test('a batch is created processing 1 financial year', async () => {
@@ -978,10 +979,10 @@ experiment('modules/billing/services/batch-service', () => {
             status: 'processing',
             regionId,
             batchType: 'annual',
-            fromFinancialYearEnding: 2022,
-            toFinancialYearEnding: 2022,
+            fromFinancialYearEnding: 2023,
+            toFinancialYearEnding: 2023,
             isSummer: 'all-year',
-            scheme: 'alcs'
+            scheme: 'sroc'
           });
         });
 
@@ -992,7 +993,7 @@ experiment('modules/billing/services/batch-service', () => {
 
       experiment('and the batch type is supplementary', () => {
         beforeEach(async () => {
-          result = await batchService.create(regionId, 'supplementary', 2019, 'all-year');
+          result = await batchService.create(regionId, 'supplementary', 2022, 'all-year');
         });
 
         test('a batch is created processing the number of years specified in config.billing.supplementaryYears', async () => {
@@ -1001,7 +1002,7 @@ experiment('modules/billing/services/batch-service', () => {
             status: 'processing',
             regionId,
             batchType: 'supplementary',
-            fromFinancialYearEnding: 2014,
+            fromFinancialYearEnding: 2017,
             toFinancialYearEnding: 2022,
             isSummer: 'all-year',
             scheme: 'alcs'

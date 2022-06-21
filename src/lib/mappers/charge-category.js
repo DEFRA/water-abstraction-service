@@ -53,7 +53,8 @@ const dbToModelMapper = createMapper()
     'isTidal',
     'lossFactor',
     'modelTier',
-    'isRestrictedSource'
+    'isRestrictedSource',
+    'subsistenceCharge'
   );
 
 const dbToModel = row => helpers.createModel(ChargeCategory, camelCaseKeys(row), dbToModelMapper);

@@ -1,0 +1,373 @@
+# this is 2pt summer 
+- ref: $region
+  model: Region
+  fields:
+    chargeRegionId: A
+    naldRegionId: 9
+    name: Test Region
+    displayName: Test Region
+    isTest: true
+
+- ref: $licenceL1
+  model: Licence
+  fields:
+    licenceRef : L1
+    includeInSupplementaryBilling : no
+    isWaterUndertaker : false
+    regions : '{ "historicalAreaCode": "ARCA", "regionalChargeArea": "Anglian" }'
+    startDate : '2008-04-01'
+    expiredDate : null
+    lapsedDate : null
+    revokedDate : null
+    suspendFromBilling : false
+    isTest: true
+    regionId: $region.regionId
+
+- ref: $licenceVersionL1
+  model: LicenceVersion
+  fields:
+    licenceId: $licenceL1.licenceId
+    issue : 1
+    increment: 0
+    status: 'current'
+    startDate: '2017-03-01'
+    endDate: null
+    externalId: 9:1111:1:0
+    isTest: true
+
+- ref: $twoPartTariffAgreement
+  model: FinancialAgreementType
+  fields:
+    financialAgreementCode: S127
+    description: Section 127 (Two Part Tariff)
+    disabled: false
+  constraints:
+    uniq_financial_agreement_code:
+      - financialAgreementCode
+    code_is_unique:
+      - financialAgreementCode
+
+- model: LicenceAgreement
+  fields:
+    licenceRef: L1
+    startDate: '2008-04-01'
+    endDate: null
+    dateSigned: '2008-05-05'
+    isTest: true
+    financialAgreementTypeId: $twoPartTariffAgreement.financialAgreementTypeId
+
+- ref: $chargeVersionL1
+  model: ChargeVersion
+  fields:
+    licenceRef: L1
+    scheme: alcs
+    versionNumber: 1
+    startDate: '2017-04-01'
+    status: current
+    endDate: null
+    source: nald
+    isTest: true
+    companyId: $invoiceAccountL1.companyId
+    invoiceAccountId: $invoiceAccountL1.invoiceAccountId
+    regionCode: $region.naldRegionId
+    licenceId: $licenceL1.licenceId
+
+- ref: $purposePrimary
+  model: PurposePrimary
+  fields:
+    legacyId: A
+    description: Agriculture
+    isTest: true
+  constraints:
+    purposes_primary_unq_legacy_id:
+      - legacyId
+
+- ref: $purposeSecondary
+  model: PurposeSecondary
+  fields:
+    legacyId: AGR
+    description: General Agriculture
+    isTest: true
+  constraints:
+    purposes_secondary_unq_legacy_id:
+      - legacyId
+
+- ref: $purposeUse
+  model: PurposeUse
+  fields:
+    legacyId: 400
+    description: Spray Irrigation - Direct
+    lossFactor: high
+    isTwoPartTariff: true
+    isTest: true
+  constraints:
+    purposes_uses_unq_legacy_id:
+      - legacyId
+
+- ref: $chargeElementL1
+  model: ChargeElement
+  fields:
+    chargeVersionId: $chargeVersionL1.chargeVersionId
+    factorsOverridden: false
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 4
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 10
+    authorisedAnnualQuantity: 30
+    billableAnnualQuantity: 25
+    season: summer
+    seasonDerived: summer
+    source: unsupported
+    loss: high
+    purposePrimaryId: $purposePrimary.purposePrimaryId
+    purposeSecondaryId: $purposeSecondary.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+    description: CE2
+    isTest: true
+
+- ref: $returnVersionL1A
+  model: ReturnVersion
+  fields:
+    versionNumber: 1
+    startDate: '2008-04-01'
+    endDate: null
+    status: superseded
+    externalId: 9:1111111:1
+    licenceId: $licenceL1.licenceId
+
+- ref: $returnRequirementL1A
+  model: ReturnRequirement
+  fields:
+    returnVersionId: $returnVersionL1A.returnVersionId
+    returnsFrequency: month
+    isSummer: true
+    isUpload: false
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 12
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 3
+    siteDescription: WELL POINTS AT MARS
+    description: 2 Jigga Watts 2000 CMD
+    legacyId: 1111111
+    externalId: 9:1111111
+
+- model: ReturnRequirementPurpose
+  fields:
+    returnRequirementId: $returnRequirementL1A.returnRequirementId
+    purposePrimaryId: $purposePrimary.purposePrimaryId
+    purposeSecondaryId: $purposeSecondary.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+    purposeAlias: SPRAY IRRIGATION DIRECT
+    externalId: 9:1111111:A:AGR:400
+
+- ref: $returnVersionL1B
+  model: ReturnVersion
+  fields:
+    versionNumber: 2
+    startDate: '2008-04-01'
+    endDate: null
+    status: current
+    externalId: 9:1111111:2
+    licenceId: $licenceL1.licenceId
+
+- ref: $returnRequirementL1B
+  model: ReturnRequirement
+  fields:
+    returnVersionId: $returnVersionL1B.returnVersionId
+    returnsFrequency: month
+    isSummer: true
+    isUpload: false
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 12
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 3
+    siteDescription: WELL POINTS AT MARS
+    description: 2 Jigga Watts 2000 CMD
+    legacyId: 1111112
+    externalId: 9:1111112
+
+- model: ReturnRequirementPurpose
+  fields:
+    returnRequirementId: $returnRequirementL1B.returnRequirementId
+    purposePrimaryId: $purposePrimary.purposePrimaryId
+    purposeSecondaryId: $purposeSecondary.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+    purposeAlias: SPRAY IRRIGATION DIRECT
+    externalId: 9:1111112:A:AGR:400
+
+# this is 2pt winter
+
+- ref: $licenceL2
+  model: Licence
+  fields:
+    licenceRef : L2
+    includeInSupplementaryBilling : no
+    isWaterUndertaker : false
+    regions : '{ "historicalAreaCode": "ARCA", "regionalChargeArea": "Anglian" }'
+    startDate : '2008-04-01'
+    expiredDate : null
+    lapsedDate : null
+    revokedDate : null
+    suspendFromBilling : false
+    isTest: true
+    regionId: $region.regionId
+
+- ref: $licenceVersionL2
+  model: LicenceVersion
+  fields:
+    licenceId: $licenceL2.licenceId
+    issue : 1
+    increment: 0
+    status: 'current'
+    startDate: '2017-03-01'
+    endDate: null
+    externalId: 9:2222:1:0
+    isTest: true
+
+- model: LicenceAgreement
+  fields:
+    licenceRef: L2
+    startDate: '2008-04-01'
+    endDate: null
+    dateSigned: '2008-05-05'
+    isTest: true
+    financialAgreementTypeId: $twoPartTariffAgreement.financialAgreementTypeId
+
+- ref: $chargeVersionL2
+  model: ChargeVersion
+  fields:
+    licenceRef: L2
+    scheme: alcs
+    versionNumber: 1
+    startDate: '2017-04-01'
+    status: current
+    endDate: null
+    source: nald
+    isTest: true
+    companyId: $invoiceAccountL2.companyId
+    invoiceAccountId: $invoiceAccountL2.invoiceAccountId
+    regionCode: $region.naldRegionId
+    licenceId: $licenceL2.licenceId
+
+- ref: $chargeElementL2
+  model: ChargeElement
+  fields:
+    chargeVersionId: $chargeVersionL2.chargeVersionId
+    factorsOverridden: false
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 11
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 12
+    authorisedAnnualQuantity: 30
+    billableAnnualQuantity: 25
+    season: winter
+    seasonDerived: winter
+    source: unsupported
+    loss: high
+    purposePrimaryId: $purposePrimary.purposePrimaryId
+    purposeSecondaryId: $purposeSecondary.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+    description: CE2
+    isTest: true
+
+- ref: $returnVersionL2
+  model: ReturnVersion
+  fields:
+    versionNumber: 101
+    startDate: '2008-04-01'
+    endDate: null
+    status: current
+    externalId: 9:22222222
+    licenceId: $licenceL2.licenceId
+
+- ref: $returnRequirementL2
+  model: ReturnRequirement
+  fields:
+    returnVersionId: $returnVersionL2.returnVersionId
+    returnsFrequency: month
+    isSummer: true
+    isUpload: false
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 12
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 3
+    siteDescription: WELL POINTS AT MARS
+    description: 2 Jigga Watts 2000 CMD
+    legacyId: 22222222
+    externalId: 9:22222222
+
+- model: ReturnRequirementPurpose
+  fields:
+    returnRequirementId: $returnRequirementL2.returnRequirementId
+    purposePrimaryId: $purposePrimary.purposePrimaryId
+    purposeSecondaryId: $purposeSecondary.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+    purposeAlias: SPRAY IRRIGATION DIRECT
+    externalId: 9:22222222:A:AGR:400
+
+
+# this is non 2PT
+
+- ref: $licenceL3
+  model: Licence
+  fields:
+    licenceRef : L3
+    includeInSupplementaryBilling : no
+    isWaterUndertaker : false
+    regions : '{ "historicalAreaCode": "ARCA", "regionalChargeArea": "Anglian" }'
+    startDate : '2008-04-01'
+    expiredDate : null
+    lapsedDate : null
+    revokedDate : null
+    suspendFromBilling : false
+    isTest: true
+    regionId: $region.regionId
+
+- ref: $licenceVersionL3
+  model: LicenceVersion
+  fields:
+    licenceId: $licenceL3.licenceId
+    issue : 1
+    increment: 0
+    status: 'current'
+    startDate: '2017-03-01'
+    endDate: null
+    externalId: 9:3333:1:0
+    isTest: true
+
+- ref: $chargeVersionL3
+  model: ChargeVersion
+  fields:
+    licenceRef: L3
+    scheme: alcs
+    versionNumber: 1
+    startDate: '2017-04-01'
+    status: current
+    endDate: null
+    source: nald
+    isTest: true
+    companyId: $invoiceAccountL3.companyId
+    invoiceAccountId: $invoiceAccountL3.invoiceAccountId
+    regionCode: $region.naldRegionId
+    licenceId: $licenceL3.licenceId
+
+- ref: $chargeElementL3
+  model: ChargeElement
+  fields:
+    chargeVersionId: $chargeVersionL3.chargeVersionId
+    factorsOverridden: false
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 4
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 3
+    authorisedAnnualQuantity: 30
+    billableAnnualQuantity: 25
+    season: winter
+    seasonDerived: winter
+    source: unsupported
+    loss: high
+    purposePrimaryId: $purposePrimary.purposePrimaryId
+    purposeSecondaryId: $purposeSecondary.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+    description: CE2
+    isTest: true

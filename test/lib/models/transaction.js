@@ -602,4 +602,28 @@ experiment('lib/models/transaction', () => {
       });
     });
   });
+  experiment('.isWaterCompanyCharge', () => {
+    test('can set it to boolean value', async () => {
+      const transaction = new Transaction();
+      transaction.isWaterCompanyCharge = true;
+      expect(transaction.isWaterCompanyCharge).to.be.true();
+    });
+    test('throw an error for a non boolean value', async () => {
+      const transaction = new Transaction();
+      const func = () => (transaction.isWaterCompanyCharge = '$$$');
+      expect(func).to.throw();
+    });
+  });
+  experiment('.isCreditedBack', () => {
+    test('can set it to boolean value', async () => {
+      const transaction = new Transaction();
+      transaction.isCreditedBack = true;
+      expect(transaction.isCreditedBack).to.be.true();
+    });
+    test('throw an error for a non boolean value', async () => {
+      const transaction = new Transaction();
+      const func = () => (transaction.isCreditedBack = '$$$');
+      expect(func).to.throw();
+    });
+  });
 });

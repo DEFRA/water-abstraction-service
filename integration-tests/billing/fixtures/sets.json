@@ -220,7 +220,7 @@
     },
     {
       "repeat": {
-        "count": 4,
+        "count": 5,
         "data": [
           {
             "service": "water",
@@ -322,6 +322,89 @@
     {
       "service": "returns",
       "file": "test-bulk-returns.yaml"
+    }
+  ],
+  "single-set": [
+    {
+      "service": "idm",
+      "file": "internal-users.yaml"
+    },
+    {
+      "service": "idm",
+      "file": "external-users.yaml"
+    },
+    {
+      "service": "permits",
+      "file": "single-set-permits.yaml"
+    },
+    {
+      "service": "crmV1",
+      "file": "single-set-crm-v1.yaml"
+    },
+    {
+      "service": "crmV2",
+      "file": "single-set-crm-v2.yaml"
+    },
+    {
+      "service": "water",
+      "file": "single-set-licences.yaml"
+    },
+    {
+      "service": "returns",
+      "file": "single-set-returns.yaml"
+    },
+    {
+      "repeat": {
+        "count": 4,
+        "data": [
+          {
+            "service": "water",
+            "file": "single-set-historic-billing-batch.yaml",
+            "config": {
+              "batchDate": "$previousYearsDateLessIndex",
+              "billingYear": "$previousYearLessIndex",
+              "batchType": "annual",
+              "invoiceNumber": "$annualInvoice",
+              "externalId": "$uuid",
+              "billRunNumber": "$billRunNumber"
+            }
+          },
+          {
+            "service": "water",
+            "file": "single-set-historic-billing-annual-trans.yaml",
+            "config": {
+              "batchDate": "$previousYearsDateLessIndex",
+              "billingYear": "$previousYearLessIndex",
+              "startDate": "$previousStartDateLessIndex",
+              "endDate": "$previousEndDateLessIndex",
+              "batchType": "annual"
+            }
+          },
+          {
+            "service": "water",
+            "file": "single-set-historic-billing-batch.yaml",
+            "config": {
+              "batchDate": "$previousYearsDateLessIndex",
+              "billingYear": "$previousYearLessIndex",
+              "batchType": "two_part_tariff",
+              "invoiceNumber": "$2PT2Invoice",
+              "externalId": "$uuid",
+              "billRunNumber": "$billRunNumber"
+            }
+          },
+          {
+            "service": "water",
+            "file": "single-set-historic-billing-2nd-part-trans.yaml",
+            "config": {
+              "batchDate": "$previousYearsDateLessIndex",
+              "billingYear": "$previousYearLessIndex",
+              "startDate": "$previousStartDateLessIndex",
+              "endDate": "$previousEndDateLessIndex",
+              "batchType": "two_part_tariff"
+            }
+          }
+        ]
+      }
     }
   ]
 }

@@ -5,7 +5,6 @@ const uuid = require('uuid/v4');
 const JOB_NAME = 'billing.refresh-totals';
 
 const batchService = require('../services/batch-service');
-const batchStatus = require('./lib/batch-status');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
@@ -50,7 +49,9 @@ const handler = async job => {
   } else {
     // Check CM batch in "generated" or "billed" status
     // This indicates that our job is done and can move onto refreshing invoices
-    batchStatus.assertCmBatchIsGeneratedOrBilled(cmBatch);
+    if (!['generated', 'billed', 'billing_not_required'].includes(cmBatch.status)) {
+      throw new StateError(`CM bill run summary not ready for batch ${batchId}`);
+    }
     // Update batch with totals/bill run ID from charge module
     const isSuccess = await cmRefreshService.updateBatch(batchId);
 

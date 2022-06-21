@@ -51,7 +51,7 @@ const getOrCreateInvoice = async (batchId, invoiceAccountId, financialYearEnding
  */
 const saveInvoiceToDB = async (batch, invoice) => {
   const data = {
-    ...mappers.invoice.modelToDb(invoice),
+    ...mappers.invoice.modelToDb(invoice, batch.scheme),
     billingBatchId: batch.id
   };
   return repos.billingInvoices.upsert(data);

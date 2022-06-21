@@ -126,7 +126,7 @@ experiment('lib/connectors/repos/charge-versions', () => {
     const financialYearEnding = 2020;
 
     beforeEach(async () => {
-      await chargeVersions.findValidInRegionAndFinancialYear(regionId, financialYearEnding);
+      await chargeVersions.findValidInRegionAndFinancialYear(regionId, financialYearEnding, false, 'alcs');
     });
 
     test('calls raw.multiRow with the expected query and params', async () => {
@@ -134,7 +134,8 @@ experiment('lib/connectors/repos/charge-versions', () => {
       expect(query).to.equal(queries.findValidInRegionAndFinancialYear);
       expect(params).to.equal({
         regionId,
-        financialYearEnding
+        financialYearEnding,
+        scheme: 'alcs'
       });
     });
   });

@@ -1,0 +1,63 @@
+- ref: $userEntity
+  model: Entity
+  fields:
+    entity_nm: 'acceptance-test.external@example.com'
+    entity_type: 'individual'
+    source: 'acceptance-test-setup'
+
+- ref: $companyEntity
+  model: Entity
+  fields:
+    entity_nm: 'Big Farm Co Ltd'
+    entity_type: 'company'
+    source: 'acceptance-test-setup'
+
+- ref: $entityRole
+  model: EntityRole
+  fields:
+    entityId: $userEntity.entity_id
+    company_entity_id: $companyEntity.entity_id
+    role: 'primary_user'
+    created_by: 'acceptance-test-setup'
+
+- ref: $documentHeaderL1
+  model: DocumentHeader
+  fields:
+    regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf'
+    system_id: 'permit-repo'
+    system_external_id: 'L1'
+    company_entity_id: $companyEntity.entity_id
+    system_internal_id: $licenceL1.licence_id
+    document_name : 'the L1 temporary licence'
+    metadata:
+      Name: 'test environment agency'
+      dataType: 'acceptance-test-setup'
+      IsCurrent: true
+
+- ref: $documentHeaderL2
+  model: DocumentHeader
+  fields:
+    regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf'
+    system_id: 'permit-repo'
+    system_external_id: 'L2'
+    company_entity_id: $companyEntity.entity_id
+    system_internal_id: $licenceL2.licence_id
+    document_name : 'the L2 temporary licence'
+    metadata:
+      Name: 'test environment agency'
+      dataType: 'acceptance-test-setup'
+      IsCurrent: true
+
+- ref: $documentHeaderL3
+  model: DocumentHeader
+  fields:
+    regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf'
+    system_id: 'permit-repo'
+    system_external_id: 'L3'
+    company_entity_id: $companyEntity.entity_id
+    system_internal_id: $licenceL3.licence_id
+    document_name : 'the L3 temporary licence'
+    metadata:
+      Name: 'test environment agency'
+      dataType: 'acceptance-test-setup'
+      IsCurrent: true

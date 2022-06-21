@@ -149,18 +149,24 @@ experiment('lib/mappers/invoice', () => {
         invoice.invoiceAccount = new InvoiceAccount().fromHash({
           accountNumber: 'A00000000A'
         });
-        result = invoiceMapper.modelToDb(invoice);
       });
 
-      test('maps to expected shape for the DB row', async () => {
+      test('maps alcs invoice to expected shape for the DB row', async () => {
+        invoice.externalId = uuid();
+        result = invoiceMapper.modelToDb(invoice, 'alcs');
         expect(result.invoiceAccountId).to.equal(invoice.invoiceAccount.id);
+        expect(result.externalId).to.equal(invoice.externalId);
         expect(result.invoiceAccountNumber).to.equal(invoice.invoiceAccount.accountNumber);
         expect(result.address).to.equal(invoice.address.toJSON());
-        // expect(result.billingBatchId).to.equal(batch.id);
         expect(result.financialYearEnding).to.equal(invoice.financialYear.yearEnding);
         expect(result.invoiceNumber).to.be.null();
         expect(result.netAmount).to.be.null();
         expect(result.isCredit).to.be.null();
+      });
+      test('maps sroc invoice to expected shape for the DB row', async () => {
+        result = invoiceMapper.modelToDb(invoice, 'sroc');
+        expect(result.externalId).to.equal(null);
+        expect(result.address).to.equal(invoice.address);
       });
     });
 

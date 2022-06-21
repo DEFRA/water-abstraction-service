@@ -52,6 +52,7 @@ experiment('modules/billing/mappers/batch', () => {
 
   beforeEach(async () => {
     sandbox.stub(transactionMapper, 'modelToChargeModule').returns({});
+    sandbox.stub(transactionMapper, 'modelToChargeModuleSroc').returns({});
   });
 
   afterEach(async () => {
@@ -134,6 +135,12 @@ experiment('modules/billing/mappers/batch', () => {
       test('the creditNoteValue is set', async () => {
         expect(batch.creditNoteValue).to.equal(-55);
       });
+      test('the endYear is set', async () => {
+        expect(batch.endYear.yearEnding).to.equal(2020);
+      });
+      test('the startYear is set', async () => {
+        expect(batch.startYear.yearEnding).to.equal(2019);
+      });
     });
 
     experiment('when there are billing invoices', () => {
@@ -156,7 +163,7 @@ experiment('modules/billing/mappers/batch', () => {
     });
   });
 
-  experiment('.modelToChargeModule', () => {
+  experiment('.modelToChargeModule alcs', () => {
     let batch, cmTransactions;
 
     beforeEach(async () => {
@@ -167,6 +174,7 @@ experiment('modules/billing/mappers/batch', () => {
         new Transaction(),
         new Transaction()
       ];
+      batch.scheme = 'alcs';
       cmTransactions = batchMapper.modelToChargeModule(batch);
     });
 
@@ -188,6 +196,16 @@ experiment('modules/billing/mappers/batch', () => {
         batch.invoices[0].invoiceLicences[0],
         batch.invoices[0].invoiceLicences[0].transactions[1]
       )).to.be.true();
+    });
+  });
+
+  experiment('.modelToChargeModule sroc', () => {
+    test('transactionMapper.modelToChargeModuleSroc is called when scheme is sroc', async () => {
+      const batch = { scheme: 'sroc' };
+      batchMapper.modelToChargeModule(batch);
+      const args = transactionMapper.modelToChargeModuleSroc.lastCall.args;
+      expect(args[0]).to.equal(batch);
+      expect(transactionMapper.modelToChargeModuleSroc.calledOnce).to.be.true();
     });
   });
 });

@@ -45,14 +45,14 @@ const getStatus = err => get(err, 'statusCode', 0);
  */
 const isClientError = err => inRange(getStatus(err), 400, 500);
 
-const updateBatchState = async batch => {
-  const statuses = await batchService.getTransactionStatusCounts(batch.id);
+const updateBatchState = async batchId => {
+  const statuses = await batchService.getTransactionStatusCounts(batchId);
 
   const isReady = get(statuses, Transaction.statuses.candidate, 0) === 0;
 
   if (isReady) {
     // Clean up batch
-    await batchService.cleanup(batch.id);
+    await batchService.cleanup(batchId);
   }
 
   return isReady;
@@ -63,35 +63,40 @@ const getTransactionStatus = batch => get(batch, 'invoices[0].invoiceLicences[0]
 const handler = async job => {
   batchJob.logHandling(job);
   const transactionId = get(job, 'data.billingBatchTransactionId');
+  const batchId = get(job, 'data.batchId');
 
   // Create batch model from loaded data
+  // the batch contains all lower level related objects for pre-sroc
+  // but for sroc we don't map all the related objects that is not needed
+  // where it will slow down performance and the batch variable is then mainly transaction data
   const batch = await transactionsService.getById(transactionId);
 
   try {
     // Skip CM call if transaction is already processed
-    const status = getTransactionStatus(batch);
+    const status = getTransactionStatus(batch) || batch.status;
     if (status !== Transaction.statuses.candidate) {
-      return await updateBatchState(batch);
+      return await updateBatchState(batchId);
     }
 
     // Map data to charge module transaction
     const [cmTransaction] = batchMapper.modelToChargeModule(batch);
 
     // Create transaction in Charge Module
-    const response = await chargeModuleBillRunConnector.addTransaction(batch.externalId, cmTransaction);
+    const cmBatchId = batch.externalId || batch.billingInvoiceLicence.billingInvoice.billingBatch.externalId;
+    const response = await chargeModuleBillRunConnector.addTransaction(cmBatchId, cmTransaction);
 
     // Update/remove our local transaction in water.billing_transactions
     await transactionsService.updateWithChargeModuleResponse(transactionId, response);
 
     // Note: the await is needed to ensure any error is handled here
-    return await updateBatchState(batch);
+    return await updateBatchState(batchId);
   } catch (err) {
     batchJob.logHandlingError(job, err);
 
     // if error code >= 400 and < 500 set transaction status to error and continue
     if (isClientError(err)) {
       await transactionsService.setErrorStatus(transactionId);
-      return updateBatchState(batch);
+      return updateBatchState(batchId);
     }
     // throw error to retry
     throw err;
