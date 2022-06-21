@@ -225,7 +225,7 @@ const postBatchBillableYears = async (request, h) => {
   const unsentYears = _determineUnsentYears(currentFinancialYear, batchFinancialYears)
 
   return h.response({ unsentYears }).code(200)
-};
+}
 
 function _determineUnsentYears (currentFinancialYear, batchFinancialYears) {
   const unsentYears = []

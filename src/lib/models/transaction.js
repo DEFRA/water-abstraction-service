@@ -420,30 +420,30 @@ class Transaction extends Model {
   }
 
   set calcWinterDiscountFactor (value) {
-    validators.assertNullableString(value);
-    this._calcWinterDiscountFactor = value;
+    validators.assertNullableString(value)
+    this._calcWinterDiscountFactor = value
   }
 
   get calcWinterDiscountFactor () {
-    return this._calcWinterDiscountFactor;
+    return this._calcWinterDiscountFactor
   }
 
   set calcAdjustmentFactor (value) {
-    validators.assertNullableString(value);
-    this._calcAdjustmentFactor = value;
+    validators.assertNullableString(value)
+    this._calcAdjustmentFactor = value
   }
 
   get calcAdjustmentFactor () {
-    return this._calcAdjustmentFactor;
+    return this._calcAdjustmentFactor
   }
 
   set grossValuesCalculated (value) {
-    validators.assertNullableObject(value);
-    this._grossValuesCalculated = value;
+    validators.assertNullableObject(value)
+    this._grossValuesCalculated = value
   }
 
   get grossValuesCalculated () {
-    return this._grossValuesCalculated;
+    return this._grossValuesCalculated
   }
 
   /**
@@ -469,21 +469,21 @@ class Transaction extends Model {
   }
 
   set isWaterCompanyCharge (value) {
-    validators.assertIsBoolean(value);
-    this._isWaterCompanyCharge = value;
+    validators.assertIsBoolean(value)
+    this._isWaterCompanyCharge = value
   }
 
   get isWaterCompanyCharge () {
-    return this._isWaterCompanyCharge;
+    return this._isWaterCompanyCharge
   }
 
   set section126Factor (value) {
-    validators.assertIsBoolean(value);
-    this._section126Factor = value;
+    validators.assertIsBoolean(value)
+    this._section126Factor = value
   }
 
   get section126Factor () {
-    return this._section126Factor;
+    return this._section126Factor
   }
 }
 
