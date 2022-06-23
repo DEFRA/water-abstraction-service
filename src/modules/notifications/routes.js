@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
-const controller = require('./controller');
+const Joi = require('joi')
+const controller = require('./controller')
 
-const exampleGuid = '00000000-0000-0000-0000-000000000000';
-const preHandlers = require('./pre-handlers');
+const exampleGuid = '00000000-0000-0000-0000-000000000000'
+const preHandlers = require('./pre-handlers')
 
 module.exports = {
 
@@ -96,4 +96,4 @@ module.exports = {
     handler: controller.getNotificationCategories
   }
 
-};
+}

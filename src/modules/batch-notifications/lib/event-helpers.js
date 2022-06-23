@@ -1,16 +1,16 @@
-const { find, get, set, uniq } = require('lodash');
-const generateReference = require('../../../lib/reference-generator');
+const { find, get, set, uniq } = require('lodash')
+const generateReference = require('../../../lib/reference-generator')
 const {
   EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING,
   EVENT_STATUS_COMPLETED
-} = require('./event-statuses');
+} = require('./event-statuses')
 const { MESSAGE_STATUS_SENT, MESSAGE_STATUS_ERROR } =
-    require('./message-statuses');
-const queries = require('./queries');
+    require('./message-statuses')
+const queries = require('./queries')
 
 // Use new event service
-const Event = require('../../../lib/models/event');
-const eventsService = require('../../../lib/services/events');
+const Event = require('../../../lib/models/event')
+const eventsService = require('../../../lib/services/events')
 
 /**
  * Creates a notification event (but does not save it)
@@ -21,10 +21,10 @@ const eventsService = require('../../../lib/services/events');
  */
 const createEvent = (issuer, config, options) => {
   // Create a reference code
-  const referenceCode = generateReference(config.prefix);
+  const referenceCode = generateReference(config.prefix)
 
   // Create event model
-  const ev = new Event();
+  const ev = new Event()
   return ev.fromHash({
     referenceCode,
     type: 'notification',
@@ -35,8 +35,8 @@ const createEvent = (issuer, config, options) => {
       name: config.name
     },
     status: EVENT_STATUS_PROCESSING
-  });
-};
+  })
+}
 
 /**
  * Marks event as processed, and also updates the number of messages,
@@ -47,19 +47,19 @@ const createEvent = (issuer, config, options) => {
  * @return {Promise}         resolves when event updated
  */
 const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
-  const ev = await eventsService.findOne(eventId);
+  const ev = await eventsService.findOne(eventId)
 
   // Update event details
-  set(ev, 'metadata.sent', 0);
-  set(ev, 'metadata.error', 0);
-  set(ev, 'metadata.recipients', recipientCount);
+  set(ev, 'metadata.sent', 0)
+  set(ev, 'metadata.error', 0)
+  set(ev, 'metadata.recipients', recipientCount)
   ev.fromHash({
     status: EVENT_STATUS_PROCESSED,
     licences: uniq(licenceNumbers)
-  });
+  })
 
-  return eventsService.update(ev);
-};
+  return eventsService.update(ev)
+}
 
 /**
  * Gets the number of messages in a certain status, defaulting to 0
@@ -68,8 +68,8 @@ const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
  * @return {Number} of messages in the requested status
  */
 const getStatusCount = (statuses, status) => {
-  return parseInt(get(find(statuses, { status }), 'count', 0));
-};
+  return parseInt(get(find(statuses, { status }), 'count', 0))
+}
 
 /**
  * Given an event ID, updates the metadata
@@ -79,28 +79,28 @@ const getStatusCount = (statuses, status) => {
  * @param {Promise} resolves with event data
  */
 const refreshEventStatus = async (eventId) => {
-  const ev = await eventsService.findOne(eventId);
+  const ev = await eventsService.findOne(eventId)
 
   if (ev.status !== EVENT_STATUS_SENDING) {
-    return ev;
+    return ev
   }
 
   // Get breakdown of statuses of messages in this event
-  const statuses = await queries.getMessageStatuses(eventId);
-  const sent = getStatusCount(statuses, MESSAGE_STATUS_SENT);
-  const error = getStatusCount(statuses, MESSAGE_STATUS_ERROR);
+  const statuses = await queries.getMessageStatuses(eventId)
+  const sent = getStatusCount(statuses, MESSAGE_STATUS_SENT)
+  const error = getStatusCount(statuses, MESSAGE_STATUS_ERROR)
 
-  const isComplete = (sent + error) === get(ev, 'metadata.recipients');
+  const isComplete = (sent + error) === get(ev, 'metadata.recipients')
 
-  set(ev, 'status', isComplete ? EVENT_STATUS_COMPLETED : EVENT_STATUS_SENDING);
-  set(ev, 'metadata.sent', sent);
-  set(ev, 'metadata.error', error);
+  set(ev, 'status', isComplete ? EVENT_STATUS_COMPLETED : EVENT_STATUS_SENDING)
+  set(ev, 'metadata.sent', sent)
+  set(ev, 'metadata.error', error)
 
-  return eventsService.update(ev);
-};
+  return eventsService.update(ev)
+}
 
 module.exports = {
   createEvent,
   markAsProcessed,
   refreshEventStatus
-};
+}

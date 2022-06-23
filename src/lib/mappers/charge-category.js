@@ -1,15 +1,15 @@
 /* eslint-disable camelcase */
-'use strict';
-const { truncate } = require('lodash');
+'use strict'
+const { truncate } = require('lodash')
 
-const { createMapper } = require('../object-mapper');
-const camelCaseKeys = require('../camel-case-keys');
-const helpers = require('./lib/helpers');
+const { createMapper } = require('../object-mapper')
+const camelCaseKeys = require('../camel-case-keys')
+const helpers = require('./lib/helpers')
 
-const ChargeCategory = require('../models/charge-category');
+const ChargeCategory = require('../models/charge-category')
 
 const csvToModel = data => {
-  const chargeCategory = new ChargeCategory();
+  const chargeCategory = new ChargeCategory()
 
   const {
     reference,
@@ -22,7 +22,7 @@ const csvToModel = data => {
     loss_factor,
     model_tier,
     is_restricted_source
-  } = data;
+  } = data
   return chargeCategory.fromHash({
     reference,
     description,
@@ -34,8 +34,8 @@ const csvToModel = data => {
     lossFactor: loss_factor,
     modelTier: model_tier,
     isRestrictedSource: is_restricted_source
-  });
-};
+  })
+}
 
 /* Humanize and copy fields */
 const dbToModelMapper = createMapper()
@@ -55,15 +55,15 @@ const dbToModelMapper = createMapper()
     'modelTier',
     'isRestrictedSource',
     'subsistenceCharge'
-  );
+  )
 
-const dbToModel = row => helpers.createModel(ChargeCategory, camelCaseKeys(row), dbToModelMapper);
+const dbToModel = row => helpers.createModel(ChargeCategory, camelCaseKeys(row), dbToModelMapper)
 
 const pojoToModel = pojo => {
-  const model = new ChargeCategory();
-  return model.fromHash(pojo);
-};
+  const model = new ChargeCategory()
+  return model.fromHash(pojo)
+}
 
-exports.pojoToModel = pojoToModel;
-exports.dbToModel = dbToModel;
-exports.csvToModel = csvToModel;
+exports.pojoToModel = pojoToModel
+exports.dbToModel = dbToModel
+exports.csvToModel = csvToModel

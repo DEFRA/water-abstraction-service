@@ -1,17 +1,17 @@
-const fs = require('fs');
-const libxmljs = require('libxmljs');
-const util = require('util');
-const path = require('path');
-const readFile = util.promisify(fs.readFile);
+const fs = require('fs')
+const libxmljs = require('libxmljs')
+const util = require('util')
+const path = require('path')
+const readFile = util.promisify(fs.readFile)
 
 /**
  * Gets libxmljs doc for the XSD schema
  * @return {Promise}
  */
 const getSchemaDoc = async () => {
-  const schema = await readFile(path.join(__dirname, './xml-returns-schema.xsd'), 'utf-8');
-  return libxmljs.parseXml(schema);
-};
+  const schema = await readFile(path.join(__dirname, './xml-returns-schema.xsd'), 'utf-8')
+  return libxmljs.parseXml(schema)
+}
 
 /**
  * Validates the supplied XML doc
@@ -19,19 +19,21 @@ const getSchemaDoc = async () => {
  * @return {Promise} resolves with { isValid, validationErrors }
  */
 const validateXml = async (xmlStr) => {
-  const xmlReturnDoc = libxmljs.parseXml(xmlStr);
-  const schema = await getSchemaDoc();
+  const xmlReturnDoc = libxmljs.parseXml(xmlStr)
+  const schema = await getSchemaDoc()
 
-  const isValid = xmlReturnDoc.validate(schema);
+  const isValid = xmlReturnDoc.validate(schema)
 
-  const validationErrors = isValid ? null : xmlReturnDoc.validationErrors.map(error => {
-    return {
-      message: error.message,
-      line: error.line
-    };
-  });
+  const validationErrors = isValid
+    ? null
+    : xmlReturnDoc.validationErrors.map(error => {
+      return {
+        message: error.message,
+        line: error.line
+      }
+    })
 
-  return { isValid, validationErrors };
-};
+  return { isValid, validationErrors }
+}
 
-module.exports.validateXml = validateXml;
+module.exports.validateXml = validateXml

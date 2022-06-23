@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const validators = require('./validators');
+const validators = require('./validators')
 
-const Model = require('./model');
-const PurposeUse = require('./purpose-use');
+const Model = require('./model')
+const PurposeUse = require('./purpose-use')
 
 class LicenceAgreementPurposeUse extends Model {
   /**
@@ -11,13 +11,13 @@ class LicenceAgreementPurposeUse extends Model {
    * @param {PurposeUse}
    */
   set purposeUse (purposeUse) {
-    validators.assertIsInstanceOf(purposeUse, PurposeUse);
-    this._purposeUse = purposeUse;
+    validators.assertIsInstanceOf(purposeUse, PurposeUse)
+    this._purposeUse = purposeUse
   }
 
   get purposeUse () {
-    return this._purposeUse;
+    return this._purposeUse
   }
 }
 
-module.exports = LicenceAgreementPurposeUse;
+module.exports = LicenceAgreementPurposeUse

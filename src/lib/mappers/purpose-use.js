@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const PurposeUse = require('../models/purpose-use');
+const PurposeUse = require('../models/purpose-use')
 
 const dbToModel = row => {
-  const model = new PurposeUse(row.purposeUseId);
+  const model = new PurposeUse(row.purposeUseId)
   return model.fromHash({
     code: row.legacyId,
     name: row.description,
@@ -11,8 +11,8 @@ const dbToModel = row => {
     dateCreated: row.dateCreated,
     lossFactor: row.lossFactor,
     isTwoPartTariff: row.isTwoPartTariff
-  });
-};
+  })
+}
 
 /**
  * Converts a plain object representation of a PurposeUse to a PurposeUse model
@@ -20,9 +20,9 @@ const dbToModel = row => {
  * @return PurposeUse
  */
 const pojoToModel = pojo => {
-  const model = new PurposeUse();
-  return model.fromHash(pojo);
-};
+  const model = new PurposeUse()
+  return model.fromHash(pojo)
+}
 
-exports.dbToModel = dbToModel;
-exports.pojoToModel = pojoToModel;
+exports.dbToModel = dbToModel
+exports.pojoToModel = pojoToModel

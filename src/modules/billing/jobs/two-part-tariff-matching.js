@@ -1,67 +1,67 @@
-'use strict';
+'use strict'
 
-const { get, partial } = require('lodash');
+const { get, partial } = require('lodash')
 
-const JOB_NAME = 'billing.two-part-tariff-matching';
+const JOB_NAME = 'billing.two-part-tariff-matching'
 
-const batchService = require('../services/batch-service');
-const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
-const batchJob = require('./lib/batch-job');
-const helpers = require('./lib/helpers');
-const batchStatus = require('./lib/batch-status');
-const billingVolumeService = require('../services/billing-volumes-service');
-const twoPartTariffService = require('../services/two-part-tariff');
-const { jobName: processChargeVersionsJobName } = require('./process-charge-versions');
+const batchService = require('../services/batch-service')
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch')
+const batchJob = require('./lib/batch-job')
+const helpers = require('./lib/helpers')
+const batchStatus = require('./lib/batch-status')
+const billingVolumeService = require('../services/billing-volumes-service')
+const twoPartTariffService = require('../services/two-part-tariff')
+const { jobName: processChargeVersionsJobName } = require('./process-charge-versions')
 
-const createMessage = partial(helpers.createMessage, JOB_NAME);
+const createMessage = partial(helpers.createMessage, JOB_NAME)
 
 const handler = async job => {
-  batchJob.logHandling(job);
+  batchJob.logHandling(job)
 
-  const batchId = get(job, 'data.batchId');
+  const batchId = get(job, 'data.batchId')
 
   try {
     // Get batch
-    const batch = await batchService.getBatchById(batchId);
+    const batch = await batchService.getBatchById(batchId)
 
     // Check batch in "processing" status
-    batchStatus.assertBatchIsProcessing(batch);
+    batchStatus.assertBatchIsProcessing(batch)
 
     // Do TPT returns matching and populate water.billing_volumes
-    await twoPartTariffService.processBatch(batch);
+    await twoPartTariffService.processBatch(batch)
 
     // Check if there are any TPT billing volumes for review
     // If there are, we go to the TPT review stage
-    const unapprovedBillingVolumeCount = await billingVolumeService.getUnapprovedVolumesForBatchCount(batch);
-    const isReviewNeeded = unapprovedBillingVolumeCount > 0;
+    const unapprovedBillingVolumeCount = await billingVolumeService.getUnapprovedVolumesForBatchCount(batch)
+    const isReviewNeeded = unapprovedBillingVolumeCount > 0
     if (isReviewNeeded) {
-      await batchService.setStatusToReview(batch.id);
+      await batchService.setStatusToReview(batch.id)
     }
-    return { isReviewNeeded };
+    return { isReviewNeeded }
   } catch (err) {
-    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToProcessTwoPartTariff);
-    throw err;
+    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToProcessTwoPartTariff)
+    throw err
   }
-};
+}
 
 const onComplete = async (job, queueManager) => {
-  batchJob.logOnComplete(job);
+  batchJob.logOnComplete(job)
 
   try {
-    const { batchId } = job.data;
-    const { isReviewNeeded } = job.returnvalue;
+    const { batchId } = job.data
+    const { isReviewNeeded } = job.returnvalue
 
     // If no review needed, proceed to process the charge version years
     if (!isReviewNeeded) {
-      await queueManager.add(processChargeVersionsJobName, batchId);
+      await queueManager.add(processChargeVersionsJobName, batchId)
     }
   } catch (err) {
-    batchJob.logOnCompleteError(job, err);
+    batchJob.logOnCompleteError(job, err)
   }
-};
+}
 
-exports.jobName = JOB_NAME;
-exports.createMessage = createMessage;
-exports.handler = handler;
-exports.onComplete = onComplete;
-exports.onFailed = helpers.onFailedHandler;
+exports.jobName = JOB_NAME
+exports.createMessage = createMessage
+exports.handler = handler
+exports.onComplete = onComplete
+exports.onFailed = helpers.onFailedHandler

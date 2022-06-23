@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const { bookshelf } = require('./bookshelf.js');
+const { bookshelf } = require('./bookshelf.js')
 
 module.exports = bookshelf.model('ScheduledNotification', {
 
@@ -11,9 +11,9 @@ module.exports = bookshelf.model('ScheduledNotification', {
   idAttribute: 'id',
 
   event () {
-    return this.hasOne('Event', 'event_id', 'event_id');
+    return this.hasOne('Event', 'event_id', 'event_id')
   }
 
 }, {
   jsonColumns: ['licences']
-});
+})

@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 const findByBatchIdForTwoPartTariffReview = `
   select l.licence_ref, l.licence_id,
@@ -13,7 +13,7 @@ const findByBatchIdForTwoPartTariffReview = `
   join water.charge_elements e on y.charge_version_id=e.charge_version_id
   join water.billing_volumes v on v.billing_batch_id=b.billing_batch_id and e.charge_element_id=v.charge_element_id
   where b.billing_batch_id=:billingBatchId
-  group by l.licence_id, invoice_account_id`;
+  group by l.licence_id, invoice_account_id`
 
 /**
  * Updates the include_in_supplementary_billing value in the water licences table from a value to a value
@@ -28,7 +28,7 @@ const updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = `
     and l.region_id = :regionId
     and l.licence_id not in (select licence_id from water.charge_version_workflows where date_deleted is null)
     and l.include_in_supplementary_billing = :from
-`;
+`
 
 /**
  * Updates the include_in_supplementary_billing value in the
@@ -55,16 +55,16 @@ const updateIncludeInSupplementaryBillingStatusForBatch = `
           on il.billing_invoice_id = i.billing_invoice_id 
     where i.billing_batch_id = :batchId
     ); 
-`;
+`
 
 const getLicencesByInvoiceAccount = `
 select distinct l.* from water.charge_versions cv
 join water.licences l on cv.licence_id=l.licence_id
 where cv.invoice_account_id=:invoiceAccountId
 and cv.status='current'
-`;
+`
 
-exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate;
-exports.updateIncludeInSupplementaryBillingStatusForBatch = updateIncludeInSupplementaryBillingStatusForBatch;
-exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview;
-exports.getLicencesByInvoiceAccount = getLicencesByInvoiceAccount;
+exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate
+exports.updateIncludeInSupplementaryBillingStatusForBatch = updateIncludeInSupplementaryBillingStatusForBatch
+exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview
+exports.getLicencesByInvoiceAccount = getLicencesByInvoiceAccount

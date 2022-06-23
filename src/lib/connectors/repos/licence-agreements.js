@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const { LicenceAgreement } = require('../bookshelf');
-const helpers = require('./lib/helpers');
+const { LicenceAgreement } = require('../bookshelf')
+const helpers = require('./lib/helpers')
 /**
  * Gets a list of licence agreements of the given types for the specified
  * licence number
@@ -14,11 +14,11 @@ const findByLicenceRef = async (licenceRef, agreementTypes = []) => {
   let licenceAgreements = LicenceAgreement
     .forge()
     .query('where', 'licence_ref', licenceRef)
-    .query('where', 'date_deleted', null);
+    .query('where', 'date_deleted', null)
 
   if (agreementTypes.length) {
     licenceAgreements = licenceAgreements
-      .query('whereIn', 'financial_agreement_type_id', agreementTypes);
+      .query('whereIn', 'financial_agreement_type_id', agreementTypes)
   }
 
   licenceAgreements = await licenceAgreements
@@ -27,10 +27,10 @@ const findByLicenceRef = async (licenceRef, agreementTypes = []) => {
       withRelated: [
         'financialAgreementType'
       ]
-    });
+    })
 
-  return licenceAgreements.toJSON();
-};
+  return licenceAgreements.toJSON()
+}
 
 /**
  * Gets a licence agreement by id
@@ -38,7 +38,7 @@ const findByLicenceRef = async (licenceRef, agreementTypes = []) => {
  * @param {String} licenceAgreementId
  */
 const findOne = async licenceAgreementId =>
-  helpers.findOne(LicenceAgreement, 'licenceAgreementId', licenceAgreementId, ['financialAgreementType', 'licence']);
+  helpers.findOne(LicenceAgreement, 'licenceAgreementId', licenceAgreementId, ['financialAgreementType', 'licence'])
 
 /**
  *
@@ -46,27 +46,27 @@ const findOne = async licenceAgreementId =>
  * @param {Object} changes
  */
 const update = async (id, changes) => {
-  await LicenceAgreement.forge({ licence_agreement_id: id }).save(changes);
-  const response = await findOne(id);
-  return response;
-};
+  await LicenceAgreement.forge({ licence_agreement_id: id }).save(changes)
+  const response = await findOne(id)
+  return response
+}
 
 /**
  * Deletes a licence agreement by
  * @param {String} licenceAgreementId
  */
 const softDeleteOne = async licenceAgreementId =>
-  helpers.update(LicenceAgreement, 'licenceAgreementId', licenceAgreementId, { dateDeleted: new Date() });
+  helpers.update(LicenceAgreement, 'licenceAgreementId', licenceAgreementId, { dateDeleted: new Date() })
 
 /**
  * Create new licence agreement
  * @param {Object} licence agreement data
  * @return {Promise<Object>}
  */
-const create = data => helpers.create(LicenceAgreement, data);
+const create = data => helpers.create(LicenceAgreement, data)
 
-exports.findByLicenceRef = findByLicenceRef;
-exports.findOne = findOne;
-exports.update = update;
-exports.softDeleteOne = softDeleteOne;
-exports.create = create;
+exports.findByLicenceRef = findByLicenceRef
+exports.findOne = findOne
+exports.update = update
+exports.softDeleteOne = softDeleteOne
+exports.create = create

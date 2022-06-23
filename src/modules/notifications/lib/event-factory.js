@@ -1,5 +1,5 @@
-const evt = require('../../../lib/event');
-const { uniq } = require('lodash');
+const evt = require('../../../lib/event')
+const { uniq } = require('lodash')
 
 /**
  * Get a list of unique entities, including individals and companies,
@@ -9,15 +9,15 @@ const { uniq } = require('lodash');
  */
 function getUniqueEntities (contactData) {
   // Create array of affected company/individual entity IDs
-  const entities = [];
+  const entities = []
   contactData.forEach(row => {
-    entities.push(row.contact.contact.entity_id);
+    entities.push(row.contact.contact.entity_id)
     row.contact.licences.forEach(licence => {
-      entities.push(licence.company_entity_id);
-    });
-  });
+      entities.push(licence.company_entity_id)
+    })
+  })
 
-  return uniq(entities.filter(x => x));
+  return uniq(entities.filter(x => x))
 }
 
 /**
@@ -30,11 +30,11 @@ function getUniqueEntities (contactData) {
 function eventFactory (issuer, taskConfig, contactData, ref) {
   // Create array of affected licence numbers
   const licences = contactData.reduce((acc, row) => {
-    const licenceNumbers = row.contact.licences.map(item => item.system_external_id);
-    return [...acc, ...licenceNumbers];
-  }, []);
+    const licenceNumbers = row.contact.licences.map(item => item.system_external_id)
+    return [...acc, ...licenceNumbers]
+  }, [])
 
-  const uniqueEntities = getUniqueEntities(contactData);
+  const uniqueEntities = getUniqueEntities(contactData)
 
   return evt.create({
     referenceCode: ref,
@@ -52,7 +52,7 @@ function eventFactory (issuer, taskConfig, contactData, ref) {
       taskConfigId: taskConfig.task_config_id
     },
     status: 'sending'
-  });
+  })
 }
 
-module.exports = eventFactory;
+module.exports = eventFactory

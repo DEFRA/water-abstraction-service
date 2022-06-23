@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const { bookshelf } = require('./bookshelf.js');
+const { bookshelf } = require('./bookshelf.js')
 
 module.exports = bookshelf.model('ApplicationState', {
   tableName: 'water.application_state',
@@ -12,4 +12,4 @@ module.exports = bookshelf.model('ApplicationState', {
   requireFetch: false,
 
   jsonColumns: ['data']
-});
+})

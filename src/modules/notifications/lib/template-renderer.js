@@ -5,17 +5,17 @@
  * @module modules/notifications/task-config-loader
  */
 
-const nunjucks = require('nunjucks');
-const moment = require('moment');
+const nunjucks = require('nunjucks')
+const moment = require('moment')
 
 nunjucks.configure({
   autoescape: false
-});
+})
 
 class NoTemplateError extends Error {
   constructor (message) {
-    super(message);
-    this.name = 'NoTemplateError';
+    super(message)
+    this.name = 'NoTemplateError'
   }
 }
 
@@ -27,17 +27,17 @@ class NoTemplateError extends Error {
  */
 function getTemplate (taskConfig, contact) {
   // Choose the correct template for the message type
-  const { default: defaultTemplate, letter, email, sms } = taskConfig.config.content;
-  const { method } = contact;
-  let template;
+  const { default: defaultTemplate, letter, email, sms } = taskConfig.config.content
+  const { method } = contact
+  let template
   if (method === 'post') {
-    template = letter || defaultTemplate;
+    template = letter || defaultTemplate
   } else if (method === 'email') {
-    template = email || defaultTemplate;
+    template = email || defaultTemplate
   } else if (method === 'sms') {
-    template = sms || defaultTemplate;
-  } else throw new NoTemplateError(`No template found for method ${contact.method}`, taskConfig);
-  return template;
+    template = sms || defaultTemplate
+  } else throw new NoTemplateError(`No template found for method ${contact.method}`, taskConfig)
+  return template
 }
 
 /**
@@ -48,14 +48,14 @@ function getTemplate (taskConfig, contact) {
  * @param {Object} context - additional context to send to the view
  */
 function renderTemplates (taskConfig, params, contacts, licences, context = {}) {
-  const date = moment().format('DD MMM YYYY');
+  const date = moment().format('DD MMM YYYY')
 
-  const viewContexts = [];
+  const viewContexts = []
 
   return contacts.map((contact) => {
     const licenceList = contact.licences.map((licence) => {
-      return licences[licence.system_external_id];
-    });
+      return licences[licence.system_external_id]
+    })
 
     // Assemble view data for passing to Nunjucks template
     const viewContext = {
@@ -67,21 +67,21 @@ function renderTemplates (taskConfig, params, contacts, licences, context = {}) 
       date,
       ...context,
       isPost: contact.method === 'post'
-    };
+    }
 
-    viewContexts.push(viewContext);
+    viewContexts.push(viewContext)
 
     // Get the correct Nunjucks template for the message type
-    const template = getTemplate(taskConfig, contact);
+    const template = getTemplate(taskConfig, contact)
 
     // Render template
-    const output = nunjucks.renderString(template, viewContext);
+    const output = nunjucks.renderString(template, viewContext)
 
     return {
       contact,
       output
-    };
-  });
+    }
+  })
 }
 
-module.exports = renderTemplates;
+module.exports = renderTemplates

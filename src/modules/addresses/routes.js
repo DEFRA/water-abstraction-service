@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
-const controller = require('./controller');
+const Joi = require('joi')
+const controller = require('./controller')
 
-const OPTIONAL_STRING = Joi.string().allow('', null).optional();
+const OPTIONAL_STRING = Joi.string().allow('', null).optional()
 
 module.exports = {
   postAddress: {
@@ -27,9 +27,9 @@ module.exports = {
           uprn: Joi.number().integer().min(0).default(null).allow(null)
         }),
         headers: async values => {
-          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required())
         }
       }
     }
   }
-};
+}

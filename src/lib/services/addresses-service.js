@@ -1,18 +1,18 @@
-const addressesConnector = require('../connectors/crm-v2/addresses');
-const mappers = require('../mappers');
-const { InvalidEntityError } = require('../errors');
-const eventService = require('./events');
-const Event = require('../models/event');
-const { getExistingEntity } = require('../crm-response');
+const addressesConnector = require('../connectors/crm-v2/addresses')
+const mappers = require('../mappers')
+const { InvalidEntityError } = require('../errors')
+const eventService = require('./events')
+const Event = require('../models/event')
+const { getExistingEntity } = require('../crm-response')
 
 const getAddressModel = address => {
-  const addressModel = mappers.address.uiToModel(address);
+  const addressModel = mappers.address.uiToModel(address)
   if (!addressModel.id) {
-    const { error } = addressModel.validate();
-    if (error) throw new InvalidEntityError('Invalid address', error);
+    const { error } = addressModel.validate()
+    if (error) throw new InvalidEntityError('Invalid address', error)
   };
-  return addressModel;
-};
+  return addressModel
+}
 
 /**
  * Creates an event when an address is stored
@@ -26,9 +26,9 @@ const createAddressEvent = (address, issuer) => {
     type: 'address:create',
     metadata: { address },
     status: 'created'
-  });
-  return eventService.create(event);
-};
+  })
+  return eventService.create(event)
+}
 
 /**
  * Creates an address
@@ -39,20 +39,20 @@ const createAddressEvent = (address, issuer) => {
  * @return {Promise<Address>} the water service representation of the CRM persisted model
  */
 const createAddress = async (addressModel, issuer) => {
-  let address;
+  let address
   try {
-    address = await addressesConnector.createAddress(mappers.address.modelToCrm(addressModel));
+    address = await addressesConnector.createAddress(mappers.address.modelToCrm(addressModel))
     if (issuer) {
-      await createAddressEvent(address, issuer);
+      await createAddressEvent(address, issuer)
     }
   } catch (err) {
-    address = getExistingEntity(err);
+    address = getExistingEntity(err)
   }
-  return mappers.address.crmToModel(address);
-};
+  return mappers.address.crmToModel(address)
+}
 
-const deleteAddress = async address => addressesConnector.deleteAddress(address.id);
+const deleteAddress = async address => addressesConnector.deleteAddress(address.id)
 
-exports.getAddressModel = getAddressModel;
-exports.createAddress = createAddress;
-exports.deleteAddress = deleteAddress;
+exports.getAddressModel = getAddressModel
+exports.createAddress = createAddress
+exports.deleteAddress = deleteAddress

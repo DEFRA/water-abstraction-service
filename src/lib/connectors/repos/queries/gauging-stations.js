@@ -70,12 +70,12 @@ lvp.licence_version_purpose_id = lvpc.licence_version_purpose_id
 where
 lgs.licence_version_purpose_condition_id is not null
 and lgs.date_deleted is null
-and gs.gauging_station_id=:gaugingStationId;`;
+and gs.gauging_station_id=:gaugingStationId;`
 
 exports.findGaugingStationByLicenceId = `SELECT gs.label, gs.gauging_station_id FROM water.licence_gauging_stations lgs 
 JOIN water.gauging_stations gs on lgs.gauging_station_id = gs.gauging_station_id
-WHERE lgs.licence_id=:licenceId and lgs.date_deleted is null;`;
+WHERE lgs.licence_id=:licenceId and lgs.date_deleted is null;`
 
 exports.findGaugingStationByLinkageId = `SELECT gs.label, gs.river_name, gs.gauging_station_id FROM water.licence_gauging_stations lgs 
 JOIN water.gauging_stations gs on lgs.gauging_station_id = gs.gauging_station_id
-WHERE lgs.licence_gauging_station_id =:licenceGaugingStationId;`;
+WHERE lgs.licence_gauging_station_id =:licenceGaugingStationId;`

@@ -6,7 +6,7 @@ const data = {
   config: {
     rolePriority: ['licence_holder', 'returns_to']
   }
-};
+}
 
 const ret = {
   return_id: 'v1:123:456',
@@ -28,7 +28,7 @@ const ret = {
       }
     }]
   }
-};
+}
 
 const contact = {
 
@@ -39,10 +39,10 @@ const contact = {
     town: 'Testing',
     postcode: 'TT1 1TT'
   }
-};
+}
 
 module.exports = {
   data,
   ret,
   contact
-};
+}

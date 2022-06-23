@@ -7,9 +7,9 @@ const getPagination = (page = 1) => {
   return {
     page,
     perPage: 50
-  };
-};
+  }
+}
 
 module.exports = {
   getPagination
-};
+}

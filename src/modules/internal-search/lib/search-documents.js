@@ -1,24 +1,24 @@
-'use strict';
+'use strict'
 
-const { uniq } = require('lodash');
-const waterHelpers = require('@envage/water-abstraction-helpers');
-const { throwIfError } = require('@envage/hapi-pg-rest-api');
-const documents = require('../../../lib/connectors/crm/documents');
-const { getPagination } = require('./pagination');
-const { returnsToIso } = waterHelpers.nald.dates;
-const { getFullName } = require('../../../lib/licence-transformer/nald-helpers');
-const licencesService = require('../../../lib/services/licences');
+const { uniq } = require('lodash')
+const waterHelpers = require('@envage/water-abstraction-helpers')
+const { throwIfError } = require('@envage/hapi-pg-rest-api')
+const documents = require('../../../lib/connectors/crm/documents')
+const { getPagination } = require('./pagination')
+const { returnsToIso } = waterHelpers.nald.dates
+const { getFullName } = require('../../../lib/licence-transformer/nald-helpers')
+const licencesService = require('../../../lib/services/licences')
 
 const validateRowMetadata = row => {
   if (!row.metadata) {
-    const err = new Error('No metadata for document');
+    const err = new Error('No metadata for document')
     err.params = {
       documentId: row.document_id,
       licenceRef: row.system_external_id
-    };
-    throw err;
+    }
+    throw err
   }
-};
+}
 
 /**
  * Gets full name for a licence
@@ -31,12 +31,12 @@ const getLicenceHolderNameFromDocumentHeader = (documentHeader) => {
     Forename: firstName,
     Initials: initials,
     Salutation: salutation
-  } = documentHeader.metadata;
-  return getFullName(salutation, initials, firstName, lastName);
-};
+  } = documentHeader.metadata
+  return getFullName(salutation, initials, firstName, lastName)
+}
 
 const mapRow = (row, licencesMap) => {
-  validateRowMetadata(row);
+  validateRowMetadata(row)
 
   return {
     documentId: row.document_id,
@@ -46,10 +46,10 @@ const mapRow = (row, licencesMap) => {
     expires: returnsToIso(row.metadata.Expires),
     isCurrent: row.metadata.IsCurrent,
     licence: licencesMap.get(row.system_external_id)
-  };
-};
+  }
+}
 
-const getLicenceNumber = doc => doc.system_external_id;
+const getLicenceNumber = doc => doc.system_external_id
 
 /**
  * Gets a map of Licence objects by licence number
@@ -59,13 +59,13 @@ const getLicenceNumber = doc => doc.system_external_id;
 const getLicencesMap = async response => {
   const licenceNumbers = uniq(
     response.data.map(getLicenceNumber)
-  );
-  const licences = await licencesService.getLicencesByLicenceRefs(licenceNumbers);
+  )
+  const licences = await licencesService.getLicencesByLicenceRefs(licenceNumbers)
   // Return as map
   return licences.reduce((map, licence) =>
     map.set(licence.licenceNumber, licence)
-  , new Map());
-};
+  , new Map())
+}
 
 /**
  * Searches documents with given query string
@@ -79,30 +79,30 @@ const searchDocuments = async (query, page = 1) => {
   const filter = {
     string: query,
     includeExpired: true // include expired documents
-  };
+  }
 
   const columns = [
     'document_id',
     'system_external_id',
     'metadata',
     'document_name'
-  ];
+  ]
 
   const sort = {
     system_external_id: 1
-  };
+  }
 
-  const response = await documents.findMany(filter, sort, getPagination(page), columns);
-  throwIfError(response.error);
+  const response = await documents.findMany(filter, sort, getPagination(page), columns)
+  throwIfError(response.error)
 
-  const licencesMap = await getLicencesMap(response);
+  const licencesMap = await getLicencesMap(response)
 
-  const { pagination } = response;
+  const { pagination } = response
   return {
     pagination,
     data: response.data.map(row => mapRow(row, licencesMap))
-  };
-};
+  }
+}
 
-exports.mapRow = mapRow;
-exports.searchDocuments = searchDocuments;
+exports.mapRow = mapRow
+exports.searchDocuments = searchDocuments

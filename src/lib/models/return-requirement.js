@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const Model = require('./model');
-const ReturnRequirementPurpose = require('./return-requirement-purpose');
+const Model = require('./model')
+const ReturnRequirementPurpose = require('./return-requirement-purpose')
 
-const validators = require('./validators');
+const validators = require('./validators')
 
 /**
  * A model to represent the requirement to complete a return
@@ -15,8 +15,8 @@ class ReturnRequirement extends Model {
    * @param {String} id
    */
   constructor (id) {
-    super(id);
-    this.returnRequirementPurposes = [];
+    super(id)
+    this.returnRequirementPurposes = []
   }
 
   /**
@@ -25,12 +25,12 @@ class ReturnRequirement extends Model {
    * @param {Boolean} isSummer - true for summer cycle
    */
   set isSummer (isSummer) {
-    validators.assertIsBoolean(isSummer);
-    this._isSummer = isSummer;
+    validators.assertIsBoolean(isSummer)
+    this._isSummer = isSummer
   }
 
   get isSummer () {
-    return this._isSummer;
+    return this._isSummer
   }
 
   /**
@@ -38,12 +38,12 @@ class ReturnRequirement extends Model {
    * @param {Array<PurposeUse>}
    */
   set returnRequirementPurposes (returnRequirementPurposes) {
-    validators.assertIsArrayOfType(returnRequirementPurposes, ReturnRequirementPurpose);
-    this._returnRequirementPurposes = returnRequirementPurposes;
+    validators.assertIsArrayOfType(returnRequirementPurposes, ReturnRequirementPurpose)
+    this._returnRequirementPurposes = returnRequirementPurposes
   }
 
   get returnRequirementPurposes () {
-    return this._returnRequirementPurposes;
+    return this._returnRequirementPurposes
   }
 
   /**
@@ -53,7 +53,7 @@ class ReturnRequirement extends Model {
   get isTwoPartTariffPurposeUse () {
     return this.returnRequirementPurposes.some(
       returnRequirementPurpose => returnRequirementPurpose.purposeUse.isTwoPartTariff
-    );
+    )
   }
 
   /**
@@ -61,12 +61,12 @@ class ReturnRequirement extends Model {
    * @param {String|Null} externalId
    */
   set externalId (externalId) {
-    validators.assertNullableString(externalId);
-    this._externalId = externalId;
+    validators.assertNullableString(externalId)
+    this._externalId = externalId
   }
 
   get externalId () {
-    return this._externalId;
+    return this._externalId
   }
 
   /**
@@ -74,13 +74,13 @@ class ReturnRequirement extends Model {
    * @param {Number}
    */
   set legacyId (legacyId) {
-    validators.assertNullablePositiveInteger(legacyId);
-    this._legacyId = legacyId;
+    validators.assertNullablePositiveInteger(legacyId)
+    this._legacyId = legacyId
   }
 
   get legacyId () {
-    return this._legacyId;
+    return this._legacyId
   }
 }
 
-module.exports = ReturnRequirement;
+module.exports = ReturnRequirement

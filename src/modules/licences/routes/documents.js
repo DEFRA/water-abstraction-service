@@ -1,8 +1,8 @@
-const Joi = require('joi');
-const controller = require('../controllers/documents');
-const { version } = require('../../../../config');
+const Joi = require('joi')
+const controller = require('../controllers/documents')
+const { version } = require('../../../../config')
 
-const pathPrefix = `/water/${version}/documents/`;
+const pathPrefix = `/water/${version}/documents/`
 
 module.exports = {
 
@@ -145,4 +145,4 @@ module.exports = {
       }
     }
   }
-};
+}

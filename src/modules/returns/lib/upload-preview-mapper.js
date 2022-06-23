@@ -1,4 +1,4 @@
-const { get, omit } = require('lodash');
+const { get, omit } = require('lodash')
 
 /**
  * Gets the total abstracted volume for a return
@@ -7,12 +7,12 @@ const { get, omit } = require('lodash');
  */
 const getTotalVolume = ret => {
   if (ret.isNil) {
-    return null;
+    return null
   }
   return ret.lines.reduce((acc, line) => {
-    return acc + line.quantity;
-  }, 0);
-};
+    return acc + line.quantity
+  }, 0)
+}
 
 /**
  * Maps return adding total volume
@@ -25,8 +25,8 @@ const mapSingleReturn = (validatedReturn, ret) => {
     ...validatedReturn,
     totalVolume: getTotalVolume(validatedReturn),
     metadata: get(ret, 'metadata')
-  };
-};
+  }
+}
 
 /**
  * Maps return adding total volume and removing return lines
@@ -37,11 +37,11 @@ const mapMultipleReturn = ret => {
   return {
     ...omit(ret, 'lines'),
     totalVolume: getTotalVolume(ret)
-  };
-};
+  }
+}
 
 module.exports = {
   getTotalVolume,
   mapSingleReturn,
   mapMultipleReturn
-};
+}

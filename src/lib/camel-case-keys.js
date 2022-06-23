@@ -1,11 +1,11 @@
-const { reduce, isArray, isPlainObject, camelCase } = require('lodash');
+const { reduce, isArray, isPlainObject, camelCase } = require('lodash')
 
 const camelCaseObjectKeys = data => {
   return reduce(data, (acc, value, key) => {
-    acc[camelCase(key)] = camelCaseKeys(value);
-    return acc;
-  }, {});
-};
+    acc[camelCase(key)] = camelCaseKeys(value)
+    return acc
+  }, {})
+}
 
 /**
  * Camel cases the keys of an object, or an array of objects.
@@ -14,13 +14,13 @@ const camelCaseObjectKeys = data => {
  */
 const camelCaseKeys = data => {
   if (isArray(data)) {
-    return data.map(camelCaseKeys);
+    return data.map(camelCaseKeys)
   }
 
   if (isPlainObject(data)) {
-    return camelCaseObjectKeys(data);
+    return camelCaseObjectKeys(data)
   }
-  return data;
-};
+  return data
+}
 
-module.exports = camelCaseKeys;
+module.exports = camelCaseKeys

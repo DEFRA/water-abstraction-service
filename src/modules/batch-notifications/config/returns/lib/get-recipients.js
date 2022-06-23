@@ -1,13 +1,13 @@
-const { get, uniq } = require('lodash');
+const { get, uniq } = require('lodash')
 
-const { stringifyValues } = require('../../../../../lib/stringify-values');
+const { stringifyValues } = require('../../../../../lib/stringify-values')
 
-const { createNotificationData } = require('./create-notification-data');
-const scheduledNotifications = require('../../../../../controllers/notifications');
-const { logger } = require('../../../../../logger');
-const eventHelpers = require('../../../lib/event-helpers');
-const notificationContacts = require('./return-notification-contacts');
-const notificationRecipients = require('./return-notification-recipients');
+const { createNotificationData } = require('./create-notification-data')
+const scheduledNotifications = require('../../../../../controllers/notifications')
+const { logger } = require('../../../../../logger')
+const eventHelpers = require('../../../lib/event-helpers')
+const notificationContacts = require('./return-notification-contacts')
+const notificationRecipients = require('./return-notification-recipients')
 
 /**
  * Gets array of licences to exclude from event metadata
@@ -15,9 +15,9 @@ const notificationRecipients = require('./return-notification-recipients');
  * @return {[type]}      [description]
  */
 const getExcludeLicences = job => {
-  const licenceNumbers = get(job, 'ev.metadata.options.excludeLicences', []);
-  return uniq(licenceNumbers);
-};
+  const licenceNumbers = get(job, 'ev.metadata.options.excludeLicences', [])
+  return uniq(licenceNumbers)
+}
 
 /**
  * A function to get a list of recipients for the requested message, and
@@ -26,39 +26,39 @@ const getExcludeLicences = job => {
  * @return {Promise}
  */
 const getRecipients = async (data) => {
-  const { id: eventId } = data.ev;
-  const { returnCycle } = data.ev.metadata;
+  const { id: eventId } = data.ev
+  const { returnCycle } = data.ev.metadata
 
-  const excludeLicences = getExcludeLicences(data);
+  const excludeLicences = getExcludeLicences(data)
 
   // Get a list of returns grouped by licence number
   const returnContacts = await notificationContacts
-    .getReturnContacts(excludeLicences, returnCycle);
+    .getReturnContacts(excludeLicences, returnCycle)
 
   // Get a list of recipients from the grouped returns
-  const messages = notificationRecipients.getRecipientList(returnContacts);
+  const messages = notificationRecipients.getRecipientList(returnContacts)
 
-  const licenceNumbers = [];
-  let recipientCount = 0;
+  const licenceNumbers = []
+  let recipientCount = 0
 
   for (const message of messages) {
-    const { contact, ...context } = message;
+    const { contact, ...context } = message
 
     if (contact) {
-      const scheduledNotification = await createNotificationData(data.ev, contact, context);
-      const rowData = stringifyValues(scheduledNotification);
-      await scheduledNotifications.repository.create(rowData);
+      const scheduledNotification = await createNotificationData(data.ev, contact, context)
+      const rowData = stringifyValues(scheduledNotification)
+      await scheduledNotifications.repository.create(rowData)
 
-      recipientCount++;
-      licenceNumbers.push(...context.licenceNumbers);
+      recipientCount++
+      licenceNumbers.push(...context.licenceNumbers)
     } else {
-      const name = get(data, 'ev.metadata.name', 'Returns notification');
-      logger.error(`${name} - no contact found for ${context.returnIds.join(', ')}`);
+      const name = get(data, 'ev.metadata.name', 'Returns notification')
+      logger.error(`${name} - no contact found for ${context.returnIds.join(', ')}`)
     }
   }
 
   // Update event status
-  return eventHelpers.markAsProcessed(eventId, licenceNumbers, recipientCount);
-};
+  return eventHelpers.markAsProcessed(eventId, licenceNumbers, recipientCount)
+}
 
-exports.getRecipients = getRecipients;
+exports.getRecipients = getRecipients

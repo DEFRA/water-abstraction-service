@@ -1,8 +1,8 @@
-'use strict';
-const Joi = require('joi');
-const controller = require('../controllers/two-part-tariff-review');
-const preHandlers = require('../pre-handlers');
-const { ROLES: { billing } } = require('../../../lib/roles');
+'use strict'
+const Joi = require('joi')
+const controller = require('../controllers/two-part-tariff-review')
+const preHandlers = require('../pre-handlers')
+const { ROLES: { billing } } = require('../../../lib/roles')
 
 const getBatchLicences = {
   method: 'GET',
@@ -22,7 +22,7 @@ const getBatchLicences = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const getBatchLicenceVolumes = {
   method: 'GET',
@@ -43,7 +43,7 @@ const getBatchLicenceVolumes = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const deleteBatchLicence = {
   method: 'DELETE',
@@ -64,7 +64,7 @@ const deleteBatchLicence = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const getBillingVolume = {
   method: 'GET',
@@ -81,7 +81,7 @@ const getBillingVolume = {
       scope: [billing]
     }
   }
-};
+}
 
 const deleteBatchLicenceBillingVolumes = {
   method: 'DELETE',
@@ -103,7 +103,7 @@ const deleteBatchLicenceBillingVolumes = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const patchBillingVolume = {
   method: 'PATCH',
@@ -123,7 +123,7 @@ const patchBillingVolume = {
       scope: [billing]
     }
   }
-};
+}
 
 const postApproveReviewBatch = {
   method: 'POST',
@@ -142,12 +142,12 @@ const postApproveReviewBatch = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
-exports.getBatchLicences = getBatchLicences;
-exports.getBatchLicenceVolumes = getBatchLicenceVolumes;
-exports.deleteBatchLicence = deleteBatchLicence;
-exports.getBillingVolume = getBillingVolume;
-exports.deleteBatchLicenceBillingVolumes = deleteBatchLicenceBillingVolumes;
-exports.patchBillingVolume = patchBillingVolume;
-exports.postApproveReviewBatch = postApproveReviewBatch;
+exports.getBatchLicences = getBatchLicences
+exports.getBatchLicenceVolumes = getBatchLicenceVolumes
+exports.deleteBatchLicence = deleteBatchLicence
+exports.getBillingVolume = getBillingVolume
+exports.deleteBatchLicenceBillingVolumes = deleteBatchLicenceBillingVolumes
+exports.patchBillingVolume = patchBillingVolume
+exports.postApproveReviewBatch = postApproveReviewBatch

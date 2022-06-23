@@ -18,7 +18,7 @@ on conflict (invoice_account_id, billing_batch_id, financial_year_ending) where 
     is_de_minimis=EXCLUDED.is_de_minimis,
     is_credit=EXCLUDED.is_credit,
     external_id=EXCLUDED.external_id
-  returning *;`;
+  returning *;`
 
 exports.deleteEmptyByBatchId = `delete from water.billing_invoices i
   where i.billing_invoice_id in (
@@ -27,14 +27,14 @@ exports.deleteEmptyByBatchId = `delete from water.billing_invoices i
   left join water.billing_invoice_licences l on i.billing_invoice_id=l.billing_invoice_id
   where b.billing_batch_id=:batchId
   group by i.billing_invoice_id
-  having count(l.billing_invoice_licence_id)=0);`;
+  having count(l.billing_invoice_licence_id)=0);`
 
 exports.findByIsFlaggedForRebillingAndRegion = `
 select i.* from water.billing_invoices i
 join water.billing_batches b on i.billing_batch_id=b.billing_batch_id
 where i.is_flagged_for_rebilling=true
 and b.region_id=:regionId;
-`;
+`
 
 exports.resetIsFlaggedForRebilling = `
 update water.billing_invoices t1
@@ -46,4 +46,4 @@ where
   and t1.billing_invoice_id=t2.original_billing_invoice_id
   and t2.original_billing_invoice_id is not null
 returning *;
-`;
+`

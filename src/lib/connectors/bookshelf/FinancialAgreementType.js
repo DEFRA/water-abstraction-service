@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const { bookshelf } = require('./bookshelf.js');
+const { bookshelf } = require('./bookshelf.js')
 
 module.exports = bookshelf.model('FinancialAgreementType', {
   tableName: 'water.financial_agreement_types',
@@ -9,4 +9,4 @@ module.exports = bookshelf.model('FinancialAgreementType', {
 
   hasTimestamps: ['date_created', 'date_updated']
 
-});
+})

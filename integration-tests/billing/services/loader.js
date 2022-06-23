@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const SetLoader = require('./fixture-loader/SetLoader');
+const SetLoader = require('./fixture-loader/SetLoader')
 
 const createSetLoader = () => {
   return new SetLoader({
@@ -10,7 +10,7 @@ const createSetLoader = () => {
     water: require('../services/bookshelf-loader')(),
     permits: require('../services/permits-loader')(),
     returns: require('../services/returns-loader')()
-  });
-};
+  })
+}
 
-exports.createSetLoader = createSetLoader;
+exports.createSetLoader = createSetLoader

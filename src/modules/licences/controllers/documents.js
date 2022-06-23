@@ -1,39 +1,39 @@
-'use strict';
+'use strict'
 
-const moment = require('moment');
-const Boom = require('@hapi/boom');
-const { get, isObject } = require('lodash');
-const documentsClient = require('../../../lib/connectors/crm/documents');
-const crmEntities = require('../../../lib/connectors/crm/entities');
-const { usersClient } = require('../../../lib/connectors/idm');
-const permitClient = require('../../../lib/connectors/permit');
-const { logger } = require('../../../logger');
-const extractConditions = require('../lib/extractConditions');
-const extractPoints = require('../lib/extractPoints');
-const { licence: { regimeId, typeId } } = require('../../../../config');
-const LicenceTransformer = require('../../../lib/licence-transformer');
-const queries = require('../lib/queries');
-const { createContacts } = require('../../../lib/models/factory/contact-list');
-const eventHelper = require('../lib/event-helper');
-const { isEmpty } = require('lodash');
+const moment = require('moment')
+const Boom = require('@hapi/boom')
+const { get, isObject } = require('lodash')
+const documentsClient = require('../../../lib/connectors/crm/documents')
+const crmEntities = require('../../../lib/connectors/crm/entities')
+const { usersClient } = require('../../../lib/connectors/idm')
+const permitClient = require('../../../lib/connectors/permit')
+const { logger } = require('../../../logger')
+const extractConditions = require('../lib/extractConditions')
+const extractPoints = require('../lib/extractPoints')
+const { licence: { regimeId, typeId } } = require('../../../../config')
+const LicenceTransformer = require('../../../lib/licence-transformer')
+const queries = require('../lib/queries')
+const { createContacts } = require('../../../lib/models/factory/contact-list')
+const eventHelper = require('../lib/event-helper')
+const { isEmpty } = require('lodash')
 
-const licencesService = require('../../../lib/services/licences');
+const licencesService = require('../../../lib/services/licences')
 
 const getDocumentHeader = async (documentId, includeExpired = false) => {
   const documentResponse = await documentsClient.findMany({
     document_id: documentId,
     includeExpired
-  });
-  return get(documentResponse, 'data[0]');
-};
+  })
+  return get(documentResponse, 'data[0]')
+}
 
 const addDocumentDetails = (licence, document) => {
   return Object.assign(licence, {
     document: {
       name: document.document_name
     }
-  });
-};
+  })
+}
 
 /**
  * Throws a Boom unauthorized error if the supplied company ID does not
@@ -43,13 +43,13 @@ const addDocumentDetails = (licence, document) => {
  */
 const throwIfUnauthorised = (documentHeader, companyId) => {
   if (typeof companyId === 'undefined') {
-    return;
+    return
   }
 
   if (documentHeader.company_entity_id !== companyId) {
-    throw Boom.unauthorized('Unauthorised to view licence data');
+    throw Boom.unauthorized('Unauthorised to view licence data')
   }
-};
+}
 
 /**
  * Gets licence data from permit repo
@@ -61,94 +61,94 @@ const throwIfUnauthorised = (documentHeader, companyId) => {
 const getLicence = async (document, includeExpired, companyId) => {
   const documentHeader = isObject(document)
     ? document
-    : await getDocumentHeader(document, includeExpired);
+    : await getDocumentHeader(document, includeExpired)
 
   if (!documentHeader) {
-    return;
+    return
   }
 
-  throwIfUnauthorised(documentHeader, companyId);
+  throwIfUnauthorised(documentHeader, companyId)
 
   const licenceResponse = await permitClient.licences.findMany({
     licence_id: documentHeader.system_internal_id,
     licence_type_id: typeId,
     licence_regime_id: regimeId
-  });
+  })
 
-  const licence = get(licenceResponse, 'data[0]');
+  const licence = get(licenceResponse, 'data[0]')
 
   if (licence) {
-    return addDocumentDetails(licence, documentHeader);
+    return addDocumentDetails(licence, documentHeader)
   }
-};
+}
 
 const handleUnexpectedError = (error, documentId) => {
   if (parseInt(error.statusCode) === 404) {
-    return Boom.notFound('Not found', error);
+    return Boom.notFound('Not found', error)
   }
 
-  logger.error('Failed to get licence data for document', error, { documentId });
-  return Boom.boomify(error);
-};
+  logger.error('Failed to get licence data for document', error, { documentId })
+  return Boom.boomify(error)
+}
 
 const wrapData = data => ({
   error: null,
   data
-});
+})
 
 const addEarliestEndDate = licence => {
   const dates = [
     { key: 'expired', date: licence.licence_data_value.EXPIRY_DATE },
     { key: 'lapsed', date: licence.licence_data_value.LAPSED_DATE },
     { key: 'revoked', date: licence.licence_data_value.REV_DATE }
-  ];
+  ]
 
   const endedDates = dates
     .map(date => {
-      date.date = moment(date.date, 'DD/MM/YYYY');
-      return date;
+      date.date = moment(date.date, 'DD/MM/YYYY')
+      return date
     })
     .filter(date => date.date.isValid())
     .sort((l, r) => {
-      if (l.date.isSame(r.date)) return 0;
-      return l.date.isBefore(r.date) ? -1 : 1;
+      if (l.date.isSame(r.date)) return 0
+      return l.date.isBefore(r.date) ? -1 : 1
     })
     .map(date => {
-      date.date = date.date.format('YYYY-MM-DD');
-      return date;
-    });
+      date.date = date.date.format('YYYY-MM-DD')
+      return date
+    })
 
-  const earliest = endedDates.length ? endedDates[0] : { date: null, key: null };
-  licence.earliestEndDate = earliest.date;
-  licence.earliestEndDateReason = earliest.key;
+  const earliest = endedDates.length ? endedDates[0] : { date: null, key: null }
+  licence.earliestEndDate = earliest.date
+  licence.earliestEndDateReason = earliest.key
 
-  return licence;
-};
+  return licence
+}
 
 /**
  * Coordinates finding a full licence from the permit repository
  * using the CRM document ID.
  */
 const getLicenceByDocumentId = async (request, h) => {
-  const { documentId } = request.params;
-  const { includeExpired, companyId } = request.query;
+  const { documentId } = request.params
+  const { includeExpired, companyId } = request.query
 
   try {
-    const permitLicence = await getLicence(documentId, includeExpired, companyId);
+    const permitLicence = await getLicence(documentId, includeExpired, companyId)
 
     if (permitLicence) {
-      const waterLicence = await licencesService.getLicenceByLicenceRef(permitLicence.licence_ref);
+      const waterLicence = await licencesService.getLicenceByLicenceRef(permitLicence.licence_ref)
       const licence = {
         ...permitLicence,
         id: waterLicence.id
-      };
-      return wrapData(addEarliestEndDate(licence));
+      }
+      return wrapData(addEarliestEndDate(licence))
     }
-    return Boom.notFound();
+    return Boom.notFound()
   } catch (error) {
-    return handleUnexpectedError(error, documentId);
+    return handleUnexpectedError(error, documentId)
   }
-};
+}
 
 /**
  * Gets the current version of the licence, then applies the given extract function
@@ -158,41 +158,41 @@ const getLicenceByDocumentId = async (request, h) => {
  * @returns {Object} The extracted data, wrapped in the comment return shape
  */
 const extractLicenceData = async (request, extractFn) => {
-  const { documentId } = request.params;
-  const { companyId } = request.query;
+  const { documentId } = request.params
+  const { companyId } = request.query
 
   try {
-    const licence = await getLicence(documentId, undefined, companyId);
+    const licence = await getLicence(documentId, undefined, companyId)
 
     if (licence) {
-      const currentVersion = get(licence, 'licence_data_value.data.current_version');
-      return wrapData(extractFn(currentVersion));
+      const currentVersion = get(licence, 'licence_data_value.data.current_version')
+      return wrapData(extractFn(currentVersion))
     }
-    return Boom.notFound();
+    return Boom.notFound()
   } catch (error) {
-    return handleUnexpectedError(error, documentId);
+    return handleUnexpectedError(error, documentId)
   }
-};
+}
 
 const getLicenceConditionsByDocumentId = async request =>
-  extractLicenceData(request, extractConditions);
+  extractLicenceData(request, extractConditions)
 
 const getLicencePointsByDocumentId = async request =>
-  extractLicenceData(request, extractPoints);
+  extractLicenceData(request, extractPoints)
 
 const getLicenceUsersByDocumentId = async (request, h) => {
-  const { documentId } = request.params;
-  const { companyId, includeExpired } = request.query;
+  const { documentId } = request.params
+  const { companyId, includeExpired } = request.query
 
   try {
     if (companyId) {
-      const header = await getDocumentHeader(documentId, includeExpired);
-      throwIfUnauthorised(header, companyId);
+      const header = await getDocumentHeader(documentId, includeExpired)
+      throwIfUnauthorised(header, companyId)
     }
 
-    const documentUsers = await documentsClient.getDocumentUsers(documentId);
-    const userEntityIds = get(documentUsers, 'data', []).map(u => u.entityId);
-    const { data: users } = await usersClient.getUsersByExternalId(userEntityIds);
+    const documentUsers = await documentsClient.getDocumentUsers(documentId)
+    const userEntityIds = get(documentUsers, 'data', []).map(u => u.entityId)
+    const { data: users } = await usersClient.getUsersByExternalId(userEntityIds)
 
     return {
       error: null,
@@ -202,28 +202,28 @@ const getLicenceUsersByDocumentId = async (request, h) => {
         userName: user.user_name,
         roles: documentUsers.data.find(d => d.entityId === user.external_id).roles
       }))
-    };
+    }
   } catch (error) {
-    return handleUnexpectedError(error, documentId);
+    return handleUnexpectedError(error, documentId)
   }
-};
+}
 
 const mapSummary = async (documentHeader, licence) => {
-  const transformer = new LicenceTransformer();
-  await transformer.load(licence.licence_data_value);
+  const transformer = new LicenceTransformer()
+  await transformer.load(licence.licence_data_value)
   return {
     ...transformer.export(),
     documentName: get(documentHeader, 'document_name')
-  };
-};
+  }
+}
 
 const mapContacts = data => {
-  const contactList = createContacts(data.licence_data_value);
+  const contactList = createContacts(data.licence_data_value)
   return contactList.toArray().map(contact => ({
     ...contact,
     fullName: contact.getFullName()
-  }));
-};
+  }))
+}
 
 /**
  * Gets licence summary for consumption by licence summary page in UI
@@ -233,36 +233,36 @@ const mapContacts = data => {
  * @return {Promise}         resolves with JSON data for licence summary view
  */
 const getLicenceSummaryByDocumentId = async (request, h) => {
-  const { documentId } = request.params;
-  const { companyId, includeExpired } = request.query;
+  const { documentId } = request.params
+  const { companyId, includeExpired } = request.query
 
   try {
-    const documentHeader = await getDocumentHeader(documentId, includeExpired);
+    const documentHeader = await getDocumentHeader(documentId, includeExpired)
     if (!documentHeader) {
-      return Boom.notFound(`Document ${documentId} not found`);
+      return Boom.notFound(`Document ${documentId} not found`)
     }
 
-    const licence = await getLicence(documentHeader, undefined, companyId);
+    const licence = await getLicence(documentHeader, undefined, companyId)
 
     if (licence) {
-      const data = await mapSummary(documentHeader, licence);
+      const data = await mapSummary(documentHeader, licence)
 
       // add the service layer model to the data object to allow the shift
       // towards using the licence model for viewing licences over the use
       // of the document entity from the CRM.
-      data.waterLicence = await licencesService.getLicenceByLicenceRef(data.licenceNumber);
+      data.waterLicence = await licencesService.getLicenceByLicenceRef(data.licenceNumber)
 
-      data.contacts = mapContacts(licence);
-      return { error: null, data };
+      data.contacts = mapContacts(licence)
+      return { error: null, data }
     }
-    return Boom.notFound();
+    return Boom.notFound()
   } catch (error) {
-    return handleUnexpectedError(error, documentId);
+    return handleUnexpectedError(error, documentId)
   }
-};
+}
 
 const mapNotification = (row) => {
-  const isPdf = get(row, 'message_ref', '').startsWith('pdf.');
+  const isPdf = get(row, 'message_ref', '').startsWith('pdf.')
   return {
     notificationId: row.id,
     messageType: row.message_type,
@@ -270,32 +270,32 @@ const mapNotification = (row) => {
     notificationType: get(row, 'event_metadata.name', null),
     sender: row.issuer,
     isPdf
-  };
-};
+  }
+}
 
 const getLicenceCommunicationsByDocumentId = async (request, h) => {
-  const { documentId } = request.params;
-  const { includeExpired, companyId } = request.query;
+  const { documentId } = request.params
+  const { includeExpired, companyId } = request.query
 
   try {
-    const documentHeader = await getDocumentHeader(documentId, includeExpired);
-    throwIfUnauthorised(documentHeader, companyId);
-    const notifications = await queries.getNotificationsForLicence(documentHeader.system_external_id);
+    const documentHeader = await getDocumentHeader(documentId, includeExpired)
+    throwIfUnauthorised(documentHeader, companyId)
+    const notifications = await queries.getNotificationsForLicence(documentHeader.system_external_id)
 
     return {
       error: null,
       data: notifications.map(mapNotification)
-    };
+    }
   } catch (error) {
-    return handleUnexpectedError(error, documentId);
+    return handleUnexpectedError(error, documentId)
   }
-};
+}
 
 const getLicenceCompanyByDocumentId = async (request, h) => {
-  const { documentId } = request.params;
+  const { documentId } = request.params
   try {
-    const document = await getDocumentHeader(documentId);
-    const { data: company } = await crmEntities.getEntityCompanies(document.company_entity_id);
+    const document = await getDocumentHeader(documentId)
+    const { data: company } = await crmEntities.getEntityCompanies(document.company_entity_id)
     return {
       data: {
         entityId: document.company_entity_id,
@@ -303,29 +303,29 @@ const getLicenceCompanyByDocumentId = async (request, h) => {
         licenceNumber: document.system_external_id
       },
       error: null
-    };
+    }
   } catch (err) {
-    return handleUnexpectedError(err, documentId);
+    return handleUnexpectedError(err, documentId)
   }
-};
+}
 
 const postLicenceName = async (request, h) => {
-  const { documentId } = request.params;
-  const { documentName } = request.payload;
-  const { data: currentDoc } = await documentsClient.findOne(documentId);
-  if (!currentDoc) { return Boom.notFound(`Document ${documentId} not found`); }
-  const rename = !isEmpty(currentDoc.document_name);
-  const { data } = await documentsClient.setLicenceName(documentId, documentName);
-  const metadata = { documentId, documentName, rename };
-  const eventData = await eventHelper.saveEvent('licence:name', rename ? 'rename' : 'name', [data.system_external_id], 'completed', request.payload.userName, metadata);
-  return { companyId: data.company_entity_id, licenceNumber: data.system_external_id, eventId: eventData.id, ...metadata };
-};
+  const { documentId } = request.params
+  const { documentName } = request.payload
+  const { data: currentDoc } = await documentsClient.findOne(documentId)
+  if (!currentDoc) { return Boom.notFound(`Document ${documentId} not found`) }
+  const rename = !isEmpty(currentDoc.document_name)
+  const { data } = await documentsClient.setLicenceName(documentId, documentName)
+  const metadata = { documentId, documentName, rename }
+  const eventData = await eventHelper.saveEvent('licence:name', rename ? 'rename' : 'name', [data.system_external_id], 'completed', request.payload.userName, metadata)
+  return { companyId: data.company_entity_id, licenceNumber: data.system_external_id, eventId: eventData.id, ...metadata }
+}
 
-exports.getLicenceByDocumentId = getLicenceByDocumentId;
-exports.getLicenceConditionsByDocumentId = getLicenceConditionsByDocumentId;
-exports.getLicencePointsByDocumentId = getLicencePointsByDocumentId;
-exports.getLicenceUsersByDocumentId = getLicenceUsersByDocumentId;
-exports.getLicenceSummaryByDocumentId = getLicenceSummaryByDocumentId;
-exports.getLicenceCommunicationsByDocumentId = getLicenceCommunicationsByDocumentId;
-exports.getLicenceCompanyByDocumentId = getLicenceCompanyByDocumentId;
-exports.postLicenceName = postLicenceName;
+exports.getLicenceByDocumentId = getLicenceByDocumentId
+exports.getLicenceConditionsByDocumentId = getLicenceConditionsByDocumentId
+exports.getLicencePointsByDocumentId = getLicencePointsByDocumentId
+exports.getLicenceUsersByDocumentId = getLicenceUsersByDocumentId
+exports.getLicenceSummaryByDocumentId = getLicenceSummaryByDocumentId
+exports.getLicenceCommunicationsByDocumentId = getLicenceCommunicationsByDocumentId
+exports.getLicenceCompanyByDocumentId = getLicenceCompanyByDocumentId
+exports.postLicenceName = postLicenceName

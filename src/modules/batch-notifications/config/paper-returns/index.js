@@ -1,12 +1,12 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
+const Joi = require('joi')
 
-const eventHelpers = require('../../lib/event-helpers');
-const { returnIDRegex } = require('@envage/water-abstraction-helpers').returns;
-const { getRecipients } = require('./lib/get-recipients');
+const eventHelpers = require('../../lib/event-helpers')
+const { returnIDRegex } = require('@envage/water-abstraction-helpers').returns
+const { getRecipients } = require('./lib/get-recipients')
 
-const OPTIONAL_NULLABLE_STRING = Joi.string().allow(null).optional();
+const OPTIONAL_NULLABLE_STRING = Joi.string().allow(null).optional()
 
 const schema = Joi.object({
   forms: Joi.array().items(Joi.object({
@@ -39,7 +39,7 @@ const schema = Joi.object({
       returnId: Joi.string().regex(returnIDRegex).required()
     }).unknown()).required()
   }))
-});
+})
 
 module.exports = [
   {
@@ -50,4 +50,4 @@ module.exports = [
     getRecipients,
     createEvent: eventHelpers.createEvent
   }
-];
+]

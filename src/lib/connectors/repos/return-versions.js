@@ -1,13 +1,13 @@
-'use strict';
+'use strict'
 
-const { ReturnVersion } = require('../bookshelf');
-const helpers = require('./lib/helpers');
+const { ReturnVersion } = require('../bookshelf')
+const helpers = require('./lib/helpers')
 
 const relatedModels = [
   'returnRequirements',
   'returnRequirements.returnRequirementPurposes',
   'returnRequirements.returnRequirementPurposes.purposeUse'
-];
+]
 
 /**
  * Find all return versions for a given licence ID
@@ -20,9 +20,9 @@ const findByLicenceId = async licenceId => {
     .where('licence_id', licenceId)
     .fetch({
       withRelated: relatedModels
-    });
-  return collection.toJSON();
-};
+    })
+  return collection.toJSON()
+}
 
-exports.create = data => helpers.create(ReturnVersion, data);
-exports.findByLicenceId = findByLicenceId;
+exports.create = data => helpers.create(ReturnVersion, data)
+exports.findByLicenceId = findByLicenceId

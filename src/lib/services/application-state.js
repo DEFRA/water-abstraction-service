@@ -1,4 +1,4 @@
-const repos = require('../connectors/repos');
+const repos = require('../connectors/repos')
 
 /**
  * Get application state data by key
@@ -6,8 +6,8 @@ const repos = require('../connectors/repos');
  * @return {Promise<Object>}
  */
 const get = async key => {
-  return repos.applicationState.findOneByKey(key);
-};
+  return repos.applicationState.findOneByKey(key)
+}
 
 /**
  * Save application state data
@@ -16,13 +16,13 @@ const get = async key => {
  * @return {Promise}
  */
 const save = async (key, data) => {
-  const existing = await repos.applicationState.findOneByKey(key);
+  const existing = await repos.applicationState.findOneByKey(key)
 
   if (existing) {
-    return repos.applicationState.update(existing.applicationStateId, { data });
+    return repos.applicationState.update(existing.applicationStateId, { data })
   }
-  return repos.applicationState.create({ key, data });
-};
+  return repos.applicationState.create({ key, data })
+}
 
-exports.get = get;
-exports.save = save;
+exports.get = get
+exports.save = save

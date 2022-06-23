@@ -1,6 +1,6 @@
-const eventsService = require('../../../../lib/services/events');
-const { set } = require('lodash');
-const { uploadStatus } = require('../returns-upload');
+const eventsService = require('../../../../lib/services/events')
+const { set } = require('lodash')
+const { uploadStatus } = require('../returns-upload')
 
 /**
  * Creates an object that describes the error that has happened
@@ -10,9 +10,9 @@ const { uploadStatus } = require('../returns-upload');
  * @returns {Object} The error details to save in the event
  */
 const createEventError = (error = {}) => {
-  const { message, key = 'server' } = error;
-  return { message, key };
-};
+  const { message, key = 'server' } = error
+  return { message, key }
+}
 
 /**
  * Updates the event to include error information.
@@ -28,13 +28,13 @@ const createEventError = (error = {}) => {
  * @returns {Promise}
  */
 const setEventError = (event, error) => {
-  const eventError = createEventError(error);
-  set(event, 'metadata.error', eventError);
-  event.status = uploadStatus.ERROR;
-  return eventsService.update(event);
-};
+  const eventError = createEventError(error)
+  set(event, 'metadata.error', eventError)
+  event.status = uploadStatus.ERROR
+  return eventsService.update(event)
+}
 
-exports.setEventError = setEventError;
+exports.setEventError = setEventError
 exports.keys = {
   SERVER: 'server',
   USER_NOT_FOUND: 'user-not-found',
@@ -47,6 +47,6 @@ exports.keys = {
     INVALID: 'invalid-csv',
     MAPPING: 'csv-to-json-mapping-failure'
   }
-};
+}
 
-exports.throwEventNotFoundError = eventId => { throw new Error(`Bulk upload event "${eventId}" not found`); };
+exports.throwEventNotFoundError = eventId => { throw new Error(`Bulk upload event "${eventId}" not found`) }

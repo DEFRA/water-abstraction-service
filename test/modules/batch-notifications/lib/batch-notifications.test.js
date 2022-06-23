@@ -1,60 +1,60 @@
-const { expect } = require('@hapi/code');
+const { expect } = require('@hapi/code')
 const {
   beforeEach,
   experiment,
   test,
   afterEach
-} = exports.lab = require('@hapi/lab').script();
+} = exports.lab = require('@hapi/lab').script()
 
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sinon = require('sinon')
+const sandbox = sinon.createSandbox()
 
 const { loadJobData } =
-require('../../../../src/modules/batch-notifications/lib/batch-notifications');
-const eventsService = require('../../../../src/lib/services/events');
-const Event = require('../../../../src/lib/models/event');
-const uuid = require('uuid/v4');
+require('../../../../src/modules/batch-notifications/lib/batch-notifications')
+const eventsService = require('../../../../src/lib/services/events')
+const Event = require('../../../../src/lib/models/event')
+const uuid = require('uuid/v4')
 
-const eventId = uuid();
+const eventId = uuid()
 
 const createEvent = () => {
-  const event = new Event();
+  const event = new Event()
   return event.fromHash({
     id: eventId,
     subtype: 'returnReminder'
-  });
-};
+  })
+}
 
 experiment('batch notifications helpers', () => {
-  const event = createEvent();
+  const event = createEvent()
 
   beforeEach(async () => {
-    sandbox.stub(eventsService, 'findOne').resolves(event);
-  });
+    sandbox.stub(eventsService, 'findOne').resolves(event)
+  })
 
   afterEach(async () => {
-    sandbox.restore();
-  });
+    sandbox.restore()
+  })
 
   experiment('loadJobData', () => {
     test('throws an error if the event cannot be found', async () => {
-      eventsService.findOne.resolves(undefined);
-      expect(loadJobData()).to.reject();
-    });
+      eventsService.findOne.resolves(undefined)
+      expect(loadJobData()).to.reject()
+    })
 
     test('throws an error if the config cannot be found', async () => {
       eventsService.findOne.resolves(
         createEvent().fromHash({
           subtype: 'unknownMessageType'
         })
-      );
-      expect(loadJobData()).to.reject();
-    });
+      )
+      expect(loadJobData()).to.reject()
+    })
 
     test('resolves with event and message data if found', async () => {
-      const result = await loadJobData();
-      expect(result.ev.id).to.equal(event.id);
-      expect(result.config.messageType).to.equal('returnReminder');
-    });
-  });
-});
+      const result = await loadJobData()
+      expect(result.ev.id).to.equal(event.id)
+      expect(result.config.messageType).to.equal('returnReminder')
+    })
+  })
+})

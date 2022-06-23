@@ -1,22 +1,22 @@
-'use strict';
+'use strict'
 
-const { isNull, max } = require('lodash');
+const { isNull, max } = require('lodash')
 
-const Model = require('./model');
-const AbstractionPeriod = require('./abstraction-period');
-const DateRange = require('./date-range');
-const Purpose = require('./purpose');
-const PurposeUse = require('./purpose-use');
-const ChargePurpose = require('./charge-purpose');
-const ChargeCategory = require('./charge-category');
-const { CHARGE_SEASON, LOSSES, VALID_SOURCES, SCHEME, WATER_MODEL } = require('./constants');
-const validators = require('./validators');
+const Model = require('./model')
+const AbstractionPeriod = require('./abstraction-period')
+const DateRange = require('./date-range')
+const Purpose = require('./purpose')
+const PurposeUse = require('./purpose-use')
+const ChargePurpose = require('./charge-purpose')
+const ChargeCategory = require('./charge-category')
+const { CHARGE_SEASON, LOSSES, VALID_SOURCES, SCHEME, WATER_MODEL } = require('./constants')
+const validators = require('./validators')
 
 class ChargeElement extends Model {
   constructor (...args) {
-    super(...args);
-    this.isSection127AgreementEnabled = true;
-    this._scheme = SCHEME.alcs;
+    super(...args)
+    this.isSection127AgreementEnabled = true
+    this._scheme = SCHEME.alcs
   }
 
   /**
@@ -24,12 +24,12 @@ class ChargeElement extends Model {
    * @return {String}
    */
   get source () {
-    return this._source;
+    return this._source
   }
 
   set source (source) {
-    validators.assertNullableEnum(source, Object.values(VALID_SOURCES));
-    this._source = source;
+    validators.assertNullableEnum(source, Object.values(VALID_SOURCES))
+    this._source = source
   }
 
   /**
@@ -38,16 +38,16 @@ class ChargeElement extends Model {
    * @return {String}
    */
   get eiucSource () {
-    return this._source === 'tidal' ? 'tidal' : 'other';
+    return this._source === 'tidal' ? 'tidal' : 'other'
   }
 
   get eiucRegion () {
-    return this._eiucRegion;
+    return this._eiucRegion
   }
 
   set eiucRegion (eiucRegion) {
-    validators.assertNullableString(eiucRegion);
-    this._eiucRegion = eiucRegion || null;
+    validators.assertNullableString(eiucRegion)
+    this._eiucRegion = eiucRegion || null
   }
 
   /**
@@ -55,12 +55,12 @@ class ChargeElement extends Model {
    * @return {String}
    */
   get season () {
-    return this._season;
+    return this._season
   }
 
   set season (season) {
-    validators.assertNullableEnum(season, Object.values(CHARGE_SEASON));
-    this._season = season;
+    validators.assertNullableEnum(season, Object.values(CHARGE_SEASON))
+    this._season = season
   }
 
   /**
@@ -68,12 +68,12 @@ class ChargeElement extends Model {
    * @return {String}
    */
   get loss () {
-    return this._loss;
+    return this._loss
   }
 
   set loss (loss) {
-    validators.assertEnum(loss, Object.values(LOSSES));
-    this._loss = loss;
+    validators.assertEnum(loss, Object.values(LOSSES))
+    this._loss = loss
   }
 
   /**
@@ -81,14 +81,14 @@ class ChargeElement extends Model {
    * @return {AbstractionPeriod}
    */
   get abstractionPeriod () {
-    return this._abstractionPeriod;
+    return this._abstractionPeriod
   }
 
   set abstractionPeriod (abstractionPeriod) {
     abstractionPeriod
       ? validators.assertIsInstanceOf(abstractionPeriod, AbstractionPeriod)
-      : validators.assertIsEmpty(abstractionPeriod);
-    this._abstractionPeriod = abstractionPeriod;
+      : validators.assertIsEmpty(abstractionPeriod)
+    this._abstractionPeriod = abstractionPeriod
   }
 
   /**
@@ -96,12 +96,12 @@ class ChargeElement extends Model {
    * @return {Number}
    */
   get authorisedAnnualQuantity () {
-    return this._authorisedAnnualQuantity;
+    return this._authorisedAnnualQuantity
   }
 
   set authorisedAnnualQuantity (quantity) {
-    validators.assertNullableQuantity(quantity);
-    this._authorisedAnnualQuantity = parseFloat(quantity);
+    validators.assertNullableQuantity(quantity)
+    this._authorisedAnnualQuantity = parseFloat(quantity)
   }
 
   /**
@@ -109,12 +109,12 @@ class ChargeElement extends Model {
    * @return {Number}
    */
   get billableAnnualQuantity () {
-    return this._billableAnnualQuantity;
+    return this._billableAnnualQuantity
   }
 
   set billableAnnualQuantity (quantity) {
-    validators.assertNullableQuantity(quantity);
-    this._billableAnnualQuantity = isNull(quantity) ? null : parseFloat(quantity);
+    validators.assertNullableQuantity(quantity)
+    this._billableAnnualQuantity = isNull(quantity) ? null : parseFloat(quantity)
   }
 
   /**
@@ -122,7 +122,7 @@ class ChargeElement extends Model {
    * @return {Number}
    */
   get maxAnnualQuantity () {
-    return max([this.billableAnnualQuantity, this.authorisedAnnualQuantity]);
+    return max([this.billableAnnualQuantity, this.authorisedAnnualQuantity])
   }
 
   /**
@@ -133,7 +133,7 @@ class ChargeElement extends Model {
   get volume () {
     return this._scheme === SCHEME.sroc
       ? this._volume
-      : this._billableAnnualQuantity || this._authorisedAnnualQuantity;
+      : this._billableAnnualQuantity || this._authorisedAnnualQuantity
   }
 
   /**
@@ -144,8 +144,8 @@ class ChargeElement extends Model {
    * @return {Number}
    */
   set volume (volume) {
-    validators.assertNullableQuantity(volume);
-    this._volume = parseFloat(volume);
+    validators.assertNullableQuantity(volume)
+    this._volume = parseFloat(volume)
   }
 
   /**
@@ -153,12 +153,12 @@ class ChargeElement extends Model {
    * @param {Purpose} purposePrimary
    */
   set purposePrimary (purposePrimary) {
-    validators.assertIsInstanceOf(purposePrimary, Purpose);
-    this._purposePrimary = purposePrimary;
+    validators.assertIsInstanceOf(purposePrimary, Purpose)
+    this._purposePrimary = purposePrimary
   }
 
   get purposePrimary () {
-    return this._purposePrimary;
+    return this._purposePrimary
   }
 
   /**
@@ -166,12 +166,12 @@ class ChargeElement extends Model {
    * @param {Purpose} purposeSecondary
    */
   set purposeSecondary (purposeSecondary) {
-    validators.assertIsInstanceOf(purposeSecondary, Purpose);
-    this._purposeSecondary = purposeSecondary;
+    validators.assertIsInstanceOf(purposeSecondary, Purpose)
+    this._purposeSecondary = purposeSecondary
   }
 
   get purposeSecondary () {
-    return this._purposeSecondary;
+    return this._purposeSecondary
   }
 
   /**
@@ -179,12 +179,12 @@ class ChargeElement extends Model {
    * @param {PurposeUse} purposeUse
    */
   set purposeUse (purposeUse) {
-    validators.assertIsInstanceOf(purposeUse, PurposeUse);
-    this._purposeUse = purposeUse;
+    validators.assertIsInstanceOf(purposeUse, PurposeUse)
+    this._purposeUse = purposeUse
   }
 
   get purposeUse () {
-    return this._purposeUse;
+    return this._purposeUse
   }
 
   /**
@@ -193,30 +193,30 @@ class ChargeElement extends Model {
   * @param {dateRange} dateRange
   */
   set timeLimitedPeriod (dateRange) {
-    validators.assertIsNullableInstanceOf(dateRange, DateRange);
-    this._timeLimitedPeriod = dateRange;
+    validators.assertIsNullableInstanceOf(dateRange, DateRange)
+    this._timeLimitedPeriod = dateRange
   }
 
   get timeLimitedPeriod () {
-    return this._timeLimitedPeriod;
+    return this._timeLimitedPeriod
   }
 
-  get description () { return this._description; }
+  get description () { return this._description }
   set description (description) {
-    validators.assertNullableString(description);
-    this._description = description;
+    validators.assertNullableString(description)
+    this._description = description
   }
 
-  get chargeVersionId () { return this._chargeVersionId; }
+  get chargeVersionId () { return this._chargeVersionId }
   set chargeVersionId (chargeVersionId) {
-    validators.assertId(chargeVersionId);
-    this._chargeVersionId = chargeVersionId;
+    validators.assertId(chargeVersionId)
+    this._chargeVersionId = chargeVersionId
   }
 
-  get isFactorsOverridden () { return this._isFactorsOverridden; }
+  get isFactorsOverridden () { return this._isFactorsOverridden }
   set isFactorsOverridden (isFactorsOverridden) {
-    validators.assertIsNullableBoolean(isFactorsOverridden);
-    this._isFactorsOverridden = isFactorsOverridden;
+    validators.assertIsNullableBoolean(isFactorsOverridden)
+    this._isFactorsOverridden = isFactorsOverridden
   }
 
   /**
@@ -227,16 +227,16 @@ class ChargeElement extends Model {
    * @returns {Boolean}
    */
   get isSection127AgreementEnabled () {
-    return this._isSection127AgreementEnabled;
+    return this._isSection127AgreementEnabled
   }
 
   set isSection127AgreementEnabled (isSection127AgreementEnabled) {
-    validators.assertIsBoolean(isSection127AgreementEnabled);
-    this._isSection127AgreementEnabled = isSection127AgreementEnabled;
+    validators.assertIsBoolean(isSection127AgreementEnabled)
+    this._isSection127AgreementEnabled = isSection127AgreementEnabled
   }
 
   get chargePurposes () {
-    return this._chargePurposes;
+    return this._chargePurposes
   }
 
   /**
@@ -244,30 +244,30 @@ class ChargeElement extends Model {
    * @param {Array<ChargePurpose>} chargePurposes
    */
   set chargePurposes (chargePurposes) {
-    validators.assertIsArrayOfType(chargePurposes, ChargePurpose);
-    this._chargePurposes = chargePurposes;
+    validators.assertIsArrayOfType(chargePurposes, ChargePurpose)
+    this._chargePurposes = chargePurposes
   }
 
   get isRestrictedSource () {
-    return this._isRestrictedSource;
+    return this._isRestrictedSource
   }
 
   set isRestrictedSource (isRestrictedSource) {
-    validators.assertIsBoolean(isRestrictedSource);
-    this._isRestrictedSource = isRestrictedSource;
+    validators.assertIsBoolean(isRestrictedSource)
+    this._isRestrictedSource = isRestrictedSource
   }
 
   get waterModel () {
-    return this._waterModel;
+    return this._waterModel
   }
 
   set waterModel (waterModel) {
-    validators.assertNullableEnum(waterModel, Object.values(WATER_MODEL));
-    this._waterModel = waterModel;
+    validators.assertNullableEnum(waterModel, Object.values(WATER_MODEL))
+    this._waterModel = waterModel
   }
 
   get scheme () {
-    return this._scheme;
+    return this._scheme
   }
 
   /**
@@ -275,12 +275,12 @@ class ChargeElement extends Model {
    * @param {String} scheme
    */
   set scheme (scheme) {
-    validators.assertEnum(scheme, Object.values(SCHEME));
-    this._scheme = scheme;
+    validators.assertEnum(scheme, Object.values(SCHEME))
+    this._scheme = scheme
   }
 
   get chargeCategory () {
-    return this._chargeCategory;
+    return this._chargeCategory
   }
 
   /**
@@ -288,8 +288,8 @@ class ChargeElement extends Model {
    * @param {ChargeCategory} chargeCategory
    */
   set chargeCategory (chargeCategory) {
-    validators.assertIsNullableInstanceOf(chargeCategory, ChargeCategory);
-    this._chargeCategory = chargeCategory;
+    validators.assertIsNullableInstanceOf(chargeCategory, ChargeCategory)
+    this._chargeCategory = chargeCategory
   }
 
   toJSON () {
@@ -297,9 +297,9 @@ class ChargeElement extends Model {
       ...super.toJSON(),
       eiucSource: this.eiucSource,
       maxAnnualQuantity: this.maxAnnualQuantity
-    };
+    }
   }
 }
 
-module.exports = ChargeElement;
-module.exports.sources = VALID_SOURCES;
+module.exports = ChargeElement
+module.exports.sources = VALID_SOURCES

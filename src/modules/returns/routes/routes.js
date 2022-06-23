@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
-const controller = require('../controllers/controller');
-const { failAction } = require('../lib/route-helpers');
-const { returnSchema, headerSchema } = require('../schema');
+const Joi = require('joi')
+const controller = require('../controllers/controller')
+const { failAction } = require('../lib/route-helpers')
+const { returnSchema, headerSchema } = require('../schema')
 
 module.exports = {
 
@@ -64,4 +64,4 @@ module.exports = {
     }
   }
 
-};
+}

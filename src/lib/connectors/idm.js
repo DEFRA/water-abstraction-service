@@ -1,54 +1,54 @@
-const Joi = require('joi');
-const { head, partialRight } = require('lodash');
-const { throwIfError } = require('@envage/hapi-pg-rest-api');
-const apiClientFactory = require('./api-client-factory');
-const urlJoin = require('url-join');
-const config = require('../../../config');
-const factory = require('./service-version-factory');
-const helpers = require('@envage/water-abstraction-helpers');
-const uuid = require('uuid/v4');
+const Joi = require('joi')
+const { head, partialRight } = require('lodash')
+const { throwIfError } = require('@envage/hapi-pg-rest-api')
+const apiClientFactory = require('./api-client-factory')
+const urlJoin = require('url-join')
+const config = require('../../../config')
+const factory = require('./service-version-factory')
+const helpers = require('@envage/water-abstraction-helpers')
+const uuid = require('uuid/v4')
 
-const usersClient = apiClientFactory.create(urlJoin(config.services.idm, 'user'));
-const kpiClient = apiClientFactory.create(urlJoin(config.services.idm, 'kpi'));
+const usersClient = apiClientFactory.create(urlJoin(config.services.idm, 'user'))
+const kpiClient = apiClientFactory.create(urlJoin(config.services.idm, 'kpi'))
 
 const validateApplication = application => Joi.assert(
   application,
   Joi.string().required().valid(...Object.values(config.idm.application))
-);
+)
 
 /**
  * Find all users that have an external_id value in the array of ids
  */
 usersClient.getUsersByExternalId = async ids => {
   if (ids.length === 0) {
-    return { data: [] };
+    return { data: [] }
   }
   return usersClient.findMany({
     external_id: { $in: ids },
     application: config.idm.application.externalUser
-  });
-};
+  })
+}
 
 /**
  * Find a single user that has the given user name
  */
 usersClient.getUserByUsername = async (userName, application) => {
-  validateApplication(application);
+  validateApplication(application)
 
   const { error, data } = await usersClient.findMany({
     user_name: userName,
     application
-  });
+  })
 
-  throwIfError(error);
-  return head(data);
-};
+  throwIfError(error)
+  return head(data)
+}
 
 usersClient.findOneById = async id => {
-  const { error, data } = await usersClient.findOne(id);
-  throwIfError(error);
-  return data;
-};
+  const { error, data } = await usersClient.findOne(id)
+  throwIfError(error)
+  return data
+}
 
 /**
  * Starts the email change process
@@ -57,14 +57,14 @@ usersClient.findOneById = async id => {
  * @return {Promise}
  */
 const startEmailChange = (userId, email) => {
-  const url = `${config.services.idm}/user/${userId}/change-email-address`;
+  const url = `${config.services.idm}/user/${userId}/change-email-address`
   const options = {
     body: {
       email
     }
-  };
-  return helpers.serviceRequest.post(url, options);
-};
+  }
+  return helpers.serviceRequest.post(url, options)
+}
 
 /**
  * Completes the email change process with a security code
@@ -73,14 +73,14 @@ const startEmailChange = (userId, email) => {
  * @return {Promise}              [description]
  */
 const verifySecurityCode = (userId, securityCode) => {
-  const url = `${config.services.idm}/user/${userId}/change-email-address/code`;
+  const url = `${config.services.idm}/user/${userId}/change-email-address/code`
   const options = {
     body: {
       securityCode
     }
-  };
-  return helpers.serviceRequest.post(url, options);
-};
+  }
+  return helpers.serviceRequest.post(url, options)
+}
 
 /**
  * Check status of email change
@@ -88,9 +88,9 @@ const verifySecurityCode = (userId, securityCode) => {
  * @param  {Int} securityCode
  */
 const getEmailChangeStatus = userId => {
-  const url = `${config.services.idm}/user/${userId}/change-email-address`;
-  return helpers.serviceRequest.get(url);
-};
+  const url = `${config.services.idm}/user/${userId}/change-email-address`
+  return helpers.serviceRequest.get(url)
+}
 
 /** Creates a new user in the IDM for the given application
  *
@@ -100,7 +100,7 @@ const getEmailChangeStatus = userId => {
  * @returns {Promise} A promise that will resolve with the newly created user
  */
 usersClient.createUser = async (username, application, externalId) => {
-  validateApplication(application);
+  validateApplication(application)
 
   const userData = {
     user_name: username,
@@ -111,23 +111,23 @@ usersClient.createUser = async (username, application, externalId) => {
     external_id: externalId,
     bad_logins: 0,
     reset_guid_date_created: new Date()
-  };
+  }
 
-  const { data: user, error } = await usersClient.create(userData);
-  throwIfError(error);
-  return user;
-};
+  const { data: user, error } = await usersClient.create(userData)
+  throwIfError(error)
+  return user
+}
 
 const setEnabled = async (userId, application, enabled) => {
   const filter = {
     user_id: userId,
     application,
     enabled: !enabled
-  };
-  const { data: [user], error } = await usersClient.updateMany(filter, { enabled });
-  throwIfError(error);
-  return user;
-};
+  }
+  const { data: [user], error } = await usersClient.updateMany(filter, { enabled })
+  throwIfError(error)
+  return user
+}
 
 /**
  * Disables the user's IDM user account if enabled
@@ -135,7 +135,7 @@ const setEnabled = async (userId, application, enabled) => {
  * @param {String} application - the IDM application name
  * @return {Promise<Boolean>} resolves with boolean to indicate success status
  */
-usersClient.disableUser = partialRight(setEnabled, false);
+usersClient.disableUser = partialRight(setEnabled, false)
 
 /**
  * Enables the user's IDM user account if disabled
@@ -143,11 +143,11 @@ usersClient.disableUser = partialRight(setEnabled, false);
  * @param {String} application - the IDM application name
  * @return {Promise<Boolean>} resolves with boolean to indicate success status
  */
-usersClient.enableUser = partialRight(setEnabled, true);
+usersClient.enableUser = partialRight(setEnabled, true)
 
-exports.usersClient = usersClient;
-exports.getServiceVersion = factory.create(config.services.crm);
-exports.kpiClient = kpiClient;
-exports.startEmailChange = startEmailChange;
-exports.verifySecurityCode = verifySecurityCode;
-exports.getEmailChangeStatus = getEmailChangeStatus;
+exports.usersClient = usersClient
+exports.getServiceVersion = factory.create(config.services.crm)
+exports.kpiClient = kpiClient
+exports.startEmailChange = startEmailChange
+exports.verifySecurityCode = verifySecurityCode
+exports.getEmailChangeStatus = getEmailChangeStatus

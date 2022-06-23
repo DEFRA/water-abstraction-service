@@ -2,15 +2,15 @@
  * Creates a client connector for the CRM verification API endpoint
  * @module lib/connectors/crm-licences
  */
-const { APIClient } = require('@envage/hapi-pg-rest-api');
+const { APIClient } = require('@envage/hapi-pg-rest-api')
 const rp = require('request-promise-native').defaults({
   proxy: null,
   strictSSL: false
-});
-const { serviceRequest } = require('@envage/water-abstraction-helpers');
-const config = require('../../../../config');
-const urlJoin = require('url-join');
-const { isArray, flatMap, chunk } = require('lodash');
+})
+const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const config = require('../../../../config')
+const urlJoin = require('url-join')
+const { isArray, flatMap, chunk } = require('lodash')
 
 // Create API client
 const client = new APIClient(rp, {
@@ -18,7 +18,7 @@ const client = new APIClient(rp, {
   headers: {
     Authorization: process.env.JWT_TOKEN
   }
-});
+})
 
 /**
  * Get all registered licences - i.e. ones with a company entity ID set
@@ -30,27 +30,27 @@ client.getRegisteredLicences = async function () {
       company_entity_id: {
         $ne: null
       }
-    };
-    return client.findMany(filter, null, { page, perPage: 250 });
-  };
+    }
+    return client.findMany(filter, null, { page, perPage: 250 })
+  }
 
   // Get first page of results
-  const { error, data, pagination } = await getRegisteredLicencePage(1);
+  const { error, data, pagination } = await getRegisteredLicencePage(1)
 
   if (error) {
-    throw error;
+    throw error
   }
 
   for (let i = 2; i <= pagination.pageCount; i++) {
-    const { data: nextPage, error: nextError } = await getRegisteredLicencePage(i);
+    const { data: nextPage, error: nextError } = await getRegisteredLicencePage(i)
     if (nextError) {
-      throw nextError;
+      throw nextError
     }
-    data.push(...nextPage);
+    data.push(...nextPage)
   }
 
-  return data;
-};
+  return data
+}
 
 /**
  * Get a list of licences based on the supplied options
@@ -68,7 +68,7 @@ client.getRegisteredLicences = async function () {
  * @example getLicences({entity_id : 'guid'})
  */
 client.getDocumentRoles = function (filter, sort = {}, pagination = { page: 1, perPage: 100 }) {
-  const uri = config.services.crm + '/document_role_access?filter=' + JSON.stringify(filter);
+  const uri = config.services.crm + '/document_role_access?filter=' + JSON.stringify(filter)
   return rp({
     uri,
     method: 'GET',
@@ -77,8 +77,8 @@ client.getDocumentRoles = function (filter, sort = {}, pagination = { page: 1, p
     },
     json: true,
     body: { filter, sort, pagination }
-  });
-};
+  })
+}
 
 /**
  * Get single licence
@@ -86,15 +86,15 @@ client.getDocumentRoles = function (filter, sort = {}, pagination = { page: 1, p
  * @return {Promise} resolves with single licence record
  */
 client.getDocument = function (documentId, includeExpired = false) {
-  const filter = JSON.stringify({ includeExpired });
-  const url = urlJoin(config.services.crm, 'documentHeader', documentId);
+  const filter = JSON.stringify({ includeExpired })
+  const url = urlJoin(config.services.crm, 'documentHeader', documentId)
 
   return serviceRequest.get(url, {
     qs: {
       filter
     }
-  });
-};
+  })
+}
 
 /**
  * Get a list of documents with contacts attached
@@ -110,8 +110,8 @@ client.getDocumentContacts = function (filter = {}) {
     },
     json: true,
     qs: { filter: JSON.stringify(filter) }
-  });
-};
+  })
+}
 
 /**
  * Get all CRM contacts for the given licence number(s)
@@ -120,25 +120,25 @@ client.getDocumentContacts = function (filter = {}) {
  * @return {Promise<Array>} array of document records decorated with contacts
  */
 client.getLicenceContacts = async licenceNumber => {
-  const licenceNumbers = isArray(licenceNumber) ? licenceNumber : [licenceNumber];
+  const licenceNumbers = isArray(licenceNumber) ? licenceNumber : [licenceNumber]
   const filter = {
     regime_entity_id: config.crm.waterRegime,
     system_external_id: { $in: licenceNumbers }
-  };
-  const result = await client.getDocumentContacts(filter);
-  return result.data;
-};
+  }
+  const result = await client.getDocumentContacts(filter)
+  return result.data
+}
 
 client.getDocumentUsers = async documentId => {
-  const url = urlJoin(config.services.crm, 'documents', documentId, 'users');
-  return serviceRequest.get(url);
-};
+  const url = urlJoin(config.services.crm, 'documents', documentId, 'users')
+  return serviceRequest.get(url)
+}
 
 if (config.isAcceptanceTestTarget) {
   client.deleteAcceptanceTestData = () => {
-    const url = urlJoin(config.services.crm, 'acceptance-tests/documents');
-    return serviceRequest.delete(url);
-  };
+    const url = urlJoin(config.services.crm, 'acceptance-tests/documents')
+    return serviceRequest.delete(url)
+  }
 }
 
 /**
@@ -150,8 +150,8 @@ if (config.isAcceptanceTestTarget) {
 client.setLicenceName = async (documentId, name) => {
   return client.updateOne(documentId, {
     document_name: name
-  });
-};
+  })
+}
 
 /**
  * Gets documents from the CRM using the licence number
@@ -161,7 +161,7 @@ client.setLicenceName = async (documentId, name) => {
 client.getDocumentsByLicenceNumbers = async (licenceNumbers, includeExpired = false) => {
   // run in batches of 20 so not to exceed the permitted request
   // query string size
-  const batches = chunk(licenceNumbers, 20);
+  const batches = chunk(licenceNumbers, 20)
 
   const documentBatches = await Promise.all(
     batches.map(ids => {
@@ -170,11 +170,11 @@ client.getDocumentsByLicenceNumbers = async (licenceNumbers, includeExpired = fa
           $in: ids
         },
         includeExpired
-      });
+      })
     })
-  );
+  )
 
-  return flatMap(documentBatches);
-};
+  return flatMap(documentBatches)
+}
 
-module.exports = client;
+module.exports = client

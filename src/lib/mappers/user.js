@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const { isObject } = require('lodash');
-const User = require('../models/user');
+const { isObject } = require('lodash')
+const User = require('../models/user')
 
 /**
  * Maps json data from DB to User model
@@ -9,15 +9,15 @@ const User = require('../models/user');
  * @return {User}
  */
 const dbToModel = data => {
-  if (!data) return null;
-  const { id, email } = data;
-  return new User(id, email);
-};
+  if (!data) return null
+  const { id, email } = data
+  return new User(id, email)
+}
 
-const pojoToModel = dbToModel;
+const pojoToModel = dbToModel
 
-const modelToDb = model => isObject(model) ? model.toJSON() : null;
+const modelToDb = model => isObject(model) ? model.toJSON() : null
 
-exports.dbToModel = dbToModel;
-exports.pojoToModel = pojoToModel;
-exports.modelToDb = modelToDb;
+exports.dbToModel = dbToModel
+exports.pojoToModel = pojoToModel
+exports.modelToDb = modelToDb

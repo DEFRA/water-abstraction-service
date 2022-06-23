@@ -2,16 +2,16 @@
  * Transforms NALD data into VML native format
  * @module lib/licence-transformer/nald-transformer
  */
-const { find, uniqBy, isArray } = require('lodash');
-const sentenceCase = require('sentence-case');
+const { find, uniqBy, isArray } = require('lodash')
+const sentenceCase = require('sentence-case')
 
-const BaseTransformer = require('./base-transformer');
-const LicenceTitleLoader = require('./licence-title-loader');
-const licenceTitleLoader = new LicenceTitleLoader();
-const NALDHelpers = require('./nald-helpers');
+const BaseTransformer = require('./base-transformer')
+const LicenceTitleLoader = require('./licence-title-loader')
+const licenceTitleLoader = new LicenceTitleLoader()
+const NALDHelpers = require('./nald-helpers')
 
-const waterHelpers = require('@envage/water-abstraction-helpers');
-const { nald } = waterHelpers;
+const waterHelpers = require('@envage/water-abstraction-helpers')
+const { nald } = waterHelpers
 
 class NALDTransformer extends BaseTransformer {
   /**
@@ -19,21 +19,21 @@ class NALDTransformer extends BaseTransformer {
    * @param {Object} data - data loaded from NALD
    */
   async load (data) {
-    data = nald.transformNull(data);
+    data = nald.transformNull(data)
 
-    const currentVersion = nald.findCurrent(data.data.versions);
+    const currentVersion = nald.findCurrent(data.data.versions)
 
-    const mostRecentVersionPurposes = data.data.purposes.filter(purpose => purpose.AABV_INCR_NO !== data.data.versions.sort((a, b) => parseInt(b.INCR_NO) - parseInt(a.INCR_NO)));
+    const mostRecentVersionPurposes = data.data.purposes.filter(purpose => purpose.AABV_INCR_NO !== data.data.versions.sort((a, b) => parseInt(b.INCR_NO) - parseInt(a.INCR_NO)))
 
     const licenceHolderParty = find(currentVersion.parties, (party) => {
-      return party.ID === currentVersion.ACON_APAR_ID;
-    });
+      return party.ID === currentVersion.ACON_APAR_ID
+    })
 
     const purposes = data.data.current_version
       ? data.data.current_version.purposes
-      : mostRecentVersionPurposes;
+      : mostRecentVersionPurposes
 
-    const conditions = await this.conditionFormatter(purposes);
+    const conditions = await this.conditionFormatter(purposes)
 
     this.data = {
       licenceNumber: data.LIC_NO,
@@ -46,7 +46,7 @@ class NALDTransformer extends BaseTransformer {
       currentVersionEffectiveStartDate: nald.dates.calendarToIso(currentVersion.EFF_ST_DATE),
       expiryDate: nald.dates.calendarToIso(data.EXPIRY_DATE),
       versionCount: data.data.versions.length,
-      conditions: conditions,
+      conditions,
       points: this.pointsFormatter(purposes),
       abstractionPeriods: this.periodsFormatter(purposes),
       aggregateQuantity: this.aggregateQuantitiesFormatter(purposes),
@@ -56,9 +56,9 @@ class NALDTransformer extends BaseTransformer {
       hofTypes: this.getHofTypes(conditions),
       sourcesOfSupply: this.getSourcesOfSupply(purposes),
       returnFormats: data.data.current_version ? this.formatsFormatter(data.data.current_version.formats) : null
-    };
+    }
 
-    return this.data;
+    return this.data
   }
 
   fullNameFormatter (party) {
@@ -67,8 +67,8 @@ class NALDTransformer extends BaseTransformer {
       INITIALS: initials,
       FORENAME: firstName,
       NAME: lastName
-    } = party;
-    return NALDHelpers.getFullName(salutation, initials, firstName, lastName);
+    } = party
+    return NALDHelpers.getFullName(salutation, initials, firstName, lastName)
   }
 
   formatsFormatter (formats = []) {
@@ -79,8 +79,8 @@ class NALDTransformer extends BaseTransformer {
         purposes: row.purposes.map(purpose => ({
           name: purpose.PURP_ALIAS
         }))
-      };
-    });
+      }
+    })
   }
 
   /**
@@ -98,11 +98,11 @@ class NALDTransformer extends BaseTransformer {
       hourlyQty: item.HOURLY_QTY,
       instantaneousQty: item.INST_QTY,
       points: item.purposePoints.map(item => nald.formatting.formatAbstractionPoint(item.point_detail))
-    }));
+    }))
 
-    purposes = _dedupe(purposes);
+    purposes = _dedupe(purposes)
 
-    return purposes;
+    return purposes
   }
 
   /**
@@ -111,8 +111,8 @@ class NALDTransformer extends BaseTransformer {
    * @return {Array} of purpose names
    */
   uniquePurposeNamesFormatter (purposes) {
-    const names = purposes.map(item => item.purpose[0].purpose_tertiary.DESCR);
-    return uniqBy(names, item => item);
+    const names = purposes.map(item => item.purpose[0].purpose_tertiary.DESCR)
+    return uniqBy(names, item => item)
   }
 
   /**
@@ -120,32 +120,32 @@ class NALDTransformer extends BaseTransformer {
    * Creates a list of contacts from the roles/parties in the NALD data
    */
   contactsFormatter (currentVersion, roles) {
-    const contacts = [];
+    const contacts = []
 
     const licenceHolderParty = find(currentVersion.parties, (party) => {
-      return party.ID === currentVersion.ACON_APAR_ID;
-    });
+      return party.ID === currentVersion.ACON_APAR_ID
+    })
 
     const licenceHolderAddress = find(licenceHolderParty.contacts, (contact) => {
-      return contact.AADD_ID === currentVersion.ACON_AADD_ID;
-    });
+      return contact.AADD_ID === currentVersion.ACON_AADD_ID
+    })
 
     contacts.push({
       type: 'Licence holder',
       ...nald.formatting.nameFormatter(licenceHolderParty),
       ...nald.formatting.addressFormatter(licenceHolderAddress.party_address)
-    });
+    })
 
-    const contactCodes = ['FM', 'LA', 'LC', 'MG', 'RT'];
+    const contactCodes = ['FM', 'LA', 'LC', 'MG', 'RT']
     roles.filter(role => contactCodes.includes(role.role_type.CODE)).forEach((role) => {
       contacts.push({
         type: sentenceCase(role.role_type.DESCR),
         ...nald.formatting.nameFormatter(role.role_party),
         ...nald.formatting.addressFormatter(role.role_address)
-      });
-    });
+      })
+    })
 
-    return contacts;
+    return contacts
   }
 
   /**
@@ -162,19 +162,19 @@ class NALDTransformer extends BaseTransformer {
       'M3/D': 'cubic metres per day',
       CMH: 'cubic metres per hour',
       'L/S': 'litres per second'
-    };
+    }
 
-    const r = /([0-9,.]+) ?([a-z3/]+)/ig;
-    let result;
-    const results = [];
+    const r = /([0-9,.]+) ?([a-z3/]+)/ig
+    let result
+    const results = []
     while ((result = r.exec(str)) !== null) {
       results.push({
         value: parseFloat(result[1].replace(/[^0-9.]/g, '')),
         units: result[2],
         name: unitNames[result[2].toUpperCase()]
-      });
+      })
     };
-    return results;
+    return results
   }
 
   /**
@@ -185,13 +185,13 @@ class NALDTransformer extends BaseTransformer {
    * @return {Array} array of quantities
    */
   aggregateQuantitiesFormatter (purposes) {
-    const quantities = purposes.map(NALDHelpers.getAggregateQuantities);
+    const quantities = purposes.map(NALDHelpers.getAggregateQuantities)
 
     const unique = uniqBy(quantities, row => {
-      return row.map(row => row.value).join(',');
-    });
+      return row.map(row => row.value).join(',')
+    })
 
-    return unique.length === 1 ? unique[0] : [];
+    return unique.length === 1 ? unique[0] : []
   }
 
   /**
@@ -200,28 +200,28 @@ class NALDTransformer extends BaseTransformer {
    * @return {Array} array of periods
    */
   periodsFormatter (purposes) {
-    const periods = [];
+    const periods = []
 
     purposes.forEach((purpose) => {
-      const periodStart = purpose.PERIOD_ST_DAY + '/' + purpose.PERIOD_ST_MONTH;
-      const periodEnd = purpose.PERIOD_END_DAY + '/' + purpose.PERIOD_END_MONTH;
+      const periodStart = purpose.PERIOD_ST_DAY + '/' + purpose.PERIOD_ST_MONTH
+      const periodEnd = purpose.PERIOD_END_DAY + '/' + purpose.PERIOD_END_MONTH
       // Find existing period
-      let period = find(periods, (item) => item.periodStart === periodStart && item.periodEnd === periodEnd);
+      let period = find(periods, (item) => item.periodStart === periodStart && item.periodEnd === periodEnd)
       if (period) {
         if (!period.purposes.includes(purpose.purpose[0].purpose_tertiary.DESCR)) {
-          period.purposes.push(purpose.purpose[0].purpose_tertiary.DESCR);
+          period.purposes.push(purpose.purpose[0].purpose_tertiary.DESCR)
         }
       } else {
         period = {
           periodStart,
           periodEnd,
           purposes: [purpose.purpose[0].purpose_tertiary.DESCR]
-        };
-        periods.push(period);
+        }
+        periods.push(period)
       }
-    });
+    })
 
-    return periods;
+    return periods
   }
 
   /**
@@ -230,16 +230,16 @@ class NALDTransformer extends BaseTransformer {
    * @return {Array} array of points
    */
   pointsFormatter (purposes) {
-    const points = [];
+    const points = []
     purposes.forEach((purpose) => {
       purpose.purposePoints.forEach((purposePoint) => {
         points.push({
           meansOfAbstraction: purposePoint.means_of_abstraction.DESCR,
           ...nald.formatting.formatAbstractionPoint(purposePoint.point_detail)
-        });
-      });
-    });
-    return uniqBy(points, item => Object.values(item).join(','));
+        })
+      })
+    })
+    return uniqBy(points, item => Object.values(item).join(','))
   }
 
   /**
@@ -250,7 +250,7 @@ class NALDTransformer extends BaseTransformer {
    */
   async conditionFormatter (purposes) {
     // Read condition titles from CSV
-    const titleData = await licenceTitleLoader.load();
+    const titleData = await licenceTitleLoader.load()
 
     /**
      * Match a condition within the condition array
@@ -260,8 +260,8 @@ class NALDTransformer extends BaseTransformer {
      * @return {Function} returns a predicate that can be used in lodash/find
      */
     const conditionMatcher = (code, subCode, purpose) => {
-      return (item) => (code === item.code) && (subCode === item.subCode) && (purpose === item.purpose);
-    };
+      return (item) => (code === item.code) && (subCode === item.subCode) && (purpose === item.purpose)
+    }
 
     /**
      * Match a title within the display titles array
@@ -270,8 +270,8 @@ class NALDTransformer extends BaseTransformer {
      * @return {Function} returns a predicate that can be used in lodash/find
      */
     const titleMatcher = (code, subCode) => {
-      return (item) => (code === item.code) && (subCode === item.subCode);
-    };
+      return (item) => (code === item.code) && (subCode === item.subCode)
+    }
 
     /**
      * Match a point within the condition points array
@@ -279,52 +279,52 @@ class NALDTransformer extends BaseTransformer {
      * @return {Function} returns a predicate that can be used in lodash/find
      */
     const pointMatcher = (points) => {
-      return (item) => item.points.join(',') === points.join(',');
-    };
+      return (item) => item.points.join(',') === points.join(',')
+    }
 
-    const conditionsArr = [];
+    const conditionsArr = []
 
     purposes.forEach((purpose) => {
       const points = purpose.purposePoints.map((purposePoint) => {
-        return nald.formatting.formatAbstractionPoint(purposePoint.point_detail);
-      });
+        return nald.formatting.formatAbstractionPoint(purposePoint.point_detail)
+      })
 
       purpose.licenceConditions.forEach((condition) => {
         const {
           CODE: code,
           SUBCODE: subCode
-        } = condition.condition_type;
+        } = condition.condition_type
         const {
           TEXT: text,
           PARAM1: parameter1,
           PARAM2: parameter2
-        } = condition;
+        } = condition
         const {
           DESCR: purposeText
-        } = purpose.purpose[0].purpose_tertiary;
+        } = purpose.purpose[0].purpose_tertiary
 
         // Condition wrapper
-        let cWrapper = find(conditionsArr, conditionMatcher(code, subCode, purposeText));
+        let cWrapper = find(conditionsArr, conditionMatcher(code, subCode, purposeText))
         if (!cWrapper) {
-          const titles = find(titleData, titleMatcher(code, subCode));
+          const titles = find(titleData, titleMatcher(code, subCode))
           cWrapper = {
             ...titles,
             code,
             subCode,
             points: [],
             purpose: purposeText
-          };
-          conditionsArr.push(cWrapper);
+          }
+          conditionsArr.push(cWrapper)
         }
 
         // Points wrapper
-        let pWrapper = find(cWrapper.points, pointMatcher(points));
+        let pWrapper = find(cWrapper.points, pointMatcher(points))
         if (!pWrapper) {
           pWrapper = {
             points,
             conditions: []
-          };
-          cWrapper.points.push(pWrapper);
+          }
+          cWrapper.points.push(pWrapper)
         }
 
         // Add condition
@@ -332,15 +332,15 @@ class NALDTransformer extends BaseTransformer {
           parameter1,
           parameter2,
           text
-        });
+        })
 
         // De-dedupe
         // @TODO - remove duplication in original data
-        pWrapper.conditions = uniqBy(pWrapper.conditions, item => Object.values(item).join(','));
-      });
-    });
+        pWrapper.conditions = uniqBy(pWrapper.conditions, item => Object.values(item).join(','))
+      })
+    })
 
-    return conditionsArr;
+    return conditionsArr
   }
 
   /*
@@ -350,11 +350,11 @@ class NALDTransformer extends BaseTransformer {
    * @param {Array|String} subCode - the condition subcode
    */
   filterConditions (conditions, code, subCode) {
-    const arrCode = isArray(code) ? code : [code];
-    const arrSubCode = isArray(subCode) ? subCode : [subCode];
+    const arrCode = isArray(code) ? code : [code]
+    const arrSubCode = isArray(subCode) ? subCode : [subCode]
     return conditions.filter(row => {
-      return arrCode.includes(row.code) && arrSubCode.includes(row.subCode);
-    });
+      return arrCode.includes(row.code) && arrSubCode.includes(row.subCode)
+    })
   }
 
   /**
@@ -365,16 +365,16 @@ class NALDTransformer extends BaseTransformer {
   getHofTypes (conditions) {
     return conditions.reduce((acc, condition) => {
       if (condition.code === 'CES' && condition.subCode === 'LEV') {
-        acc.cesLev = true;
+        acc.cesLev = true
       }
       if (condition.code === 'CES' && condition.subCode === 'FLOW') {
-        acc.cesFlow = true;
+        acc.cesFlow = true
       }
-      return acc;
+      return acc
     }, {
       cesFlow: false,
       cesLev: false
-    });
+    })
   }
 
   /**
@@ -383,31 +383,31 @@ class NALDTransformer extends BaseTransformer {
    * @return {Array} of points of supply
    */
   getSourcesOfSupply (purposes) {
-    const points = [];
+    const points = []
     purposes.forEach((purpose) => {
       purpose.purposePoints.forEach((purposePoint) => {
-        const { NAME } = purposePoint.point_source;
+        const { NAME } = purposePoint.point_source
         points.push({
           name: NAME
-        });
-      });
-    });
-    return uniqBy(points, item => Object.values(item).join(','));
+        })
+      })
+    })
+    return uniqBy(points, item => Object.values(item).join(','))
   }
 }
 
 function _dedupe (arrayData) {
-  var deduped = [];
-  var hashes = [];
-  var crypto = require('crypto');
-  for (var i in arrayData) {
-    var hash = crypto.createHash('md5').update(JSON.stringify(arrayData[i])).digest('hex');
+  const deduped = []
+  const hashes = []
+  const crypto = require('crypto')
+  for (const i in arrayData) {
+    const hash = crypto.createHash('md5').update(JSON.stringify(arrayData[i])).digest('hex')
     if (hashes.indexOf(hash) === -1) {
-      hashes.push(hash);
-      deduped.push(arrayData[i]);
+      hashes.push(hash)
+      deduped.push(arrayData[i])
     }
   }
-  return deduped;
+  return deduped
 }
 
-module.exports = NALDTransformer;
+module.exports = NALDTransformer

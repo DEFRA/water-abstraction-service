@@ -1,4 +1,4 @@
-const { bookshelf } = require('./bookshelf.js');
+const { bookshelf } = require('./bookshelf.js')
 
 module.exports = bookshelf.model('Event', {
 
@@ -11,4 +11,4 @@ module.exports = bookshelf.model('Event', {
 },
 {
   jsonColumns: ['licences', 'entities', 'metadata']
-});
+})

@@ -1,24 +1,24 @@
-'use strict';
+'use strict'
 
 const {
   experiment,
   test,
   beforeEach
-} = exports.lab = require('@hapi/lab').script();
-const { expect } = require('@hapi/code');
+} = exports.lab = require('@hapi/lab').script()
+const { expect } = require('@hapi/code')
 
-const moment = require('moment');
-const uuid = require('uuid/v4');
+const moment = require('moment')
+const uuid = require('uuid/v4')
 
-const LicenceVersion = require('../../../src/lib/models/licence-version');
+const LicenceVersion = require('../../../src/lib/models/licence-version')
 
-const licenceVersionMapper = require('../../../src/lib/mappers/licence-version');
+const licenceVersionMapper = require('../../../src/lib/mappers/licence-version')
 
-let dbRow;
+let dbRow
 
 experiment('modules/billing/mappers/licence-version', () => {
   experiment('.dbToModel', () => {
-    let result;
+    let result
 
     beforeEach(async () => {
       dbRow = {
@@ -59,63 +59,63 @@ experiment('modules/billing/mappers/licence-version', () => {
             isTwoPartTariff: false
           }
         }]
-      };
+      }
 
-      result = licenceVersionMapper.dbToModel(dbRow);
-    });
+      result = licenceVersionMapper.dbToModel(dbRow)
+    })
 
     test('returns a LicenceVersion instance with correct ID', async () => {
-      expect(result instanceof LicenceVersion).to.be.true();
-      expect(result.id).to.equal(dbRow.licenceVersionId);
-    });
+      expect(result instanceof LicenceVersion).to.be.true()
+      expect(result.id).to.equal(dbRow.licenceVersionId)
+    })
 
     test('has a status property', async () => {
-      expect(result.status).to.equal(dbRow.status);
-    });
+      expect(result.status).to.equal(dbRow.status)
+    })
 
     test('has an endDate property', async () => {
-      expect(result.endDate).to.equal(moment(dbRow.endDate));
-    });
+      expect(result.endDate).to.equal(moment(dbRow.endDate))
+    })
 
     test('has a startDate property', async () => {
-      expect(result.startDate).to.equal(moment(dbRow.startDate));
-    });
+      expect(result.startDate).to.equal(moment(dbRow.startDate))
+    })
 
     test('has an externalId property', async () => {
-      expect(result.externalId).to.equal(dbRow.externalId);
-    });
+      expect(result.externalId).to.equal(dbRow.externalId)
+    })
 
     test('has a dateUpdated property', async () => {
-      expect(result.dateUpdated).to.equal(moment(dbRow.dateUpdated));
-    });
+      expect(result.dateUpdated).to.equal(moment(dbRow.dateUpdated))
+    })
 
     test('has a dateCreated property', async () => {
-      expect(result.dateCreated).to.equal(moment(dbRow.dateCreated));
-    });
+      expect(result.dateCreated).to.equal(moment(dbRow.dateCreated))
+    })
 
     test('has an issue property', async () => {
-      expect(result.issue).to.equal(dbRow.issue);
-    });
+      expect(result.issue).to.equal(dbRow.issue)
+    })
 
     test('has an increment property', async () => {
-      expect(result.increment).to.equal(dbRow.increment);
-    });
+      expect(result.increment).to.equal(dbRow.increment)
+    })
 
     experiment('licenceVersionPurposes', () => {
       test('has the expected count', async () => {
-        expect(result.licenceVersionPurposes.length).to.equal(1);
-      });
+        expect(result.licenceVersionPurposes.length).to.equal(1)
+      })
 
       test('contains the purpose use', async () => {
-        expect(result.licenceVersionPurposes[0].purposeUse.lossFactor).to.equal('high');
-      });
+        expect(result.licenceVersionPurposes[0].purposeUse.lossFactor).to.equal('high')
+      })
 
       test('is undefined when no data ', async () => {
-        delete dbRow.licenceVersionPurposes;
-        result = licenceVersionMapper.dbToModel(dbRow);
+        delete dbRow.licenceVersionPurposes
+        result = licenceVersionMapper.dbToModel(dbRow)
 
-        expect(result.licenceVersionPurposes).to.equal(undefined);
-      });
-    });
-  });
-});
+        expect(result.licenceVersionPurposes).to.equal(undefined)
+      })
+    })
+  })
+})

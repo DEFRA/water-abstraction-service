@@ -1,7 +1,7 @@
-const Joi = require('joi');
-const controller = require('./controller');
+const Joi = require('joi')
+const controller = require('./controller')
 
-const notificationId = Joi.string().required().valid('pdf.return_form', 'pdf.return_reminder');
+const notificationId = Joi.string().required().valid('pdf.return_form', 'pdf.return_reminder')
 const payload = Joi.object().keys({
   filter: Joi.object().required(),
   issuer: Joi.string().email().required(),
@@ -9,7 +9,7 @@ const payload = Joi.object().keys({
   config: Joi.object({
     rolePriority: Joi.array().items(Joi.string().valid('licence_holder', 'returns_to'))
   })
-});
+})
 
 module.exports = {
 
@@ -43,4 +43,4 @@ module.exports = {
     }
   }
 
-};
+}

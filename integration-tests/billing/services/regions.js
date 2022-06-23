@@ -1,4 +1,4 @@
-const { bookshelf } = require('../../../src/lib/connectors/bookshelf');
+const { bookshelf } = require('../../../src/lib/connectors/bookshelf')
 
 /**
  * Delete regions specified
@@ -8,7 +8,7 @@ const { bookshelf } = require('../../../src/lib/connectors/bookshelf');
 const tearDown = () => {
   return bookshelf.knex('water.regions')
     .where('is_test', true)
-    .del();
-};
+    .del()
+}
 
-exports.tearDown = tearDown;
+exports.tearDown = tearDown

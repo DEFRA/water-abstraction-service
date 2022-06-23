@@ -1,12 +1,12 @@
-const sentenceCase = require('sentence-case');
-const { find, get } = require('lodash');
+const sentenceCase = require('sentence-case')
+const { find, get } = require('lodash')
 
 // Import models
-const Contact = require('../contact');
-const ContactList = require('../contact-list');
-const nald = require('@envage/water-abstraction-helpers').nald;
+const Contact = require('../contact')
+const ContactList = require('../contact-list')
+const nald = require('@envage/water-abstraction-helpers').nald
 
-const { createContact } = require('./contact');
+const { createContact } = require('./contact')
 
 /**
  * Given the current version object, gets the licence holder party
@@ -15,9 +15,9 @@ const { createContact } = require('./contact');
  */
 const getLicenceHolderParty = currentVersion => {
   return find(currentVersion.parties, (party) => {
-    return party.ID === currentVersion.ACON_APAR_ID;
-  });
-};
+    return party.ID === currentVersion.ACON_APAR_ID
+  })
+}
 
 /**
  * Given the current version and party objects, gets the licence holder address
@@ -27,11 +27,11 @@ const getLicenceHolderParty = currentVersion => {
  */
 const getLicenceHolderAddress = (currentVersion, licenceHolderParty) => {
   return find(licenceHolderParty.contacts, (contact) => {
-    return contact.AADD_ID === currentVersion.ACON_AADD_ID;
-  });
-};
+    return contact.AADD_ID === currentVersion.ACON_AADD_ID
+  })
+}
 
-const mapRole = role => sentenceCase(role.role_type.DESCR);
+const mapRole = role => sentenceCase(role.role_type.DESCR)
 
 /**
  * Checks whether the NALD role is one we wish to include in our model
@@ -39,9 +39,9 @@ const mapRole = role => sentenceCase(role.role_type.DESCR);
  * @return {Boolean} true if the contact with this role should be included
  */
 const rolePredicate = role => {
-  const contactCodes = ['FM', 'LA', 'LC', 'MG', 'RT'];
-  return contactCodes.includes(role.role_type.CODE);
-};
+  const contactCodes = ['FM', 'LA', 'LC', 'MG', 'RT']
+  return contactCodes.includes(role.role_type.CODE)
+}
 
 /**
  * Creates a contacts object given NALD permit data
@@ -50,31 +50,31 @@ const rolePredicate = role => {
  */
 const createContacts = (data) => {
   // Initialise contact list
-  const contacts = new ContactList();
+  const contacts = new ContactList()
 
   // Get current version
-  const currentVersion = nald.findCurrent(data.data.versions);
+  const currentVersion = nald.findCurrent(data.data.versions)
   if (!currentVersion) {
-    return contacts;
+    return contacts
   }
 
   // Add licence holder contact
-  const licenceHolderParty = getLicenceHolderParty(currentVersion);
-  const licenceHolderAddress = getLicenceHolderAddress(currentVersion, licenceHolderParty);
+  const licenceHolderParty = getLicenceHolderParty(currentVersion)
+  const licenceHolderAddress = getLicenceHolderAddress(currentVersion, licenceHolderParty)
 
   const licenceHolder = createContact(
     Contact.CONTACT_ROLE_LICENCE_HOLDER, licenceHolderParty, licenceHolderAddress.party_address
-  );
-  contacts.add(licenceHolder);
+  )
+  contacts.add(licenceHolder)
 
   // Add other contacts for allowed roles
-  const roles = get(data, 'data.roles');
+  const roles = get(data, 'data.roles')
   roles.filter(rolePredicate).forEach((role) => {
-    const contact = createContact(mapRole(role), role.role_party, role.role_address);
-    contacts.add(contact);
-  });
+    const contact = createContact(mapRole(role), role.role_party, role.role_address)
+    contacts.add(contact)
+  })
 
-  return contacts;
-};
+  return contacts
+}
 
-exports.createContacts = createContacts;
+exports.createContacts = createContacts

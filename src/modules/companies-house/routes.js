@@ -1,11 +1,11 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
-const controller = require('./controller');
+const Joi = require('joi')
+const controller = require('./controller')
 
 const headers = Joi.object().keys({
   authorization: Joi.string().required().example('Bearer {{JWT_TOKEN}}')
-}).unknown(true);
+}).unknown(true)
 
 module.exports = {
   getCompaniesHouseCompanies: {
@@ -40,4 +40,4 @@ module.exports = {
       }
     }
   }
-};
+}

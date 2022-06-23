@@ -1,8 +1,8 @@
-const controller = require('./controller');
-const Joi = require('joi');
+const controller = require('./controller')
+const Joi = require('joi')
 
-const OPTIONAL_STRING = Joi.string().allow('', null).optional();
-const OPTIONAL_EMAIL = Joi.string().email().allow('', null).optional();
+const OPTIONAL_STRING = Joi.string().allow('', null).optional()
+const OPTIONAL_EMAIL = Joi.string().email().allow('', null).optional()
 
 module.exports = {
   getContact: {
@@ -12,7 +12,7 @@ module.exports = {
     config: {
       validate: {
         headers: async values => {
-          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required())
         },
         params: Joi.object().keys({
           contactId: Joi.string().guid().required()
@@ -28,7 +28,7 @@ module.exports = {
     config: {
       validate: {
         headers: async values => {
-          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required())
         },
         params: Joi.object().keys({
           contactId: Joi.string().guid().required()
@@ -66,9 +66,9 @@ module.exports = {
           source: Joi.string().valid('wrls', 'nald').default('wrls')
         }),
         headers: async values => {
-          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required())
         }
       }
     }
   }
-};
+}

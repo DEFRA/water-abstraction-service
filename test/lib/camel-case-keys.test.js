@@ -1,51 +1,51 @@
-const { experiment, test } = exports.lab = require('@hapi/lab').script();
-const { expect } = require('@hapi/code');
+const { experiment, test } = exports.lab = require('@hapi/lab').script()
+const { expect } = require('@hapi/code')
 
-const camelCaseKeys = require('../../src/lib/camel-case-keys');
+const camelCaseKeys = require('../../src/lib/camel-case-keys')
 
 experiment('lib/camel-case-keys', () => {
   experiment('for an array of strings', () => {
     test('the strings are kept at their orignal value', async () => {
-      const input = ['one', 'two'];
-      expect(camelCaseKeys(input)).to.equal(input);
-    });
-  });
+      const input = ['one', 'two']
+      expect(camelCaseKeys(input)).to.equal(input)
+    })
+  })
 
   experiment('primitive values', () => {
     test('handles null', async () => {
-      const input = null;
-      expect(camelCaseKeys(input)).to.equal(null);
-    });
+      const input = null
+      expect(camelCaseKeys(input)).to.equal(null)
+    })
 
     test('handles undefined', async () => {
-      const input = undefined;
-      expect(camelCaseKeys(input)).to.equal(undefined);
-    });
+      const input = undefined
+      expect(camelCaseKeys(input)).to.equal(undefined)
+    })
 
     test('handles arrays of numbers', async () => {
-      const input = [1, 2, 3, 4, 5];
-      expect(camelCaseKeys(input)).to.equal(input);
-    });
+      const input = [1, 2, 3, 4, 5]
+      expect(camelCaseKeys(input)).to.equal(input)
+    })
 
     test('handles mixed arrays', async () => {
-      const input = [1, 'two', false, true, Symbol('hello')];
-      expect(camelCaseKeys(input)).to.equal(input);
-    });
-  });
+      const input = [1, 'two', false, true, Symbol('hello')]
+      expect(camelCaseKeys(input)).to.equal(input)
+    })
+  })
 
   experiment('for an object', () => {
     test('all keys are transformed to camel case', async () => {
       const input = {
         snake_case: 'slither',
         'kebab-case': 'meaty'
-      };
+      }
 
       expect(camelCaseKeys(input)).to.equal({
         snakeCase: 'slither',
         kebabCase: 'meaty'
-      });
-    });
-  });
+      })
+    })
+  })
 
   experiment('for a nested object', () => {
     test('all keys are transformed to camel case', async () => {
@@ -62,7 +62,7 @@ experiment('lib/camel-case-keys', () => {
           'top-one': 1,
           top_two: 2
         }
-      };
+      }
 
       expect(camelCaseKeys(input)).to.equal({
         topLevel: {
@@ -77,23 +77,23 @@ experiment('lib/camel-case-keys', () => {
           topOne: 1,
           topTwo: 2
         }
-      });
-    });
-  });
+      })
+    })
+  })
 
   experiment('for an array of objects', () => {
     test('all object keys are transformed to camel case', async () => {
       const input = [
         { snake_case: 'slither' },
         { 'kebab-case': 'meaty' }
-      ];
+      ]
 
       expect(camelCaseKeys(input)).to.equal([
         { snakeCase: 'slither' },
         { kebabCase: 'meaty' }
-      ]);
-    });
-  });
+      ])
+    })
+  })
 
   experiment('for an array of nested objects', () => {
     test('all object keys are transformed to camel case', async () => {
@@ -127,7 +127,7 @@ experiment('lib/camel-case-keys', () => {
             ]
           }
         }
-      ];
+      ]
 
       expect(camelCaseKeys(input)).to.equal([
         {
@@ -159,21 +159,21 @@ experiment('lib/camel-case-keys', () => {
             ]
           }
         }
-      ]);
-    });
-  });
+      ])
+    })
+  })
 
   experiment('for an array of arrays', () => {
     test('all object keys are transformed to camel case', async () => {
       const input = [
         [{ first_object: 1 }, { second_object: 2 }],
         [{ third_object: 3 }, { fourth_object: 4 }]
-      ];
+      ]
 
       expect(camelCaseKeys(input)).to.equal([
         [{ firstObject: 1 }, { secondObject: 2 }],
         [{ thirdObject: 3 }, { fourthObject: 4 }]
-      ]);
-    });
-  });
-});
+      ])
+    })
+  })
+})

@@ -1,10 +1,10 @@
-const NotifyClient = require('notifications-node-client').NotifyClient;
+const NotifyClient = require('notifications-node-client').NotifyClient
 
 const messageTypes = {
   email: 'email',
   letter: 'letter',
   sms: 'sms'
-};
+}
 
 /**
  * Gets the Notify API key.
@@ -16,13 +16,13 @@ const messageTypes = {
 const getKey = (env, type) => {
   // Always use live key in production environment
   if (env.NODE_ENV === 'production') {
-    return env.LIVE_NOTIFY_KEY;
+    return env.LIVE_NOTIFY_KEY
   }
   // In other environments, use whitelist key for email/SMS, and test key for anything else
   return [messageTypes.email, messageTypes.sms].includes(type)
     ? env.WHITELIST_NOTIFY_KEY
-    : env.TEST_NOTIFY_KEY;
-};
+    : env.TEST_NOTIFY_KEY
+}
 
 /**
  * Gets a notify client
@@ -31,10 +31,10 @@ const getKey = (env, type) => {
  * @return {Object} nofify client
  */
 const getClient = (type, env = process.env) => {
-  const key = getKey(env, type);
-  return new NotifyClient(key);
-};
+  const key = getKey(env, type)
+  return new NotifyClient(key)
+}
 
-exports._getKey = getKey;
-exports.getClient = getClient;
-exports.messageTypes = messageTypes;
+exports._getKey = getKey
+exports.getClient = getClient
+exports.messageTypes = messageTypes

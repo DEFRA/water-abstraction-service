@@ -1,5 +1,5 @@
-'use strict';
-const DateRange = require('../models/date-range');
+'use strict'
+const DateRange = require('../models/date-range')
 
 /**
  * Maps a plain object representation of a date range to
@@ -9,9 +9,9 @@ const DateRange = require('../models/date-range');
  */
 const pojoToModel = dateRange => {
   if (!dateRange) {
-    return null;
+    return null
   }
-  return new DateRange(dateRange.startDate, dateRange.endDate);
-};
+  return new DateRange(dateRange.startDate, dateRange.endDate)
+}
 
-exports.pojoToModel = pojoToModel;
+exports.pojoToModel = pojoToModel

@@ -1,21 +1,21 @@
-const { expect } = require('@hapi/code');
+const { expect } = require('@hapi/code')
 const {
   beforeEach,
   experiment,
   test
-} = exports.lab = require('@hapi/lab').script();
+} = exports.lab = require('@hapi/lab').script()
 
-const notificationFactory = require('../../../../src/modules/notifications/lib/notification-factory.js');
+const notificationFactory = require('../../../../src/modules/notifications/lib/notification-factory.js')
 
 experiment('modules/notifications/lib/notification-factory.js', () => {
-  let taskConfig, contactData, event;
+  let taskConfig, contactData, event
 
   beforeEach(async () => {
     taskConfig = {
       config: {
         subject: 'Message subject'
       }
-    };
+    }
 
     contactData = {
       contact: {
@@ -40,103 +40,103 @@ experiment('modules/notifications/lib/notification-factory.js', () => {
         method: 'email'
       },
       output: 'Message body'
-    };
+    }
 
     event = {
       eventId: 'test-event-id'
-    };
-  });
+    }
+  })
 
   experiment('when the message is an email', () => {
-    let result;
+    let result
 
     beforeEach(async () => {
-      result = await notificationFactory(contactData, taskConfig, event);
-    });
+      result = await notificationFactory(contactData, taskConfig, event)
+    })
 
     test('the message type is notification_email', async () => {
-      expect(result.messageRef).to.equal('notification_email');
-    });
+      expect(result.messageRef).to.equal('notification_email')
+    })
 
     test('the recipient is the email address', async () => {
-      expect(result.recipient).to.equal('test@example.com');
-    });
+      expect(result.recipient).to.equal('test@example.com')
+    })
 
     test('the personalisation includes the message subject, body and header', async () => {
-      expect(result.personalisation.body).to.equal(contactData.output);
-      expect(result.personalisation.heading).to.equal(taskConfig.config.subject);
-      expect(result.personalisation.subject).to.equal(taskConfig.config.subject);
-    });
+      expect(result.personalisation.body).to.equal(contactData.output)
+      expect(result.personalisation.heading).to.equal(taskConfig.config.subject)
+      expect(result.personalisation.subject).to.equal(taskConfig.config.subject)
+    })
 
     test('the licence numbers are set', async () => {
-      expect(result.licences).to.equal(['01/123/ABC']);
-    });
+      expect(result.licences).to.equal(['01/123/ABC'])
+    })
 
     test('the event ID is set', async () => {
-      expect(result.eventId).to.equal(event.eventId);
-    });
+      expect(result.eventId).to.equal(event.eventId)
+    })
 
     test('the entity IDs are set', async () => {
-      expect(result.companyEntityId).to.equal(contactData.contact.licences[0].company_entity_id);
-      expect(result.individualEntityId).to.equal(contactData.contact.contact.entity_id);
-    });
-  });
+      expect(result.companyEntityId).to.equal(contactData.contact.licences[0].company_entity_id)
+      expect(result.individualEntityId).to.equal(contactData.contact.contact.entity_id)
+    })
+  })
 
   experiment('when the message is a letter', () => {
-    let result;
+    let result
 
     beforeEach(async () => {
-      contactData.contact.method = 'letter';
-      contactData.contact.contact.email = null;
-      result = await notificationFactory(contactData, taskConfig, event);
-    });
+      contactData.contact.method = 'letter'
+      contactData.contact.contact.email = null
+      result = await notificationFactory(contactData, taskConfig, event)
+    })
 
     test('the message type is notification_letter', async () => {
-      expect(result.messageRef).to.equal('notification_letter');
-    });
+      expect(result.messageRef).to.equal('notification_letter')
+    })
 
     test('the address is set correctly', async () => {
-      const { personalisation } = result;
-      expect(personalisation.address_line_1).to.equal('Mr John Doe');
-      expect(personalisation.address_line_2).to.equal('Buttercup Farm');
-      expect(personalisation.address_line_3).to.equal('Daisy meadow');
-      expect(personalisation.address_line_4).to.equal('Oak avenue');
-      expect(personalisation.address_line_5).to.equal('Windy ridge');
-      expect(personalisation.address_line_6).to.equal('Testington');
-      expect(personalisation.postcode).to.equal('TT1 1TT');
-    });
+      const { personalisation } = result
+      expect(personalisation.address_line_1).to.equal('Mr John Doe')
+      expect(personalisation.address_line_2).to.equal('Buttercup Farm')
+      expect(personalisation.address_line_3).to.equal('Daisy meadow')
+      expect(personalisation.address_line_4).to.equal('Oak avenue')
+      expect(personalisation.address_line_5).to.equal('Windy ridge')
+      expect(personalisation.address_line_6).to.equal('Testington')
+      expect(personalisation.postcode).to.equal('TT1 1TT')
+    })
 
     test('the address does not include more than 6 lines, as this is not supported in Notify', async () => {
-      const { personalisation } = result;
-      expect(personalisation).to.not.include('address_line_7');
-    });
-  });
+      const { personalisation } = result
+      expect(personalisation).to.not.include('address_line_7')
+    })
+  })
 
   experiment('when address lines are null', () => {
-    let result;
+    let result
 
     beforeEach(async () => {
-      contactData.contact.method = 'letter';
-      contactData.contact.contact.email = null;
-      contactData.contact.contact.address_3 = null;
-      contactData.contact.contact.address_4 = null;
-      result = await notificationFactory(contactData, taskConfig, event);
-    });
+      contactData.contact.method = 'letter'
+      contactData.contact.contact.email = null
+      contactData.contact.contact.address_3 = null
+      contactData.contact.contact.address_4 = null
+      result = await notificationFactory(contactData, taskConfig, event)
+    })
 
     test('the address is set correctly', async () => {
-      const { personalisation } = result;
-      expect(personalisation.address_line_1).to.equal('Mr John Doe');
-      expect(personalisation.address_line_2).to.equal('Buttercup Farm');
-      expect(personalisation.address_line_3).to.equal('Daisy meadow');
-      expect(personalisation.address_line_4).to.equal('Testington');
-      expect(personalisation.address_line_5).to.equal('Testingshire');
+      const { personalisation } = result
+      expect(personalisation.address_line_1).to.equal('Mr John Doe')
+      expect(personalisation.address_line_2).to.equal('Buttercup Farm')
+      expect(personalisation.address_line_3).to.equal('Daisy meadow')
+      expect(personalisation.address_line_4).to.equal('Testington')
+      expect(personalisation.address_line_5).to.equal('Testingshire')
 
-      expect(personalisation.postcode).to.equal('TT1 1TT');
-    });
+      expect(personalisation.postcode).to.equal('TT1 1TT')
+    })
 
     test('the address does not include more than 5 lines, as empty lines are removed', async () => {
-      const { personalisation } = result;
-      expect(personalisation).to.not.include('address_line_6');
-    });
-  });
-});
+      const { personalisation } = result
+      expect(personalisation).to.not.include('address_line_6')
+    })
+  })
+})

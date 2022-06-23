@@ -1,24 +1,24 @@
-'use strict';
+'use strict'
 
-const Decimal = require('decimal.js-light');
-const { groupBy, sortBy, negate, flatMap } = require('lodash');
+const Decimal = require('decimal.js-light')
+const { groupBy, sortBy, negate, flatMap } = require('lodash')
 
-const validators = require('../../../../../lib/models/validators');
-const Return = require('../../../../../lib/models/return');
-const ReturnLine = require('../../../../../lib/models/return-line');
-const PurposeUse = require('../../../../../lib/models/purpose-use');
-const DateRange = require('../../../../../lib/models/date-range');
-const FinancialYear = require('../../../../../lib/models/financial-year');
+const validators = require('../../../../../lib/models/validators')
+const Return = require('../../../../../lib/models/return')
+const ReturnLine = require('../../../../../lib/models/return-line')
+const PurposeUse = require('../../../../../lib/models/purpose-use')
+const DateRange = require('../../../../../lib/models/date-range')
+const FinancialYear = require('../../../../../lib/models/financial-year')
 
-const ChargeElementContainer = require('./charge-element-container');
+const ChargeElementContainer = require('./charge-element-container')
 
-const { ChargeElementMatchingError } = require('../errors');
-const decimalHelpers = require('../../../../../lib/decimal-helpers');
+const { ChargeElementMatchingError } = require('../errors')
+const decimalHelpers = require('../../../../../lib/decimal-helpers')
 
-const { RETURN_SEASONS } = require('../../../../../lib/models/constants');
+const { RETURN_SEASONS } = require('../../../../../lib/models/constants')
 const {
   ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD
-} = require('../../../../../lib/models/billing-volume').twoPartTariffStatuses;
+} = require('../../../../../lib/models/billing-volume').twoPartTariffStatuses
 
 /**
  * Checks whether the charge element purpose matches the supplied purpose use
@@ -27,14 +27,14 @@ const {
  * @return {Boolean}
  */
 const isPurposeUseMatch = (purposeUse, chargeElementContainer) => {
-  return chargeElementContainer.chargeElement.purposeUse.id === purposeUse.id;
-};
+  return chargeElementContainer.chargeElement.purposeUse.id === purposeUse.id
+}
 
 const isReturnPurposeUseMatch = (ret, chargeElementContainer) => {
   return ret.purposeUses.some(purposeUse =>
     isPurposeUseMatch(purposeUse, chargeElementContainer)
-  );
-};
+  )
+}
 
 /**
  * Checks if the return line is within the supplied charge period
@@ -49,12 +49,12 @@ const isReturnPurposeUseMatch = (ret, chargeElementContainer) => {
  */
 const isReturnLineStraddlingChargePeriodError = (returnLine, chargePeriod) => {
   if (returnLine.isDaily || chargePeriod.isFinancialYear) {
-    return false;
+    return false
   }
 
   // Charge period is not full financial year - indicates possible transfer/variation
-  return !returnLine.isWithinDateRange(chargePeriod);
-};
+  return !returnLine.isWithinDateRange(chargePeriod)
+}
 
 /**
  * Gets a key for re-allocating quantities to base elements
@@ -66,12 +66,12 @@ const isReturnLineStraddlingChargePeriodError = (returnLine, chargePeriod) => {
  * @return {String}
  */
 const getReallocationKey = chargeElementContainer => {
-  const { source, season, purposeUse: { id } } = chargeElementContainer.chargeElement;
-  return [source, season, id].join(':');
-};
+  const { source, season, purposeUse: { id } } = chargeElementContainer.chargeElement
+  return [source, season, id].join(':')
+}
 
-const isTimeLimited = chargeElementContainer => !!chargeElementContainer.chargeElement.timeLimitedPeriod;
-const isNotTimeLimited = negate(isTimeLimited);
+const isTimeLimited = chargeElementContainer => !!chargeElementContainer.chargeElement.timeLimitedPeriod
+const isNotTimeLimited = negate(isTimeLimited)
 
 /**
  * Re-allocates as much volume as possible from the source element to the target element
@@ -82,12 +82,12 @@ const reallocateElement = (returnSeason, sourceElementContainer, targetElementCo
   const volumeToReallocate = decimalHelpers.min(
     targetElementContainer.getAvailableVolume(),
     sourceElementContainer.getBillingVolume(returnSeason).approvedOrCalculatedVolume
-  );
+  )
   if (volumeToReallocate.isPositive()) {
-    sourceElementContainer.deallocate(returnSeason, volumeToReallocate);
-    targetElementContainer.allocate(returnSeason, volumeToReallocate);
+    sourceElementContainer.deallocate(returnSeason, volumeToReallocate)
+    targetElementContainer.allocate(returnSeason, volumeToReallocate)
   }
-};
+}
 
 /**
  * Re-allocates volume within a group of ChargeElementContainers which have
@@ -95,17 +95,17 @@ const reallocateElement = (returnSeason, sourceElementContainer, targetElementCo
  * @param {Array} chargeElementContainers
  */
 const reallocateGroup = (returnSeason, chargeElementContainers) => {
-  const base = chargeElementContainers.filter(isNotTimeLimited);
-  const sub = chargeElementContainers.filter(isTimeLimited);
+  const base = chargeElementContainers.filter(isNotTimeLimited)
+  const sub = chargeElementContainers.filter(isTimeLimited)
 
   base.forEach(baseElement => {
     sub.forEach(subElement => {
       if (subElement.chargeElement.abstractionPeriod.isWithinAbstractionPeriod(baseElement.chargeElement.abstractionPeriod)) {
-        reallocateElement(returnSeason, subElement, baseElement);
+        reallocateElement(returnSeason, subElement, baseElement)
       }
-    });
-  });
-};
+    })
+  })
+}
 
 class ChargeElementGroup {
   /**
@@ -113,12 +113,12 @@ class ChargeElementGroup {
    * @param {Array<ChargeElementContainer>} [chargeElementContainers]
    */
   constructor (chargeElementContainers, returnSeason) {
-    this._chargeElementContainers = [];
+    this._chargeElementContainers = []
     if (chargeElementContainers) {
-      this.chargeElementContainers = chargeElementContainers;
+      this.chargeElementContainers = chargeElementContainers
     }
     if (returnSeason) {
-      this.returnSeason = returnSeason;
+      this.returnSeason = returnSeason
     }
   }
 
@@ -127,7 +127,7 @@ class ChargeElementGroup {
    * @param {String} returnSeason
    */
   createForReturnSeason (returnSeason) {
-    return new ChargeElementGroup(this._chargeElementContainers, returnSeason);
+    return new ChargeElementGroup(this._chargeElementContainers, returnSeason)
   }
 
   /**
@@ -135,12 +135,12 @@ class ChargeElementGroup {
    * @param {String}
    */
   set returnSeason (returnSeason) {
-    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
-    this._returnSeason = returnSeason;
+    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS))
+    this._returnSeason = returnSeason
   }
 
   get returnSeason () {
-    return this._returnSeason;
+    return this._returnSeason
   }
 
   /**
@@ -148,12 +148,12 @@ class ChargeElementGroup {
    * @param {Array<ChargeElementContainer>} chargeElementContainers
    */
   set chargeElementContainers (chargeElementContainers) {
-    validators.assertIsArrayOfType(chargeElementContainers, ChargeElementContainer);
-    this._chargeElementContainers = chargeElementContainers;
+    validators.assertIsArrayOfType(chargeElementContainers, ChargeElementContainer)
+    this._chargeElementContainers = chargeElementContainers
   }
 
   get chargeElementContainers () {
-    return this._chargeElementContainers;
+    return this._chargeElementContainers
   }
 
   /**
@@ -164,7 +164,7 @@ class ChargeElementGroup {
   get volume () {
     return this._chargeElementContainers.reduce((acc, chargeElementContainer) =>
       acc.plus(new Decimal(chargeElementContainer.chargeElement.volume))
-    , new Decimal(0));
+    , new Decimal(0))
   }
 
   /**
@@ -172,7 +172,7 @@ class ChargeElementGroup {
    * @return {Boolean}
    */
   isEmpty () {
-    return this._chargeElementContainers.length === 0;
+    return this._chargeElementContainers.length === 0
   }
 
   /**
@@ -182,10 +182,10 @@ class ChargeElementGroup {
    * @return {Boolean}
    */
   isPurposeUseMatch (purposeUse) {
-    validators.assertIsInstanceOf(purposeUse, PurposeUse);
+    validators.assertIsInstanceOf(purposeUse, PurposeUse)
     return this._chargeElementContainers.some(
       chargeElementContainer => isPurposeUseMatch(purposeUse, chargeElementContainer)
-    );
+    )
   }
 
   /**
@@ -195,8 +195,8 @@ class ChargeElementGroup {
    */
   createForChargePeriod () {
     const chargeElementContainers = this._chargeElementContainers
-      .filter(chargeElementContainer => chargeElementContainer.isValidForChargePeriod);
-    return new ChargeElementGroup(chargeElementContainers);
+      .filter(chargeElementContainer => chargeElementContainer.isValidForChargePeriod)
+    return new ChargeElementGroup(chargeElementContainers)
   }
 
   /**
@@ -206,8 +206,8 @@ class ChargeElementGroup {
    */
   createForTwoPartTariff () {
     const chargeElementContainers = this._chargeElementContainers
-      .filter(chargeElementContainer => chargeElementContainer.isTwoPartTariffPurpose);
-    return new ChargeElementGroup(chargeElementContainers);
+      .filter(chargeElementContainer => chargeElementContainer.isTwoPartTariffPurpose)
+    return new ChargeElementGroup(chargeElementContainers)
   }
 
   /**
@@ -217,15 +217,15 @@ class ChargeElementGroup {
    * @return {ChargeElementGroup}
    */
   createForReturn (ret) {
-    validators.assertIsInstanceOf(ret, Return);
+    validators.assertIsInstanceOf(ret, Return)
 
-    const returnSeason = ret.isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
+    const returnSeason = ret.isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear
 
     // Get only elements with purpose uses matching the return purpose
     const elements = this._chargeElementContainers
-      .filter(chargeElementContainer => isReturnPurposeUseMatch(ret, chargeElementContainer));
+      .filter(chargeElementContainer => isReturnPurposeUseMatch(ret, chargeElementContainer))
 
-    return new ChargeElementGroup(elements, returnSeason);
+    return new ChargeElementGroup(elements, returnSeason)
   }
 
   /**
@@ -236,37 +236,37 @@ class ChargeElementGroup {
    * @return {Array<ChargeElementGroup>}
    */
   createForReturnLine (returnLine, chargePeriod) {
-    validators.assertIsInstanceOf(returnLine, ReturnLine);
-    validators.assertIsInstanceOf(chargePeriod, DateRange);
+    validators.assertIsInstanceOf(returnLine, ReturnLine)
+    validators.assertIsInstanceOf(chargePeriod, DateRange)
 
     // Only consider elements with abs period / time limits that match return line
     const elements = this._chargeElementContainers.filter(
       chargeElementContainer => chargeElementContainer.isReturnLineMatch(returnLine)
-    );
+    )
 
     // Throw error if no element matches supplied return line
     if (elements.length === 0) {
-      throw new ChargeElementMatchingError(`No charge elements to match for return line ${returnLine.id}`);
+      throw new ChargeElementMatchingError(`No charge elements to match for return line ${returnLine.id}`)
     }
 
     // Rank elements by score
-    const { returnSeason } = this;
-    const sortedElements = sortBy(elements, chargeElementContainer => chargeElementContainer.getScore(returnSeason));
+    const { returnSeason } = this
+    const sortedElements = sortBy(elements, chargeElementContainer => chargeElementContainer.getScore(returnSeason))
 
     // Check return line falls in charge period
     if (isReturnLineStraddlingChargePeriodError(returnLine, chargePeriod)) {
-      this.setTwoPartTariffStatus(ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD);
+      this.setTwoPartTariffStatus(ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD)
     }
 
     // Group by purpose use
     const groups = groupBy(sortedElements,
       element => element.chargeElement.purposeUse.id
-    );
+    )
 
     // Return as array of element groups
     return Object.values(groups).map(
       chargeElementContainers => new ChargeElementGroup(chargeElementContainers, this.returnSeason)
-    );
+    )
   }
 
   /**
@@ -274,11 +274,11 @@ class ChargeElementGroup {
    * @param {Number} twoPartTariffStatus
    */
   setTwoPartTariffStatus (twoPartTariffStatus) {
-    const { returnSeason } = this;
+    const { returnSeason } = this
     this._chargeElementContainers.forEach(chargeElementContainer =>
       chargeElementContainer.setTwoPartTariffStatus(returnSeason, twoPartTariffStatus)
-    );
-    return this;
+    )
+    return this
   }
 
   /**
@@ -286,16 +286,18 @@ class ChargeElementGroup {
    * @param {Decimal}
    */
   allocate (volume) {
-    const { returnSeason } = this;
+    const { returnSeason } = this
     this._chargeElementContainers.reduce((acc, chargeElementContainer, i) => {
-      const isLast = i === this._chargeElementContainers.length - 1;
-      const qtyToAllocate = isLast ? acc : decimalHelpers.min(
-        chargeElementContainer.getAvailableVolume(),
-        acc
-      );
-      chargeElementContainer.allocate(returnSeason, qtyToAllocate);
-      return acc.minus(qtyToAllocate);
-    }, new Decimal(volume));
+      const isLast = i === this._chargeElementContainers.length - 1
+      const qtyToAllocate = isLast
+        ? acc
+        : decimalHelpers.min(
+          chargeElementContainer.getAvailableVolume(),
+          acc
+        )
+      chargeElementContainer.allocate(returnSeason, qtyToAllocate)
+      return acc.minus(qtyToAllocate)
+    }, new Decimal(volume))
   }
 
   /**
@@ -304,10 +306,10 @@ class ChargeElementGroup {
    * @return {this}
    */
   reallocate () {
-    const { returnSeason } = this;
-    const groups = groupBy(this._chargeElementContainers, getReallocationKey);
-    Object.values(groups).forEach(group => reallocateGroup(returnSeason, group));
-    return this;
+    const { returnSeason } = this
+    const groups = groupBy(this._chargeElementContainers, getReallocationKey)
+    Object.values(groups).forEach(group => reallocateGroup(returnSeason, group))
+    return this
   }
 
   /**
@@ -315,11 +317,11 @@ class ChargeElementGroup {
    * @return {this}
    */
   flagOverAbstraction () {
-    const { returnSeason } = this;
+    const { returnSeason } = this
     this._chargeElementContainers.forEach(
       chargeElementContainer => chargeElementContainer.flagOverAbstraction(returnSeason)
-    );
-    return this;
+    )
+    return this
   }
 
   /**
@@ -327,11 +329,11 @@ class ChargeElementGroup {
    * @return {this}
    */
   setFinancialYear (financialYear) {
-    validators.assertIsInstanceOf(financialYear, FinancialYear);
+    validators.assertIsInstanceOf(financialYear, FinancialYear)
     this._chargeElementContainers.forEach(
       chargeElementContainer => chargeElementContainer.setFinancialYear(financialYear)
-    );
-    return this;
+    )
+    return this
   }
 
   /**
@@ -339,13 +341,13 @@ class ChargeElementGroup {
    * @return {Array<BillingVolume>}
    */
   toBillingVolumes () {
-    const isSummer = this.returnSeason === RETURN_SEASONS.summer;
+    const isSummer = this.returnSeason === RETURN_SEASONS.summer
     const billingVolumes = flatMap(this._chargeElementContainers.map(
       chargeElementContainer => chargeElementContainer.billingVolumes
-    ));
+    ))
     return billingVolumes
       .filter(billingVolume => billingVolume.isSummer === isSummer)
-      .map(billingVolume => billingVolume.setVolumeFromCalculatedVolume());
+      .map(billingVolume => billingVolume.setVolumeFromCalculatedVolume())
   }
 
   /**
@@ -355,11 +357,11 @@ class ChargeElementGroup {
    */
   setBillingVolumes (billingVolumes) {
     for (const billingVolume of billingVolumes) {
-      const chargeElementContainer = this._chargeElementContainers.find(c => c.chargeElement.id === billingVolume.chargeElementId);
-      chargeElementContainer.setBillingVolume(billingVolume);
+      const chargeElementContainer = this._chargeElementContainers.find(c => c.chargeElement.id === billingVolume.chargeElementId)
+      chargeElementContainer.setBillingVolume(billingVolume)
     }
-    return this;
+    return this
   }
 };
 
-module.exports = ChargeElementGroup;
+module.exports = ChargeElementGroup

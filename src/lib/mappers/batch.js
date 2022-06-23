@@ -1,11 +1,11 @@
-'use strict';
+'use strict'
 
-const Batch = require('../../lib/models/batch');
-const FinancialYear = require('../../lib/models/financial-year');
-const regionMapper = require('../../lib/mappers/region');
+const Batch = require('../../lib/models/batch')
+const FinancialYear = require('../../lib/models/financial-year')
+const regionMapper = require('../../lib/mappers/region')
 
-const { createMapper } = require('../../lib/object-mapper');
-const helpers = require('../../lib/mappers/lib/helpers');
+const { createMapper } = require('../../lib/object-mapper')
+const helpers = require('../../lib/mappers/lib/helpers')
 
 const dbToModelMapper = createMapper({ mapNull: false })
   .copy(
@@ -29,7 +29,7 @@ const dbToModelMapper = createMapper({ mapNull: false })
   .map('batchType').to('type')
   .map('fromFinancialYearEnding').to('startYear', fromFinancialYearEnding => new FinancialYear(fromFinancialYearEnding))
   .map('toFinancialYearEnding').to('endYear', toFinancialYearEnding => new FinancialYear(toFinancialYearEnding))
-  .map('region').to('region', regionMapper.dbToModel);
+  .map('region').to('region', regionMapper.dbToModel)
 
 /**
  * Converts DB representation to a Batch service model
@@ -37,6 +37,6 @@ const dbToModelMapper = createMapper({ mapNull: false })
  * @return {Batch}
  */
 const dbToModel = row =>
-  helpers.createModel(Batch, row, dbToModelMapper);
+  helpers.createModel(Batch, row, dbToModelMapper)
 
-exports.dbToModel = dbToModel;
+exports.dbToModel = dbToModel

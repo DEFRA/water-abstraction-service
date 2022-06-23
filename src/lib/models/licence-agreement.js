@@ -1,22 +1,22 @@
-'use strict';
+'use strict'
 
-const DateRange = require('./date-range');
-const Agreement = require('./agreement');
+const DateRange = require('./date-range')
+const Agreement = require('./agreement')
 
-const validators = require('./validators');
+const validators = require('./validators')
 
-const Model = require('./model');
+const Model = require('./model')
 
-const DATE_FORMAT = 'YYYY-MM-DD';
+const DATE_FORMAT = 'YYYY-MM-DD'
 
 class LicenceAgreement extends Model {
   set licenceNumber (licenceNumber) {
-    validators.assertLicenceNumber(licenceNumber);
-    this._licenceNumber = licenceNumber;
+    validators.assertLicenceNumber(licenceNumber)
+    this._licenceNumber = licenceNumber
   }
 
   get licenceNumber () {
-    return this._licenceNumber;
+    return this._licenceNumber
   }
 
   /**
@@ -24,12 +24,12 @@ class LicenceAgreement extends Model {
    * @return {DateRange}
    */
   set dateRange (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    this._dateRange = dateRange;
+    validators.assertIsInstanceOf(dateRange, DateRange)
+    this._dateRange = dateRange
   }
 
   get dateRange () {
-    return this._dateRange;
+    return this._dateRange
   }
 
   /**
@@ -37,29 +37,29 @@ class LicenceAgreement extends Model {
    * @return {Agreement}
    */
   get agreement () {
-    return this._agreement;
+    return this._agreement
   }
 
   set agreement (agreement) {
-    validators.assertIsInstanceOf(agreement, Agreement);
-    this._agreement = agreement;
+    validators.assertIsInstanceOf(agreement, Agreement)
+    this._agreement = agreement
   }
 
   get dateSigned () {
-    return this._dateSigned ? this._dateSigned.format(DATE_FORMAT) : this._dateSigned;
+    return this._dateSigned ? this._dateSigned.format(DATE_FORMAT) : this._dateSigned
   }
 
   set dateSigned (dateSigned) {
-    this._dateSigned = this.getDateTimeFromValue(dateSigned);
+    this._dateSigned = this.getDateTimeFromValue(dateSigned)
   }
 
   get dateDeleted () {
-    return this._dateDeleted ? this._dateDeleted.format(DATE_FORMAT) : this._dateDeleted;
+    return this._dateDeleted ? this._dateDeleted.format(DATE_FORMAT) : this._dateDeleted
   }
 
   set dateDeleted (dateDeleted) {
-    this._dateDeleted = this.getDateTimeFromValue(dateDeleted);
+    this._dateDeleted = this.getDateTimeFromValue(dateDeleted)
   }
 }
 
-module.exports = LicenceAgreement;
+module.exports = LicenceAgreement

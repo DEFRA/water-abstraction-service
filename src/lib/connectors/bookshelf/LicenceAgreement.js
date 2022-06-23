@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const { bookshelf } = require('./bookshelf.js');
+const { bookshelf } = require('./bookshelf.js')
 
 module.exports = bookshelf.model('LicenceAgreement', {
   tableName: 'water.licence_agreements',
@@ -10,11 +10,11 @@ module.exports = bookshelf.model('LicenceAgreement', {
   hasTimestamps: ['date_created', 'date_updated'],
 
   licence () {
-    return this.belongsTo('Licence', 'licence_ref', 'licence_ref');
+    return this.belongsTo('Licence', 'licence_ref', 'licence_ref')
   },
 
   financialAgreementType () {
-    return this.hasOne('FinancialAgreementType', 'financial_agreement_type_id', 'financial_agreement_type_id');
+    return this.hasOne('FinancialAgreementType', 'financial_agreement_type_id', 'financial_agreement_type_id')
   }
 
-});
+})

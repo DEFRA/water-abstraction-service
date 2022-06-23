@@ -16,8 +16,8 @@
     "migrate:local-test": "DATABASE_URL=postgres://water_user:password@localhost:5432/permits node scripts/create-schema && DATABASE_URL=postgres://water_user:password@localhost:5432/permits db-migrate up --verbose && DATABASE_URL=postgres://water_user:password@localhost:5432/permits node scripts/migrate-task-config",
     "migrate:down": "db-migrate down --verbose",
     "migrate:create": "db-migrate create --sql-file --",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "standard",
+    "lint:fix": "standard --fix",
     "version": "auto-changelog -p --commit-limit false && git add CHANGELOG.md"
   },
   "engines": {
@@ -34,15 +34,10 @@
     "csv-stringify": "^2.0.4",
     "db-migrate": "^0.11.11",
     "db-migrate-pg": "^1.2.2",
-    "eslint": "^8.13.0",
-    "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^6.0.0",
-    "eslint-plugin-standard": "^5.0.0",
     "mkdir": "^0.0.2",
     "promise-poller": "^1.9.1",
-    "sinon": "^7.5.0"
+    "sinon": "^7.5.0",
+    "standard": "^17.0.0"
   },
   "dependencies": {
     "@envage/hapi-pg-rest-api": "^7.0.0",

@@ -39,9 +39,9 @@ const permissionsMap = {
     groups: ['wirs']
   }
 
-};
+}
 
-const getRolesForPermissionKey = key => permissionsMap[key];
+const getRolesForPermissionKey = key => permissionsMap[key]
 
 /**
  * IDM roles
@@ -57,7 +57,7 @@ const ROLES = {
   manageGaugingStationLicenceLinks: 'manage_gauging_station_licence_links',
   viewChargeVersions: 'view_charge_versions',
   manageBillingAccounts: 'manage_billing_accounts'
-};
+}
 
-exports.getRolesForPermissionKey = getRolesForPermissionKey;
-exports.ROLES = ROLES;
+exports.getRolesForPermissionKey = getRolesForPermissionKey
+exports.ROLES = ROLES

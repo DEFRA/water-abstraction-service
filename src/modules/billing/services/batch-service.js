@@ -1,35 +1,35 @@
-'use strict';
+'use strict'
 
-const { partialRight, startCase } = require('lodash');
-const Boom = require('@hapi/boom');
-const bluebird = require('bluebird');
+const { partialRight, startCase } = require('lodash')
+const Boom = require('@hapi/boom')
+const bluebird = require('bluebird')
 
-const mappers = require('../mappers');
-const { logger } = require('../../../logger');
-const messageQueue = require('../../../lib/message-queue-v2');
+const mappers = require('../mappers')
+const { logger } = require('../../../logger')
+const messageQueue = require('../../../lib/message-queue-v2')
 
 // Constants
-const { BatchStatusError } = require('../lib/errors');
-const { NotFoundError } = require('../../../lib/errors');
-const { BATCH_STATUS, BATCH_TYPE } = require('../../../lib/models/batch');
-const { SCHEME } = require('../../../lib/models/constants');
-const config = require('../../../../config');
+const { BatchStatusError } = require('../lib/errors')
+const { NotFoundError } = require('../../../lib/errors')
+const { BATCH_STATUS, BATCH_TYPE } = require('../../../lib/models/batch')
+const { SCHEME } = require('../../../lib/models/constants')
+const config = require('../../../../config')
 
 // Services
-const newRepos = require('../../../lib/connectors/repos');
-const eventService = require('../../../lib/services/events');
-const invoiceLicenceService = require('./invoice-licences-service');
-const transactionsService = require('./transactions-service');
-const billingVolumesService = require('./billing-volumes-service');
-const invoiceService = require('../../../lib/services/invoice-service');
-const licencesService = require('../../../lib/services/licences');
-const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
+const newRepos = require('../../../lib/connectors/repos')
+const eventService = require('../../../lib/services/events')
+const invoiceLicenceService = require('./invoice-licences-service')
+const transactionsService = require('./transactions-service')
+const billingVolumesService = require('./billing-volumes-service')
+const invoiceService = require('../../../lib/services/invoice-service')
+const licencesService = require('../../../lib/services/licences')
+const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs')
 // Models
-const Event = require('../../../lib/models/event');
-const Batch = require('../../../lib/models/batch');
+const Event = require('../../../lib/models/event')
+const Batch = require('../../../lib/models/batch')
 
 // Jobs
-const { jobName: deleteErroredBatchName } = require('../jobs/delete-errored-batch');
+const { jobName: deleteErroredBatchName } = require('../jobs/delete-errored-batch')
 
 /**
  * Loads a Batch instance by ID
@@ -40,31 +40,31 @@ const { jobName: deleteErroredBatchName } = require('../jobs/delete-errored-batc
 const getBatchById = async (id, includeInvoices = false) => {
   const method = includeInvoices
     ? newRepos.billingBatches.findOneWithInvoices
-    : newRepos.billingBatches.findOne;
-  const row = await method(id);
-  return row ? mappers.batch.dbToModel(row) : null;
-};
+    : newRepos.billingBatches.findOne
+  const row = await method(id)
+  return row ? mappers.batch.dbToModel(row) : null
+}
 
 const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
-  const result = await newRepos.billingBatches.findPage(page, perPage);
+  const result = await newRepos.billingBatches.findPage(page, perPage)
   return {
     data: result.data.map(mappers.batch.dbToModel),
     pagination: result.pagination
-  };
-};
+  }
+}
 
-const mapBatch = batch => batch ? mappers.batch.dbToModel(batch) : null;
+const mapBatch = batch => batch ? mappers.batch.dbToModel(batch) : null
 
 const getExistingBatch = (batches, toFinancialYearEnding) => {
   const liveStatuses = [
     BATCH_STATUS.processing,
     BATCH_STATUS.ready,
     BATCH_STATUS.review
-  ];
+  ]
 
-  const existingBatch = batches.find(batch => liveStatuses.includes(batch.status) && batch.toFinancialYearEnding === toFinancialYearEnding);
-  return mapBatch(existingBatch);
-};
+  const existingBatch = batches.find(batch => liveStatuses.includes(batch.status) && batch.toFinancialYearEnding === toFinancialYearEnding)
+  return mapBatch(existingBatch)
+}
 
 const getDuplicateSentBatch = (batches, batchType, toFinancialYearEnding, isSummer, scheme) => {
   const duplicateSentBatch = batches.find(batch =>
@@ -72,17 +72,17 @@ const getDuplicateSentBatch = (batches, batchType, toFinancialYearEnding, isSumm
       batch.batchType === batchType &&
       batch.toFinancialYearEnding === toFinancialYearEnding &&
       batch.isSummer === isSummer &&
-      batch.scheme === scheme);
-  return mapBatch(duplicateSentBatch);
-};
+      batch.scheme === scheme)
+  return mapBatch(duplicateSentBatch)
+}
 
 const getExistingAndDuplicateBatchesForRegion = async (regionId, batchType, toFinancialYearEnding, isSummer, scheme) => {
-  const batches = await newRepos.billingBatches.findByRegionId(regionId);
+  const batches = await newRepos.billingBatches.findByRegionId(regionId)
   return {
     existingBatch: getExistingBatch(batches, toFinancialYearEnding),
     duplicateSentBatch: getDuplicateSentBatch(batches, batchType, toFinancialYearEnding, isSummer, scheme)
-  };
-};
+  }
+}
 
 /**
  * Checks if there is:
@@ -95,13 +95,13 @@ const getExistingAndDuplicateBatchesForRegion = async (regionId, batchType, toFi
  * @return {Batch|null} if batch exists
  */
 const getExistingOrDuplicateSentBatch = async (regionId, batchType, toFinancialYearEnding, isSummer, scheme) => {
-  const { existingBatch, duplicateSentBatch } = await getExistingAndDuplicateBatchesForRegion(regionId, batchType, toFinancialYearEnding, isSummer, scheme);
+  const { existingBatch, duplicateSentBatch } = await getExistingAndDuplicateBatchesForRegion(regionId, batchType, toFinancialYearEnding, isSummer, scheme)
 
   // supplementary batches can be run multiple times for the same region, year and season
-  if (batchType === BATCH_TYPE.supplementary) return existingBatch;
+  if (batchType === BATCH_TYPE.supplementary) return existingBatch
 
-  return duplicateSentBatch || existingBatch;
-};
+  return duplicateSentBatch || existingBatch
+}
 
 const saveEvent = (type, status, user, batch) => {
   const event = new Event().fromHash({
@@ -109,37 +109,37 @@ const saveEvent = (type, status, user, batch) => {
     type,
     metadata: { user, batch },
     status
-  });
+  })
 
-  return eventService.create(event);
-};
+  return eventService.create(event)
+}
 
 const deleteBatch = async (batch, internalCallingUser) => {
   if (!batch.canBeDeleted()) {
-    throw new BatchStatusError(`Batch ${batch.id} cannot be deleted - status is ${batch.status}`);
+    throw new BatchStatusError(`Batch ${batch.id} cannot be deleted - status is ${batch.status}`)
   }
 
   try {
-    await chargeModuleBillRunConnector.delete(batch.externalId);
+    await chargeModuleBillRunConnector.delete(batch.externalId)
 
     // These are populated at every stage in the bill run
-    await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batch.id, false);
-    await newRepos.billingVolumes.deleteByBatchId(batch.id);
+    await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batch.id, false)
+    await newRepos.billingVolumes.deleteByBatchId(batch.id)
 
     // These tables are not yet populated at review stage in TPT
-    await newRepos.billingTransactions.deleteByBatchId(batch.id);
-    await newRepos.billingInvoiceLicences.deleteByBatchId(batch.id);
-    await newRepos.billingInvoices.deleteByBatchId(batch.id, false);
-    await newRepos.billingBatches.delete(batch.id);
+    await newRepos.billingTransactions.deleteByBatchId(batch.id)
+    await newRepos.billingInvoiceLicences.deleteByBatchId(batch.id)
+    await newRepos.billingInvoices.deleteByBatchId(batch.id, false)
+    await newRepos.billingBatches.delete(batch.id)
 
-    await saveEvent('billing-batch:cancel', 'delete', internalCallingUser, batch);
+    await saveEvent('billing-batch:cancel', 'delete', internalCallingUser, batch)
   } catch (err) {
-    logger.error('Failed to delete the batch', err, batch);
-    await saveEvent('billing-batch:cancel', 'error', internalCallingUser, batch);
-    await setStatus(batch.id, BATCH_STATUS.error);
-    throw err;
+    logger.error('Failed to delete the batch', err, batch)
+    await saveEvent('billing-batch:cancel', 'error', internalCallingUser, batch)
+    await setStatus(batch.id, BATCH_STATUS.error)
+    throw err
   }
-};
+}
 
 /**
  * Sets the batch status
@@ -147,7 +147,7 @@ const deleteBatch = async (batch, internalCallingUser) => {
  * @param {BATCH_STATUS} status
  */
 const setStatus = (batchId, status) =>
-  newRepos.billingBatches.update(batchId, { status });
+  newRepos.billingBatches.update(batchId, { status })
 
 /**
  * Sets the specified batch to 'error' status
@@ -158,64 +158,64 @@ const setStatus = (batchId, status) =>
  * @return {Promise}
  */
 const setErrorStatus = async (batchId, errorCode) => {
-  logger.error(`Batch ${batchId} failed with error code ${errorCode}`);
+  logger.error(`Batch ${batchId} failed with error code ${errorCode}`)
 
-  await newRepos.billingVolumes.markVolumesAsErrored(batchId, { require: false });
+  await newRepos.billingVolumes.markVolumesAsErrored(batchId, { require: false })
 
   // Mark local batch as errored and delete CM batch
-  await newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error, errorCode });
+  await newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error, errorCode })
   if (errorCode !== Batch.BATCH_ERROR_CODE.failedToCreateBillRun) {
-    await messageQueue.getQueueManager().add(deleteErroredBatchName, batchId);
+    await messageQueue.getQueueManager().add(deleteErroredBatchName, batchId)
   }
-};
+}
 
 const approveBatch = async (batch, internalCallingUser) => {
   try {
-    await chargeModuleBillRunConnector.approve(batch.externalId);
-    await chargeModuleBillRunConnector.send(batch.externalId);
-    await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
-    await invoiceService.resetIsFlaggedForRebilling(batch.id);
+    await chargeModuleBillRunConnector.approve(batch.externalId)
+    await chargeModuleBillRunConnector.send(batch.externalId)
+    await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch)
+    await invoiceService.resetIsFlaggedForRebilling(batch.id)
 
     // if it is a supplementary batch mark all the
     // old transactions in previous batches that was credited back in new invoices sent in this batch
     // for the relevant region.
     if (batch.type === BATCH_TYPE.supplementary) {
-      await transactionsService.updateIsCredited(batch.region.id);
-      await licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(batch.region.id, batch.dateCreated);
+      await transactionsService.updateIsCredited(batch.region.id)
+      await licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(batch.region.id, batch.dateCreated)
     }
 
-    return batch;
+    return batch
   } catch (err) {
-    logger.error('Failed to approve the batch', err, batch);
+    logger.error('Failed to approve the batch', err, batch)
     // set the status back to ready so the user can retry
-    await setStatus(batch.id, BATCH_STATUS.ready);
-    await saveEvent('billing-batch:approve', 'error', internalCallingUser, batch);
-    throw err;
+    await setStatus(batch.id, BATCH_STATUS.ready)
+    await saveEvent('billing-batch:approve', 'error', internalCallingUser, batch)
+    throw err
   }
-};
+}
 
 const saveInvoiceLicenceTransactions = async invoiceLicence => {
   for (const transaction of invoiceLicence.transactions) {
-    const { billingTransactionId } = await transactionsService.saveTransactionToDB(invoiceLicence, transaction);
-    transaction.id = billingTransactionId;
+    const { billingTransactionId } = await transactionsService.saveTransactionToDB(invoiceLicence, transaction)
+    transaction.id = billingTransactionId
   }
-};
+}
 
 const saveInvoiceLicences = async (batch, invoice) => {
   for (const invoiceLicence of invoice.invoiceLicences) {
-    const { id } = await invoiceLicenceService.saveInvoiceLicenceToDB(invoice, invoiceLicence, batch.scheme);
-    invoiceLicence.id = id;
-    await saveInvoiceLicenceTransactions(invoiceLicence);
+    const { id } = await invoiceLicenceService.saveInvoiceLicenceToDB(invoice, invoiceLicence, batch.scheme)
+    invoiceLicence.id = id
+    await saveInvoiceLicenceTransactions(invoiceLicence)
   }
-};
+}
 
 const saveInvoicesToDB = async batch => {
   for (const invoice of batch.invoices) {
-    const { billingInvoiceId } = await invoiceService.saveInvoiceToDB(batch, invoice);
-    invoice.id = billingInvoiceId;
-    await saveInvoiceLicences(batch, invoice);
+    const { billingInvoiceId } = await invoiceService.saveInvoiceToDB(batch, invoice)
+    invoice.id = billingInvoiceId
+    await saveInvoiceLicences(batch, invoice)
   }
-};
+}
 
 /**
  * Gets counts of the number of transactions in each status for the
@@ -223,12 +223,12 @@ const saveInvoicesToDB = async batch => {
  * @param {String} batchId
  */
 const getTransactionStatusCounts = async batchId => {
-  const data = await newRepos.billingTransactions.findStatusCountsByBatchId(batchId);
+  const data = await newRepos.billingTransactions.findStatusCountsByBatchId(batchId)
   return data.reduce((acc, row) => ({
     ...acc,
     [row.status]: parseInt(row.count)
-  }), {});
-};
+  }), {})
+}
 
 /**
  * Cleans up any
@@ -238,14 +238,14 @@ const getTransactionStatusCounts = async batchId => {
  * @return {Promise}
  */
 const cleanup = async batchId => {
-  await newRepos.billingInvoiceLicences.deleteEmptyByBatchId(batchId);
-  await newRepos.billingInvoices.deleteEmptyByBatchId(batchId);
-};
+  await newRepos.billingInvoiceLicences.deleteEmptyByBatchId(batchId)
+  await newRepos.billingInvoices.deleteEmptyByBatchId(batchId)
+}
 
 const getErrMsgForBatchErr = (batch, regionId) =>
   batch.status === BATCH_STATUS.sent
     ? `${startCase(batch.type)} batch already sent for: region ${regionId}, financial year ${batch.endYear.yearEnding}, isSummer ${batch.isSummer}`
-    : `Batch already live for region ${regionId}`;
+    : `Batch already live for region ${regionId}`
 
 /**
  * Creates batch locally and on CM, responds with Batch service model
@@ -256,27 +256,27 @@ const getErrMsgForBatchErr = (batch, regionId) =>
  * @return {Promise<Batch>} resolves with Batch service model
  */
 const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
-  let fromFinancialYearEnding, scheme;
+  let fromFinancialYearEnding, scheme
   if (batchType !== 'annual') {
-    scheme = 'alcs';
-    toFinancialYearEnding = config.billing.alcsEndYear;
+    scheme = 'alcs'
+    toFinancialYearEnding = config.billing.alcsEndYear
     if (batchType === 'supplementary') {
-      fromFinancialYearEnding = config.billing.alcsEndYear - (config.billing.supplementaryYears + (config.billing.alcsEndYear - toFinancialYearEnding));
+      fromFinancialYearEnding = config.billing.alcsEndYear - (config.billing.supplementaryYears + (config.billing.alcsEndYear - toFinancialYearEnding))
     } else {
-      fromFinancialYearEnding = toFinancialYearEnding;
+      fromFinancialYearEnding = toFinancialYearEnding
     }
   } else {
-    scheme = 'sroc';
-    fromFinancialYearEnding = toFinancialYearEnding;
+    scheme = 'sroc'
+    fromFinancialYearEnding = toFinancialYearEnding
   }
 
-  const batch = await getExistingOrDuplicateSentBatch(regionId, batchType, toFinancialYearEnding, isSummer, scheme);
+  const batch = await getExistingOrDuplicateSentBatch(regionId, batchType, toFinancialYearEnding, isSummer, scheme)
 
   if (batch) {
-    const err = Boom.conflict(getErrMsgForBatchErr(batch, regionId));
-    err.reformat();
-    err.output.payload.batch = batch;
-    throw err;
+    const err = Boom.conflict(getErrMsgForBatchErr(batch, regionId))
+    err.reformat()
+    err.output.payload.batch = batch
+    throw err
   }
 
   const { billingBatchId } = await newRepos.billingBatches.create({
@@ -287,26 +287,26 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
     toFinancialYearEnding,
     isSummer,
     scheme
-  });
+  })
 
-  return getBatchById(billingBatchId);
-};
+  return getBatchById(billingBatchId)
+}
 
 const createChargeModuleBillRun = async batchId => {
-  const batch = await getBatchById(batchId);
+  const batch = await getBatchById(batchId)
 
   // Create CM batch
-  const { billRun: cmBillRun } = await chargeModuleBillRunConnector.create(batch.region.code, batch.scheme === SCHEME.alcs ? 'presroc' : batch.scheme);
+  const { billRun: cmBillRun } = await chargeModuleBillRunConnector.create(batch.region.code, batch.scheme === SCHEME.alcs ? 'presroc' : batch.scheme)
 
   // Update DB row
   const row = await newRepos.billingBatches.update(batch.id, {
     externalId: cmBillRun.id,
     billRunNumber: cmBillRun.billRunNumber
-  });
+  })
 
   // Return updated batch
-  return batch.pickFrom(row, ['externalId', 'billRunNumber']);
-};
+  return batch.pickFrom(row, ['externalId', 'billRunNumber'])
+}
 
 /**
  * Validates batch & transactions, then updates batch status to "processing"
@@ -321,18 +321,18 @@ const createChargeModuleBillRun = async batchId => {
  */
 const approveTptBatchReview = async batch => {
   if (!batch.canApproveReview()) {
-    throw new BatchStatusError('Cannot approve review. Batch status must be "review"');
+    throw new BatchStatusError('Cannot approve review. Batch status must be "review"')
   }
-  await billingVolumesService.approveVolumesForBatch(batch);
-  await setStatus(batch.id, BATCH_STATUS.processing);
-  return getBatchById(batch.id);
-};
+  await billingVolumesService.approveVolumesForBatch(batch)
+  await setStatus(batch.id, BATCH_STATUS.processing)
+  return getBatchById(batch.id)
+}
 
 const getSentTptBatchesForFinancialYearAndRegion = async (financialYear, region) => {
-  const tptBatches = await newRepos.billingBatches.findSentTptBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id, BATCH_TYPE.twoPartTariff);
-  const suppBatches = await newRepos.billingBatches.findSentTptBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id, BATCH_TYPE.supplementary);
-  return [...tptBatches, ...suppBatches].map(mappers.batch.dbToModel);
-};
+  const tptBatches = await newRepos.billingBatches.findSentTptBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id, BATCH_TYPE.twoPartTariff)
+  const suppBatches = await newRepos.billingBatches.findSentTptBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id, BATCH_TYPE.supplementary)
+  return [...tptBatches, ...suppBatches].map(mappers.batch.dbToModel)
+}
 
 /**
    * Updates each licence in the invoice so that the includeInSupplementaryBilling
@@ -341,9 +341,9 @@ const getSentTptBatchesForFinancialYearAndRegion = async (financialYear, region)
    * @param {Object<Invoice>} invoice The invoice containing the licences to update
    */
 const updateInvoiceLicencesForSupplementaryReprocessing = async invoice => {
-  const licenceIds = invoice.getLicenceIds();
-  return Promise.all(licenceIds.map(licenceId => licencesService.flagForSupplementaryBilling(licenceId)));
-};
+  const licenceIds = invoice.getLicenceIds()
+  return Promise.all(licenceIds.map(licenceId => licencesService.flagForSupplementaryBilling(licenceId)))
+}
 
 /**
  * deletes all the transactions, invoice licences, invoices, charge version years and charge module data for an invoice
@@ -351,13 +351,13 @@ const updateInvoiceLicencesForSupplementaryReprocessing = async invoice => {
  * @param {Invoice} invoice water service invoice instance
  */
 const deleteInvoicesWithRelatedData = async (batch, invoice) => {
-  await newRepos.billingBatchChargeVersionYears.deleteByInvoiceId(invoice.billingInvoiceId);
-  await newRepos.billingVolumes.deleteByBatchAndInvoiceId(batch.id, invoice.billingInvoiceId);
-  await chargeModuleBillRunConnector.deleteInvoiceFromBillRun(batch.externalId, invoice.externalId);
-  await newRepos.billingTransactions.deleteByInvoiceId(invoice.billingInvoiceId);
-  await newRepos.billingInvoiceLicences.deleteByInvoiceId(invoice.billingInvoiceId);
-  await newRepos.billingInvoices.delete(invoice.billingInvoiceId);
-};
+  await newRepos.billingBatchChargeVersionYears.deleteByInvoiceId(invoice.billingInvoiceId)
+  await newRepos.billingVolumes.deleteByBatchAndInvoiceId(batch.id, invoice.billingInvoiceId)
+  await chargeModuleBillRunConnector.deleteInvoiceFromBillRun(batch.externalId, invoice.externalId)
+  await newRepos.billingTransactions.deleteByInvoiceId(invoice.billingInvoiceId)
+  await newRepos.billingInvoiceLicences.deleteByInvoiceId(invoice.billingInvoiceId)
+  await newRepos.billingInvoices.delete(invoice.billingInvoiceId)
+}
 
 /**
  * Deletes an individual invoice from the batch.  Also deletes CM transactions
@@ -370,52 +370,52 @@ const deleteInvoicesWithRelatedData = async (batch, invoice) => {
 const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = null, rebillInvoiceId = null) => {
   // Check batch is in suitable state to delete invoices
   if (!batch.canDeleteInvoices()) {
-    throw new BatchStatusError(`Cannot delete invoice from batch when status is ${batch.status}`);
+    throw new BatchStatusError(`Cannot delete invoice from batch when status is ${batch.status}`)
   }
   // Load invoice
-  const invoice = await newRepos.billingInvoices.findOne(invoiceId);
+  const invoice = await newRepos.billingInvoices.findOne(invoiceId)
   if (!invoice) {
-    throw new NotFoundError(`Invoice ${invoiceId} not found`);
+    throw new NotFoundError(`Invoice ${invoiceId} not found`)
   }
 
   // Set batch status back to 'processing'
-  await setStatus(batch.id, Batch.BATCH_STATUS.processing);
+  await setStatus(batch.id, Batch.BATCH_STATUS.processing)
   try {
     if (rebillInvoiceId && originalBillingInvoiceId) {
       // find the original Invoice and rebilling invoice (reversal of resissue)
-      const originalInvoice = invoice.originalBillingInvoice;
-      const rebillingInvoice = await newRepos.billingInvoices.findOne(rebillInvoiceId);
+      const originalInvoice = invoice.originalBillingInvoice
+      const rebillingInvoice = await newRepos.billingInvoices.findOne(rebillInvoiceId)
 
       if (!rebillingInvoice) {
-        throw new NotFoundError(`Rebilling Invoice ${rebillInvoiceId} not found`);
+        throw new NotFoundError(`Rebilling Invoice ${rebillInvoiceId} not found`)
       } else if (!originalInvoice) {
-        throw new NotFoundError(`Original Invoice ${originalBillingInvoiceId} not found`);
+        throw new NotFoundError(`Original Invoice ${originalBillingInvoiceId} not found`)
       }
 
       const changes = originalInvoice.originalBillingInvoiceId === originalBillingInvoiceId
         ? {
-          isFlaggedForRebilling: false,
-          originalBillingInvoiceId: null,
-          rebillingState: null
-        }
-        : { isFlaggedForRebilling: false, rebillingState: 'rebill' };
+            isFlaggedForRebilling: false,
+            originalBillingInvoiceId: null,
+            rebillingState: null
+          }
+        : { isFlaggedForRebilling: false, rebillingState: 'rebill' }
       // reset the original invoice rebilling status and set isFlaggedForRebilling to false.
-      await invoiceService.updateInvoice(originalBillingInvoiceId, changes);
+      await invoiceService.updateInvoice(originalBillingInvoiceId, changes)
       // delete the rebill and reversal invoices
-      await bluebird.mapSeries([rebillingInvoice, invoice], invoiceRow => deleteInvoicesWithRelatedData(batch, invoiceRow));
+      await bluebird.mapSeries([rebillingInvoice, invoice], invoiceRow => deleteInvoicesWithRelatedData(batch, invoiceRow))
     } else {
       // delete the normal invoice
-      await deleteInvoicesWithRelatedData(batch, invoice);
+      await deleteInvoicesWithRelatedData(batch, invoice)
       // update the include in supplementary billing status
-      const invoiceModel = mappers.invoice.dbToModel(invoice);
-      await updateInvoiceLicencesForSupplementaryReprocessing(invoiceModel);
+      const invoiceModel = mappers.invoice.dbToModel(invoice)
+      await updateInvoiceLicencesForSupplementaryReprocessing(invoiceModel)
     }
-    return batch;
+    return batch
   } catch (err) {
-    await setErrorStatus(batch.id, Batch.BATCH_ERROR_CODE.failedToDeleteInvoice);
-    throw err;
+    await setErrorStatus(batch.id, Batch.BATCH_ERROR_CODE.failedToDeleteInvoice)
+    throw err
   }
-};
+}
 
 /**
  * Deletes all billing data in service (!)
@@ -423,22 +423,22 @@ const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = n
  */
 const deleteAllBillingData = async () => {
   // Delete batches in CM
-  const batches = await newRepos.billingBatches.find();
-  const batchesWithExternalId = batches.filter(row => !!row.externalId);
+  const batches = await newRepos.billingBatches.find()
+  const batchesWithExternalId = batches.filter(row => !!row.externalId)
   for (const { externalId } of batchesWithExternalId) {
     try {
-      logger.info(`Deleting Charge Module batch ${externalId}`);
-      await chargeModuleBillRunConnector.delete(externalId);
+      logger.info(`Deleting Charge Module batch ${externalId}`)
+      await chargeModuleBillRunConnector.delete(externalId)
     } catch (err) {
-      logger.error(`Unable to delete Charge Module batch ${externalId}`, err);
+      logger.error(`Unable to delete Charge Module batch ${externalId}`, err)
     }
   }
   // Delete all data in water.billing_* tables
-  return newRepos.billingBatches.deleteAllBillingData();
-};
+  return newRepos.billingBatches.deleteAllBillingData()
+}
 
 const getBatchTransactionCount = batchId =>
-  newRepos.billingTransactions.countByBatchId(batchId);
+  newRepos.billingTransactions.countByBatchId(batchId)
 
 /**
  * Updates batch from CM summary data
@@ -448,16 +448,16 @@ const getBatchTransactionCount = batchId =>
  */
 const updateWithCMSummary = async (batchId, cmResponse) => {
   // Extract counts/totals from CM bill run response
-  const { invoiceCount, creditNoteCount, invoiceValue, creditNoteValue, netTotal, status: cmStatus, transactionFileReference } = cmResponse.billRun;
+  const { invoiceCount, creditNoteCount, invoiceValue, creditNoteValue, netTotal, status: cmStatus, transactionFileReference } = cmResponse.billRun
   // Calculate next batch status
-  const cmCompletedStatuses = ['billed', 'billing_not_required'];
+  const cmCompletedStatuses = ['billed', 'billing_not_required']
 
-  const batch = await newRepos.billingBatches.findOne(batchId);
-  const status = cmCompletedStatuses.includes(cmStatus) && batch.status !== 'cancel' ? Batch.BATCH_STATUS.sent : Batch.BATCH_STATUS.ready;
+  const batch = await newRepos.billingBatches.findOne(batchId)
+  const status = cmCompletedStatuses.includes(cmStatus) && batch.status !== 'cancel' ? Batch.BATCH_STATUS.sent : Batch.BATCH_STATUS.ready
 
   // Get transaction count in local DB
   // if 0, the batch will be set to "empty" status
-  const count = await getBatchTransactionCount(batchId);
+  const count = await getBatchTransactionCount(batchId)
 
   let changes = {
     status,
@@ -467,46 +467,46 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
     netTotal,
     transactionFileReference,
     creditNoteValue: -Math.abs(creditNoteValue)
-  };
+  }
   // if the batch is empty remove the supplementary billing flag from the licences in
   // the region set before the batch creation date and set the batch status to EMPTY
   if (count === 0) {
-    changes = { status: BATCH_STATUS.empty };
-    await licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(batch.region.regionId, batch.dateCreated);
+    changes = { status: BATCH_STATUS.empty }
+    await licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(batch.region.regionId, batch.dateCreated)
   }
 
-  const data = await newRepos.billingBatches.update(batchId, changes);
-  return mappers.batch.dbToModel(data);
-};
+  const data = await newRepos.billingBatches.update(batchId, changes)
+  return mappers.batch.dbToModel(data)
+}
 
-const generateBatchById = CMBillRunId => chargeModuleBillRunConnector.generate(CMBillRunId);
+const generateBatchById = CMBillRunId => chargeModuleBillRunConnector.generate(CMBillRunId)
 
 const requestCMBatchGeneration = async batchId => {
-  const batch = await getBatchById(batchId);
-  const transactionCount = await getBatchTransactionCount(batch.id);
+  const batch = await getBatchById(batchId)
+  const transactionCount = await getBatchTransactionCount(batch.id)
   if (transactionCount > 0) {
-    await chargeModuleBillRunConnector.generate(batch.externalId);
+    await chargeModuleBillRunConnector.generate(batch.externalId)
   }
-};
+}
 
-exports.approveBatch = approveBatch;
-exports.deleteBatch = deleteBatch;
-exports.getBatchById = getBatchById;
-exports.getBatches = getBatches;
-exports.getTransactionStatusCounts = getTransactionStatusCounts;
-exports.getExistingAndDuplicateBatchesForRegion = getExistingAndDuplicateBatchesForRegion;
-exports.getExistingOrDuplicateSentBatch = getExistingOrDuplicateSentBatch;
-exports.saveInvoicesToDB = saveInvoicesToDB;
-exports.setErrorStatus = setErrorStatus;
-exports.setStatus = setStatus;
-exports.setStatusToReview = partialRight(setStatus, Batch.BATCH_STATUS.review);
-exports.cleanup = cleanup;
-exports.create = create;
-exports.createChargeModuleBillRun = createChargeModuleBillRun;
-exports.approveTptBatchReview = approveTptBatchReview;
-exports.getSentTptBatchesForFinancialYearAndRegion = getSentTptBatchesForFinancialYearAndRegion;
-exports.deleteBatchInvoice = deleteBatchInvoice;
-exports.deleteAllBillingData = deleteAllBillingData;
-exports.updateWithCMSummary = updateWithCMSummary;
-exports.generateBatchById = generateBatchById;
-exports.requestCMBatchGeneration = requestCMBatchGeneration;
+exports.approveBatch = approveBatch
+exports.deleteBatch = deleteBatch
+exports.getBatchById = getBatchById
+exports.getBatches = getBatches
+exports.getTransactionStatusCounts = getTransactionStatusCounts
+exports.getExistingAndDuplicateBatchesForRegion = getExistingAndDuplicateBatchesForRegion
+exports.getExistingOrDuplicateSentBatch = getExistingOrDuplicateSentBatch
+exports.saveInvoicesToDB = saveInvoicesToDB
+exports.setErrorStatus = setErrorStatus
+exports.setStatus = setStatus
+exports.setStatusToReview = partialRight(setStatus, Batch.BATCH_STATUS.review)
+exports.cleanup = cleanup
+exports.create = create
+exports.createChargeModuleBillRun = createChargeModuleBillRun
+exports.approveTptBatchReview = approveTptBatchReview
+exports.getSentTptBatchesForFinancialYearAndRegion = getSentTptBatchesForFinancialYearAndRegion
+exports.deleteBatchInvoice = deleteBatchInvoice
+exports.deleteAllBillingData = deleteAllBillingData
+exports.updateWithCMSummary = updateWithCMSummary
+exports.generateBatchById = generateBatchById
+exports.requestCMBatchGeneration = requestCMBatchGeneration

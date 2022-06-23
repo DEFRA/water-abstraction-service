@@ -3,7 +3,7 @@
  * @param  {String}  query - the search query
  * @return {Boolean}       returns true if a user search
  */
-const isUserQuery = query => query.includes('@');
+const isUserQuery = query => query.includes('@')
 
 /**
  * Tests whether the query is for a return ID - i.e. a scanned QR code
@@ -11,9 +11,9 @@ const isUserQuery = query => query.includes('@');
  * @return {Boolean}       returns true if an exact return ID
  */
 const isReturnId = query => {
-  const pattern = /^v1:[1-8]:[^:]+:[0-9]+:[0-9]{4}-[0-9]{2}-[0-9]{2}:[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
-  return pattern.test(query);
-};
+  const pattern = /^v1:[1-8]:[^:]+:[0-9]+:[0-9]{4}-[0-9]{2}-[0-9]{2}:[0-9]{4}-[0-9]{2}-[0-9]{2}$/
+  return pattern.test(query)
+}
 
 /**
  * Tests whether the query is for a billing account reference
@@ -21,9 +21,9 @@ const isReturnId = query => {
  * @return {Boolean}       returns true if an exact billing account reference
  */
 const isBillingAccountReference = query => {
-  const pattern = /^[ABENSTWY][0-9]{8}A$/;
-  return pattern.test(query);
-};
+  const pattern = /^[ABENSTWY][0-9]{8}A$/
+  return pattern.test(query)
+}
 
 /**
  * Tests whether the query could be for a return format ID
@@ -32,9 +32,9 @@ const isBillingAccountReference = query => {
  * @return {Boolean}       returns true if is a numeric search
  */
 const isNumeric = query => {
-  const pattern = /^[0-9]+$/;
-  return pattern.test(query);
-};
+  const pattern = /^[0-9]+$/
+  return pattern.test(query)
+}
 
 /**
  * Parses the request to determine query, sort, pagination and search mode
@@ -47,10 +47,10 @@ const parseQuery = (query) => {
     isUser: isUserQuery(query),
     isReturnId: isReturnId(query),
     isBillingAccountReference: isBillingAccountReference(query.toUpperCase())
-  };
-};
+  }
+}
 
 module.exports = {
   parseQuery,
   isReturnId
-};
+}

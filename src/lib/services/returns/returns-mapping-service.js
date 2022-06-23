@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 /**
  * @module a service to transform and decorate data loaded from the returns service
@@ -6,12 +6,12 @@
  */
 
 // Services
-const returnRequirementsService = require('../return-requirements');
-const returnMapper = require('../../mappers/return');
+const returnRequirementsService = require('../return-requirements')
+const returnMapper = require('../../mappers/return')
 
-const { uniq, find } = require('lodash');
+const { uniq, find } = require('lodash')
 
-const getReturnRequirementExternalId = returnData => `${returnData.metadata.nald.regionCode}:${returnData.metadata.nald.formatId}`;
+const getReturnRequirementExternalId = returnData => `${returnData.metadata.nald.regionCode}:${returnData.metadata.nald.formatId}`
 
 /**
  * Given a list of returns loaded from the returns service, fetches the
@@ -21,10 +21,10 @@ const getReturnRequirementExternalId = returnData => `${returnData.metadata.nald
  */
 const getReturnRequirements = returnsData => {
   // Get a unique list of external IDs
-  const externalIds = uniq(returnsData.map(getReturnRequirementExternalId));
-  const tasks = externalIds.map(returnRequirementsService.getReturnRequirementByExternalId);
-  return Promise.all(tasks);
-};
+  const externalIds = uniq(returnsData.map(getReturnRequirementExternalId))
+  const tasks = externalIds.map(returnRequirementsService.getReturnRequirementByExternalId)
+  return Promise.all(tasks)
+}
 
 /**
  * Given an object of data from returns.returns loaded via the returns module API,
@@ -35,10 +35,10 @@ const getReturnRequirements = returnsData => {
  * @return {Return}
  */
 const mapReturnDataToModel = (returnData, returnRequirements) => {
-  const externalId = getReturnRequirementExternalId(returnData);
-  const returnRequirement = find(returnRequirements, { externalId });
-  return returnMapper.returnsServiceToModel(returnData, returnRequirement);
-};
+  const externalId = getReturnRequirementExternalId(returnData)
+  const returnRequirement = find(returnRequirements, { externalId })
+  return returnMapper.returnsServiceToModel(returnData, returnRequirement)
+}
 
 /**
  * Given an array of returns loaded from returns.returns loaded via the returns module API,
@@ -47,8 +47,8 @@ const mapReturnDataToModel = (returnData, returnRequirements) => {
  */
 const mapReturnsToModels = async returnsData => {
   // Load return requirements from local table and map to service models
-  const returnRequirements = await getReturnRequirements(returnsData);
-  return returnsData.map(ret => mapReturnDataToModel(ret, returnRequirements));
-};
+  const returnRequirements = await getReturnRequirements(returnsData)
+  return returnsData.map(ret => mapReturnDataToModel(ret, returnRequirements))
+}
 
-exports.mapReturnsToModels = mapReturnsToModels;
+exports.mapReturnsToModels = mapReturnsToModels

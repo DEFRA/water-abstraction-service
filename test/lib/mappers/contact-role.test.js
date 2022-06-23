@@ -1,19 +1,19 @@
-'use strict';
+'use strict'
 
 const {
   experiment,
   test,
   beforeEach
-} = exports.lab = require('@hapi/lab').script();
-const moment = require('moment');
+} = exports.lab = require('@hapi/lab').script()
+const moment = require('moment')
 
-const { expect } = require('@hapi/code');
-const mapper = require('../../../src/lib/mappers/contact-role');
+const { expect } = require('@hapi/code')
+const mapper = require('../../../src/lib/mappers/contact-role')
 
 experiment('modules/billing/mappers/contact-role', () => {
   experiment('.crmToModel', () => {
-    let mapped;
-    let row;
+    let mapped
+    let row
 
     beforeEach(async () => {
       row = {
@@ -21,25 +21,25 @@ experiment('modules/billing/mappers/contact-role', () => {
         name: 'billing',
         dateCreated: '2020-05-04T15:06:49.058Z',
         dateUpdated: '2020-05-04T15:06:49.058Z'
-      };
+      }
 
-      mapped = mapper.crmToModel(row);
-    });
+      mapped = mapper.crmToModel(row)
+    })
 
     test('has the mapped id', async () => {
-      expect(mapped.id).to.equal(row.roleId);
-    });
+      expect(mapped.id).to.equal(row.roleId)
+    })
 
     test('has the mapped name', async () => {
-      expect(mapped.name).to.equal(row.name);
-    });
+      expect(mapped.name).to.equal(row.name)
+    })
 
     test('has the created date', async () => {
-      expect(mapped.dateCreated).to.equal(moment(row.dateCreated));
-    });
+      expect(mapped.dateCreated).to.equal(moment(row.dateCreated))
+    })
 
     test('has the mapped updated date', async () => {
-      expect(mapped.dateUpdated).to.equal(moment(row.dateUpdated));
-    });
-  });
-});
+      expect(mapped.dateUpdated).to.equal(moment(row.dateUpdated))
+    })
+  })
+})

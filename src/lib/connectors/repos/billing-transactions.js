@@ -1,7 +1,7 @@
-const { BillingTransaction, bookshelf } = require('../bookshelf');
-const queries = require('./queries/billing-transactions');
-const makeArray = require('../../../lib/make-array');
-const raw = require('./lib/raw');
+const { BillingTransaction, bookshelf } = require('../bookshelf')
+const queries = require('./queries/billing-transactions')
+const makeArray = require('../../../lib/make-array')
+const raw = require('./lib/raw')
 
 const withRelated = [
   'chargeElement',
@@ -13,7 +13,7 @@ const withRelated = [
   'billingInvoiceLicence.billingInvoice',
   'billingInvoiceLicence.billingInvoice.billingBatch'
   // 'billingInvoiceLicence.billingInvoice.billingBatch.region'
-];
+]
 
 /**
  * Gets transaction and related models by GUID
@@ -25,9 +25,9 @@ const findOne = async id => {
     .forge({ billingTransactionId: id })
     .fetch({
       withRelated
-    });
-  return model.toJSON();
-};
+    })
+  return model.toJSON()
+}
 
 /**
  * Finds many transactions with relates data
@@ -40,9 +40,9 @@ const find = async ids => {
     .where('billing_transaction_id', 'in', ids)
     .fetch({
       withRelated
-    });
-  return result.toJSON();
-};
+    })
+  return result.toJSON()
+}
 
 /**
  * For supplementary billing, finds transactions in the supplied batch ID
@@ -50,7 +50,7 @@ const find = async ids => {
  * @param {String} batchId - the supplementary batch ID being processed
  * @return {Promise<Array>}
  */
-const findByBatchId = batchId => raw.multiRow(queries.findByBatchId, { batchId });
+const findByBatchId = batchId => raw.multiRow(queries.findByBatchId, { batchId })
 
 /**
  * For supplementary billing, finds historical transactions
@@ -59,7 +59,7 @@ const findByBatchId = batchId => raw.multiRow(queries.findByBatchId, { batchId }
  * @param {String} batchId - the supplementary batch ID being processed
  * @return {Promise<Array>} water.billing_transactions rows
  */
-const findHistoryByBatchId = batchId => raw.multiRow(queries.findHistoryByBatchId, { batchId });
+const findHistoryByBatchId = batchId => raw.multiRow(queries.findHistoryByBatchId, { batchId })
 
 /**
  * Delete one or many records
@@ -68,7 +68,7 @@ const findHistoryByBatchId = batchId => raw.multiRow(queries.findHistoryByBatchI
 const deleteRecords = id => bookshelf
   .knex('water.billing_transactions')
   .whereIn('billing_transaction_id', makeArray(id))
-  .delete();
+  .delete()
 
 /**
  * Insert a new transaction record
@@ -77,11 +77,11 @@ const deleteRecords = id => bookshelf
 const create = async data => {
   const model = await BillingTransaction
     .forge(data)
-    .save();
-  return model.toJSON();
-};
+    .save()
+  return model.toJSON()
+}
 
-const findStatusCountsByBatchId = batchId => raw.multiRow(queries.findStatusCountsByBatchId, { batchId });
+const findStatusCountsByBatchId = batchId => raw.multiRow(queries.findStatusCountsByBatchId, { batchId })
 
 /**
  * Updates a water.billing_transactions record for the given id
@@ -92,7 +92,7 @@ const findStatusCountsByBatchId = batchId => raw.multiRow(queries.findStatusCoun
  */
 const update = (billingTransactionId, changes, isUpdateRequired = true) => BillingTransaction
   .where('billing_transaction_id', 'in', makeArray(billingTransactionId))
-  .save(changes, { patch: true, require: isUpdateRequired });
+  .save(changes, { patch: true, require: isUpdateRequired })
 
 /**
  * Deletes all transactions by invoice licence ID
@@ -102,13 +102,13 @@ const update = (billingTransactionId, changes, isUpdateRequired = true) => Billi
 const deleteByInvoiceLicenceId = invoiceLicenceId => bookshelf
   .knex('water.billing_transactions')
   .where('billing_invoice_licence_id', invoiceLicenceId)
-  .delete();
+  .delete()
 
 /**
 * Deletes all transactions for given batch
 * @param {String} batchId - guid
 */
-const deleteByBatchId = async batchId => bookshelf.knex.raw(queries.deleteByBatchId, { batchId });
+const deleteByBatchId = async batchId => bookshelf.knex.raw(queries.deleteByBatchId, { batchId })
 
 /**
  * Deletes all transactions by invoice ID
@@ -117,7 +117,7 @@ const deleteByBatchId = async batchId => bookshelf.knex.raw(queries.deleteByBatc
  */
 const deleteByInvoiceId = billingInvoiceId => bookshelf
   .knex
-  .raw(queries.deleteByInvoiceId, { billingInvoiceId });
+  .raw(queries.deleteByInvoiceId, { billingInvoiceId })
 
 /**
  * Get number of transactions in batch
@@ -125,9 +125,9 @@ const deleteByInvoiceId = billingInvoiceId => bookshelf
  * @return {Promise<Number>}
  */
 const countByBatchId = async billingBatchId => {
-  const { count } = await raw.singleRow(queries.countByBatchId, { billingBatchId });
-  return parseInt(count);
-};
+  const { count } = await raw.singleRow(queries.countByBatchId, { billingBatchId })
+  return parseInt(count)
+}
 
 /**
  * Updates the isCredited flag for the region for all transactions
@@ -137,18 +137,18 @@ const countByBatchId = async billingBatchId => {
  */
 const updateIsCredited = regionId => bookshelf
   .knex
-  .raw(queries.updateIsCredited, { regionId });
+  .raw(queries.updateIsCredited, { regionId })
 
-exports.findOne = findOne;
-exports.find = find;
-exports.findHistoryByBatchId = findHistoryByBatchId;
-exports.findByBatchId = findByBatchId;
-exports.delete = deleteRecords;
-exports.create = create;
-exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
-exports.update = update;
-exports.deleteByInvoiceLicenceId = deleteByInvoiceLicenceId;
-exports.deleteByBatchId = deleteByBatchId;
-exports.deleteByInvoiceId = deleteByInvoiceId;
-exports.countByBatchId = countByBatchId;
-exports.updateIsCredited = updateIsCredited;
+exports.findOne = findOne
+exports.find = find
+exports.findHistoryByBatchId = findHistoryByBatchId
+exports.findByBatchId = findByBatchId
+exports.delete = deleteRecords
+exports.create = create
+exports.findStatusCountsByBatchId = findStatusCountsByBatchId
+exports.update = update
+exports.deleteByInvoiceLicenceId = deleteByInvoiceLicenceId
+exports.deleteByBatchId = deleteByBatchId
+exports.deleteByInvoiceId = deleteByInvoiceId
+exports.countByBatchId = countByBatchId
+exports.updateIsCredited = updateIsCredited

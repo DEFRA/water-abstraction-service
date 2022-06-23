@@ -1,15 +1,15 @@
-'use strict';
+'use strict'
 
-const { isEmpty, flatten, compact, isString, times } = require('lodash');
+const { isEmpty, flatten, compact, isString, times } = require('lodash')
 
-const waterHelpers = require('@envage/water-abstraction-helpers');
-const { returnIDRegex, parseReturnId } = waterHelpers.returns;
+const waterHelpers = require('@envage/water-abstraction-helpers')
+const { returnIDRegex, parseReturnId } = waterHelpers.returns
 
-const dateParser = require('./date-parser');
-const csvParser = require('./csv-parser');
+const dateParser = require('./date-parser')
+const csvParser = require('./csv-parser')
 
-const lineErrorRegex = /line (\d*)$/;
-const validAbstractionVolumeRegex = /(^Do not edit$)|(^-?\d[\d.,]*$)|(^\s*$)/;
+const lineErrorRegex = /line (\d*)$/
+const validAbstractionVolumeRegex = /(^Do not edit$)|(^-?\d[\d.,]*$)|(^\s*$)/
 
 const errorMessages = {
   licenceNumber: 'Licence number is missing',
@@ -18,7 +18,7 @@ const errorMessages = {
   meterUsed: 'Did you use a meter should be Y, N or empty',
   abstractionVolumes: 'Abstraction volumes must be numbers',
   returnId: 'Return id in unexpected format'
-};
+}
 
 /**
  * Takes a column of CSV data and maps to an object to represent
@@ -39,7 +39,7 @@ const createLicenceReturn = column => ({
     value
   })),
   returnId: { line: column.length, value: column.reverse()[0] }
-});
+})
 
 /**
  * If expectation is a string, the value is compared, otherwise
@@ -52,13 +52,13 @@ const createLicenceReturn = column => ({
 const validateExpectation = (expectation, val) => {
   return isString(expectation)
     ? val === expectation
-    : expectation(val);
-};
+    : expectation(val)
+}
 
 const getHeadingExpectation = expectation => ({
   expectation,
   errorMessage: `${expectation} field not in expected position`
-});
+})
 
 /**
  * Gets an array of validations to perform where each validator
@@ -74,19 +74,19 @@ const getHeadingValidation = column => {
     getHeadingExpectation('Did you use a meter Y/N'),
     getHeadingExpectation('Meter make'),
     getHeadingExpectation('Meter serial number')
-  ];
+  ]
 
   times(column.length - 9, () => {
     validators.push({
       expectation: val => dateParser.validate(val),
       errorMessage: 'Unexpected date format for return line'
-    });
-  });
+    })
+  })
 
-  validators.push(getHeadingExpectation('Unique return reference'));
+  validators.push(getHeadingExpectation('Unique return reference'))
 
-  return validators;
-};
+  return validators
+}
 
 /**
  * Takes a 2d array of records and returns the required
@@ -97,87 +97,87 @@ const getHeadingValidation = column => {
  */
 const getColumn = (records, columnIndex) => {
   return records.reduce((acc, record) => {
-    acc.push(record[columnIndex]);
-    return acc;
-  }, []);
-};
+    acc.push(record[columnIndex])
+    return acc
+  }, [])
+}
 
-const createError = (message, line) => ({ message, line });
+const createError = (message, line) => ({ message, line })
 
 const extractLineNumberFromError = err => {
-  const matches = lineErrorRegex.exec(err);
-  return matches ? parseInt(matches[1]) : -1;
-};
+  const matches = lineErrorRegex.exec(err)
+  return matches ? parseInt(matches[1]) : -1
+}
 
 const createErrorFromCsvParseError = err => {
-  return createError(err, extractLineNumberFromError(err));
-};
+  return createError(err, extractLineNumberFromError(err))
+}
 
 /**
  * Validates that all the headings (the first column) are
  * not modified since the original download of the CSV template.
  */
 const validateHeadings = records => {
-  const firstColumn = getColumn(records, 0);
-  const validators = getHeadingValidation(firstColumn);
+  const firstColumn = getColumn(records, 0)
+  const validators = getHeadingValidation(firstColumn)
 
   const errors = firstColumn.reduce((acc, row, index) => {
-    const { errorMessage, expectation } = validators[index];
+    const { errorMessage, expectation } = validators[index]
 
     if (!validateExpectation(expectation, row)) {
-      acc.push(createError(errorMessage, index + 1));
+      acc.push(createError(errorMessage, index + 1))
     }
-    return acc;
-  }, []);
+    return acc
+  }, [])
 
-  return compact(errors);
-};
+  return compact(errors)
+}
 
 /**
  * Maps the CSV records array to an array of licence objects.
  */
 const recordsToLicences = records => {
-  const licences = [];
+  const licences = []
 
   for (let i = 1; i < records[0].length; i++) {
-    licences.push(createLicenceReturn(getColumn(records, i)));
+    licences.push(createLicenceReturn(getColumn(records, i)))
   }
-  return licences;
-};
+  return licences
+}
 
 /**
  * Checks if the licence number is present
  */
 const validateLicenceNumber = licence => {
-  const { value, line } = licence.licenceNumber;
+  const { value, line } = licence.licenceNumber
 
   if (isEmpty(value)) {
-    return createError(errorMessages.licenceNumber, line);
+    return createError(errorMessages.licenceNumber, line)
   }
-};
+}
 
 /**
  * Checks if the return rerefence is not empty and is a number
  */
 const validateReturnReference = licence => {
-  const { value, line } = licence.returnReference;
+  const { value, line } = licence.returnReference
 
   if (isEmpty(value) || /^\d{1,}$/g.test(value) === false) {
-    return createError(errorMessages.returnReference, line);
+    return createError(errorMessages.returnReference, line)
   }
-};
+}
 
 const isValidBooleanOrEmpty = (licence, licenceKey, errorKey = licenceKey) => {
-  const { value, line } = licence[licenceKey];
-  const isValid = ['y', 'n', 'yes', 'no', ''].includes(value.toLowerCase().trim());
+  const { value, line } = licence[licenceKey]
+  const isValid = ['y', 'n', 'yes', 'no', ''].includes(value.toLowerCase().trim())
 
   if (!isValid) {
-    return createError(errorMessages[errorKey], line);
+    return createError(errorMessages[errorKey], line)
   }
-};
+}
 
-const validateMeterUsed = licence => isValidBooleanOrEmpty(licence, 'meterUsed');
-const validateNilReturn = licence => isValidBooleanOrEmpty(licence, 'isNilReturn', 'nilReturn');
+const validateMeterUsed = licence => isValidBooleanOrEmpty(licence, 'meterUsed')
+const validateNilReturn = licence => isValidBooleanOrEmpty(licence, 'isNilReturn', 'nilReturn')
 
 /**
  * Checks that the abstraction volumes are valid.
@@ -189,15 +189,15 @@ const validateNilReturn = licence => isValidBooleanOrEmpty(licence, 'isNilReturn
  */
 const validateAbstractionVolumes = licence => {
   return licence.abstractionVolumes.reduce((acc, volume) => {
-    const { value, line } = volume;
-    const isValueValid = validAbstractionVolumeRegex.test(value);
+    const { value, line } = volume
+    const isValueValid = validAbstractionVolumeRegex.test(value)
 
     if (!isValueValid) {
-      acc.push(createError(errorMessages.abstractionVolumes, line));
+      acc.push(createError(errorMessages.abstractionVolumes, line))
     }
-    return acc;
-  }, []);
-};
+    return acc
+  }, [])
+}
 
 /**
  * Checks that the return id:
@@ -207,61 +207,61 @@ const validateAbstractionVolumes = licence => {
  *  - Contains the return reference
  */
 const validateReturnId = licence => {
-  const { value, line } = licence.returnId;
-  const matchesReturnIdPattern = returnIDRegex.test(value);
+  const { value, line } = licence.returnId
+  const matchesReturnIdPattern = returnIDRegex.test(value)
 
   if (matchesReturnIdPattern) {
-    const licenceNumber = licence.licenceNumber.value;
-    const returnReference = licence.returnReference.value;
-    const parsed = parseReturnId(value);
+    const licenceNumber = licence.licenceNumber.value
+    const returnReference = licence.returnReference.value
+    const parsed = parseReturnId(value)
 
     if (parsed.licenceNumber === licenceNumber &&
       parsed.formatId === returnReference) {
-      return;
+      return
     }
   }
 
-  return createError(errorMessages.returnId, line);
-};
+  return createError(errorMessages.returnId, line)
+}
 
 const validateLicences = licences => {
   const errors = licences.reduce((acc, licence, index) => {
-    acc.push(validateLicenceNumber(licence));
-    acc.push(validateReturnReference(licence));
-    acc.push(validateNilReturn(licence));
-    acc.push(validateMeterUsed(licence));
-    acc.push(validateAbstractionVolumes(licence));
-    acc.push(validateReturnId(licence));
-    return acc;
-  }, []);
+    acc.push(validateLicenceNumber(licence))
+    acc.push(validateReturnReference(licence))
+    acc.push(validateNilReturn(licence))
+    acc.push(validateMeterUsed(licence))
+    acc.push(validateAbstractionVolumes(licence))
+    acc.push(validateReturnId(licence))
+    return acc
+  }, [])
 
-  return flatten(compact(errors));
-};
+  return flatten(compact(errors))
+}
 
 const validate = async csv => {
   try {
-    const records = await csvParser.parseCsv(csv);
+    const records = await csvParser.parseCsv(csv)
 
     // validate the headings
-    const headerErrors = validateHeadings(records);
+    const headerErrors = validateHeadings(records)
 
     if (headerErrors.length) {
-      return createValidationResult(headerErrors);
+      return createValidationResult(headerErrors)
     }
 
     // headings are good, validate the licence data
-    const licenceErrors = validateLicences(recordsToLicences(records));
-    return createValidationResult(licenceErrors);
+    const licenceErrors = validateLicences(recordsToLicences(records))
+    return createValidationResult(licenceErrors)
   } catch (err) {
-    const parseErrors = [createErrorFromCsvParseError(err.message)];
-    return createValidationResult(parseErrors);
+    const parseErrors = [createErrorFromCsvParseError(err.message)]
+    return createValidationResult(parseErrors)
   }
-};
+}
 
 const createValidationResult = (errors = []) => ({
   isValid: errors.length === 0,
   validationErrors: errors
-});
+})
 
-exports.errorMessages = errorMessages;
-exports.validate = validate;
+exports.errorMessages = errorMessages
+exports.validate = validate

@@ -1,6 +1,6 @@
-'use-strict';
-const Event = require('../../../lib/models/event');
-const eventService = require('../../../lib/services/events');
+'use-strict'
+const Event = require('../../../lib/models/event')
+const eventService = require('../../../lib/services/events')
 
 const saveEvent = (type, subtype, licences, status, userName, metadata) => {
   const event = new Event().fromHash({
@@ -10,8 +10,8 @@ const saveEvent = (type, subtype, licences, status, userName, metadata) => {
     licences,
     metadata,
     status
-  });
-  return eventService.create(event);
-};
+  })
+  return eventService.create(event)
+}
 
-module.exports.saveEvent = saveEvent;
+module.exports.saveEvent = saveEvent

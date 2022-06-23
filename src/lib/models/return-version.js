@@ -1,16 +1,16 @@
-'use strict';
+'use strict'
 
-const { isFinite } = require('lodash');
+const { isFinite } = require('lodash')
 
-const Model = require('./model');
-const ReturnLine = require('./return-line');
+const Model = require('./model')
+const ReturnLine = require('./return-line')
 
-const validators = require('./validators');
+const validators = require('./validators')
 
 class ReturnVersion extends Model {
   constructor (id) {
-    super(id);
-    this._returnLines = [];
+    super(id)
+    this._returnLines = []
   }
 
   /**
@@ -18,12 +18,12 @@ class ReturnVersion extends Model {
    * @return {Array<ReturnVersion>}
    */
   set returnLines (returnLines) {
-    validators.assertIsArrayOfType(returnLines, ReturnLine);
-    this._returnLines = returnLines;
+    validators.assertIsArrayOfType(returnLines, ReturnLine)
+    this._returnLines = returnLines
   }
 
   get returnLines () {
-    return this._returnLines;
+    return this._returnLines
   }
 
   /**
@@ -31,12 +31,12 @@ class ReturnVersion extends Model {
    * @param {Boolean}
    */
   set isNilReturn (isNilReturn) {
-    validators.assertIsBoolean(isNilReturn);
-    this._isNilReturn = isNilReturn;
+    validators.assertIsBoolean(isNilReturn)
+    this._isNilReturn = isNilReturn
   }
 
   get isNilReturn () {
-    return this._isNilReturn;
+    return this._isNilReturn
   }
 
   /**
@@ -44,12 +44,12 @@ class ReturnVersion extends Model {
    * @param {Boolean}
    */
   set isCurrentVersion (isCurrentVersion) {
-    validators.assertIsBoolean(isCurrentVersion);
-    this._isCurrentVersion = isCurrentVersion;
+    validators.assertIsBoolean(isCurrentVersion)
+    this._isCurrentVersion = isCurrentVersion
   }
 
   get isCurrentVersion () {
-    return this._isCurrentVersion;
+    return this._isCurrentVersion
   }
 
   /**
@@ -64,8 +64,8 @@ class ReturnVersion extends Model {
     return this._returnLines
       .filter(returnLine => isFinite(returnLine.volume) && returnLine.volume > 0)
       .filter(returnLine => abstractionPeriod.isDateRangeOverlapping(returnLine.dateRange))
-      .filter(returnLine => returnLine.dateRange.overlaps(chargePeriod));
+      .filter(returnLine => returnLine.dateRange.overlaps(chargePeriod))
   }
 }
 
-module.exports = ReturnVersion;
+module.exports = ReturnVersion

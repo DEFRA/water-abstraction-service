@@ -1,43 +1,37 @@
-'use strict';
+'use strict'
 
-var dbm;
-var type; // eslint-disable-line no-unused-vars
-var seed; // eslint-disable-line no-unused-vars
-var fs = require('fs');
-var path = require('path');
-var Promise;
+const fs = require('fs')
+const path = require('path')
+let Promise
 
 /**
   * We receive the dbmigrate dependency from dbmigrate initially.
   * This enables us to not have to rely on NODE_PATH.
   */
-exports.setup = function (options, seedLink) {
-  dbm = options.dbmigrate;
-  type = dbm.dataType;
-  seed = seedLink;
-  Promise = options.Promise;
-};
+exports.setup = function (options, _seedLink) {
+  Promise = options.Promise
+}
 
 const runQuery = (db, sqlName) => {
-  const filePath = path.join(__dirname, 'sqls', sqlName);
+  const filePath = path.join(__dirname, 'sqls', sqlName)
   return new Promise(function (resolve, reject) {
-    fs.readFile(filePath, {encoding: 'utf-8'}, function (err, data) {
-      if (err) return reject(err);
+    fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
+      if (err) return reject(err)
 
-      console.log('received data: ' + data);
-      resolve(data);
-    });
+      console.log('received data: ' + data)
+      resolve(data)
+    })
   }).then(function (data) {
-    return db.runSql(data);
-  });
-};
+    return db.runSql(data)
+  })
+}
 
 exports.up = function (db) {
-  return runQuery(db, '20180605103805-update-renewal-notification-up.sql');
-};
+  return runQuery(db, '20180605103805-update-renewal-notification-up.sql')
+}
 
 exports.down = function (db) {
-  return runQuery(db, '20180605103805-update-renewal-notification-down.sql');
-};
+  return runQuery(db, '20180605103805-update-renewal-notification-down.sql')
+}
 
-exports._meta = { 'version': 1 };
+exports._meta = { version: 1 }

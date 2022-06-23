@@ -1,2 +1,2 @@
-exports.xml = require('./xml-adapter');
-exports.csv = require('./csv-adapter');
+exports.xml = require('./xml-adapter')
+exports.csv = require('./csv-adapter')

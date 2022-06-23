@@ -1,4 +1,4 @@
-const formatMoment = date => date.format('DD/MM/YYYY');
+const formatMoment = date => date.format('DD/MM/YYYY')
 
 const testAddress = {
   TOWN: 'Test town',
@@ -11,22 +11,22 @@ const testAddress = {
   ADDR_LINE4: 'Test address line 4',
   ID: '9000022',
   FGAC_REGION_CODE: '6'
-};
+}
 
 const testQuantities = {
   INST_QTY: '12',
   HOURLY_QTY: '12',
   DAILY_QTY: '123',
   ANNUAL_QTY: '12345'
-};
+}
 
 const testPurpose = {
   purpose_primary: { CODE: 'P', DESCR: 'Production Of Energy' },
   purpose_tertiary: { CODE: '80', DESCR: 'Evaporative Cooling', ALSF_CODE: 'H' },
   purpose_secondary: { CODE: 'ELC', DESCR: 'Electricity' }
-};
+}
 
-const TEST_PARTY_ID = '9999999';
+const TEST_PARTY_ID = '9999999'
 
 const getLicenceData = (licenceRef, startDate, endDate) => {
   return {
@@ -289,7 +289,7 @@ const getLicenceData = (licenceRef, startDate, endDate) => {
     ORIG_EFF_DATE: formatMoment(startDate),
     ORIG_SIG_DATE: formatMoment(startDate),
     FGAC_REGION_CODE: '6'
-  };
-};
+  }
+}
 
-exports.getLicenceData = getLicenceData;
+exports.getLicenceData = getLicenceData

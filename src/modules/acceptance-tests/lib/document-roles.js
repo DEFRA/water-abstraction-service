@@ -1,8 +1,8 @@
-const { TEST_COMPANY_NAME, ACCEPTANCE_TEST_SOURCE } = require('./constants');
-const documentV1Connector = require('../../../lib/connectors/crm/documents');
-const documentV2Connector = require('../../../lib/connectors/crm-v2/documents');
+const { TEST_COMPANY_NAME, ACCEPTANCE_TEST_SOURCE } = require('./constants')
+const documentV1Connector = require('../../../lib/connectors/crm/documents')
+const documentV2Connector = require('../../../lib/connectors/crm-v2/documents')
 
-const config = require('../../../../config');
+const config = require('../../../../config')
 
 const create = async (companyId, licenceId, licenceRef) => {
   const document = {
@@ -37,12 +37,12 @@ const create = async (companyId, licenceId, licenceRef) => {
         }
       ]
     })
-  };
+  }
 
-  const { data } = await documentV1Connector.create(document);
-  await documentV2Connector.createDocument(licenceRef, 'current', new Date().toJSON().slice(0, 10), null, true);
-  return data;
-};
+  const { data } = await documentV1Connector.create(document)
+  await documentV2Connector.createDocument(licenceRef, 'current', new Date().toJSON().slice(0, 10), null, true)
+  return data
+}
 
-exports.create = create;
-exports.delete = async () => documentV1Connector.deleteAcceptanceTestData();
+exports.create = create
+exports.delete = async () => documentV1Connector.deleteAcceptanceTestData()

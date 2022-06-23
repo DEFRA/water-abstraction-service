@@ -1,5 +1,5 @@
-const { pool } = require('../../../lib/connectors/db');
-const { logger } = require('../../../logger');
+const { pool } = require('../../../lib/connectors/db')
+const { logger } = require('../../../logger')
 
 /**
  * Perform a database query by getting a client from the connection pool and releasing
@@ -10,17 +10,17 @@ const { logger } = require('../../../logger');
  */
 const dbQuery = async (query, params = []) => {
   try {
-    const { error, rows } = await pool.query(query, params);
+    const { error, rows } = await pool.query(query, params)
     if (error) {
-      throw error;
+      throw error
     }
-    return rows;
+    return rows
   } catch (error) {
-    logger.error('dbQuery error', error);
-    throw error;
+    logger.error('dbQuery error', error)
+    throw error
   }
-};
+}
 
 module.exports = {
   dbQuery
-};
+}

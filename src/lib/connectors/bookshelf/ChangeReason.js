@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const { bookshelf } = require('./bookshelf.js');
+const { bookshelf } = require('./bookshelf.js')
 
 module.exports = bookshelf.model('ChangeReason', {
   tableName: 'water.change_reasons',
@@ -11,4 +11,4 @@ module.exports = bookshelf.model('ChangeReason', {
 
   requireFetch: false
 
-});
+})

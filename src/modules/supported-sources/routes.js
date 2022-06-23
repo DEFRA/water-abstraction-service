@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const controller = require('./controller');
+const controller = require('./controller')
 module.exports = {
 
   getSupportedSources: {
@@ -8,4 +8,4 @@ module.exports = {
     path: '/water/1.0/supported-sources',
     handler: controller.getSupportedSources
   }
-};
+}

@@ -1,35 +1,35 @@
-const { uniq } = require('lodash');
-const evt = require('../../lib/event');
-const { returns } = require('../../lib/connectors/returns');
-const permitConnector = require('../../lib/connectors/permit');
-const eventFactory = require('./lib/event-factory');
-const generateReference = require('../../lib/reference-generator');
-const returnsNotificationSend = require('./lib/returns-notification-send');
-const { getJobData } = require('./lib/message-helpers');
-const { parseRequest } = require('./lib/request-parser');
+const { uniq } = require('lodash')
+const evt = require('../../lib/event')
+const { returns } = require('../../lib/connectors/returns')
+const permitConnector = require('../../lib/connectors/permit')
+const eventFactory = require('./lib/event-factory')
+const generateReference = require('../../lib/reference-generator')
+const returnsNotificationSend = require('./lib/returns-notification-send')
+const { getJobData } = require('./lib/message-helpers')
+const { parseRequest } = require('./lib/request-parser')
 
 /**
  * Previews what will be send by the returns notification, by using the
  * same filter query used by the post call below
  */
 const postPreviewReturnNotification = async (request, h) => {
-  const { filter, columns, sort } = parseRequest(request);
+  const { filter, columns, sort } = parseRequest(request)
 
   // Find all returns matching criteria
-  const data = await returns.findAll(filter, sort, columns);
+  const data = await returns.findAll(filter, sort, columns)
 
-  const licenceRefs = uniq(data.map(item => item.licence_ref));
+  const licenceRefs = uniq(data.map(item => item.licence_ref))
 
-  const licencesEndDates = await permitConnector.getLicenceEndDates(licenceRefs);
+  const licencesEndDates = await permitConnector.getLicenceEndDates(licenceRefs)
 
   return {
     error: null,
     data: data.map(item => {
-      const endDates = licencesEndDates[item.licence_ref];
-      return Object.assign(item, endDates);
+      const endDates = licencesEndDates[item.licence_ref]
+      return Object.assign(item, endDates)
     })
-  };
-};
+  }
+}
 
 /**
  * This route handler accepts a POST request containing a filter to find
@@ -51,13 +51,13 @@ const postReturnNotification = async (request, h) => {
     columns,
     sort,
     config
-  } = parseRequest(request);
+  } = parseRequest(request)
 
   // Find all returns matching criteria
-  const data = await returns.findAll(filter, sort, columns);
+  const data = await returns.findAll(filter, sort, columns)
 
   // Generate a reference number
-  const ref = generateReference(config.prefix);
+  const ref = generateReference(config.prefix)
 
   // Create container event in event log for tracking/reporting of batch
   const e = eventFactory({
@@ -65,20 +65,20 @@ const postReturnNotification = async (request, h) => {
     messageRef,
     ref,
     name
-  }, data);
+  }, data)
 
-  await evt.save(e);
+  await evt.save(e)
 
   // Schedule building of individual messages
   for (const row of data) {
-    const job = getJobData(row, e, messageRef, config);
-    request.queueManager.add(returnsNotificationSend.jobName, job);
+    const job = getJobData(row, e, messageRef, config)
+    request.queueManager.add(returnsNotificationSend.jobName, job)
   }
 
-  return { event: e.data };
-};
+  return { event: e.data }
+}
 
 module.exports = {
   postPreviewReturnNotification,
   postReturnNotification
-};
+}

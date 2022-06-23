@@ -1,14 +1,14 @@
-'use strict';
-const { truncate } = require('lodash');
-const camelCaseKeys = require('../camel-case-keys');
+'use strict'
+const { truncate } = require('lodash')
+const camelCaseKeys = require('../camel-case-keys')
 
-const { createMapper } = require('../object-mapper');
-const helpers = require('./lib/helpers');
+const { createMapper } = require('../object-mapper')
+const helpers = require('./lib/helpers')
 
-const SupportedSource = require('../models/supported-source');
+const SupportedSource = require('../models/supported-source')
 
 const csvToModel = data => {
-  const supportedSource = new SupportedSource();
+  const supportedSource = new SupportedSource()
 
   /* eslint-disable */
   const {
@@ -23,8 +23,8 @@ const csvToModel = data => {
     order,
     name: truncate(name, { length: 255 }),
     region: truncate(region, { length: 255 })
-  });
-};
+  })
+}
 
 /* Humanize and copy fields */
 const dbToModelMapper = createMapper()
@@ -38,9 +38,9 @@ const dbToModelMapper = createMapper()
     'region',
     'dateCreated',
     'dateUpdated'
-  );
+  )
 
-const dbToModel = row => helpers.createModel(SupportedSource, camelCaseKeys(row), dbToModelMapper);
+const dbToModel = row => helpers.createModel(SupportedSource, camelCaseKeys(row), dbToModelMapper)
 
-exports.dbToModel = dbToModel;
-exports.csvToModel = csvToModel;
+exports.dbToModel = dbToModel
+exports.csvToModel = csvToModel

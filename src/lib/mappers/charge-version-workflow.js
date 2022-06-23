@@ -1,15 +1,15 @@
-'use strict';
+'use strict'
 
-const chargeVersionMapper = require('./charge-version');
-const userMapper = require('./user');
-const licenceMapper = require('./licence');
-const licenceVersionMapper = require('./licence-version');
-const regionMapper = require('./region');
+const chargeVersionMapper = require('./charge-version')
+const userMapper = require('./user')
+const licenceMapper = require('./licence')
+const licenceVersionMapper = require('./licence-version')
+const regionMapper = require('./region')
 
-const ChargeVersionWorkflow = require('../models/charge-version-workflow');
+const ChargeVersionWorkflow = require('../models/charge-version-workflow')
 
-const { createMapper } = require('../object-mapper');
-const helpers = require('./lib/helpers');
+const { createMapper } = require('../object-mapper')
+const helpers = require('./lib/helpers')
 
 const dbToModelMapper = createMapper()
   .map('chargeVersionWorkflowId').to('id')
@@ -22,7 +22,7 @@ const dbToModelMapper = createMapper()
   .map('licence').to('licence', licenceMapper.dbToModel)
   .map('licence.region').to('chargeVersion.region', regionMapper.dbToModel)
   .map('licenceVersion').to('licenceVersion', licenceVersionMapper.dbToModel)
-  .map('dateDeleted').to('dateDeleted');
+  .map('dateDeleted').to('dateDeleted')
 
 /**
  * Converts DB representation to a ChargeVersionWorkflow service model
@@ -30,7 +30,7 @@ const dbToModelMapper = createMapper()
  * @return {ChargeVersionWorkflow}
  */
 const dbToModel = row =>
-  helpers.createModel(ChargeVersionWorkflow, row, dbToModelMapper);
+  helpers.createModel(ChargeVersionWorkflow, row, dbToModelMapper)
 
 const modelToDbMapper = createMapper()
   .map('id').to('chargeVersionWorkflowId')
@@ -40,14 +40,14 @@ const modelToDbMapper = createMapper()
   .map('createdBy').to('createdBy', userMapper.modelToDb)
   .map('chargeVersion').to('data.chargeVersion', chargeVersion => chargeVersion ? chargeVersion.toJSON() : null)
   .map('licenceVersionId').to('licenceVersionId')
-  .map('dateDeleted').to('dateDeleted');
+  .map('dateDeleted').to('dateDeleted')
 
 /**
  * Converts ChargeVersionWorkflow service model to a DB row
  * @param {ChargeVersionWorkflow} model
  * @return {Object}
  */
-const modelToDb = model => modelToDbMapper.execute(model);
+const modelToDb = model => modelToDbMapper.execute(model)
 
-exports.dbToModel = dbToModel;
-exports.modelToDb = modelToDb;
+exports.dbToModel = dbToModel
+exports.modelToDb = modelToDb

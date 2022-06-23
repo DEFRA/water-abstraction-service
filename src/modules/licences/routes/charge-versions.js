@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
+const Joi = require('joi')
 
-const controller = require('../controllers/charge-versions');
+const controller = require('../controllers/charge-versions')
 
 module.exports = {
   getChargeVersionsByLicence: {
@@ -17,4 +17,4 @@ module.exports = {
       }
     }
   }
-};
+}

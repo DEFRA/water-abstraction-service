@@ -1,23 +1,23 @@
-'use strict';
+'use strict'
 
 /**
  * @module water service representation of CRM v2 document model
  */
-const Model = require('./model');
-const DateRange = require('./date-range');
-const validators = require('./validators');
-const Role = require('./role');
+const Model = require('./model')
+const DateRange = require('./date-range')
+const validators = require('./validators')
+const Role = require('./role')
 
 const DOCUMENT_STATUS = {
   current: 'current',
   draft: 'draft',
   superseded: 'superseded'
-};
+}
 
 class Document extends Model {
   constructor (id) {
-    super(id);
-    this._roles = [];
+    super(id)
+    this._roles = []
   }
 
   /**
@@ -25,12 +25,12 @@ class Document extends Model {
    * @param {DateRange} dateRange
    */
   set dateRange (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    this._dateRange = dateRange;
+    validators.assertIsInstanceOf(dateRange, DateRange)
+    this._dateRange = dateRange
   }
 
   get dateRange () {
-    return this._dateRange;
+    return this._dateRange
   }
 
   /**
@@ -38,12 +38,12 @@ class Document extends Model {
    * @param {String} status
    */
   set status (status) {
-    validators.assertEnum(status, Object.keys(DOCUMENT_STATUS));
-    this._status = status;
+    validators.assertEnum(status, Object.keys(DOCUMENT_STATUS))
+    this._status = status
   }
 
   get status () {
-    return this._status;
+    return this._status
   }
 
   /**
@@ -51,12 +51,12 @@ class Document extends Model {
    * @param {Number}
    */
   set versionNumber (versionNumber) {
-    validators.assertPositiveInteger(versionNumber);
-    this._versionNumber = versionNumber;
+    validators.assertPositiveInteger(versionNumber)
+    this._versionNumber = versionNumber
   }
 
   get versionNumber () {
-    return this._versionNumber;
+    return this._versionNumber
   }
 
   /**
@@ -64,12 +64,12 @@ class Document extends Model {
    * @param {Array<Role>} roles
    */
   set roles (roles) {
-    validators.assertIsArrayOfType(roles, Role);
-    this._roles = roles;
+    validators.assertIsArrayOfType(roles, Role)
+    this._roles = roles
   }
 
   get roles () {
-    return this._roles;
+    return this._roles
   }
 
   /**
@@ -79,11 +79,11 @@ class Document extends Model {
    * @return {Role}
    */
   getRoleOnDate (roleName, date) {
-    validators.assertEnum(roleName, Object.values(Role.ROLE_NAMES));
+    validators.assertEnum(roleName, Object.values(Role.ROLE_NAMES))
     const [role] = this.roles.filter(
       role => role.roleName === roleName && role.dateRange.includes(date)
-    );
-    return role;
+    )
+    return role
   }
 
   /**
@@ -91,14 +91,14 @@ class Document extends Model {
    * @param {Number}
    */
   set licenceNumber (licenceNumber) {
-    validators.assertLicenceNumber(licenceNumber);
-    this._licenceNumber = licenceNumber;
+    validators.assertLicenceNumber(licenceNumber)
+    this._licenceNumber = licenceNumber
   }
 
   get licenceNumber () {
-    return this._licenceNumber;
+    return this._licenceNumber
   }
 }
 
-module.exports = Document;
-module.exports.DOCUMENT_STATUS = DOCUMENT_STATUS;
+module.exports = Document
+module.exports.DOCUMENT_STATUS = DOCUMENT_STATUS

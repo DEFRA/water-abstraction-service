@@ -3,14 +3,14 @@ const {
   test,
   beforeEach,
   afterEach
-} = exports.lab = require('@hapi/lab').script();
-const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+} = exports.lab = require('@hapi/lab').script()
+const { expect } = require('@hapi/code')
+const sinon = require('sinon')
+const sandbox = sinon.createSandbox()
 
-const LicenceRepository = require('../../../../src/lib/connectors/repository/LicenceRepository');
+const LicenceRepository = require('../../../../src/lib/connectors/repository/LicenceRepository')
 
-const repo = new LicenceRepository();
+const repo = new LicenceRepository()
 
 const data = {
   licenceNumber: '01/123/ABC',
@@ -20,35 +20,35 @@ const data = {
     licence_ref: '01/123/ABC',
     include_in_supplementary_billing: 'no'
   }]
-};
+}
 
 experiment('lib/connectors/repository/LicenceRepository', () => {
   beforeEach(async () => {
-    sandbox.stub(LicenceRepository.prototype, 'dbQuery');
-  });
+    sandbox.stub(LicenceRepository.prototype, 'dbQuery')
+  })
 
   afterEach(async () => {
-    sandbox.restore();
-  });
+    sandbox.restore()
+  })
 
   experiment('.findOneByLicenceNumber', () => {
-    let result;
+    let result
 
     beforeEach(async () => {
       LicenceRepository.prototype.dbQuery.resolves({
         rows: data.singleRow
-      });
-      result = await repo.findOneByLicenceNumber(data.licenceNumber);
-    });
+      })
+      result = await repo.findOneByLicenceNumber(data.licenceNumber)
+    })
 
     test('calls this.dbQuery with appropriate params', async () => {
       expect(LicenceRepository.prototype.dbQuery.calledWith(
         LicenceRepository._findOneByLicenceNumberQuery, [data.licenceNumber]
-      )).to.be.true();
-    });
+      )).to.be.true()
+    })
 
     test('resolves with first row found', async () => {
-      expect(result).to.equal(data.singleRow[0]);
-    });
-  });
-});
+      expect(result).to.equal(data.singleRow[0])
+    })
+  })
+})

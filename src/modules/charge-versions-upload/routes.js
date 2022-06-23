@@ -1,5 +1,5 @@
-const controller = require('../charge-versions/controllers/charge-versions');
-const Joi = require('joi');
+const controller = require('../charge-versions/controllers/charge-versions')
+const Joi = require('joi')
 
 module.exports = {
   postUploadChargeInformation: {
@@ -35,4 +35,4 @@ module.exports = {
       }
     }
   }
-};
+}

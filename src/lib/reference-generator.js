@@ -6,10 +6,10 @@
  * @return {String}
  */
 function randomString (length) {
-  let text = '';
-  const possible = 'ABCDEFGHJKLMNPQRTUVWXYZ0123456789';
-  for (let i = 0; i < length; i++) { text += possible.charAt(Math.floor(Math.random() * possible.length)); }
-  return text;
+  let text = ''
+  const possible = 'ABCDEFGHJKLMNPQRTUVWXYZ0123456789'
+  for (let i = 0; i < length; i++) { text += possible.charAt(Math.floor(Math.random() * possible.length)) }
+  return text
 }
 
 /**
@@ -19,9 +19,9 @@ function randomString (length) {
  */
 function generateReference (prefix) {
   if (!prefix) {
-    return null;
+    return null
   }
-  return prefix + randomString(6);
+  return prefix + randomString(6)
 }
 
-module.exports = generateReference;
+module.exports = generateReference

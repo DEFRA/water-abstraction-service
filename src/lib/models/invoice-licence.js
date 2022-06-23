@@ -1,20 +1,20 @@
-'use strict';
-const Licence = require('./licence');
-const Transaction = require('./transaction');
-const Role = require('./role');
+'use strict'
+const Licence = require('./licence')
+const Transaction = require('./transaction')
+const Role = require('./role')
 
 const {
   assertIsArrayOfType,
   assertIsInstanceOf,
   assertId
-} = require('./validators');
+} = require('./validators')
 
-const Model = require('./model');
+const Model = require('./model')
 
 class InvoiceLicence extends Model {
   constructor (id) {
-    super(id);
-    this._transactions = [];
+    super(id)
+    this._transactions = []
   }
 
   /**
@@ -22,8 +22,8 @@ class InvoiceLicence extends Model {
   * @param {Licence} licence
   */
   set licence (licence) {
-    assertIsInstanceOf(licence, Licence);
-    this._licence = licence;
+    assertIsInstanceOf(licence, Licence)
+    this._licence = licence
   }
 
   /**
@@ -31,25 +31,25 @@ class InvoiceLicence extends Model {
    * @return {Licence}
    */
   get licence () {
-    return this._licence;
+    return this._licence
   }
 
   set transactions (transactions) {
-    assertIsArrayOfType(transactions, Transaction);
-    this._transactions = transactions;
+    assertIsArrayOfType(transactions, Transaction)
+    this._transactions = transactions
   }
 
   get transactions () {
-    return this._transactions;
+    return this._transactions
   }
 
   set roles (roles) {
-    assertIsArrayOfType(roles, Role);
-    this._roles = roles;
+    assertIsArrayOfType(roles, Role)
+    this._roles = roles
   }
 
   get roles () {
-    return this._roles;
+    return this._roles
   }
 
   /**
@@ -57,25 +57,25 @@ class InvoiceLicence extends Model {
    * @param {String} invoiceId - GUID
    */
   set invoiceId (invoiceId) {
-    assertId(invoiceId);
-    this._invoiceId = invoiceId;
+    assertId(invoiceId)
+    this._invoiceId = invoiceId
   }
 
   get invoiceId () {
-    return this._invoiceId;
+    return this._invoiceId
   }
 
   get hasTransactionErrors () {
-    return this.transactions.some(transaction => transaction.isErrorStatus);
+    return this.transactions.some(transaction => transaction.isErrorStatus)
   }
 
   toJSON () {
-    const { hasTransactionErrors } = this;
+    const { hasTransactionErrors } = this
     return {
       hasTransactionErrors,
       ...super.toJSON()
-    };
+    }
   }
 }
 
-module.exports = InvoiceLicence;
+module.exports = InvoiceLicence

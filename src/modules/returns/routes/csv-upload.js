@@ -1,16 +1,16 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
-const controller = require('../controllers/csv-upload');
-const pre = require('../pre-handlers');
+const Joi = require('joi')
+const controller = require('../controllers/csv-upload')
+const pre = require('../pre-handlers')
 
 const getSubmitConfig = (isSingleReturn) => {
   const params = {
     eventId: Joi.string().uuid().required()
-  };
+  }
 
   if (isSingleReturn) {
-    params.returnId = Joi.string().required();
+    params.returnId = Joi.string().required()
   }
 
   return {
@@ -27,8 +27,8 @@ const getSubmitConfig = (isSingleReturn) => {
         userName: Joi.string().email().required()
       })
     }
-  };
-};
+  }
+}
 
 module.exports = {
 
@@ -66,4 +66,4 @@ module.exports = {
     handler: controller.postUploadSubmit,
     config: getSubmitConfig()
   }
-};
+}

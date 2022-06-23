@@ -1,17 +1,17 @@
-'use strict';
+'use strict'
 
-const Model = require('./model');
-const DateRange = require('./date-range');
-const ReturnRequirement = require('./return-requirement');
-const { RETURN_SEASONS } = require('./constants');
+const Model = require('./model')
+const DateRange = require('./date-range')
+const ReturnRequirement = require('./return-requirement')
+const { RETURN_SEASONS } = require('./constants')
 
-const validators = require('./validators');
+const validators = require('./validators')
 
 const RETURN_REQUIREMENT_VERSION_STATUSES = {
   current: 'current',
   draft: 'draft',
   superseded: 'superseded'
-};
+}
 
 /**
  * A model to provide a version history for a collection of return requirements
@@ -24,8 +24,8 @@ class ReturnRequirementVersion extends Model {
    * @param {String} id
    */
   constructor (id) {
-    super(id);
-    this._returnRequirements = [];
+    super(id)
+    this._returnRequirements = []
   }
 
   /**
@@ -33,12 +33,12 @@ class ReturnRequirementVersion extends Model {
    * @param {DateRange} dateRange
    */
   set dateRange (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    this._dateRange = dateRange;
+    validators.assertIsInstanceOf(dateRange, DateRange)
+    this._dateRange = dateRange
   }
 
   get dateRange () {
-    return this._dateRange;
+    return this._dateRange
   }
 
   /**
@@ -46,8 +46,8 @@ class ReturnRequirementVersion extends Model {
    * @param {String} status
    */
   set status (status) {
-    validators.assertEnum(status, Object.keys(RETURN_REQUIREMENT_VERSION_STATUSES));
-    this._status = status;
+    validators.assertEnum(status, Object.keys(RETURN_REQUIREMENT_VERSION_STATUSES))
+    this._status = status
   }
 
   /**
@@ -55,7 +55,7 @@ class ReturnRequirementVersion extends Model {
    * @return {String}
    */
   get status () {
-    return this._status;
+    return this._status
   }
 
   /**
@@ -63,16 +63,16 @@ class ReturnRequirementVersion extends Model {
    * @return {Boolean}
    */
   get isNotDraft () {
-    return this.status !== RETURN_REQUIREMENT_VERSION_STATUSES.draft;
+    return this.status !== RETURN_REQUIREMENT_VERSION_STATUSES.draft
   }
 
   set returnRequirements (returnRequirements) {
-    validators.assertIsArrayOfType(returnRequirements, ReturnRequirement);
-    this._returnRequirements = returnRequirements;
+    validators.assertIsArrayOfType(returnRequirements, ReturnRequirement)
+    this._returnRequirements = returnRequirements
   }
 
   get returnRequirements () {
-    return this._returnRequirements;
+    return this._returnRequirements
   }
 
   /**
@@ -83,14 +83,14 @@ class ReturnRequirementVersion extends Model {
    * @return {Boolean}
    */
   hasTwoPartTariffPurposeReturnsInSeason (returnSeason) {
-    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
-    const isSummer = returnSeason === RETURN_SEASONS.summer;
+    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS))
+    const isSummer = returnSeason === RETURN_SEASONS.summer
 
     return this.returnRequirements
       .filter(returnRequirement => returnRequirement.isSummer === isSummer)
-      .some(returnRequirement => returnRequirement.isTwoPartTariffPurposeUse);
+      .some(returnRequirement => returnRequirement.isTwoPartTariffPurposeUse)
   }
 }
 
-module.exports = ReturnRequirementVersion;
-module.exports.RETURN_REQUIREMENT_VERSION_STATUSES = RETURN_REQUIREMENT_VERSION_STATUSES;
+module.exports = ReturnRequirementVersion
+module.exports.RETURN_REQUIREMENT_VERSION_STATUSES = RETURN_REQUIREMENT_VERSION_STATUSES

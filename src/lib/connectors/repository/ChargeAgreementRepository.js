@@ -1,4 +1,4 @@
-const Repository = require('@envage/hapi-pg-rest-api/src/repository');
+const Repository = require('@envage/hapi-pg-rest-api/src/repository')
 
 class ChargeAgreementRepository extends Repository {
   /**
@@ -13,11 +13,11 @@ class ChargeAgreementRepository extends Repository {
         JOIN water.financial_agreement_types t ON a.agreement_code=t.id
         JOIN water.charge_elements e ON a.charge_element_id=e.charge_element_id
         WHERE e.charge_version_id=$1
-        ORDER BY a.start_date`;
-    const params = [chargeVersionId];
-    const { rows } = await this.dbQuery(query, params);
-    return rows;
+        ORDER BY a.start_date`
+    const params = [chargeVersionId]
+    const { rows } = await this.dbQuery(query, params)
+    return rows
   }
 }
 
-module.exports = ChargeAgreementRepository;
+module.exports = ChargeAgreementRepository

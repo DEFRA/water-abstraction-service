@@ -1,6 +1,6 @@
-const { serviceRequest } = require('@envage/water-abstraction-helpers');
-const urlJoin = require('url-join');
-const { URL } = require('url');
+const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const urlJoin = require('url-join')
+const { URL } = require('url')
 
 /**
  * Takes a service endpoint which may contain path segments (e.g. http://localhost:8001/api)
@@ -13,10 +13,10 @@ const { URL } = require('url');
  * @returns {Function} A request handler function that gets the version of the downstream service.
  */
 const create = (endPointUrl) => async () => {
-  const urlParts = new URL(endPointUrl);
-  const url = urlJoin(urlParts.protocol, urlParts.host, 'status');
-  const response = await serviceRequest.get(url);
-  return response.version;
-};
+  const urlParts = new URL(endPointUrl)
+  const url = urlJoin(urlParts.protocol, urlParts.host, 'status')
+  const response = await serviceRequest.get(url)
+  return response.version
+}
 
-exports.create = create;
+exports.create = create

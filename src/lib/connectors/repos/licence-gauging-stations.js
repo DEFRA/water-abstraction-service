@@ -1,32 +1,32 @@
-'use strict';
-const { LicenceGaugingStations } = require('../bookshelf');
-const helpers = require('./lib/helpers');
+'use strict'
+const { LicenceGaugingStations } = require('../bookshelf')
+const helpers = require('./lib/helpers')
 
 const findLicenceGaugingStationsByFilter = async filters => {
   const result = await LicenceGaugingStations
     .forge()
     .query(function (qb) {
-      qb.where(filters);
+      qb.where(filters)
     })
-    .fetchAll();
+    .fetchAll()
 
-  return result.toJSON();
-};
+  return result.toJSON()
+}
 
 const findOneById = licenceGaugingStationId =>
-  helpers.findOne(LicenceGaugingStations, 'licenceGaugingStationId', licenceGaugingStationId);
+  helpers.findOne(LicenceGaugingStations, 'licenceGaugingStationId', licenceGaugingStationId)
 
 const create = data =>
-  helpers.create(LicenceGaugingStations, data);
+  helpers.create(LicenceGaugingStations, data)
 
 const deleteOne = licenceGaugingStationId =>
-  helpers.update(LicenceGaugingStations, 'licenceGaugingStationId', licenceGaugingStationId, { date_deleted: new Date() });
+  helpers.update(LicenceGaugingStations, 'licenceGaugingStationId', licenceGaugingStationId, { date_deleted: new Date() })
 
 const updateStatus = (licenceGaugingStationId, status) =>
-  helpers.update(LicenceGaugingStations, 'licenceGaugingStationId', licenceGaugingStationId, { status, dateStatusUpdated: new Date() });
+  helpers.update(LicenceGaugingStations, 'licenceGaugingStationId', licenceGaugingStationId, { status, dateStatusUpdated: new Date() })
 
-exports.findOneById = findOneById;
-exports.findLicenceGaugingStationsByFilter = findLicenceGaugingStationsByFilter;
-exports.create = create;
-exports.deleteOne = deleteOne;
-exports.updateStatus = updateStatus;
+exports.findOneById = findOneById
+exports.findLicenceGaugingStationsByFilter = findLicenceGaugingStationsByFilter
+exports.create = create
+exports.deleteOne = deleteOne
+exports.updateStatus = updateStatus

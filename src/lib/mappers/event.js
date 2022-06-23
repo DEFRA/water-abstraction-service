@@ -1,11 +1,11 @@
-'use strict';
+'use strict'
 
-const { isNull, isEmpty } = require('lodash');
+const { isNull, isEmpty } = require('lodash')
 
-const Event = require('../models/event');
+const Event = require('../models/event')
 
 const mapStatus = status =>
-  isEmpty(status) ? null : status;
+  isEmpty(status) ? null : status
 
 /**
  * Creates Event object model from data received from the repo layer
@@ -14,15 +14,15 @@ const mapStatus = status =>
  */
 const dbToModel = data => {
   if (isNull(data)) {
-    return null;
+    return null
   }
-  const { eventId, status, ...rest } = data;
-  const event = new Event(eventId);
+  const { eventId, status, ...rest } = data
+  const event = new Event(eventId)
   return event.fromHash({
     status: mapStatus(status),
     ...rest
-  });
-};
+  })
+}
 
 /**
  * Maps data from event model back to the Bookshelf repo
@@ -30,12 +30,12 @@ const dbToModel = data => {
  * @return {Object}
  */
 const modelToDb = eventModel => {
-  const { id, scheduledNotifications, ...rest } = eventModel.toJSON();
+  const { id, scheduledNotifications, ...rest } = eventModel.toJSON()
   return {
     eventId: id,
     ...rest
-  };
-};
+  }
+}
 
-exports.dbToModel = dbToModel;
-exports.modelToDb = modelToDb;
+exports.dbToModel = dbToModel
+exports.modelToDb = modelToDb

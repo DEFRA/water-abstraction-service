@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const MomentRange = require('moment-range');
-const moment = MomentRange.extendMoment(require('moment'));
+const MomentRange = require('moment-range')
+const moment = MomentRange.extendMoment(require('moment'))
 
-const DATE_FORMAT = 'YYYY-MM-DD';
+const DATE_FORMAT = 'YYYY-MM-DD'
 
 /**
  * The date range splitter function from water-abstraction-helpers
@@ -21,15 +21,15 @@ const applyEffectiveDates = obj => ({
   endDate: moment(obj.effectiveEndDate).format(DATE_FORMAT),
   originalStartDate: obj.startDate,
   originalEndDate: obj.endDate
-});
+})
 
 const findByDate = (arr, date) => {
-  const m = moment(date);
+  const m = moment(date)
   return arr.find(row => {
-    const range = moment.range(row.startDate, row.endDate);
-    return range.contains(m);
-  });
-};
+    const range = moment.range(row.startDate, row.endDate)
+    return range.contains(m)
+  })
+}
 
-exports.applyEffectiveDates = applyEffectiveDates;
-exports.findByDate = findByDate;
+exports.applyEffectiveDates = applyEffectiveDates
+exports.findByDate = findByDate

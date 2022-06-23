@@ -1,28 +1,28 @@
-'use strict';
+'use strict'
 
-const { flatMap, get } = require('lodash');
+const { flatMap, get } = require('lodash')
 
-const MomentRange = require('moment-range');
-const moment = MomentRange.extendMoment(require('moment'));
+const MomentRange = require('moment-range')
+const moment = MomentRange.extendMoment(require('moment'))
 
 // DEFRA helpers
-const helpers = require('@envage/water-abstraction-helpers');
+const helpers = require('@envage/water-abstraction-helpers')
 
 // Service models
-const DateRange = require('../../../../lib/models/date-range');
-const Transaction = require('../../../../lib/models/transaction');
+const DateRange = require('../../../../lib/models/date-range')
+const Transaction = require('../../../../lib/models/transaction')
 
-const { TRANSACTION_TYPE } = require('../../../../lib/models/charge-version-year');
-const { getChargePeriod, isNaldTransaction } = require('../../lib/charge-period');
+const { TRANSACTION_TYPE } = require('../../../../lib/models/charge-version-year')
+const { getChargePeriod, isNaldTransaction } = require('../../lib/charge-period')
 
-const agreements = require('./lib/agreements');
+const agreements = require('./lib/agreements')
 
-const DATE_FORMAT = 'YYYY-MM-DD';
+const DATE_FORMAT = 'YYYY-MM-DD'
 
 const isTwoPartTariffApplied = (agreement, chargeElement) =>
   agreement.isTwoPartTariff() &&
   chargeElement.purposeUse.isTwoPartTariff &&
-  chargeElement.isSection127AgreementEnabled;
+  chargeElement.isSection127AgreementEnabled
 /**
  * Predicate to check whether an agreement should be applied to the transaction
  * @param {Agreement} agreement
@@ -30,15 +30,15 @@ const isTwoPartTariffApplied = (agreement, chargeElement) =>
  * @return {Boolean}
  */
 const agreementAppliesToTransaction = (agreement, chargeElement) => {
-  const isCanalApplied = agreement.isCanalAndRiversTrust();
-  return isCanalApplied || isTwoPartTariffApplied(agreement, chargeElement);
-};
+  const isCanalApplied = agreement.isCanalAndRiversTrust()
+  return isCanalApplied || isTwoPartTariffApplied(agreement, chargeElement)
+}
 
 const getBillableDays = (absPeriod, startDate, endDate, isTwoPartSecondPartCharge) => {
   return isTwoPartSecondPartCharge
     ? 0
-    : helpers.charging.getBillableDays(absPeriod, startDate, endDate);
-};
+    : helpers.charging.getBillableDays(absPeriod, startDate, endDate)
+}
 
 /**
  * Creates a Transaction model
@@ -53,8 +53,8 @@ const getBillableDays = (absPeriod, startDate, endDate, isTwoPartSecondPartCharg
  * @return {Transaction}
  */
 const createTransaction = (chargePeriod, chargeElement, agreements, financialYear, flags = {}, billingVolume) => {
-  const absPeriod = chargeElement.abstractionPeriod.toJSON();
-  const transaction = new Transaction();
+  const absPeriod = chargeElement.abstractionPeriod.toJSON()
+  const transaction = new Transaction()
   transaction.fromHash({
     chargeElement,
     chargePeriod,
@@ -66,24 +66,24 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
     isTwoPartSecondPartCharge: flags.isTwoPartSecondPartCharge || false,
     isCompensationCharge: flags.isCompensationCharge || false,
     isNewLicence: flags.isMinimumCharge || false
-  });
-  transaction.createDescription();
-  return transaction;
-};
+  })
+  transaction.createDescription()
+  return transaction
+}
 
 const createSrocTransactionDescription = (chargeElement, flags) => {
   if (flags.isCompensationCharge) {
-    return 'Compensation charge: calculated from the charge reference, activity description and regional environmental improvement charge; excludes any supported source additional charge and two-part tariff charge agreement';
+    return 'Compensation charge: calculated from the charge reference, activity description and regional environmental improvement charge; excludes any supported source additional charge and two-part tariff charge agreement'
   }
   // if it is a two part tarriff bill run then all transactions are 2nd part charges
   if (flags.isTwoPartSecondPartCharge) {
-    return `Two-part tariff supplementary water abstraction charge: ${chargeElement.description}`;
+    return `Two-part tariff supplementary water abstraction charge: ${chargeElement.description}`
   } else { // annual or 1st part charge description
     return chargeElement.adjustments.s127
       ? `Two-part tariff basic water abstraction charge: ${chargeElement.description}`
-      : `Water abstraction charge: ${chargeElement.description}`;
+      : `Water abstraction charge: ${chargeElement.description}`
   }
-};
+}
 
 // produce array of date ranges
 // sort the array of date ranges in asccending order
@@ -102,16 +102,16 @@ const createSrocTransactionDescription = (chargeElement, flags) => {
  * @return {Transaction}
  */
 const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags = {}) => {
-  const absPeriod = chargeElement.chargePurposes.map(chargePurpose => chargePurpose.abstractionPeriod.toJSON());
+  const absPeriod = chargeElement.chargePurposes.map(chargePurpose => chargePurpose.abstractionPeriod.toJSON())
   const additionalCharges = chargeElement.additionalCharges
     ? {
-      supportedSource: chargeElement.additionalCharges.supportedSource || { name: null },
-      isSupplyPublicWater: !!chargeElement.additionalCharges.isSupplyPublicWater
-    }
+        supportedSource: chargeElement.additionalCharges.supportedSource || { name: null },
+        isSupplyPublicWater: !!chargeElement.additionalCharges.isSupplyPublicWater
+      }
     : {
-      supportedSource: { name: null },
-      isSupplyPublicWater: false
-    };
+        supportedSource: { name: null },
+        isSupplyPublicWater: false
+      }
 
   return {
     isCredit: false,
@@ -145,18 +145,18 @@ const createSrocTransaction = (chargePeriod, chargeElement, financialYear, flags
     isNewLicence: flags.isMinimumCharge || false,
     isWaterUndertaker: flags.isWaterUndertaker || false, // if this is false then isWaterCompanyCharge can not be true
     isWaterCompanyCharge: additionalCharges.isSupplyPublicWater // this value is set in the UI when assigning a charge category
-  };
-};
+  }
+}
 
 /**
  * Predicate to check whether compensation charges are needed
  * @param {ChargeVersion} chargeVersion
  * @return {Boolean}
  */
-const isCompensationChargesNeeded = chargeVersion => !chargeVersion.licence.isWaterUndertaker;
+const isCompensationChargesNeeded = chargeVersion => !chargeVersion.licence.isWaterUndertaker
 
 const doesChargePeriodStartOnFirstApril = chargePeriodStartDate =>
-  chargePeriodStartDate.isSame(moment(`${chargePeriodStartDate.year()}-04-01`, DATE_FORMAT), 'day');
+  chargePeriodStartDate.isSame(moment(`${chargePeriodStartDate.year()}-04-01`, DATE_FORMAT), 'day')
 
 /**
  * Predicate to check whether the minimum charge applies
@@ -165,18 +165,18 @@ const doesChargePeriodStartOnFirstApril = chargePeriodStartDate =>
  * @return {Boolean}
  */
 const doesMinimumChargeApply = (chargePeriod, chargeVersion) => {
-  const { dateRange, changeReason } = chargeVersion;
-  const chargePeriodStartDate = moment(chargePeriod.startDate);
+  const { dateRange, changeReason } = chargeVersion
+  const chargePeriodStartDate = moment(chargePeriod.startDate)
 
   if (isNaldTransaction(chargePeriodStartDate)) {
-    return false;
+    return false
   }
 
-  const isSharedStartDate = chargePeriodStartDate.isSame(moment(dateRange.startDate), 'day');
-  const isFirstChargeOnNewLicence = isSharedStartDate && get(changeReason, 'triggersMinimumCharge', false);
+  const isSharedStartDate = chargePeriodStartDate.isSame(moment(dateRange.startDate), 'day')
+  const isFirstChargeOnNewLicence = isSharedStartDate && get(changeReason, 'triggersMinimumCharge', false)
 
-  return doesChargePeriodStartOnFirstApril(chargePeriodStartDate) || isFirstChargeOnNewLicence;
-};
+  return doesChargePeriodStartOnFirstApril(chargePeriodStartDate) || isFirstChargeOnNewLicence
+}
 
 /**
  * Gets the charge period for the element, taking into account the time-limited
@@ -188,19 +188,19 @@ const doesMinimumChargeApply = (chargePeriod, chargeVersion) => {
  * @return {DateRange|null}
  */
 const getElementChargePeriod = (period, chargeElement) => {
-  const { timeLimitedPeriod } = chargeElement;
+  const { timeLimitedPeriod } = chargeElement
 
   if (!timeLimitedPeriod) {
-    return new DateRange(period.startDate, period.endDate);
+    return new DateRange(period.startDate, period.endDate)
   }
 
   const intersection = helpers.charging.getIntersection([
     [period.startDate, period.endDate],
     [timeLimitedPeriod.startDate, timeLimitedPeriod.endDate]
-  ]);
+  ])
 
-  return intersection ? new DateRange(...intersection) : null;
-};
+  return intersection ? new DateRange(...intersection) : null
+}
 
 /**
  * Gets the summer and winter/all year billing volume
@@ -209,13 +209,13 @@ const getElementChargePeriod = (period, chargeElement) => {
  */
 const getBillingVolumesForChargeElement = (chargeElement, billingVolumes) => billingVolumes.filter(
   billingVolume => billingVolume.chargeElementId === chargeElement.id
-);
+)
 
 const hasTwoPartTariffAgreement = (agreements, chargeElement) => {
   const agreementsAreTwoPartTariff = agreements.map(agreement =>
-    isTwoPartTariffApplied(agreement, chargeElement));
-  return agreementsAreTwoPartTariff.includes(true);
-};
+    isTwoPartTariffApplied(agreement, chargeElement))
+  return agreementsAreTwoPartTariff.includes(true)
+}
 
 /**
  * Create two part tariff transactions
@@ -227,17 +227,17 @@ const hasTwoPartTariffAgreement = (agreements, chargeElement) => {
  * @return {Array<Transaction>}
  */
 const createTwoPartTariffTransactions = (elementChargePeriod, chargeElement, agreements, financialYear, additionalData) => {
-  const { billingVolumes } = additionalData;
-  const transactions = [];
-  const elementBillingVolumes = getBillingVolumesForChargeElement(chargeElement, billingVolumes);
+  const { billingVolumes } = additionalData
+  const transactions = []
+  const elementBillingVolumes = getBillingVolumesForChargeElement(chargeElement, billingVolumes)
   elementBillingVolumes.forEach(billingVolume => {
     if (hasTwoPartTariffAgreement(agreements, chargeElement)) {
-      transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isTwoPartSecondPartCharge: true }, billingVolume));
+      transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isTwoPartSecondPartCharge: true }, billingVolume))
     }
-  });
+  })
 
-  return transactions;
-};
+  return transactions
+}
 
 /**
  * Create annual transactions
@@ -249,63 +249,63 @@ const createTwoPartTariffTransactions = (elementChargePeriod, chargeElement, agr
  * @return {Array<Transaction>}
  */
 const createAnnualAndCompensationTransactions = (elementChargePeriod, chargeElement, agreements, financialYear, additionalData) => {
-  const { chargeVersion } = additionalData;
-  const isMinimumCharge = doesMinimumChargeApply(elementChargePeriod, chargeVersion);
-  const transactions = [];
-  let flags = { isMinimumCharge };
+  const { chargeVersion } = additionalData
+  const isMinimumCharge = doesMinimumChargeApply(elementChargePeriod, chargeVersion)
+  const transactions = []
+  let flags = { isMinimumCharge }
   if (chargeVersion.scheme === 'alcs') {
-    transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, flags));
+    transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, flags))
 
     if (isCompensationChargesNeeded(chargeVersion)) {
       flags = {
         isMinimumCharge,
         isCompensationCharge: true
-      };
+      }
       transactions.push(
-        createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, flags));
+        createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, flags))
     }
   } else {
     flags = {
       isMinimumCharge,
       isWaterUndertaker: chargeVersion.licence.isWaterUndertaker,
       isTwoPartSecondPartCharge: false
-    };
+    }
     // set isTwoPartSecondPartCharge flag to false because all annual billing transactions are 1st part charges
-    transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, flags));
+    transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, flags))
 
     if (isCompensationChargesNeeded(chargeVersion)) {
       flags = {
         isMinimumCharge,
         isCompensationCharge: true,
         isWaterUndertaker: chargeVersion.licence.isWaterUndertaker
-      };
-      transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, flags));
+      }
+      transactions.push(createSrocTransaction(elementChargePeriod, chargeElement, financialYear, flags))
     }
   }
 
   // Filter any transactions with 0 billable days
-  return transactions.filter(transaction => transaction.billableDays > 0);
-};
+  return transactions.filter(transaction => transaction.billableDays > 0)
+}
 
 const actions = {
   [TRANSACTION_TYPE.annual]: createAnnualAndCompensationTransactions,
   [TRANSACTION_TYPE.twoPartTariff]: createTwoPartTariffTransactions
-};
+}
 
 const createTransactionsForPeriod = (chargeVersionYear, period, billingVolumes) => {
-  const { chargeVersion, financialYear, transactionType } = chargeVersionYear;
-  const { agreements, dateRange } = period;
+  const { chargeVersion, financialYear, transactionType } = chargeVersionYear
+  const { agreements, dateRange } = period
 
   return chargeVersion.chargeElements.reduce((acc, chargeElement) => {
-    const elementChargePeriod = getElementChargePeriod(dateRange, chargeElement);
+    const elementChargePeriod = getElementChargePeriod(dateRange, chargeElement)
     if (!elementChargePeriod) {
-      return acc;
+      return acc
     }
-    const additionalData = { chargeVersion, billingVolumes };
-    acc.push(...actions[transactionType](elementChargePeriod, chargeElement, agreements, financialYear, additionalData));
-    return acc;
-  }, []);
-};
+    const additionalData = { chargeVersion, billingVolumes }
+    acc.push(...actions[transactionType](elementChargePeriod, chargeElement, agreements, financialYear, additionalData))
+    return acc
+  }, [])
+}
 
 /**
  * Create two part tariff transactions
@@ -314,17 +314,17 @@ const createTransactionsForPeriod = (chargeVersionYear, period, billingVolumes) 
  * @return {Array<Transaction>}
  */
 const createTransactions = (chargeVersionYear, billingVolumes) => {
-  const { chargeVersion, financialYear } = chargeVersionYear;
-  const chargePeriod = getChargePeriod(financialYear, chargeVersion);
+  const { chargeVersion, financialYear } = chargeVersionYear
+  const chargePeriod = getChargePeriod(financialYear, chargeVersion)
 
   // Create a history for the financial year, taking into account agreements
-  const history = agreements.getAgreementsHistory(chargePeriod, chargeVersion.licence.licenceAgreements);
+  const history = agreements.getAgreementsHistory(chargePeriod, chargeVersion.licence.licenceAgreements)
 
   // Create transactions for each period in the history
   const transactions = history.map(period =>
-    createTransactionsForPeriod(chargeVersionYear, period, billingVolumes));
+    createTransactionsForPeriod(chargeVersionYear, period, billingVolumes))
 
-  return flatMap(transactions);
-};
+  return flatMap(transactions)
+}
 
-exports.createTransactions = createTransactions;
+exports.createTransactions = createTransactions

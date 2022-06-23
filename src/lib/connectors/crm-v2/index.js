@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 module.exports = {
   addresses: require('./addresses'),
@@ -6,4 +6,4 @@ module.exports = {
   contacts: require('./contacts'),
   documents: require('./documents'),
   invoiceAccounts: require('./invoice-accounts')
-};
+}

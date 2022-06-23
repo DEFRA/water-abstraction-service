@@ -3,9 +3,9 @@
  * For setting up notifications, each notification type is stores in the DB
  * as a blob of JSON config data
  */
-const HAPIRestAPI = require('@envage/hapi-pg-rest-api');
-const Joi = require('joi');
-const { pool } = require('../lib/connectors/db.js');
+const HAPIRestAPI = require('@envage/hapi-pg-rest-api')
+const Joi = require('joi')
+const { pool } = require('../lib/connectors/db.js')
 
 const TaskConfigApi = new HAPIRestAPI({
   table: 'water.task_config',
@@ -24,8 +24,8 @@ const TaskConfigApi = new HAPIRestAPI({
     created: Joi.string(),
     modified: Joi.string()
   }
-});
+})
 
-module.exports = TaskConfigApi.getRoutes();
+module.exports = TaskConfigApi.getRoutes()
 
-module.exports.repository = TaskConfigApi.repo;
+module.exports.repository = TaskConfigApi.repo

@@ -1,8 +1,8 @@
-const Boom = require('@hapi/boom');
-const scheduledNotificationsService = require('../../lib/services/scheduled-notifications');
-const { logger } = require('../../logger');
-const { enqueue } = require('./index.js');
-const notifyService = require('../../lib/notify');
+const Boom = require('@hapi/boom')
+const scheduledNotificationsService = require('../../lib/services/scheduled-notifications')
+const { logger } = require('../../logger')
+const { enqueue } = require('./index.js')
+const notifyService = require('../../lib/notify')
 /**
  * Gets the notify template ID for a notify message ref,
  * and sends it using the notify API
@@ -18,57 +18,57 @@ const notifyService = require('../../lib/notify');
  * @param {Object} reply - the HAPI HTTP response
  */
 async function send (request, reply) {
-  const { message_ref: messageRef } = request.params;
-  const { id, recipient, personalisation } = request.payload;
+  const { message_ref: messageRef } = request.params
+  const { id, recipient, personalisation } = request.payload
 
   const config = {
     id,
     messageRef,
     recipient,
     personalisation
-  };
+  }
 
   try {
-    await enqueue(request.queueManager, config);
-    return config;
+    await enqueue(request.queueManager, config)
+    return config
   } catch (err) {
     if (err.isBoom && (err.output.statusCode !== 500)) {
-      throw Boom.badRequest(err.message);
+      throw Boom.badRequest(err.message)
     }
     if (err.name === 'TemplateNotFoundError') {
-      throw Boom.boomify(err, { statusCode: 400 });
+      throw Boom.boomify(err, { statusCode: 400 })
     }
     if (err.name === 'StatusCodeError') {
-      throw Boom.boomify(err, { statusCode: err.statusCode });
+      throw Boom.boomify(err, { statusCode: err.statusCode })
     }
-    throw err;
+    throw err
   }
 }
 
 const callback = async (request, h) => {
-  const { status, id } = request.payload;
+  const { status, id } = request.payload
 
-  const notification = await scheduledNotificationsService.getScheduledNotificationByNotifyId(id);
+  const notification = await scheduledNotificationsService.getScheduledNotificationByNotifyId(id)
 
   if (notification === null) {
-    logger.error(`Notify callback: Failed to set status (${status}) on a notification (NOTIFY ID ${id}) as the notification could not be found.`);
-    return Boom.notFound('Notification not found');
+    logger.error(`Notify callback: Failed to set status (${status}) on a notification (NOTIFY ID ${id}) as the notification could not be found.`)
+    return Boom.notFound('Notification not found')
   } else {
-    await scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback(notification.id, status);
-    logger.info(`Notify callback: Successfully set status (${status}) on notification (NOTIFY ID ${id})`);
+    await scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback(notification.id, status)
+    logger.info(`Notify callback: Successfully set status (${status}) on notification (NOTIFY ID ${id})`)
 
-    return h.response(null).code(204);
+    return h.response(null).code(204)
   }
-};
+}
 
 /**
  * A very basic proxy service to send notify emails via the water service
  */
 const notifyEmailProxy = async request => {
-  const { templateId, recipient, personalisation } = request.payload;
-  return notifyService.sendEmail(templateId, recipient, personalisation);
-};
+  const { templateId, recipient, personalisation } = request.payload
+  return notifyService.sendEmail(templateId, recipient, personalisation)
+}
 
-exports.send = send;
-exports.callback = callback;
-exports.notifyEmailProxy = notifyEmailProxy;
+exports.send = send
+exports.callback = callback
+exports.notifyEmailProxy = notifyEmailProxy

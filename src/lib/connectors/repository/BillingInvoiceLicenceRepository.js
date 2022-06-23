@@ -1,6 +1,6 @@
-const { get } = require('lodash');
-const Repository = require('@envage/hapi-pg-rest-api/src/repository');
-const db = require('../db');
+const { get } = require('lodash')
+const Repository = require('@envage/hapi-pg-rest-api/src/repository')
+const db = require('../db')
 
 const findOneByTransactionIdQuery = `
   select il.*, l.is_water_undertaker, l.regions
@@ -10,7 +10,7 @@ const findOneByTransactionIdQuery = `
     join water.licences l
       on il.licence_id=l.licence_id
   where t.billing_transaction_id=$1;
-`;
+`
 
 class BillingInvoiceLicenceRepository extends Repository {
   constructor (config = {}) {
@@ -22,7 +22,7 @@ class BillingInvoiceLicenceRepository extends Repository {
         fields: ['billing_invoice_id', 'company_id', 'address_id', 'licence_id'],
         set: ['date_updated']
       }
-    }, config));
+    }, config))
   }
 
   /**
@@ -31,10 +31,10 @@ class BillingInvoiceLicenceRepository extends Repository {
    * @return {Promise<Object>}
    */
   async findOneByTransactionId (transactionId) {
-    const result = await this.dbQuery(findOneByTransactionIdQuery, [transactionId]);
-    return get(result, 'rows.0', null);
+    const result = await this.dbQuery(findOneByTransactionIdQuery, [transactionId])
+    return get(result, 'rows.0', null)
   }
 };
 
-module.exports = BillingInvoiceLicenceRepository;
-module.exports._findOneByTransactionIdQuery = findOneByTransactionIdQuery;
+module.exports = BillingInvoiceLicenceRepository
+module.exports._findOneByTransactionIdQuery = findOneByTransactionIdQuery

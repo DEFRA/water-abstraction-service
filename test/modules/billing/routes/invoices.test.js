@@ -1,12 +1,12 @@
-'use strict';
-const uuid = require('uuid/v4');
+'use strict'
+const uuid = require('uuid/v4')
 
-const { expect } = require('@hapi/code');
-const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
+const { expect } = require('@hapi/code')
+const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script()
 
-const routes = require('../../../../src/modules/billing/routes/invoices');
-const testHelpers = require('../../../test-helpers');
-const { ROLES } = require('../../../../src/lib/roles');
+const routes = require('../../../../src/modules/billing/routes/invoices')
+const testHelpers = require('../../../test-helpers')
+const { ROLES } = require('../../../../src/lib/roles')
 
 /**
  * Creates a test Hapi server that has no other plugins loaded,
@@ -18,10 +18,10 @@ const { ROLES } = require('../../../../src/lib/roles');
  * @param {Object} route The route to test
  */
 const getServer = route =>
-  testHelpers.createServerForRoute(route, true);
+  testHelpers.createServerForRoute(route, true)
 
 experiment('modules/billing/routes', () => {
-  let auth;
+  let auth
 
   beforeEach(async () => {
     auth = {
@@ -29,15 +29,15 @@ experiment('modules/billing/routes', () => {
       credentials: {
         scope: [ROLES.billing]
       }
-    };
-  });
+    }
+  })
 
   experiment('postCreateBatch', () => {
-    let request;
-    let server;
+    let request
+    let server
 
     beforeEach(async () => {
-      server = await getServer(routes.patchInvoice);
+      server = await getServer(routes.patchInvoice)
 
       request = {
         method: 'PATCH',
@@ -46,30 +46,30 @@ experiment('modules/billing/routes', () => {
           isFlaggedForRebilling: true
         },
         auth
-      };
-    });
+      }
+    })
 
     test('returns the 200 for a valid payload', async () => {
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(200);
-    });
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(200)
+    })
 
     test('returns a 400 if the invoiceId is not a valid guid', async () => {
-      request.url = '/water/1.0/billing/invoices/test-id';
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(400);
-    });
+      request.url = '/water/1.0/billing/invoices/test-id'
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(400)
+    })
 
     test('returns a 400 if the isFlaggedForRebilling is omitted', async () => {
-      delete request.payload.isFlaggedForRebilling;
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(400);
-    });
+      delete request.payload.isFlaggedForRebilling
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(400)
+    })
 
     test('returns a 400 if the isFlaggedForRebilling is an unexpected value', async () => {
-      request.payload.isFlaggedForRebilling = 'a string';
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(400);
-    });
-  });
-});
+      request.payload.isFlaggedForRebilling = 'a string'
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(400)
+    })
+  })
+})

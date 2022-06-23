@@ -4,4 +4,4 @@ exports.jobNames = {
   updateInvoice: 'billing.update-invoice',
   updateInvoices: 'billing.update-invoices',
   updateWithCMSummary: 'billing.update-with-cm-summary'
-};
+}

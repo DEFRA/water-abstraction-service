@@ -1,17 +1,17 @@
-const urlJoin = require('url-join');
-const { get, partialRight } = require('lodash');
-const { serviceRequest } = require('@envage/water-abstraction-helpers');
-const config = require('../../../../config');
-const helpers = require('@envage/water-abstraction-helpers');
+const urlJoin = require('url-join')
+const { get, partialRight } = require('lodash')
+const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const config = require('../../../../config')
+const helpers = require('@envage/water-abstraction-helpers')
 
 const getEntityContent = async (entityId, pathTail) => {
-  const url = `${config.services.crm}/entity/${entityId}/${pathTail}`;
-  return serviceRequest.get(url);
-};
+  const url = `${config.services.crm}/entity/${entityId}/${pathTail}`
+  return serviceRequest.get(url)
+}
 
-const getEntityCompanies = partialRight(getEntityContent, 'companies');
+const getEntityCompanies = partialRight(getEntityContent, 'companies')
 
-const getEntityVerifications = partialRight(getEntityContent, 'verifications');
+const getEntityVerifications = partialRight(getEntityContent, 'verifications')
 
 /**
  * update CRM db row for entity with new email for entity_nm
@@ -21,8 +21,8 @@ const updateEntityEmail = async (entityId, newEmail) => {
     body: {
       entity_nm: newEmail
     }
-  });
-};
+  })
+}
 
 /** Gets an entity from the CRM. Returns only the entity and does
  * not include the response envelope.
@@ -34,13 +34,13 @@ const getEntity = async (name, type = 'individual') => {
   const filter = JSON.stringify({
     entity_nm: name,
     entity_type: type
-  });
+  })
 
-  const url = `${config.services.crm}/entity?filter=${filter}`;
-  const response = await serviceRequest.get(url);
+  const url = `${config.services.crm}/entity?filter=${filter}`
+  const response = await serviceRequest.get(url)
 
-  return get(response, 'data[0]');
-};
+  return get(response, 'data[0]')
+}
 
 /**
  * Create a new entity in the CRM
@@ -51,19 +51,19 @@ const getEntity = async (name, type = 'individual') => {
  * @param {String} source The source of the user (used in acceptance tests data creation)
  */
 const createEntity = async (name, type = 'individual', source) => {
-  const url = `${config.services.crm}/entity`;
+  const url = `${config.services.crm}/entity`
   const body = {
     entity_nm: name,
     entity_type: type
-  };
-
-  if (source) {
-    body.source = source;
   }
 
-  const response = await serviceRequest.post(url, { body });
-  return get(response, 'data');
-};
+  if (source) {
+    body.source = source
+  }
+
+  const response = await serviceRequest.post(url, { body })
+  return get(response, 'data')
+}
 
 /**
  * Create a new entity in the CRM
@@ -73,27 +73,27 @@ const createEntity = async (name, type = 'individual', source) => {
  * @param {String} type The entity type (individual|company|regime)
  */
 const createEntityRole = async (entityId, role, createdBy, companyEntityId = null, regimeEntityId = null) => {
-  const url = `${config.services.crm}/entity/${entityId}/roles`;
+  const url = `${config.services.crm}/entity/${entityId}/roles`
   const body = {
     role,
     created_by: createdBy
-  };
+  }
 
   if (companyEntityId) {
-    body.company_entity_id = companyEntityId;
+    body.company_entity_id = companyEntityId
   }
 
   if (regimeEntityId) {
-    body.regime_entity_id = regimeEntityId;
+    body.regime_entity_id = regimeEntityId
   }
 
-  const response = await serviceRequest.post(url, { body });
-  return get(response, 'data');
-};
+  const response = await serviceRequest.post(url, { body })
+  return get(response, 'data')
+}
 
 const createAdminEntityRole = (entityId, createdBy) => {
-  return createEntityRole(entityId, 'admin', createdBy, null, config.crm.waterRegime);
-};
+  return createEntityRole(entityId, 'admin', createdBy, null, config.crm.waterRegime)
+}
 
 /**
  * Ensures that an entity exists in the CRM for the given email address
@@ -102,37 +102,37 @@ const createAdminEntityRole = (entityId, createdBy) => {
  * @param {String} callingUserEmail The email address of the user who is creating the new user
  */
 const getOrCreateInternalUserEntity = async (newUserEmail, callingUserEmail) => {
-  const existingEntity = await getEntity(newUserEmail);
+  const existingEntity = await getEntity(newUserEmail)
 
   if (existingEntity) {
-    return existingEntity;
+    return existingEntity
   }
 
   // create a new crm entity
-  const newEntity = await createEntity(newUserEmail);
+  const newEntity = await createEntity(newUserEmail)
 
   // then create the entity_role
-  await createAdminEntityRole(newEntity.entity_id, callingUserEmail);
+  await createAdminEntityRole(newEntity.entity_id, callingUserEmail)
 
-  return newEntity;
-};
+  return newEntity
+}
 
-exports.getEntity = getEntity;
-exports.createEntity = createEntity;
-exports.createEntityRole = createEntityRole;
-exports.createAdminEntityRole = createAdminEntityRole;
+exports.getEntity = getEntity
+exports.createEntity = createEntity
+exports.createEntityRole = createEntityRole
+exports.createAdminEntityRole = createAdminEntityRole
 
-exports.getEntityCompanies = getEntityCompanies;
-exports.getEntityVerifications = getEntityVerifications;
+exports.getEntityCompanies = getEntityCompanies
+exports.getEntityVerifications = getEntityVerifications
 
-exports.getOrCreateInternalUserEntity = getOrCreateInternalUserEntity;
-exports.updateEntityEmail = updateEntityEmail;
+exports.getOrCreateInternalUserEntity = getOrCreateInternalUserEntity
+exports.updateEntityEmail = updateEntityEmail
 
 if (config.isAcceptanceTestTarget) {
   exports.deleteAcceptanceTestData = async () => {
-    const CRMV1URL = urlJoin(config.services.crm, 'acceptance-tests/entities');
-    const CRMV2URL = urlJoin(config.services.crm_v2, 'test-data');
-    await serviceRequest.delete(CRMV2URL);
-    return serviceRequest.delete(CRMV1URL);
-  };
+    const CRMV1URL = urlJoin(config.services.crm, 'acceptance-tests/entities')
+    const CRMV2URL = urlJoin(config.services.crm_v2, 'test-data')
+    await serviceRequest.delete(CRMV2URL)
+    return serviceRequest.delete(CRMV1URL)
+  }
 }

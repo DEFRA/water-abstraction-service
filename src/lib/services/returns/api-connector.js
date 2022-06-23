@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const { first } = require('lodash');
-const apiConnector = require('../../connectors/returns');
+const { first } = require('lodash')
+const apiConnector = require('../../connectors/returns')
 
 /**
  * Get all non-void returns for licence in specified return cycle
@@ -17,13 +17,13 @@ const getReturnsForLicenceInCycle = (licenceNumber, cycle) => {
     start_date: { $gte: cycle.startDate },
     end_date: { $lte: cycle.endDate },
     'metadata->>isSummer': cycle.isSummer ? 'true' : 'false'
-  };
+  }
   const sort = {
     end_date: +1,
     return_id: +1
-  };
-  return apiConnector.returns.findAll(filter, sort);
-};
+  }
+  return apiConnector.returns.findAll(filter, sort)
+}
 
 /**
  * Gets the record for the current version of the return
@@ -34,11 +34,11 @@ const getCurrentVersion = async returnId => {
   const filter = {
     return_id: returnId,
     current: true
-  };
-  const sort = { version_number: -1 };
-  const versions = await apiConnector.versions.findAll(filter, sort);
-  return first(versions);
-};
+  }
+  const sort = { version_number: -1 }
+  const versions = await apiConnector.versions.findAll(filter, sort)
+  return first(versions)
+}
 
 /**
  * Gets the lines for the supplied version ID
@@ -48,10 +48,10 @@ const getCurrentVersion = async returnId => {
 const getLines = async versionId => {
   const filter = {
     version_id: versionId
-  };
-  const sort = { start_date: +1 };
-  return apiConnector.lines.findAll(filter, sort);
-};
+  }
+  const sort = { start_date: +1 }
+  return apiConnector.lines.findAll(filter, sort)
+}
 
 /**
  * Get returns for the specified licence number with one of the supplied statuses
@@ -68,18 +68,18 @@ const getLicenceReturnsByStatusAndEndDate = (licenceNumber, statuses, minEndDate
       $in: statuses
     },
     end_date: { $gte: minEndDate, $lte: maxEndDate }
-  };
+  }
   const sort = {
     end_date: +1,
     return_id: +1
-  };
-  return apiConnector.returns.findAll(filter, sort);
-};
+  }
+  return apiConnector.returns.findAll(filter, sort)
+}
 
 const getReturnById = async returnId => {
-  const { data } = await apiConnector.returns.findOne(returnId);
-  return data;
-};
+  const { data } = await apiConnector.returns.findOne(returnId)
+  return data
+}
 
 /**
  * Get a page of returns for the specified licence
@@ -95,21 +95,21 @@ const getReturnsForLicence = (licenceNumber, page, perPage) => {
     start_date: {
       $gte: '2008-04-01'
     }
-  };
+  }
   const sort = {
     due_date: -1
-  };
+  }
   const pagination = {
     page,
     perPage
-  };
-  return apiConnector.returns.findMany(filter, sort, pagination);
-};
+  }
+  return apiConnector.returns.findMany(filter, sort, pagination)
+}
 
-exports.getReturnById = getReturnById;
-exports.getReturnsForLicenceInCycle = getReturnsForLicenceInCycle;
-exports.getCurrentVersion = getCurrentVersion;
-exports.getLines = getLines;
-exports.getReturnsForLicence = apiConnector.getReturnsForLicence;
-exports.getLicenceReturnsByStatusAndEndDate = getLicenceReturnsByStatusAndEndDate;
-exports.getReturnsForLicence = getReturnsForLicence;
+exports.getReturnById = getReturnById
+exports.getReturnsForLicenceInCycle = getReturnsForLicenceInCycle
+exports.getCurrentVersion = getCurrentVersion
+exports.getLines = getLines
+exports.getReturnsForLicence = apiConnector.getReturnsForLicence
+exports.getLicenceReturnsByStatusAndEndDate = getLicenceReturnsByStatusAndEndDate
+exports.getReturnsForLicence = getReturnsForLicence

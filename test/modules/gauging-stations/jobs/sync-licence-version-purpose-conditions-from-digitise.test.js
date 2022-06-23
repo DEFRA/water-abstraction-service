@@ -1,34 +1,34 @@
-const { expect } = require('@hapi/code');
+const { expect } = require('@hapi/code')
 const {
   beforeEach,
   afterEach,
   experiment,
   test
-} = exports.lab = require('@hapi/lab').script();
+} = exports.lab = require('@hapi/lab').script()
 
-const config = require('../../../../config');
-const sinon = require('sinon');
-const moment = require('moment');
-const sandbox = sinon.createSandbox();
+const config = require('../../../../config')
+const sinon = require('sinon')
+const moment = require('moment')
+const sandbox = sinon.createSandbox()
 
-const permitsConnector = require('../../../../src/lib/connectors/permit');
+const permitsConnector = require('../../../../src/lib/connectors/permit')
 
-const syncLVPCFromDigitseJob = require('../../../../src/modules/gauging-stations/jobs/sync-licence-version-purpose-conditions-from-digitise');
-const LVPCService = require('../../../../src/lib/services/licence-version-purpose-conditions');
+const syncLVPCFromDigitseJob = require('../../../../src/modules/gauging-stations/jobs/sync-licence-version-purpose-conditions-from-digitise')
+const LVPCService = require('../../../../src/lib/services/licence-version-purpose-conditions')
 experiment('.createMessage', () => {
-  let message;
+  let message
 
   beforeEach(async () => {
-    message = syncLVPCFromDigitseJob.createMessage();
-  });
+    message = syncLVPCFromDigitseJob.createMessage()
+  })
 
   test('creates a message with the expected name', async () => {
-    expect(message[0]).to.equal('gauging-stations.copy-lvpc-from-digitise');
-  });
+    expect(message[0]).to.equal('gauging-stations.copy-lvpc-from-digitise')
+  })
 
   test('the message has no associated job data', async () => {
-    expect(message[1]).to.equal({});
-  });
+    expect(message[1]).to.equal({})
+  })
 
   test('the message has a config object calling for repeats', async () => {
     expect(message[2]).to.equal({
@@ -36,12 +36,12 @@ experiment('.createMessage', () => {
       repeat: {
         cron: config.import.digitiseToLVPCSyncCronExp
       }
-    });
-  });
-});
+    })
+  })
+})
 
 experiment('.handler', () => {
-  const email = 'test@email.com';
+  const email = 'test@email.com'
   const licences = [
     {
       licence_id: '123456',
@@ -122,16 +122,16 @@ experiment('.handler', () => {
       }
     }
 
-  ];
+  ]
 
   experiment('When a licence has been approved in digitse with a new purpose condition on the licence', () => {
     beforeEach(async () => {
-      const lvpc = { licenceVersionPurposeConditionId: 'lvpc-id', licenceVersionPurposeId: 'lvp-id' };
-      sandbox.stub(LVPCService, 'getLicenceVersionConditionByPartialExternalId').resolves(lvpc);
-      sandbox.stub(LVPCService, 'getLicenceVersionConditionType').resolves({ licenceVersionPurposeConditionTypeId: 'test-lvpc-type-id' });
-      sandbox.stub(LVPCService, 'upsertByExternalId').resolves({});
-      sandbox.stub(permitsConnector.licences, 'getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise').resolves(licences);
-      sandbox.stub(permitsConnector.licences, 'updateOne').resolves();
+      const lvpc = { licenceVersionPurposeConditionId: 'lvpc-id', licenceVersionPurposeId: 'lvp-id' }
+      sandbox.stub(LVPCService, 'getLicenceVersionConditionByPartialExternalId').resolves(lvpc)
+      sandbox.stub(LVPCService, 'getLicenceVersionConditionType').resolves({ licenceVersionPurposeConditionTypeId: 'test-lvpc-type-id' })
+      sandbox.stub(LVPCService, 'upsertByExternalId').resolves({})
+      sandbox.stub(permitsConnector.licences, 'getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise').resolves(licences)
+      sandbox.stub(permitsConnector.licences, 'updateOne').resolves()
       sandbox.stub(permitsConnector.licences, 'getWaterLicence').resolves({
         licence_data_value: {
           data: {
@@ -140,26 +140,26 @@ experiment('.handler', () => {
             }
           }
         }
-      });
-      await syncLVPCFromDigitseJob.handler();
-    });
+      })
+      await syncLVPCFromDigitseJob.handler()
+    })
 
-    afterEach(async () => sandbox.restore());
+    afterEach(async () => sandbox.restore())
 
     test('add the licence version purpose condition to the licence', async () => {
-      const args = LVPCService.upsertByExternalId.lastCall.args;
-      expect(args[0]).to.equal('digitise:123456:lvpc-id:/wr22/2.5');
-      expect(args[1]).to.equal('lvp-id');
-      expect(args[2].licenceVersionPurposeConditionTypeId).to.equal('test-lvpc-type-id');
-      expect(args[4]).to.equal('digitise');
-    });
+      const args = LVPCService.upsertByExternalId.lastCall.args
+      expect(args[0]).to.equal('digitise:123456:lvpc-id:/wr22/2.5')
+      expect(args[1]).to.equal('lvp-id')
+      expect(args[2].licenceVersionPurposeConditionTypeId).to.equal('test-lvpc-type-id')
+      expect(args[4]).to.equal('digitise')
+    })
 
     test('updates the licence record in the permits schema', async () => {
-      const args = permitsConnector.licences.updateOne.lastCall.args;
-      const date = moment(args[1].date_licence_version_purpose_conditions_last_copied);
-      expect(args[0]).to.equal('123456');
-      expect(Object.keys(args[1])).to.equal(['date_licence_version_purpose_conditions_last_copied']);
-      expect(date.isValid()).to.be.true();
-    });
-  });
-});
+      const args = permitsConnector.licences.updateOne.lastCall.args
+      const date = moment(args[1].date_licence_version_purpose_conditions_last_copied)
+      expect(args[0]).to.equal('123456')
+      expect(Object.keys(args[1])).to.equal(['date_licence_version_purpose_conditions_last_copied'])
+      expect(date.isValid()).to.be.true()
+    })
+  })
+})

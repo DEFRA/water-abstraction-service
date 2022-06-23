@@ -1,11 +1,11 @@
-const { WATER_MODEL } = require('../../../../lib/models/constants');
+const { WATER_MODEL } = require('../../../../lib/models/constants')
 const {
   testAcceptedTerm, testNotBlank, testMaxLength, testNumberLessThanOne, testNumberGreaterThanZero, testNumber,
   testMaxDecimalPlaces, testBlankWhen, testPopulatedWhen, testSupportedSourceOrBlank, testValidReferenceLineDescription,
   testMaxValue, testMaxDigits, testMatchTPTPurpose, testDateAfterLicenceDate, testDateBefore, testValidDate,
   testDateRange, testPurpose, testDateBeforeSrocStartDate, testDateBeforeLicenceDate, testValidLicence,
   testLicenceHasInvoiceAccount, testNumberGreaterThanOrEqualToZero
-} = require('./tests');
+} = require('./tests')
 
 const csvFields = {
   licenceNumber: {
@@ -195,6 +195,6 @@ const csvFields = {
       testMaxLength(500)
     ]
   }
-};
+}
 
-exports.csvFields = csvFields;
+exports.csvFields = csvFields

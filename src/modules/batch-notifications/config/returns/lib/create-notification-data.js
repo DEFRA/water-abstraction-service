@@ -1,20 +1,20 @@
-'use strict';
+'use strict'
 
-const uuidv4 = require('uuid/v4');
-const { first } = require('lodash');
+const uuidv4 = require('uuid/v4')
+const { first } = require('lodash')
 
-const { MESSAGE_STATUS_DRAFT } = require('../../../lib/message-statuses');
-const notifyHelpers = require('../../../lib/notify-helpers');
+const { MESSAGE_STATUS_DRAFT } = require('../../../lib/message-statuses')
+const notifyHelpers = require('../../../lib/notify-helpers')
 
-const waterHelpers = require('@envage/water-abstraction-helpers');
+const waterHelpers = require('@envage/water-abstraction-helpers')
 
-const { isoToReadable } = waterHelpers.nald.dates;
+const { isoToReadable } = waterHelpers.nald.dates
 const {
   CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_RETURNS_AGENT,
   CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO
-} = require('../../../../../lib/models/contact');
-const BI_TEMPLATES = ['control', 'moral_suasion', 'social_norm', 'formality'];
-const events = require('../../../../../lib/services/events');
+} = require('../../../../../lib/models/contact')
+const BI_TEMPLATES = ['control', 'moral_suasion', 'social_norm', 'formality']
+const events = require('../../../../../lib/services/events')
 
 /**
  * Gets personalisation data for the notification - this relates to the
@@ -23,14 +23,14 @@ const events = require('../../../../../lib/services/events');
  * @return {Object}         - start, end and due dates of return cycle
  */
 const getReturnPersonalisation = evt => {
-  const { startDate, endDate, dueDate } = evt.metadata.returnCycle;
+  const { startDate, endDate, dueDate } = evt.metadata.returnCycle
 
   return {
     periodStartDate: isoToReadable(startDate),
     periodEndDate: isoToReadable(endDate),
     returnDueDate: isoToReadable(dueDate)
-  };
-};
+  }
+}
 
 /**
  * Creates notification object fields that are common to all message types
@@ -49,7 +49,7 @@ const createNotification = (ev, contact, context) => ({
     returnIds: context.returnIds
   },
   status: MESSAGE_STATUS_DRAFT
-});
+})
 
 /**
  * Creates email notification data with the supplied message ref
@@ -67,7 +67,7 @@ const createEmail = (ev, contact, context, messageRef) => ({
   message_ref: messageRef,
   recipient: contact.email,
   personalisation: getReturnPersonalisation(ev)
-});
+})
 
 /**
  * Creates letter notification data with the supplied message ref
@@ -89,45 +89,45 @@ const createLetter = (ev, contact, context, messageRef) => ({
     name: contact.getFullName(),
     ...notifyHelpers.mapContactAddress(contact)
   }
-});
+})
 
 const templateRandomiser = templateType => {
   // generate a number between 0-3
-  const random = Math.floor(Math.random() * 4);
-  return templateType.concat('_', BI_TEMPLATES[random]);
-};
+  const random = Math.floor(Math.random() * 4)
+  return templateType.concat('_', BI_TEMPLATES[random])
+}
 
 const getRelevantRowData = (rows, reminderRef) => {
-  const contactAndMessageType = reminderRef.substring(17); // remove 'returns_invitation' from beginning
-  return first(rows.filter(row => row.message_ref.includes(contactAndMessageType)));
-};
+  const contactAndMessageType = reminderRef.substring(17) // remove 'returns_invitation' from beginning
+  return first(rows.filter(row => row.message_ref.includes(contactAndMessageType)))
+}
 
 const reminderSuffixMap = {
   moral_suasion: 'active_choice',
   social_norm: 'loss_aversion',
   formality: 'enforcement_action'
-};
+}
 
-const getReminderSuffix = invitationSuffix => reminderSuffixMap[invitationSuffix] || 'control';
+const getReminderSuffix = invitationSuffix => reminderSuffixMap[invitationSuffix] || 'control'
 
 const getInvitationSuffix = messageRef => {
   const suffixIndex = (messageRef.indexOf('letter') > 0)
     ? messageRef.indexOf('letter') + 7
-    : messageRef.indexOf('email') + 6;
-  return messageRef.substring(suffixIndex);
-};
+    : messageRef.indexOf('email') + 6
+  return messageRef.substring(suffixIndex)
+}
 
 const getRelevantTemplate = async (context, reminderRef) => {
-  const { rows, rowCount } = await events.getMostRecentReturnsInvitationByLicence(context.licenceNumbers[0]);
-  const data = rowCount > 1 ? getRelevantRowData(rows, reminderRef) : rows[0];
-  if (rowCount === 0 || !data) return `${reminderRef}_control`;
+  const { rows, rowCount } = await events.getMostRecentReturnsInvitationByLicence(context.licenceNumbers[0])
+  const data = rowCount > 1 ? getRelevantRowData(rows, reminderRef) : rows[0]
+  if (rowCount === 0 || !data) return `${reminderRef}_control`
 
-  const suffix = getInvitationSuffix(data.message_ref);
-  return `${reminderRef}_${getReminderSuffix(suffix)}`;
-};
+  const suffix = getInvitationSuffix(data.message_ref)
+  return `${reminderRef}_${getReminderSuffix(suffix)}`
+}
 
-const emailTemplate = template => ({ method: createEmail, messageRef: template });
-const letterTemplate = template => ({ method: createLetter, messageRef: template });
+const emailTemplate = template => ({ method: createEmail, messageRef: template })
+const letterTemplate = template => ({ method: createLetter, messageRef: template })
 
 /**
  * Maps the message type and contact role to the relevant factory method and
@@ -147,7 +147,7 @@ const templateMap = {
     [CONTACT_ROLE_LICENCE_HOLDER]: letterTemplate('returns_reminder_licence_holder_letter'),
     [CONTACT_ROLE_RETURNS_TO]: letterTemplate('returns_reminder_returns_to_letter')
   }
-};
+}
 
 /**
  * Creates the notification data to write in the
@@ -161,15 +161,15 @@ const templateMap = {
  * @return {Object}         - scheduled_notification data
  */
 const createNotificationData = async (ev, contact, context) => {
-  const { method, messageRef } = templateMap[ev.subtype][contact.role];
+  const { method, messageRef } = templateMap[ev.subtype][contact.role]
 
-  const selectedMessageRef = messageRef.startsWith('returns_reminder') ? await getRelevantTemplate(context, messageRef) : templateRandomiser(messageRef);
+  const selectedMessageRef = messageRef.startsWith('returns_reminder') ? await getRelevantTemplate(context, messageRef) : templateRandomiser(messageRef)
 
-  return method(ev, contact, context, selectedMessageRef);
-};
+  return method(ev, contact, context, selectedMessageRef)
+}
 
-exports.BI_TEMPLATES = BI_TEMPLATES;
+exports.BI_TEMPLATES = BI_TEMPLATES
 
-exports._getReturnPersonalisation = getReturnPersonalisation;
-exports._reminderSuffixMap = reminderSuffixMap;
-exports.createNotificationData = createNotificationData;
+exports._getReturnPersonalisation = getReturnPersonalisation
+exports._reminderSuffixMap = reminderSuffixMap
+exports.createNotificationData = createNotificationData

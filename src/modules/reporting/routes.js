@@ -1,6 +1,6 @@
-const controllers = require('./controllers');
-const Joi = require('joi');
-const { ROLES: { billing } } = require('../../lib/roles');
+const controllers = require('./controllers')
+const Joi = require('joi')
+const { ROLES: { billing } } = require('../../lib/roles')
 
 module.exports = {
   getReport: {
@@ -21,9 +21,9 @@ module.exports = {
           ).required()
         }),
         headers: async values => {
-          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required())
         }
       }
     }
   }
-};
+}

@@ -1,5 +1,5 @@
-const Repository = require('@envage/hapi-pg-rest-api/src/repository');
-const db = require('../db');
+const Repository = require('@envage/hapi-pg-rest-api/src/repository')
+const db = require('../db')
 
 class LicenceAgreementRepository extends Repository {
   constructor (config = {}) {
@@ -7,7 +7,7 @@ class LicenceAgreementRepository extends Repository {
       connection: db.pool,
       table: 'water.licence_agreements',
       primaryKey: 'licence_agreement_id'
-    }, config));
+    }, config))
   }
 
   /**
@@ -17,13 +17,13 @@ class LicenceAgreementRepository extends Repository {
    * @return {Promise<Array>} agreement records
    */
   async findByLicenceNumber (licenceNumber, agreementCodes) {
-    const filter = { licence_ref: licenceNumber };
+    const filter = { licence_ref: licenceNumber }
     if (agreementCodes) {
-      filter.financial_agreement_type_id = { $in: agreementCodes };
+      filter.financial_agreement_type_id = { $in: agreementCodes }
     }
-    const { rows } = await this.find(filter);
-    return rows;
+    const { rows } = await this.find(filter)
+    return rows
   }
 };
 
-module.exports = LicenceAgreementRepository;
+module.exports = LicenceAgreementRepository

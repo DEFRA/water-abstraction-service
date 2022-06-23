@@ -1,9 +1,9 @@
-const Joi = require('joi');
-const controller = require('./controller');
-const { statuses } = require('../returns/schema');
-const { ROLES: { billing } } = require('../../lib/roles');
+const Joi = require('joi')
+const controller = require('./controller')
+const { statuses } = require('../returns/schema')
+const { ROLES: { billing } } = require('../../lib/roles')
 
-const EXAMPLE_GUID = '00000000-0000-0000-0000-000000000000';
+const EXAMPLE_GUID = '00000000-0000-0000-0000-000000000000'
 
 module.exports = {
   getReturns: {
@@ -189,4 +189,4 @@ module.exports = {
       }
     }
   }
-};
+}

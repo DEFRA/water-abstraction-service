@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
-const moment = require('moment');
-const { last } = require('lodash');
-const helpers = require('@envage/water-abstraction-helpers');
+const moment = require('moment')
+const { last } = require('lodash')
+const helpers = require('@envage/water-abstraction-helpers')
 
-const eventHelpers = require('../../../lib/event-helpers');
+const eventHelpers = require('../../../lib/event-helpers')
 
 /**
  * Creates and persists a notification event, decorated with info
@@ -15,19 +15,19 @@ const eventHelpers = require('../../../lib/event-helpers');
  * @return {Promise}          resolves with event data
  */
 const createEvent = async (...args) => {
-  const evt = eventHelpers.createEvent(...args);
+  const evt = eventHelpers.createEvent(...args)
 
   // The reference date is today + 14 days.  This allows returns notifications
   // to be sent for the following return cycle up to 14 days before the cycle ends
-  const refDate = moment().add(14, 'day');
+  const refDate = moment().add(14, 'day')
 
   // Create return cycles
-  const cycles = helpers.returns.date.createReturnCycles(undefined, refDate);
+  const cycles = helpers.returns.date.createReturnCycles(undefined, refDate)
 
   // Decorate event with return cycle info
-  evt.metadata.returnCycle = last(cycles);
+  evt.metadata.returnCycle = last(cycles)
 
-  return evt;
-};
+  return evt
+}
 
-exports.createEvent = createEvent;
+exports.createEvent = createEvent

@@ -1,26 +1,26 @@
-const { parseBool } = require('../helpers');
-const helpers = require('../helpers');
+const { parseBool } = require('../helpers')
+const helpers = require('../helpers')
 
 const getSupportedSource = async name => {
-  const supportedSources = await helpers.getSupportedSources();
-  return supportedSources ? supportedSources.find(supportedSource => supportedSource.name === name) : null;
-};
+  const supportedSources = await helpers.getSupportedSources()
+  return supportedSources ? supportedSources.find(supportedSource => supportedSource.name === name) : null
+}
 
 const getAdditionalCharges = async data => {
-  const hasSupportedSourceCharge = parseBool(data.chargeReferenceDetailsSupportedSourceCharge);
-  const isSupplyPublicWater = parseBool(data.chargeReferenceDetailsPublicWaterSupply);
+  const hasSupportedSourceCharge = parseBool(data.chargeReferenceDetailsSupportedSourceCharge)
+  const isSupplyPublicWater = parseBool(data.chargeReferenceDetailsPublicWaterSupply)
   if (hasSupportedSourceCharge || isSupplyPublicWater) {
-    const additionalCharges = { isSupplyPublicWater };
+    const additionalCharges = { isSupplyPublicWater }
     if (hasSupportedSourceCharge) {
-      const { billingSupportedSourceId: id, name } = await getSupportedSource(data.chargeReferenceDetailsSupportedSourceName);
+      const { billingSupportedSourceId: id, name } = await getSupportedSource(data.chargeReferenceDetailsSupportedSourceName)
       if (id) {
-        additionalCharges.supportedSource = { id, name };
+        additionalCharges.supportedSource = { id, name }
       }
     }
-    return additionalCharges;
+    return additionalCharges
   } else {
-    return null;
+    return null
   }
-};
+}
 
-exports.mapToAdditionalCharges = getAdditionalCharges;
+exports.mapToAdditionalCharges = getAdditionalCharges

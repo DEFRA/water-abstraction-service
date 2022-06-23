@@ -1,14 +1,14 @@
-'use strict';
+'use strict'
 
-const Invoice = require('./invoice');
-const FinancialYear = require('./financial-year');
-const Region = require('./region');
-const Totals = require('./totals');
-const { assert } = require('@hapi/hoek');
-const { isArray } = require('lodash');
-const config = require('../../../config');
+const Invoice = require('./invoice')
+const FinancialYear = require('./financial-year')
+const Region = require('./region')
+const Totals = require('./totals')
+const { assert } = require('@hapi/hoek')
+const { isArray } = require('lodash')
+const config = require('../../../config')
 
-const validators = require('./validators');
+const validators = require('./validators')
 
 /**
  * Statuses that the batch (water.billing_batches) may have. These
@@ -26,7 +26,7 @@ const BATCH_STATUS = {
   // if there are no charge versions, or all billing has already happened
   // in earlier run, or all customers have been removed from the batch
   empty: 'empty'
-};
+}
 
 const BATCH_ERROR_CODE = {
   failedToPopulateChargeVersions: 10,
@@ -38,28 +38,28 @@ const BATCH_ERROR_CODE = {
   failedToProcessTwoPartTariff: 70,
   failedToGetChargeModuleBillRunSummary: 80,
   failedToProcessRebilling: 90
-};
+}
 
 const BATCH_TYPE = {
   annual: 'annual',
   supplementary: 'supplementary',
   twoPartTariff: 'two_part_tariff'
-};
+}
 
 const BATCH_SOURCE = {
   nald: 'nald',
   wrls: 'wrls'
-};
+}
 
-const { SCHEME } = require('./constants');
+const { SCHEME } = require('./constants')
 class Batch extends Totals {
   constructor (id) {
-    super(id);
-    this._invoices = [];
+    super(id)
+    this._invoices = []
     if (new Date() >= config.billing.srocStartDate) {
-      this._scheme = SCHEME.sroc;
+      this._scheme = SCHEME.sroc
     } else {
-      this._scheme = SCHEME.alcs;
+      this._scheme = SCHEME.alcs
     }
   }
 
@@ -68,8 +68,8 @@ class Batch extends Totals {
    * @param {String} batchType
    */
   set type (batchType) {
-    validators.assertEnum(batchType, Object.values(BATCH_TYPE));
-    this._type = batchType;
+    validators.assertEnum(batchType, Object.values(BATCH_TYPE))
+    this._type = batchType
   }
 
   /**
@@ -77,7 +77,7 @@ class Batch extends Totals {
    * @return {String}
    */
   get type () {
-    return this._type;
+    return this._type
   }
 
   /**
@@ -85,7 +85,7 @@ class Batch extends Totals {
    * @return {Boolean}
    */
   isSupplementary () {
-    return this._type === BATCH_TYPE.supplementary;
+    return this._type === BATCH_TYPE.supplementary
   }
 
   /**
@@ -93,7 +93,7 @@ class Batch extends Totals {
    * @return {Boolean}
    */
   isTwoPartTariff () {
-    return this.type === BATCH_TYPE.twoPartTariff;
+    return this.type === BATCH_TYPE.twoPartTariff
   }
 
   /**
@@ -101,7 +101,7 @@ class Batch extends Totals {
    * @return {Boolean}
    */
   isAnnual () {
-    return this.type === BATCH_TYPE.annual;
+    return this.type === BATCH_TYPE.annual
   }
 
   /**
@@ -109,8 +109,8 @@ class Batch extends Totals {
    * @param {Boolean} isSummer
    */
   set isSummer (isSummer) {
-    validators.assertIsBoolean(isSummer);
-    this._isSummer = isSummer;
+    validators.assertIsBoolean(isSummer)
+    this._isSummer = isSummer
   }
 
   /**
@@ -118,7 +118,7 @@ class Batch extends Totals {
    * @return {Boolean}
    */
   get isSummer () {
-    return this._isSummer;
+    return this._isSummer
   }
 
   /**
@@ -126,8 +126,8 @@ class Batch extends Totals {
    * @param {FinancialYear} startYear
    */
   set startYear (startYear) {
-    assert(startYear instanceof FinancialYear, 'FinancialYear expected');
-    this._startYear = startYear;
+    assert(startYear instanceof FinancialYear, 'FinancialYear expected')
+    this._startYear = startYear
   }
 
   /**
@@ -135,7 +135,7 @@ class Batch extends Totals {
  * @return {FinancialYear}
  */
   get startYear () {
-    return this._startYear;
+    return this._startYear
   }
 
   /**
@@ -143,8 +143,8 @@ class Batch extends Totals {
  * @param {FinancialYear} startYear
  */
   set endYear (endYear) {
-    assert(endYear instanceof FinancialYear, 'FinancialYear expected');
-    this._endYear = endYear;
+    assert(endYear instanceof FinancialYear, 'FinancialYear expected')
+    this._endYear = endYear
   }
 
   /**
@@ -152,7 +152,7 @@ class Batch extends Totals {
  * @return {FinancialYear}
  */
   get endYear () {
-    return this._endYear;
+    return this._endYear
   }
 
   /**
@@ -160,8 +160,8 @@ class Batch extends Totals {
    * @param {String} status
    */
   set status (status) {
-    validators.assertEnum(status, Object.keys(BATCH_STATUS));
-    this._status = status;
+    validators.assertEnum(status, Object.keys(BATCH_STATUS))
+    this._status = status
   }
 
   /**
@@ -169,27 +169,27 @@ class Batch extends Totals {
    * @return {String}
    */
   get status () {
-    return this._status;
+    return this._status
   }
 
   set dateCreated (value) {
-    this._dateCreated = this.getDateTimeFromValue(value);
+    this._dateCreated = this.getDateTimeFromValue(value)
   }
 
   get dateCreated () {
-    return this._dateCreated;
+    return this._dateCreated
   }
 
   set dateUpdated (value) {
-    this._dateUpdated = this.getDateTimeFromValue(value);
+    this._dateUpdated = this.getDateTimeFromValue(value)
   }
 
   get dateUpdated () {
-    return this._dateUpdated;
+    return this._dateUpdated
   }
 
   get scheme () {
-    return this._scheme;
+    return this._scheme
   }
 
   /**
@@ -197,8 +197,8 @@ class Batch extends Totals {
    * @param {String} scheme
    */
   set scheme (scheme) {
-    validators.assertEnum(scheme, Object.values(SCHEME));
-    this._scheme = scheme;
+    validators.assertEnum(scheme, Object.values(SCHEME))
+    this._scheme = scheme
   }
 
   /**
@@ -207,13 +207,13 @@ class Batch extends Totals {
    */
   addInvoice (invoice) {
     // Validate type
-    assert(invoice instanceof Invoice, 'Instance of Invoice expected');
+    assert(invoice instanceof Invoice, 'Instance of Invoice expected')
     // Each customer ref can only appear once in batch
     if (this.getInvoiceByAccountNumberAndFinancialYear(invoice.invoiceAccount.accountNumber, invoice.financialYear)) {
-      throw new Error(`An invoice with account number ${invoice.invoiceAccountNumber} is already in the batch`);
+      throw new Error(`An invoice with account number ${invoice.invoiceAccountNumber} is already in the batch`)
     }
-    this._invoices.push(invoice);
-    return this;
+    this._invoices.push(invoice)
+    return this
   }
 
   /**
@@ -221,8 +221,8 @@ class Batch extends Totals {
    * @param {Array<Invoice>} invoices
    */
   addInvoices (invoices = []) {
-    assert(isArray(invoices), 'Array expected');
-    return invoices.map(invoice => this.addInvoice(invoice));
+    assert(isArray(invoices), 'Array expected')
+    return invoices.map(invoice => this.addInvoice(invoice))
   }
 
   /**
@@ -232,13 +232,13 @@ class Batch extends Totals {
    * @return {Invoice|undefined}
    */
   getInvoiceByAccountNumberAndFinancialYear (accountNumber, financialYear) {
-    validators.assertString(accountNumber);
-    validators.assertIsInstanceOf(financialYear, FinancialYear);
+    validators.assertString(accountNumber)
+    validators.assertIsInstanceOf(financialYear, FinancialYear)
     return this._invoices.find(invoice => {
-      const isAccountNumberMatch = invoice.invoiceAccount.accountNumber === accountNumber;
-      const isFinancialYearMatch = invoice.financialYear.isEqualTo(financialYear);
-      return isAccountNumberMatch && isFinancialYearMatch;
-    });
+      const isAccountNumberMatch = invoice.invoiceAccount.accountNumber === accountNumber
+      const isFinancialYearMatch = invoice.financialYear.isEqualTo(financialYear)
+      return isAccountNumberMatch && isFinancialYearMatch
+    })
   }
 
   /**
@@ -246,12 +246,12 @@ class Batch extends Totals {
    * @return {Array}
    */
   get invoices () {
-    return this._invoices;
+    return this._invoices
   }
 
   set invoices (invoices) {
-    validators.assertIsArrayOfType(invoices, Invoice);
-    this._invoices = invoices;
+    validators.assertIsArrayOfType(invoices, Invoice)
+    this._invoices = invoices
   }
 
   /**
@@ -260,12 +260,12 @@ class Batch extends Totals {
    * @return {Region}
    */
   get region () {
-    return this._region;
+    return this._region
   }
 
   set region (region) {
-    validators.assertIsInstanceOf(region, Region);
-    this._region = region;
+    validators.assertIsInstanceOf(region, Region)
+    this._region = region
   }
 
   /**
@@ -273,19 +273,19 @@ class Batch extends Totals {
    * @return {Region}
    */
   get externalId () {
-    return this._externalId;
+    return this._externalId
   }
 
   set externalId (externalId) {
-    validators.assertId(externalId);
-    this._externalId = externalId;
+    validators.assertId(externalId)
+    this._externalId = externalId
   }
 
-  get errorCode () { return this._errorCode; }
+  get errorCode () { return this._errorCode }
 
   set errorCode (errorCode) {
-    validators.assertNullableEnum(errorCode, Object.values(BATCH_ERROR_CODE));
-    this._errorCode = errorCode;
+    validators.assertNullableEnum(errorCode, Object.values(BATCH_ERROR_CODE))
+    this._errorCode = errorCode
   }
 
   /**
@@ -294,7 +294,7 @@ class Batch extends Totals {
    * @param  {...String} statuses A list of statuses to match with the batch status
    */
   statusIsOneOf (...statuses) {
-    return statuses.includes(this.status);
+    return statuses.includes(this.status)
   }
 
   /**
@@ -307,7 +307,7 @@ class Batch extends Totals {
       BATCH_STATUS.ready,
       BATCH_STATUS.review,
       BATCH_STATUS.cancel
-    );
+    )
   }
 
   /**
@@ -315,7 +315,7 @@ class Batch extends Totals {
    * associated with the batch can be deleted?
    */
   canDeleteInvoices () {
-    return this.statusIsOneOf(BATCH_STATUS.ready);
+    return this.statusIsOneOf(BATCH_STATUS.ready)
   }
 
   /**
@@ -323,7 +323,7 @@ class Batch extends Totals {
    * two-part tariff approval?
    */
   canApproveReview () {
-    return this.statusIsOneOf(BATCH_STATUS.review);
+    return this.statusIsOneOf(BATCH_STATUS.review)
   }
 
   /**
@@ -332,15 +332,15 @@ class Batch extends Totals {
    * @param {Number} integer
    */
   set billRunNumber (billRunNumber) {
-    validators.assertPositiveInteger(billRunNumber);
-    this._billRunNumber = billRunNumber;
+    validators.assertPositiveInteger(billRunNumber)
+    this._billRunNumber = billRunNumber
   }
 
   /**
    * @return {Number} integer
    */
   get billRunNumber () {
-    return this._billRunNumber;
+    return this._billRunNumber
   }
 
   /**
@@ -350,25 +350,25 @@ class Batch extends Totals {
    * @param {String} source
    */
   set source (source) {
-    validators.assertEnum(source, Object.values(BATCH_SOURCE));
-    this._source = source;
+    validators.assertEnum(source, Object.values(BATCH_SOURCE))
+    this._source = source
   }
 
   get source () {
-    return this._source;
+    return this._source
   }
 
   set transactionFileReference (transactionFileReference) {
-    this._transactionFileReference = transactionFileReference;
+    this._transactionFileReference = transactionFileReference
   }
 
   get transactionFileReference () {
-    return this._transactionFileReference;
+    return this._transactionFileReference
   }
 }
-module.exports.SCHEME = SCHEME;
-module.exports = Batch;
-module.exports.BATCH_TYPE = BATCH_TYPE;
-module.exports.BATCH_STATUS = BATCH_STATUS;
-module.exports.BATCH_ERROR_CODE = BATCH_ERROR_CODE;
-module.exports.BATCH_SOURCE = BATCH_SOURCE;
+module.exports.SCHEME = SCHEME
+module.exports = Batch
+module.exports.BATCH_TYPE = BATCH_TYPE
+module.exports.BATCH_STATUS = BATCH_STATUS
+module.exports.BATCH_ERROR_CODE = BATCH_ERROR_CODE
+module.exports.BATCH_SOURCE = BATCH_SOURCE

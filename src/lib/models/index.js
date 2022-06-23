@@ -16,4 +16,4 @@ module.exports = {
   Region: require('./region'),
   Transaction: require('./transaction'),
   Event: require('./event')
-};
+}

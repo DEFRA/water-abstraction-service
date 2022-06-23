@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const Boom = require('@hapi/boom');
-const companiesHouseService = require('./services/companies-house-service');
+const Boom = require('@hapi/boom')
+const companiesHouseService = require('./services/companies-house-service')
 
 /**
  * Search companies house API
@@ -11,9 +11,9 @@ const companiesHouseService = require('./services/companies-house-service');
  * @param {*} h
  */
 const getCompaniesHouseCompanies = request => {
-  const { q, page } = request.query;
-  return companiesHouseService.searchCompanies(q, page);
-};
+  const { q, page } = request.query
+  return companiesHouseService.searchCompanies(q, page)
+}
 
 /**
  * Get companies house company by companyNumber
@@ -21,10 +21,10 @@ const getCompaniesHouseCompanies = request => {
  * @param {String} request.params.companyNumber - the companies house number
  */
 const getCompaniesHouseCompany = async request => {
-  const { companyNumber } = request.params;
-  const company = await companiesHouseService.getCompany(companyNumber);
-  return company || Boom.notFound(`Company ${companyNumber} not found`);
-};
+  const { companyNumber } = request.params
+  const company = await companiesHouseService.getCompany(companyNumber)
+  return company || Boom.notFound(`Company ${companyNumber} not found`)
+}
 
-exports.getCompaniesHouseCompanies = getCompaniesHouseCompanies;
-exports.getCompaniesHouseCompany = getCompaniesHouseCompany;
+exports.getCompaniesHouseCompanies = getCompaniesHouseCompanies
+exports.getCompaniesHouseCompany = getCompaniesHouseCompany

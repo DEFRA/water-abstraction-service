@@ -1,28 +1,28 @@
-'use strict';
+'use strict'
 
-const helpers = require('@envage/water-abstraction-helpers');
+const helpers = require('@envage/water-abstraction-helpers')
 
-const Model = require('./model');
-const DateRange = require('./date-range');
-const validators = require('./validators');
+const Model = require('./model')
+const DateRange = require('./date-range')
+const validators = require('./validators')
 
 class AbstractionPeriod extends Model {
   static getSummer () {
-    const summer = new AbstractionPeriod();
-    summer.setDates(1, 4, 31, 10);
-    return summer;
+    const summer = new AbstractionPeriod()
+    summer.setDates(1, 4, 31, 10)
+    return summer
   }
 
   static getWinter () {
-    const winter = new AbstractionPeriod();
-    winter.setDates(1, 11, 31, 3);
-    return winter;
+    const winter = new AbstractionPeriod()
+    winter.setDates(1, 11, 31, 3)
+    return winter
   }
 
   static getAllYear () {
-    const allYear = new AbstractionPeriod();
-    allYear.setDates(1, 1, 31, 12);
-    return allYear;
+    const allYear = new AbstractionPeriod()
+    allYear.setDates(1, 1, 31, 12)
+    return allYear
   }
 
   /**
@@ -30,12 +30,12 @@ class AbstractionPeriod extends Model {
    * @return {Number}
    */
   get startDay () {
-    return this._startDay;
+    return this._startDay
   }
 
   set startDay (day) {
-    validators.assertDay(day);
-    this._startDay = parseInt(day);
+    validators.assertDay(day)
+    this._startDay = parseInt(day)
   }
 
   /**
@@ -43,12 +43,12 @@ class AbstractionPeriod extends Model {
    * @return {Number}
    */
   get startMonth () {
-    return this._startMonth;
+    return this._startMonth
   }
 
   set startMonth (month) {
-    validators.assertMonth(month);
-    this._startMonth = parseInt(month);
+    validators.assertMonth(month)
+    this._startMonth = parseInt(month)
   }
 
   /**
@@ -56,12 +56,12 @@ class AbstractionPeriod extends Model {
    * @return {Number}
    */
   get endDay () {
-    return this._endDay;
+    return this._endDay
   }
 
   set endDay (day) {
-    validators.assertDay(day);
-    this._endDay = parseInt(day);
+    validators.assertDay(day)
+    this._endDay = parseInt(day)
   }
 
   /**
@@ -69,12 +69,12 @@ class AbstractionPeriod extends Model {
    * @return {Number}
    */
   get endMonth () {
-    return this._endMonth;
+    return this._endMonth
   }
 
   set endMonth (month) {
-    validators.assertMonth(month);
-    this._endMonth = parseInt(month);
+    validators.assertMonth(month)
+    this._endMonth = parseInt(month)
   }
 
   /**
@@ -87,7 +87,7 @@ class AbstractionPeriod extends Model {
       startDay: this._startDay,
       endMonth: this._endMonth,
       endDay: this._endDay
-    };
+    }
   }
 
   /**
@@ -99,10 +99,10 @@ class AbstractionPeriod extends Model {
    * @param {Number} endMonth
    */
   setDates (startDay, startMonth, endDay, endMonth) {
-    this.startDay = startDay;
-    this.startMonth = startMonth;
-    this.endDay = endDay;
-    this.endMonth = endMonth;
+    this.startDay = startDay
+    this.startMonth = startMonth
+    this.endDay = endDay
+    this.endMonth = endMonth
   }
 
   /**
@@ -118,9 +118,9 @@ class AbstractionPeriod extends Model {
       startDay: period.startDay,
       endMonth: period.endMonth,
       endDay: period.endDay
-    };
-    const absPeriod = this.getDates();
-    return helpers.returns.date.isWithinAbstractionPeriod(absPeriod, testPeriod);
+    }
+    const absPeriod = this.getDates()
+    return helpers.returns.date.isWithinAbstractionPeriod(absPeriod, testPeriod)
   }
 
   /**
@@ -130,7 +130,7 @@ class AbstractionPeriod extends Model {
    * will need to be overlayed.
    */
   getChargeSeason () {
-    return helpers.returns.date.getAbstractionPeriodSeason(this.getDates());
+    return helpers.returns.date.getAbstractionPeriodSeason(this.getDates())
   }
 
   /**
@@ -139,13 +139,13 @@ class AbstractionPeriod extends Model {
    * @return {Boolean}
    */
   isDateWithinAbstractionPeriod (date) {
-    const m = this.getDateOrThrow(date);
+    const m = this.getDateOrThrow(date)
     return helpers.returns.date.isDateWithinAbstractionPeriod(m.format('YYYY-MM-DD'), {
       periodStartDay: this._startDay,
       periodStartMonth: this._startMonth,
       periodEndDay: this._endDay,
       periodEndMonth: this._endMonth
-    });
+    })
   }
 
   /**
@@ -155,8 +155,8 @@ class AbstractionPeriod extends Model {
    * @return {Number}
    */
   getDays (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    return helpers.charging.getBillableDays(this.getDates(), dateRange.startDate, dateRange.endDate);
+    validators.assertIsInstanceOf(dateRange, DateRange)
+    return helpers.charging.getBillableDays(this.getDates(), dateRange.startDate, dateRange.endDate)
   }
 
   /**
@@ -166,12 +166,12 @@ class AbstractionPeriod extends Model {
    * @return {Boolean}
    */
   isDateRangeOverlapping (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
+    validators.assertIsInstanceOf(dateRange, DateRange)
     return [
       this.isDateWithinAbstractionPeriod(dateRange.startDate),
       this.isDateWithinAbstractionPeriod(dateRange.endDate)
-    ].includes(true);
+    ].includes(true)
   }
 }
 
-module.exports = AbstractionPeriod;
+module.exports = AbstractionPeriod

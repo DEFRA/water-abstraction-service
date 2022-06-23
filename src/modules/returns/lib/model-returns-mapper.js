@@ -1,8 +1,8 @@
-const { get } = require('lodash');
-const moment = require('moment');
-const { convertToCubicMetres, convertToUserUnit } = require('./unit-conversion');
-const uuidv4 = require('uuid/v4');
-const returnLines = require('@envage/water-abstraction-helpers').returns.lines;
+const { get } = require('lodash')
+const moment = require('moment')
+const { convertToCubicMetres, convertToUserUnit } = require('./unit-conversion')
+const uuidv4 = require('uuid/v4')
+const returnLines = require('@envage/water-abstraction-helpers').returns.lines
 
 /**
  * Converts a line from the returns service to
@@ -18,7 +18,7 @@ const returnLineToModel = (line) => {
     user_unit: userUnit,
     time_period: timePeriod,
     reading_type: readingType
-  } = line;
+  } = line
 
   return {
     startDate,
@@ -26,20 +26,20 @@ const returnLineToModel = (line) => {
     quantity: convertToUserUnit(quantity, userUnit),
     timePeriod,
     readingType
-  };
-};
+  }
+}
 
 const mapMeter = meter => {
   return {
     ...meter,
     meterDetailsProvided: get(meter, 'meterDetailsProvided', !!meter.manufacturer)
-  };
-};
+  }
+}
 
 const getMetersFromVersionMetadata = version => {
-  const meters = get(version, 'metadata.meters', []);
-  return meters.map(mapMeter);
-};
+  const meters = get(version, 'metadata.meters', [])
+  return meters.map(mapMeter)
+}
 
 const getReadingFromVersionMetadata = version => {
   return {
@@ -51,8 +51,8 @@ const getReadingFromVersionMetadata = version => {
     totalCustomDates: get(version, 'metadata.totalCustomDates', false),
     totalCustomDateStart: get(version, 'metadata.totalCustomDateStart', null),
     totalCustomDateEnd: get(version, 'metadata.totalCustomDateEnd', null)
-  };
-};
+  }
+}
 
 /**
  * Creates a unified data model for a single return
@@ -65,7 +65,7 @@ const getReadingFromVersionMetadata = version => {
 const mapReturnToModel = (ret, version, lines, versions) => {
   const requiredLines = lines.length
     ? null
-    : returnLines.getRequiredLines(ret.start_date, ret.end_date, ret.returns_frequency);
+    : returnLines.getRequiredLines(ret.start_date, ret.end_date, ret.returns_frequency)
 
   return {
     returnId: ret.return_id,
@@ -90,11 +90,11 @@ const mapReturnToModel = (ret, version, lines, versions) => {
         email: version.user_id,
         createdAt: version.created_at,
         isCurrent: version.current
-      };
+      }
     }),
     isUnderQuery: ret.under_query
-  };
-};
+  }
+}
 
 /**
  * Maps return model back to a return version row
@@ -114,8 +114,8 @@ const mapReturnToVersion = (ret) => {
     }),
     nil_return: ret.isNil,
     current: true
-  };
-};
+  }
+}
 
 /**
  * Maps return model back to return lines
@@ -136,10 +136,10 @@ const mapReturnToLines = (ret, version) => {
       time_period: line.timePeriod,
       metadata: '{}',
       reading_type: ret.reading.type
-    }));
+    }))
   }
-  return null;
-};
+  return null
+}
 
 /**
  * Maps water service model to those fields that need updating in returns service
@@ -147,18 +147,18 @@ const mapReturnToLines = (ret, version) => {
  * @return {Object} data to store in returns table of returns service
  */
 const mapReturn = (ret) => {
-  const { status, receivedDate } = ret;
+  const { status, receivedDate } = ret
 
   return {
     status,
     received_date: receivedDate,
     under_query: ret.isUnderQuery
-  };
-};
+  }
+}
 
 module.exports = {
   mapReturnToModel,
   mapReturnToVersion,
   mapReturnToLines,
   mapReturn
-};
+}

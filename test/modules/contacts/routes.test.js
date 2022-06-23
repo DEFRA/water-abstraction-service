@@ -1,14 +1,14 @@
-'use strict';
+'use strict'
 
-const Hapi = require('@hapi/hapi');
-const { cloneDeep } = require('lodash');
+const Hapi = require('@hapi/hapi')
+const { cloneDeep } = require('lodash')
 
-const { expect } = require('@hapi/code');
-const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
-const sandbox = require('sinon').createSandbox();
+const { expect } = require('@hapi/code')
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script()
+const sandbox = require('sinon').createSandbox()
 
-const routes = require('../../../src/modules/contacts/routes');
-const controller = require('../../../src/modules/contacts/controller');
+const routes = require('../../../src/modules/contacts/routes')
+const controller = require('../../../src/modules/contacts/controller')
 
 /**
  * Creates a test Hapi server that has no other plugins loaded,
@@ -20,14 +20,14 @@ const controller = require('../../../src/modules/contacts/controller');
  * @param {Object} route The route to test
  */
 const getServer = route => {
-  const server = Hapi.server({ port: 80 });
+  const server = Hapi.server({ port: 80 })
 
-  const testRoute = cloneDeep(route);
-  testRoute.handler = (req, h) => h.response('Test handler').code(200);
-  testRoute.config.pre = [];
-  server.route(testRoute);
-  return server;
-};
+  const testRoute = cloneDeep(route)
+  testRoute.handler = (req, h) => h.response('Test handler').code(200)
+  testRoute.config.pre = []
+  server.route(testRoute)
+  return server
+}
 
 const createRequest = () => ({
   method: 'POST',
@@ -46,105 +46,105 @@ const createRequest = () => ({
     isTest: true,
     source: 'nald'
   }
-});
+})
 
 experiment('modules/contacts/routes', () => {
   afterEach(async () => {
-    sandbox.restore();
-  });
+    sandbox.restore()
+  })
 
   experiment('postContact', () => {
-    let server, request;
+    let server, request
 
     beforeEach(async () => {
-      server = getServer(routes.postContact);
-      request = createRequest();
-    });
+      server = getServer(routes.postContact)
+      request = createRequest()
+    })
 
     test('the correct handler is specified', async () => {
       expect(routes.postContact.handler)
-        .to.equal(controller.postContact);
-    });
+        .to.equal(controller.postContact)
+    })
 
     test('type can be "person"', async () => {
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(200);
-    });
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(200)
+    })
 
     test('type can be "department"', async () => {
-      request.payload.type = 'department';
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(200);
-    });
+      request.payload.type = 'department'
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(200)
+    })
 
     test('requires type', async () => {
-      delete request.payload.type;
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(400);
-    });
+      delete request.payload.type
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(400)
+    })
 
     test('salutation is optional', async () => {
-      delete request.payload.salutation;
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(200);
-    });
+      delete request.payload.salutation
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(200)
+    })
 
     test('firstName is optional', async () => {
-      delete request.payload.firstName;
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(200);
-    });
+      delete request.payload.firstName
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(200)
+    })
 
     test('lastName is optional', async () => {
-      delete request.payload.lastName;
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(200);
-    });
+      delete request.payload.lastName
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(200)
+    })
 
     test('middleInitials is optional', async () => {
-      delete request.payload.middleInitials;
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(200);
-    });
+      delete request.payload.middleInitials
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(200)
+    })
 
     test('department is optional', async () => {
-      delete request.payload.department;
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(200);
-    });
+      delete request.payload.department
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(200)
+    })
 
     test('suffix is optional', async () => {
-      delete request.payload.suffix;
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(200);
-    });
+      delete request.payload.suffix
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(200)
+    })
 
     test('isTest is optional (but will default to false)', async () => {
-      delete request.payload.isTest;
-      const response = await server.inject(request);
+      delete request.payload.isTest
+      const response = await server.inject(request)
 
-      expect(response.statusCode).to.equal(200);
-      expect(response.request.payload.isTest).to.equal(false);
-    });
+      expect(response.statusCode).to.equal(200)
+      expect(response.request.payload.isTest).to.equal(false)
+    })
 
     test('source is optional (but will default to "wrls")', async () => {
-      delete request.payload.source;
-      const response = await server.inject(request);
+      delete request.payload.source
+      const response = await server.inject(request)
 
-      expect(response.statusCode).to.equal(200);
-      expect(response.request.payload.source).to.equal('wrls');
-    });
+      expect(response.statusCode).to.equal(200)
+      expect(response.request.payload.source).to.equal('wrls')
+    })
 
     test('returns a 400 if the calling user id is not supplied', async () => {
-      request.headers = {};
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(400);
-    });
+      request.headers = {}
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(400)
+    })
 
     test('returns a 400 if the calling user id is not a number', async () => {
-      request.headers['defra-internal-user-id'] = 'a string';
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(400);
-    });
-  });
-});
+      request.headers['defra-internal-user-id'] = 'a string'
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(400)
+    })
+  })
+})

@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const Model = require('./model');
-const PurposeUse = require('./purpose-use');
+const Model = require('./model')
+const PurposeUse = require('./purpose-use')
 
-const validators = require('./validators');
+const validators = require('./validators')
 
 /**
  * A model to represent the requirement to complete a return
@@ -15,12 +15,12 @@ class ReturnRequirementPurpose extends Model {
    * @param {Array<PurposeUse>}
    */
   set purposeUse (purposeUse) {
-    validators.assertIsInstanceOf(purposeUse, PurposeUse);
-    this._purposeUse = purposeUse;
+    validators.assertIsInstanceOf(purposeUse, PurposeUse)
+    this._purposeUse = purposeUse
   }
 
   get purposeUse () {
-    return this._purposeUse;
+    return this._purposeUse
   }
 
   /**
@@ -28,13 +28,13 @@ class ReturnRequirementPurpose extends Model {
    * @param {Array<PurposeUse>}
    */
   set purposeAlias (purposeAlias) {
-    validators.assertNullableString(purposeAlias);
-    this._purposeAlias = purposeAlias;
+    validators.assertNullableString(purposeAlias)
+    this._purposeAlias = purposeAlias
   }
 
   get purposeAlias () {
-    return this._purposeAlias;
+    return this._purposeAlias
   }
 }
 
-module.exports = ReturnRequirementPurpose;
+module.exports = ReturnRequirementPurpose

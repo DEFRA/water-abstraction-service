@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const camelCaseKeys = require('../camel-case-keys');
-const Region = require('../models/region');
+const camelCaseKeys = require('../camel-case-keys')
+const Region = require('../models/region')
 
 /**
  * Maps a row from water.regions to a Region model
@@ -10,10 +10,10 @@ const Region = require('../models/region');
  */
 const dbToModel = data => {
   if (!data) {
-    return null;
+    return null
   }
-  const row = camelCaseKeys(data);
-  const region = new Region();
+  const row = camelCaseKeys(data)
+  const region = new Region()
   region.fromHash({
     type: Region.types.region,
     id: row.regionId,
@@ -21,15 +21,15 @@ const dbToModel = data => {
     code: row.chargeRegionId,
     numericCode: row.naldRegionId,
     displayName: row.displayName
-  });
-  return region;
-};
+  })
+  return region
+}
 
 const create = (type, props = {}) => {
-  const region = new Region();
-  region.fromHash(props);
-  return region;
-};
+  const region = new Region()
+  region.fromHash(props)
+  return region
+}
 
 /**
  * @param {Object} regions - from water.licences.regions jsonb field
@@ -38,7 +38,7 @@ const create = (type, props = {}) => {
 const licenceRegionsToModels = regions => ({
   historicalArea: create(Region.types.environmentAgencyArea, { code: regions.historicalAreaCode }),
   regionalChargeArea: create(Region.types.regionalChargeArea, { name: regions.regionalChargeArea })
-});
+})
 
-exports.dbToModel = dbToModel;
-exports.licenceRegionsToModels = licenceRegionsToModels;
+exports.dbToModel = dbToModel
+exports.licenceRegionsToModels = licenceRegionsToModels

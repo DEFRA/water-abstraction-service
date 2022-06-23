@@ -1,21 +1,21 @@
-'use strict';
+'use strict'
 
-const { get } = require('lodash');
+const { get } = require('lodash')
 
-const chargeVersionMapper = require('../../../lib/mappers/charge-version');
-const userMapper = require('../../../lib/mappers/user');
-const chargeVersionWorkflowService = require('../services/charge-version-workflows');
-const Boom = require('@hapi/boom');
-const { logger } = require('../../../logger');
+const chargeVersionMapper = require('../../../lib/mappers/charge-version')
+const userMapper = require('../../../lib/mappers/user')
+const chargeVersionWorkflowService = require('../services/charge-version-workflows')
+const Boom = require('@hapi/boom')
+const { logger } = require('../../../logger')
 
 const mapOrThrowBoom = (entityName, data, mapper) => {
   try {
-    return mapper.pojoToModel(data);
+    return mapper.pojoToModel(data)
   } catch (err) {
-    logger.error(`Error mapping ${entityName}`, err);
-    return Boom.badData('Invalid charge version data');
+    logger.error(`Error mapping ${entityName}`, err)
+    return Boom.badData('Invalid charge version data')
   }
-};
+}
 
 /**
  * Maps a pojo representation of a charge version in the request payload
@@ -26,12 +26,12 @@ const mapOrThrowBoom = (entityName, data, mapper) => {
  * @return {ChargeVersion} - if mapped
  */
 const mapChargeVersion = (request, h) => {
-  const { chargeVersion } = request.payload;
+  const { chargeVersion } = request.payload
 
   return chargeVersion
     ? mapOrThrowBoom('charge version', chargeVersion, chargeVersionMapper)
-    : h.continue;
-};
+    : h.continue
+}
 
 /**
  * Maps a pojo representation of a user in the request payload
@@ -42,21 +42,21 @@ const mapChargeVersion = (request, h) => {
  * @return {User} - if mapped
  */
 const mapInternalCallingUser = (request, h) => {
-  const internalCallingUser = get(request, 'defra.internalCallingUser', null);
-  return mapOrThrowBoom('user', internalCallingUser, userMapper);
-};
+  const internalCallingUser = get(request, 'defra.internalCallingUser', null)
+  return mapOrThrowBoom('user', internalCallingUser, userMapper)
+}
 
 const loadChargeVersionWorkflow = async request => {
-  const { chargeVersionWorkflowId } = request.params;
-  const chargeVersionWorkflow = await chargeVersionWorkflowService.getById(chargeVersionWorkflowId);
+  const { chargeVersionWorkflowId } = request.params
+  const chargeVersionWorkflow = await chargeVersionWorkflowService.getById(chargeVersionWorkflowId)
 
   if (!chargeVersionWorkflow) {
-    return Boom.notFound(`No charge version workflow found with id: ${chargeVersionWorkflowId}`);
+    return Boom.notFound(`No charge version workflow found with id: ${chargeVersionWorkflowId}`)
   }
 
-  return chargeVersionWorkflow;
-};
+  return chargeVersionWorkflow
+}
 
-exports.mapChargeVersion = mapChargeVersion;
-exports.mapInternalCallingUser = mapInternalCallingUser;
-exports.loadChargeVersionWorkflow = loadChargeVersionWorkflow;
+exports.mapChargeVersion = mapChargeVersion
+exports.mapInternalCallingUser = mapInternalCallingUser
+exports.loadChargeVersionWorkflow = loadChargeVersionWorkflow

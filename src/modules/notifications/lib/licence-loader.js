@@ -1,5 +1,5 @@
-const LicenceTransformer = require('../../../lib/licence-transformer');
-const { licences } = require('../../../lib/connectors/permit');
+const LicenceTransformer = require('../../../lib/licence-transformer')
+const { licences } = require('../../../lib/connectors/permit')
 
 /**
  * Get a list of permit repo IDs for each licence from the contact list
@@ -9,8 +9,8 @@ const { licences } = require('../../../lib/connectors/permit');
  */
 function getSystemInternalIds (contactList) {
   return contactList.reduce((acc, contact) => {
-    return [...acc, ...contact.licences.map(row => row.system_internal_id)];
-  }, []);
+    return [...acc, ...contact.licences.map(row => row.system_internal_id)]
+  }, [])
 }
 
 /**
@@ -18,24 +18,24 @@ function getSystemInternalIds (contactList) {
  * @return {Object} transformed licence data, keyed by licence number
  */
 async function loadLicenceData (licenceIds) {
-  const obj = {};
+  const obj = {}
 
   for (const licenceId of licenceIds) {
-    const { data: { licence_ref: licenceNumber, licence_data_value: licenceData }, error } = await licences.findOne(licenceId);
+    const { data: { licence_ref: licenceNumber, licence_data_value: licenceData }, error } = await licences.findOne(licenceId)
     if (error) {
-      throw error;
+      throw error
     }
-    const transformer = new LicenceTransformer();
-    await transformer.load(licenceData);
-    obj[licenceNumber] = transformer.export();
+    const transformer = new LicenceTransformer()
+    await transformer.load(licenceData)
+    obj[licenceNumber] = transformer.export()
   }
 
-  return obj;
+  return obj
 }
 
 module.exports = (contacts) => {
   // Load licence data from permit repo, and use NALD licence transformer
   // to transform to same format used in front-end GUI
-  const licenceIds = getSystemInternalIds(contacts);
-  return loadLicenceData(licenceIds);
-};
+  const licenceIds = getSystemInternalIds(contacts)
+  return loadLicenceData(licenceIds)
+}
