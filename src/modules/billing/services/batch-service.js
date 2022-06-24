@@ -307,7 +307,7 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
  *
  * @returns {number} the financial year ending to use
  */
-function _alcsToFinancialYearEndingCheck(selectedFinancialYearEnding) {
+function _alcsToFinancialYearEndingCheck (selectedFinancialYearEnding) {
   if (selectedFinancialYearEnding > config.billing.alcsEndYear) {
     return config.billing.alcsEndYear
   }
