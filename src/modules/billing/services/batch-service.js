@@ -38,11 +38,18 @@ const { jobName: deleteErroredBatchName } = require('../jobs/delete-errored-batc
  * @return {Promise<Batch>}
  */
 const getBatchById = async (id, includeInvoices = false) => {
-  const method = includeInvoices
-    ? newRepos.billingBatches.findOneWithInvoices
-    : newRepos.billingBatches.findOne
-  const row = await method(id)
-  return row ? mappers.batch.dbToModel(row) : null
+  let row
+  if (includeInvoices) {
+    row = await newRepos.billingBatches.findOneWithInvoices(id)
+  } else {
+    row = await newRepos.billingBatches.findOne(id)
+  }
+
+  if (row) {
+    return mappers.batch.dbToModel(row)
+  }
+
+  return null
 }
 
 const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
