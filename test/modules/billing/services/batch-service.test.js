@@ -153,7 +153,6 @@ experiment('modules/billing/services/batch-service', () => {
   })
 
   afterEach(async () => {
-    console.log('BOO')
     sandbox.restore()
   })
 
