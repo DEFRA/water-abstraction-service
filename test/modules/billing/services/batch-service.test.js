@@ -891,6 +891,53 @@ experiment('modules/billing/services/batch-service', () => {
   })
 
   experiment('.create', () => {
+    // The following tests were added when it was spotted that create() was hard coding bill runs that are not annual
+    // with toFinancialYear=2022. This broke our changes to 2PT which needed to accept a financial year selected by the
+    // user from the frontend.
+    //
+    // Ideally, we would be testing the result of the call to create() to confirm it had behaved as expected. However,
+    // so much of the internal mechanism has been stubbed out that we would have to specify the batch it returns. And,
+    // if we are specifying the return value then we're not really testing the result. This is because elsewhere in
+    // these tests `newRepos.billingBatches.findOne()` is stubbed to return `data.batch`. If you follow the code in
+    // create() it returns the result of `getBatchById()` which depends on `findOne()`.
+    //
+    // So, we've settled on testing that the args we expect are passed to the `newRepos.billingBatches.create()`, like
+    // the rest of these tests do, which sucks!
+    experiment('when the batch type is not annual', () => {
+      const regionId = uuid()
+
+      beforeEach(async () => {
+        newRepos.billingBatches.findByRegionId.resolves([])
+        newRepos.billingBatches.create.resolves({
+          billingBatchId: uuid()
+        })
+      })
+
+      experiment('and the financial year is greater than 2022', () => {
+        beforeEach(async () => {
+          await batchService.create(regionId, 'two_part_tariff', 2023, 'all-year')
+        })
+
+        test('it resets the financial year to 2022', () => {
+          const { toFinancialYearEnding } = newRepos.billingBatches.create.lastCall.args[0]
+
+          expect(toFinancialYearEnding).to.equal(2022)
+        })
+      })
+
+      experiment('and the financial year is less than 2022', () => {
+        beforeEach(async () => {
+          await batchService.create(regionId, 'two_part_tariff', 2021, 'all-year')
+        })
+
+        test('it resets the financial year to 2022', () => {
+          const { toFinancialYearEnding } = newRepos.billingBatches.create.lastCall.args[0]
+
+          expect(toFinancialYearEnding).to.equal(2021)
+        })
+      })
+    })
+
     experiment('when there is an existing batch', () => {
       const existingBatchId = uuid()
       const regionId = uuid()

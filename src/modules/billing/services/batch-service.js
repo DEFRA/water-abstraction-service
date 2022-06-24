@@ -38,11 +38,18 @@ const { jobName: deleteErroredBatchName } = require('../jobs/delete-errored-batc
  * @return {Promise<Batch>}
  */
 const getBatchById = async (id, includeInvoices = false) => {
-  const method = includeInvoices
-    ? newRepos.billingBatches.findOneWithInvoices
-    : newRepos.billingBatches.findOne
-  const row = await method(id)
-  return row ? mappers.batch.dbToModel(row) : null
+  let row
+  if (includeInvoices) {
+    row = await newRepos.billingBatches.findOneWithInvoices(id)
+  } else {
+    row = await newRepos.billingBatches.findOne(id)
+  }
+
+  if (row) {
+    return mappers.batch.dbToModel(row)
+  }
+
+  return null
 }
 
 const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
@@ -259,7 +266,7 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
   let fromFinancialYearEnding, scheme
   if (batchType !== 'annual') {
     scheme = 'alcs'
-    toFinancialYearEnding = config.billing.alcsEndYear
+    toFinancialYearEnding = _alcsToFinancialYearEndingCheck(toFinancialYearEnding)
     if (batchType === 'supplementary') {
       fromFinancialYearEnding = config.billing.alcsEndYear - (config.billing.supplementaryYears + (config.billing.alcsEndYear - toFinancialYearEnding))
     } else {
@@ -290,6 +297,22 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
   })
 
   return getBatchById(billingBatchId)
+}
+
+/**
+ * Checks when the scheme is ALCS (pre-sroc) that the financial year is not greater than 2022 which is the last year
+ * ALCS applies
+ *
+ * @param {number} selectedFinancialYearEnding The year ending to check
+ *
+ * @returns {number} the financial year ending to use
+ */
+function _alcsToFinancialYearEndingCheck (selectedFinancialYearEnding) {
+  if (selectedFinancialYearEnding > config.billing.alcsEndYear) {
+    return config.billing.alcsEndYear
+  }
+
+  return selectedFinancialYearEnding
 }
 
 const createChargeModuleBillRun = async batchId => {
