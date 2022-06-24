@@ -259,7 +259,7 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
   let fromFinancialYearEnding, scheme
   if (batchType !== 'annual') {
     scheme = 'alcs'
-    toFinancialYearEnding = config.billing.alcsEndYear
+    toFinancialYearEnding = _alcsToFinancialYearEndingCheck(toFinancialYearEnding)
     if (batchType === 'supplementary') {
       fromFinancialYearEnding = config.billing.alcsEndYear - (config.billing.supplementaryYears + (config.billing.alcsEndYear - toFinancialYearEnding))
     } else {
@@ -290,6 +290,22 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
   })
 
   return getBatchById(billingBatchId)
+}
+
+/**
+ * Checks when the scheme is ALCS (pre-sroc) that the financial year is not greater than 2022 which is the last year
+ * ALCS applies
+ *
+ * @param {number} selectedFinancialYearEnding The year ending to check
+ *
+ * @returns {number} the financial year ending to use
+ */
+function _alcsToFinancialYearEndingCheck(selectedFinancialYearEnding) {
+  if (selectedFinancialYearEnding > config.billing.alcsEndYear) {
+    return config.billing.alcsEndYear
+  }
+
+  return selectedFinancialYearEnding
 }
 
 const createChargeModuleBillRun = async batchId => {
