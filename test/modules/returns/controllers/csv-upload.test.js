@@ -55,7 +55,7 @@ const requestFactory = (returnId, lines = []) => {
   }
 }
 
-experiment.only('modules/returns/controllers/csv-upload', () => {
+experiment('modules/returns/controllers/csv-upload', () => {
   experiment('.postUpload', () => {
     let request
     let h
