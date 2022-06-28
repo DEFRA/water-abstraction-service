@@ -167,8 +167,14 @@ const getBatchDownloadData = async request => {
         .map(transaction => transaction.chargeElement.chargeVersionId)
     ))
   })))
+
   const chargeVersions = await chargeVersionService.getManyByChargeVersionIds(chargeVersionIds)
-  return { invoices, chargeVersions, scheme: batch.scheme }
+
+  return {
+    invoices,
+    chargeVersions,
+    scheme: batch.scheme
+  }
 }
 
 /**

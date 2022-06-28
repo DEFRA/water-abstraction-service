@@ -949,7 +949,12 @@ experiment('modules/billing/controller', () => {
     let request, invoices, result
     beforeEach(async () => {
       request = {
-        pre: { batch: { id: 'test-batch-id' } }
+        pre: {
+          batch: {
+            id: 'test-batch-id',
+            scheme: 'SCHEME'
+          }
+        }
       }
       invoices = getInvoices()
 
@@ -971,6 +976,10 @@ experiment('modules/billing/controller', () => {
     test('returns the result of both service calls', () => {
       expect(result.invoices).to.be.equal(invoices)
       expect(result.chargeVersions).to.be.equal([{ foo: 'bar' }])
+    })
+
+    test('returns the batch scheme', () => {
+      expect(result.scheme).to.equal('SCHEME')
     })
   })
 
