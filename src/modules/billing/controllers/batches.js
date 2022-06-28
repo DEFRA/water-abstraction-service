@@ -168,7 +168,7 @@ const getBatchDownloadData = async request => {
     ))
   })))
   const chargeVersions = await chargeVersionService.getManyByChargeVersionIds(chargeVersionIds)
-  return { invoices, chargeVersions }
+  return { invoices, chargeVersions, scheme: batch.scheme }
 }
 
 /**
