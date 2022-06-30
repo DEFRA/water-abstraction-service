@@ -401,12 +401,12 @@ class Transaction extends Model {
     return this._calcS127Factor
   }
 
-  set calcS130Factor(calcS130Factor) {
+  set calcS130Factor (calcS130Factor) {
     validators.assertNullableFactorWithPrefix(calcS130Factor)
     this._calcS130Factor = calcS130Factor
   }
 
-  get calcS130Factor() {
+  get calcS130Factor () {
     return this._calcS130Factor
   }
 
