@@ -47,8 +47,9 @@ const mapTransaction = (transactionMap, cmTransaction, scheme) => {
       billingTransactionId: cmTransaction.clientId,
       netAmount: cmTransaction.chargeValue,
       chargeType: cmTransaction.compensationCharge ? 'compensation' : 'standard',
-      calcS127Factor: srocTransaction.calcS127Factor ? (srocTransaction.calcS127Factor.trim()).split('x')[1] || null : null,
       calcS126Factor: srocTransaction.calcS126Factor ? (srocTransaction.calcS126Factor.trim()).split('x')[1] || null : null,
+      calcS127Factor: srocTransaction.calcS127Factor ? (srocTransaction.calcS127Factor.trim()).split('x')[1] || null : null,
+      calcS130Factor: srocTransaction.calcS130Factor ? (srocTransaction.calcS130Factor.trim()).split('x')[1] || null : null,
       calcWinterDiscountFactor: srocTransaction.calcWinterDiscountFactor ? (srocTransaction.calcWinterDiscountFactor.trim()).split('x')[1] || null : null,
       grossValuesCalculated: cmTransaction.calculation.WRLSChargingResponse.decisionPoints
     }

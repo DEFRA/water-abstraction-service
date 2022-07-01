@@ -6,14 +6,14 @@ const Joi = require('joi')
 
 const assert = (value, schema) => Joi.assert(value, schema)
 
-const dateRegex = /^\d{4}-([0][1-9]|[1][0-2])-([0][1-9]|[1-2][0-9]|[3][0-1])$/
+const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/
 const { returnIDRegex } = require('@envage/water-abstraction-helpers').returns
 
 const VALID_DATE = Joi.string().regex(dateRegex).required()
 const VALID_NULLABLE_DATE = VALID_DATE.allow(null)
 const VALID_ACCOUNT_NUMBER = Joi.string().regex(/^[ABENSTWY][0-9]{8}A$/).required()
 const VALID_LICENCE_NUMBER = Joi.string().regex(/^[&()*-./0-9A-Z]+$/).required()
-const VALID_FACTOR_WITH_PREFIX = Joi.string().regex(/^.... x [0-9].[0-9]$/).allow(null)
+const VALID_FACTOR_WITH_PREFIX = Joi.string().regex(/^.* x [0-9].[0-9]$/).allow(null)
 const VALID_GUID = Joi.string().guid().required()
 const VALID_NULLABLE_GUID = Joi.string().guid().allow(null).required()
 const VALID_STRING = Joi.string().required()
