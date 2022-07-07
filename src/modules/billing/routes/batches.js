@@ -239,20 +239,16 @@ const getBatchDownloadData = {
   }
 }
 
-if (config.featureToggles.deleteAllBillingData) {
-  const deleteAllBillingData = {
-    method: 'DELETE',
-    path: BASE_PATH,
-    handler: controller.deleteAllBillingData,
-    config: {
-      description: 'Deletes all billing and charge version data (!)',
-      auth: {
-        scope: [billing]
-      }
+const deleteAllBillingData = {
+  method: 'DELETE',
+  path: BASE_PATH,
+  handler: controller.deleteAllBillingData,
+  config: {
+    description: 'Deletes all billing and charge version data (!)',
+    auth: {
+      scope: [billing]
     }
   }
-
-  exports.deleteAllBillingData = deleteAllBillingData
 }
 
 const postSetBatchStatusToCancel = {
@@ -307,5 +303,7 @@ module.exports = {
   postCreateBatch,
   postApproveReviewBatch,
   getBatchDownloadData,
-  postSetBatchStatusToCancel
+  postSetBatchStatusToCancel,
+  // We only include delete all bill runs when running in non-prod environments
+  ...(config.featureToggles.deleteAllBillingData) && { deleteAllBillingData }
 }
