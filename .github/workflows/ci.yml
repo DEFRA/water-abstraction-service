@@ -18,8 +18,10 @@ jobs:
       PGPORT: 5432
       # Additional config needed by the service
       NALD_SERVICE_MAILBOX: some@mailbox.com
-      TEST_NOTIFY_KEY: ${{ secrets.TEST_NOTIFY_KEY }}
-      WHITELIST_NOTIFY_KEY: ${{ secrets.WHITELIST_NOTIFY_KEY }}
+      TEST_NOTIFY_KEY: somerealnotifykey-00000000-0000-0000-0000-000000000000-00000000-0000-0000-0000-000000000000
+      WHITELIST_NOTIFY_KEY: somerealnotifykey-00000000-0000-0000-0000-000000000000-00000000-0000-0000-0000-000000000000
+      # TEST_NOTIFY_KEY: ${{ secrets.TEST_NOTIFY_KEY }}
+      # WHITELIST_NOTIFY_KEY: ${{ secrets.WHITELIST_NOTIFY_KEY }}
 
     # Service containers to run with `runner-job`
     services:
