@@ -19,6 +19,7 @@ jobs:
       # Additional config needed by the service
       TEST_NOTIFY_KEY: ${{ secrets.TEST_NOTIFY_KEY }}
       WHITELIST_NOTIFY_KEY: ${{ secrets.WHITELIST_NOTIFY_KEY }}
+      LIVE_NOTIFY_KEY: somerealnotifykey-00000000-0000-0000-0000-000000000000-00000000-0000-0000-0000-000000000000
 
     # Service containers to run with `runner-job`
     services:
