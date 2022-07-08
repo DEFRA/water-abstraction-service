@@ -1,10 +1,10 @@
-# Water Abstraction service
+# Water Abstraction Service
 
-|               |              |  
-|---------------|--------------|
-| Build         |  ![CI](https://github.com/DEFRA/water-abstraction-service/workflows/CI/badge.svg) |
-| Test coverage | [![Test Coverage](https://api.codeclimate.com/v1/badges/9ee43d8d24011c130e15/test_coverage)](https://codeclimate.com/github/DEFRA/water-abstraction-service/test_coverage)  |
-| Quality check |  [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_water-abstraction-service&metric=alert_status)](https://sonarcloud.io/dashboard?id=DEFRA_water-abstraction-service) |
+![Build Status](https://github.com/DEFRA/water-abstraction-service/workflows/CI/badge.svg?branch=develop)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_water-abstraction-service&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=DEFRA_water-abstraction-service)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_water-abstraction-service&metric=coverage)](https://sonarcloud.io/dashboard?id=DEFRA_water-abstraction-service)
+[![Known Vulnerabilities](https://snyk.io/test/github/DEFRA/water-abstraction-service/badge.svg)](https://snyk.io/test/github/DEFRA/water-abstraction-service)
+[![Licence](https://img.shields.io/badge/Licence-OGLv3-blue.svg)](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3)
 
 The water abstraction service is a layer which contains the business logic that is required for the water abstraction service to function, without such logic making its way into the underlying and potentially reusable IDM, CRM or Permit projects.
 
