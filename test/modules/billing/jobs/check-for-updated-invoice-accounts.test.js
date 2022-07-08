@@ -62,7 +62,7 @@ experiment('modules/billing/jobs/update-customers', () => {
       expect(invoiceAccountsConnector.fetchInvoiceAccountsWithUpdatedEntities.called).to.be.true()
     })
 
-    test('Calls the notify web service', async () => {
+    test.only('Calls the notify web service', async () => {
       expect(notifyService.sendEmail.called).to.be.true()
     })
   })

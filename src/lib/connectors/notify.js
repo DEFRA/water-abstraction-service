@@ -14,6 +14,7 @@ const messageTypes = {
  * @return {String}      Notify API key
  */
 const getKey = (env, type) => {
+  console.log(`LOOK HERE NODE_ENV --> ${env.NODE_ENV}`)
   // Always use live key in production environment
   if (env.NODE_ENV === 'production') {
     return env.LIVE_NOTIFY_KEY
@@ -31,7 +32,9 @@ const getKey = (env, type) => {
  * @return {Object} nofify client
  */
 const getClient = (type, env = process.env) => {
+  console.log(`LOOK HERE type --> ${type}`)
   const key = getKey(env, type)
+  console.log(`LOOK HERE KEY --> ${key}`)
   return new NotifyClient(key)
 }
 

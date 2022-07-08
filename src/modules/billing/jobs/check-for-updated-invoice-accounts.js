@@ -31,7 +31,9 @@ const handler = async () => {
   const templateId = config.notify.templates.nald_entity_changes_detected
   const recipient = process.env.NALD_SERVICE_MAILBOX
 
+  console.log(`LOOK HERE recipient --> ${recipient}`)
   if (invoiceAccountsWithUpdatedEntities.length > 0 && recipient) {
+    console.log('LOOK HERE I am in')
     const content = invoiceAccountsWithUpdatedEntities.map(invoiceAccount => `
       ${invoiceAccount.invoiceAccountNumber} (Legacy identifier ${invoiceAccount.companyLegacyId})
     `)
