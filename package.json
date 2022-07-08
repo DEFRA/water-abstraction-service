@@ -8,12 +8,12 @@
     "url": "https://github.com/DEFRA/water-abstraction-service"
   },
   "scripts": {
-    "test": "DATABASE_URL=postgres://water_user:password@localhost:5432/permits LAZY_REDIS=1 lab",
-    "test:bail": "DATABASE_URL=postgres://water_user:password@localhost:5432/permits LAZY_REDIS=1 lab --bail",
+    "test": "DATABASE_URL=postgres://water_user:password@localhost:5432/wabs_test LAZY_REDIS=1 lab",
+    "test:bail": "DATABASE_URL=postgres://water_user:password@localhost:5432/wabs_test LAZY_REDIS=1 lab --bail",
     "test:ci": "CHARGE_MODULE_ORIGIN=https://charging.defra.net LAZY_REDIS=1 lab --bail  -t 55 -m 0 --coverage-path ./src/ -r html -o coverage/coverage.html -r lcov -o coverage/lcov.info --reporter junit -o coverage/junit.xml -r console -o stdout",
-    "test:integration": "DATABASE_URL=postgres://water_user:password@localhost:5432/permits lab integration-tests/ --silence --bail",
+    "test:integration": "DATABASE_URL=postgres://water_user:password@localhost:5432/wabs_test lab integration-tests/ --silence --bail",
     "migrate": "node scripts/create-schema && db-migrate up --verbose && node scripts/migrate-task-config",
-    "migrate:local-test": "DATABASE_URL=postgres://water_user:password@localhost:5432/permits node scripts/create-schema && DATABASE_URL=postgres://water_user:password@localhost:5432/permits db-migrate up --verbose && DATABASE_URL=postgres://water_user:password@localhost:5432/permits node scripts/migrate-task-config",
+    "migrate:local-test": "DATABASE_URL=postgres://water_user:password@localhost:5432/wabs_test node scripts/create-schema && DATABASE_URL=postgres://water_user:password@localhost:5432/wabs_test db-migrate up --verbose && DATABASE_URL=postgres://water_user:password@localhost:5432/wabs_test node scripts/migrate-task-config",
     "migrate:down": "db-migrate down --verbose",
     "migrate:create": "db-migrate create --sql-file --",
     "lint": "standard",
