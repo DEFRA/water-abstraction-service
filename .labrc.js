@@ -18,5 +18,6 @@ module.exports = {
     '__spread','__spreadArrays','__await','__asyncGenerator','__asyncDelegator','__asyncValues','__makeTemplateObject',
     '__importStar','__importDefault','__classPrivateFieldGet','__classPrivateFieldSet','__core-js_shared__','CSS',
     'regeneratorRuntime','core','__spreadArray','global-symbol-property'
-  ].join(',')
+  ].join(','),
+  'coverage-exclude': ['integration-tests']
 };
