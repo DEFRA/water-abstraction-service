@@ -26,19 +26,6 @@
   },
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "@hapi/basic": "^6.0.0",
-    "@hapi/code": "^5.2.4",
-    "@hapi/lab": "^24.2.0",
-    "auto-changelog": "^1.16.4",
-    "csv-stringify": "^2.0.4",
-    "db-migrate": "^0.11.11",
-    "db-migrate-pg": "^1.2.2",
-    "mkdir": "^0.0.2",
-    "promise-poller": "^1.9.1",
-    "sinon": "^7.5.0",
-    "standard": "^17.0.0"
-  },
   "dependencies": {
     "@envage/hapi-pg-rest-api": "^7.0.0",
     "@envage/water-abstraction-helpers": "4.8.1",
@@ -61,6 +48,8 @@
     "camelcase": "^5.3.1",
     "commander": "^2.20.3",
     "csv-parse": "^2.5.0",
+    "db-migrate": "^0.11.13",
+    "db-migrate-pg": "^1.2.2",
     "decimal.js-light": "^2.5.0",
     "deep-map": "^1.5.0",
     "dotenv": "^4.0.0",
@@ -100,5 +89,16 @@
     "url-join": "^4.0.1",
     "uuid": "^3.4.0",
     "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "@hapi/basic": "^6.0.0",
+    "@hapi/code": "^5.2.4",
+    "@hapi/lab": "^24.2.0",
+    "auto-changelog": "^1.16.4",
+    "csv-stringify": "^2.0.4",
+    "mkdir": "^0.0.2",
+    "promise-poller": "^1.9.1",
+    "sinon": "^7.5.0",
+    "standard": "^17.0.0"
   }
 }
