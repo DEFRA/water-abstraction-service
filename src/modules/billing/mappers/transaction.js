@@ -383,6 +383,7 @@ const cmToModelMapper = createMapper()
   .map('calculation.WRLSChargingResponse.abatementAdjustment').to('calcS126Factor')
   .map('calculation.WRLSChargingResponse.s127Agreement').to('calcS127Factor')
   .map('calculation.WRLSChargingResponse.s130Agreement').to('calcS130Factor')
+  .map('calculation.WRLSChargingResponse.winterOnlyAdjustment').to('calcWinterDiscountFactor')
   .map('calculation.WRLSChargingResponse.eiucFactor').to('calcEiucFactor')
   .map('calculation.WRLSChargingResponse.eiucSourceFactor').to('calcEiucSourceFactor')
 
