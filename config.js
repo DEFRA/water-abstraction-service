@@ -255,7 +255,7 @@ module.exports = {
   },
 
   featureToggles: {
-    deleteAllBillingData: process.env.ENABLE_DELETE_ALL_BILLING_DATA_BUTTON === 'true' && !isProduction,
+    deleteAllBillingData: process.env.ENABLE_DELETE_ALL_BILLING_DATA_FEATURE === 'true' && !isProduction,
     swagger: !isProductionLike
   }
 }
