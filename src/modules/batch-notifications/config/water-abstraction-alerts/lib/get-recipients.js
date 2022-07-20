@@ -56,7 +56,8 @@ const getRecipients = async eventData => {
           condition_text: conditionText && conditionText.length > 0 ? `Effect of restriction: ${conditionText}` : '',
           ...notifyMapper.mapModelsToNotifyAddress({
             company: companyMapper.pojoToModel(licenceHolderCompany),
-            address: addressMapper.pojoToModel(licenceHolderAddress),
+            // Address is in CRM format when we receive it so we use a different mapper to the others
+            address: addressMapper.crmToModel(licenceHolderAddress),
             contact: contactMapper.pojoToModel(licenceContact)
           })
         }
