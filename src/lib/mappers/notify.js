@@ -17,11 +17,14 @@ const { DATA_SOURCE_TYPES } = require('../models/contact-v2')
 const mapModelsToNotifyAddress = models => {
   const { address, company, contact } = models
   const lines = []
-  if (contact && (contact.dataSource !== DATA_SOURCE_TYPES.nald)) {
-    lines.push(`FAO ${contact.fullName}`)
-  }
+  const maxNumberOfLines = 7
+let noOfLines = 0
   if (company) {
-    lines.push(company.name)
+    // lines.push(company.name)
+    noOfLines += 1
+  } else if (contact && (contact.dataSource !== DATA_SOURCE_TYPES.nald)) {
+    // lines.push(`FAO ${contact.fullName}`)
+    noOfLines += 1
   }
 
   // Get non-empty address lines in order
@@ -29,11 +32,15 @@ const mapModelsToNotifyAddress = models => {
     pick(address, 'addressLine1', 'addressLine2', 'addressLine3', 'addressLine4', 'town', 'county', 'postcode')
   ).filter(identity)
 
-  lines.push(...addressLines)
+  // lines.push(...addressLines)
+  noOfLines += addressLines.length
 
   if (!address.isUKAddress) {
-    lines.push(address.country)
+    // lines.push(address.country)
+    noOfLines += 1
   }
+
+  const noLinesOver = Math.max(noOfLines - maxNumberOfLines, 0)
 
   const arr = combineAddressLines(lines, 7)
 
