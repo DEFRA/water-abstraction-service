@@ -2,8 +2,7 @@
 
 const {
   experiment,
-  test,
-  beforeEach
+  test
 } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
 
@@ -14,17 +13,23 @@ experiment.only('lib/mappers/notify', () => {
     test('returns a correctly formatted address', async () => {
       const address = {
         addressLine1: 'addressLine1',
+        addressLine2: 'addressLine2',
+        addressLine3: 'addressLine3',
+        addressLine4: 'addressLine4',
         town: 'town',
         county: 'county',
         postcode: 'postcode',
         isUKAddress: true
       }
-      const result = notifyMapper.mapModelsToNotifyAddress({address})
+      const result = notifyMapper.mapModelsToNotifyAddress({ address })
       expect(result).to.equal({
         address_line_1: 'addressLine1',
-        address_line_2: 'town',
-        address_line_3: 'county',
-        address_line_4: 'postcode'
+        address_line_2: 'addressLine2',
+        address_line_3: 'addressLine3',
+        address_line_4: 'addressLine4',
+        address_line_5: 'town',
+        address_line_6: 'county',
+        address_line_7: 'postcode'
       })
     })
 
@@ -89,10 +94,11 @@ experiment.only('lib/mappers/notify', () => {
       const result = notifyMapper.mapModelsToNotifyAddress({ address, company, contact })
       expect(result).to.equal({
         address_line_1: 'a company',
-        address_line_2: 'addressLine1',
-        address_line_3: 'town',
-        address_line_4: 'county',
-        address_line_5: 'postcode'
+        address_line_2: 'FAO testy mctester',
+        address_line_3: 'addressLine1',
+        address_line_4: 'town',
+        address_line_5: 'county',
+        address_line_6: 'postcode'
       })
     })
 
@@ -117,7 +123,7 @@ experiment.only('lib/mappers/notify', () => {
       })
     })
 
-    test('returns a correctly formatted address showing company', async () => {
+    test('returns a correctly formatted address with concatenated lines', async () => {
       const address = {
         addressLine1: 'addressLine1',
         addressLine2: 'addressLine2',
@@ -126,21 +132,25 @@ experiment.only('lib/mappers/notify', () => {
         town: 'town',
         county: 'county',
         postcode: 'postcode',
-        country: 'Spain',
+        country: 'country',
         isUKAddress: false
       }
       const company = {
-        name: 'a company'
+        name: 'company name'
       }
-      const result = notifyMapper.mapModelsToNotifyAddress({ address, company })
+      const contact = {
+        fullName: 'contact name',
+        dataSource: 'dataSource'
+      }
+      const result = notifyMapper.mapModelsToNotifyAddress({ address, company, contact })
       expect(result).to.equal({
-        address_line_1: 'a company',
-        address_line_2: 'addressLine1',
-        address_line_3: 'addressLine2, addressLine3',
-        address_line_4: 'addressLine4',
-        address_line_5: 'town, county',
+        address_line_1: 'company name',
+        address_line_2: 'FAO contact name',
+        address_line_3: 'addressLine1',
+        address_line_4: 'addressLine2, addressLine3',
+        address_line_5: 'town',
         address_line_6: 'postcode',
-        address_line_7: 'Spain'
+        address_line_7: 'country'
       })
     })
   })
