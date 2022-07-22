@@ -30,21 +30,12 @@ const mapModelsToNotifyAddress = models => {
   const addressTailArray = _getAddressTailArray(address)
 
   // Get our address body ie. the address lines in the middle that we can concatenate
-  // Note that this is an object so we can manipulate it precisely later
   const addressBodyObject = _getAddressBodyObject({
     ...bunchedAddressLines,
     ...pick(address, 'town', 'county')
-  })
+  }, addressHeadArray, addressTailArray)
 
-  // If the length of the head, body and tail fit in the max number of lines then return the address as-is
-  const headTailLength = [...addressHeadArray, ...addressTailArray].length
-  if (headTailLength + Object.values(addressBodyObject).length <= MAX_NUMBER_OF_LINES) {
-    return _buildAddress(addressHeadArray, addressBodyObject, addressTailArray)
-  }
-
-  // Otherwise, return the address with a shortened body
-  const shortenedBody = _shortenBody(addressBodyObject, headTailLength)
-  return _buildAddress(addressHeadArray, shortenedBody, addressTailArray)
+  return _buildAddress(addressHeadArray, addressBodyObject, addressTailArray)
 }
 
 /**
@@ -86,10 +77,35 @@ function _getAddressHeadArray (company, contact, addressLines) {
 
 /**
  * Returns an object containing the elements we want for the address body (ie. the lines in the middle of the address
- * that could be concatenated)
+ * that could be concatenated). The body will be shortened if we need to in order for it to fit in the remaining lines
  */
-function _getAddressBodyObject (address) {
-  return pick(address, 'addressLine2', 'addressLine3', 'addressLine4', 'town', 'county')
+function _getAddressBodyObject (addressBody, headArray, tailArray) {
+  // Chop addressLine1 off the top as this is already in the address head
+  const cutBody = omit(addressBody, 'addressLine1')
+
+  // If our cut body fits into the remaining number of lines, just return it as-is
+  const headTailLength = [...headArray, ...tailArray].length
+  if (headTailLength + Object.values(cutBody).length <= MAX_NUMBER_OF_LINES) {
+    return cutBody
+  }
+
+  // Otherwise, try removing the county and see if that fits
+  const bodyWithoutCounty = omit(cutBody, 'county')
+  if (headTailLength + Object.values(bodyWithoutCounty).length <= MAX_NUMBER_OF_LINES) {
+    return bodyWithoutCounty
+  }
+
+  // Now try removing addressLine4
+  const bodyWithoutCountyOrLine4 = omit(bodyWithoutCounty, 'addressLine4')
+  if (headTailLength + Object.values(bodyWithoutCountyOrLine4).length <= MAX_NUMBER_OF_LINES) {
+    return bodyWithoutCountyOrLine4
+  }
+
+  // Otherwise, concatenate lines 2 and 3 and return just that plus the town
+  return {
+    addressLine2: [addressBody.addressLine2, addressBody.addressLine3].join(', '),
+    town: addressBody.town
+  }
 }
 
 /**
@@ -104,30 +120,6 @@ function _getAddressTailArray (address) {
   ]
     // We filter the array that we return to strip out any nulls (ie. if we haven't included the country)
     .filter(element => element)
-}
-
-/**
- * Returns an object of the address body with elements removed/concatenated to fit into the correct number of lines
- */
-function _shortenBody (addressBody, headTailLength) {
-  // Start by removing the county from the address body
-  // If that fits us under the limit then return the address without county
-  const addressBodyWithoutCounty = omit(addressBody, 'county')
-  if (headTailLength + Object.values(addressBodyWithoutCounty).length <= MAX_NUMBER_OF_LINES) {
-    return addressBodyWithoutCounty
-  }
-
-  // Now try removing addressLine4
-  const addressBodyWithoutCountyOrLine4 = omit(addressBodyWithoutCounty, 'addressLine4')
-  if (headTailLength + Object.values(addressBodyWithoutCountyOrLine4).length <= MAX_NUMBER_OF_LINES) {
-    return addressBodyWithoutCountyOrLine4
-  }
-
-  // Otherwise, concatenate lines 2 and 3 and return just that plus the town
-  return {
-    addressLine2: [addressBody.addressLine2, addressBody.addressLine3].join(', '),
-    town: addressBody.town
-  }
 }
 
 exports.mapModelsToNotifyAddress = mapModelsToNotifyAddress
