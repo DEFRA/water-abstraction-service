@@ -8,7 +8,7 @@ const { expect } = require('@hapi/code')
 
 const notifyMapper = require('../../../src/lib/mappers/notify')
 
-experiment.only('lib/mappers/notify', () => {
+experiment('lib/mappers/notify', () => {
   experiment('.mapModelsToNotifyAddress', () => {
     test('returns a correctly formatted address', async () => {
       const address = {
