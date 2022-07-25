@@ -216,11 +216,11 @@ experiment('getRecipients', () => {
       const [notification] = scheduledNotificationsService.createScheduledNotification.lastCall.args
       const { personalisation } = notification
 
-      expect(personalisation.address_line_1).to.equal('ADDRESS1, ADDRESS2')
-      expect(personalisation.address_line_2).to.equal('ADDRESS3')
-      expect(personalisation.address_line_3).to.equal('ADDRESS4')
-      expect(personalisation.address_line_4).to.equal('TOWN')
-      expect(personalisation.address_line_5).to.equal('COUNTY')
+      expect(personalisation.address_line_1).to.equal('ADDRESS1')
+      expect(personalisation.address_line_2).to.equal('ADDRESS2')
+      expect(personalisation.address_line_3).to.equal('ADDRESS3')
+      expect(personalisation.address_line_4).to.equal('ADDRESS4')
+      expect(personalisation.address_line_5).to.equal('TOWN')
       expect(personalisation.address_line_6).to.equal('POSTCODE')
       expect(personalisation.address_line_7).to.equal('COUNTRY')
     })
