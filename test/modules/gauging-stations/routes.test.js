@@ -38,6 +38,6 @@ experiment('.createLicenceGaugingStationLink', () => {
   test('it has an invalid thresholdUnit in the payload', () => {
     const schema = routes.createLicenceGaugingStationLink.config.validate.payload
     const result = schema.validate({ ...payload, thresholdUnit: 'xxx' })
-    expect(result.error.message).to.equal('"thresholdUnit" must be one of [Ml/d, m3/s, m3/d, l/s, mAOD, mASD, m, SLD]')
+    expect(result.error.message).to.equal('"thresholdUnit" must be one of [Ml/d, m3/s, m3/d, l/s, mAOD, mBOD, mASD, m, SLD]')
   })
 })
