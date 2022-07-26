@@ -179,8 +179,8 @@ const testMatchTPTPurpose = async (field, term, _licence, headings, columns) => 
 }
 
 const testValidReferenceLineDescription = async (field, description) => {
-  const validCharacters = /[^a-z &*,./()\-\d]/i
-  return validCharacters.test(description) ? `${field} contains at least one unaccepted character` : ''
+  const invalidCharacters = /[“”?^£≥≤—]/
+  return invalidCharacters.test(description) ? `${field} contains at least one unaccepted character` : ''
 }
 
 exports.testNotBlank = testNotBlank
