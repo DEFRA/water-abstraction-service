@@ -345,7 +345,7 @@ experiment('validator', () => {
         })
 
         test('contains unaccepted characters', async () => {
-          const row = { ...testRow, chargeReferenceLineDescription: 'I_N_V_A_L_I_D' }
+          const row = { ...testRow, chargeReferenceLineDescription: 'I_N_V_A_L_I_D?' }
           expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_line_description contains at least one unaccepted character']))
         })
       })
