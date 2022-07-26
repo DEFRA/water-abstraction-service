@@ -4,7 +4,7 @@ const {
   testMaxDecimalPlaces, testBlankWhen, testPopulatedWhen, testSupportedSourceOrBlank, testValidReferenceLineDescription,
   testMaxValue, testMaxDigits, testMatchTPTPurpose, testDateAfterLicenceDate, testDateBefore, testValidDate,
   testDateRange, testPurpose, testDateBeforeSrocStartDate, testDateBeforeLicenceDate, testValidLicence,
-  testLicenceHasInvoiceAccount, testNumberGreaterThanOrEqualToZero
+  testLicenceHasInvoiceAccount
 } = require('./tests')
 
 const csvFields = {
@@ -104,7 +104,7 @@ const csvFields = {
       testNotBlank,
       testMaxDigits(17),
       testNumber,
-      testNumberGreaterThanOrEqualToZero,
+      testNumberGreaterThanZero,
       testMaxDecimalPlaces(6),
       testMaxValue(1000000000000000)
     ]
