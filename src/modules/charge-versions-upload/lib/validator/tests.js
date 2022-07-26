@@ -140,8 +140,6 @@ const testNumber = async (field, number) => {
 
 const testNumberGreaterThanZero = async (field, number) => parseFloat(number) > 0 ? '' : `${field} is less than or equal to 0`
 
-const testNumberGreaterThanOrEqualToZero = async (field, number) => parseFloat(number) >= 0 ? '' : `${field} is less than 0`
-
 const testNumberLessThanOne = async (field, number) => parseFloat(number) < 1 ? '' : `${field} is greater than or equal to 1`
 
 const testMaxDecimalPlaces = maxDecimalPlaces => async (field, number) => {
@@ -201,7 +199,6 @@ exports.testBlankWhen = testBlankWhen
 exports.testDateRange = testDateRange
 exports.testNumber = testNumber
 exports.testNumberGreaterThanZero = testNumberGreaterThanZero
-exports.testNumberGreaterThanOrEqualToZero = testNumberGreaterThanOrEqualToZero
 exports.testNumberLessThanOne = testNumberLessThanOne
 exports.testMaxDecimalPlaces = testMaxDecimalPlaces
 exports.testDateBefore = testDateBefore
