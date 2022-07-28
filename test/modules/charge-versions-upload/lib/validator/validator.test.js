@@ -292,9 +292,14 @@ experiment('validator', () => {
           expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_volume is not a number']))
         })
 
-        test('is not a number', async () => {
+        test('is zero', async () => {
+          const row = { ...testRow, chargeReferenceDetailsVolume: '0' }
+          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_volume is less than or equal to 0']))
+        })
+
+        test('is a negative number', async () => {
           const row = { ...testRow, chargeReferenceDetailsVolume: '-1' }
-          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_volume is less than 0']))
+          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_volume is less than or equal to 0']))
         })
 
         test('has more than 6 decimal places', async () => {

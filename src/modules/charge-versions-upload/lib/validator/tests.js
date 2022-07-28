@@ -143,8 +143,6 @@ const testNumber = async (field, number) => {
 
 const testNumberGreaterThanZero = async (field, number) => parseFloat(number) > 0 ? '' : `${field} is less than or equal to 0`
 
-const testNumberGreaterThanOrEqualToZero = async (field, number) => parseFloat(number) >= 0 ? '' : `${field} is less than 0`
-
 const testNumberLessThanOne = async (field, number) => parseFloat(number) < 1 ? '' : `${field} is greater than or equal to 1`
 
 const testMaxDecimalPlaces = maxDecimalPlaces => async (field, number) => {
@@ -215,7 +213,6 @@ module.exports = {
   testDateRange,
   testNumber,
   testNumberGreaterThanZero,
-  testNumberGreaterThanOrEqualToZero,
   testNumberLessThanOne,
   testMaxDecimalPlaces,
   testDateBefore,
