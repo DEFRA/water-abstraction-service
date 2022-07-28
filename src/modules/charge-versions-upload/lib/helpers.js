@@ -57,8 +57,8 @@ const getLicence = async licenceNumber => {
   if (!cache.licences[licenceNumber]) {
     assertLicenceNumber(licenceNumber)
     // Only include required properties
-    const { id, startDate, expiredDate, lapsedDate, revokedDate, regionalChargeArea } = await licencesService.getLicenceByLicenceRef(licenceNumber)
-    cache.licences[licenceNumber] = deepFreeze({ id, licenceNumber, startDate, expiredDate, lapsedDate, revokedDate, regionalChargeArea })
+    const { id, startDate, expiredDate, lapsedDate, revokedDate, regionalChargeArea, isWaterUndertaker } = await licencesService.getLicenceByLicenceRef(licenceNumber)
+    cache.licences[licenceNumber] = deepFreeze({ id, licenceNumber, startDate, expiredDate, lapsedDate, revokedDate, regionalChargeArea, isWaterUndertaker })
   }
   return cache.licences[licenceNumber]
 }

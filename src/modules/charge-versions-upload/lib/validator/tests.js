@@ -183,27 +183,39 @@ const testValidReferenceLineDescription = async (field, description) => {
   return invalidCharacters.test(description) ? `${field} contains at least one unaccepted character` : ''
 }
 
-exports.testNotBlank = testNotBlank
-exports.testAcceptedTerm = testAcceptedTerm
-exports.testMaxLength = testMaxLength
-exports.testMaxValue = testMaxValue
-exports.testMaxDigits = testMaxDigits
-exports.testValidLicence = testValidLicence
-exports.testLicenceHasInvoiceAccount = testLicenceHasInvoiceAccount
-exports.testValidDate = testValidDate
-exports.testDateAfterLicenceDate = testDateAfterLicenceDate
-exports.testDateBeforeLicenceDate = testDateBeforeLicenceDate
-exports.testDateBeforeSrocStartDate = testDateBeforeSrocStartDate
-exports.testPurpose = testPurpose
-exports.testSupportedSourceOrBlank = testSupportedSourceOrBlank
-exports.testPopulatedWhen = testPopulatedWhen
-exports.testBlankWhen = testBlankWhen
-exports.testDateRange = testDateRange
-exports.testNumber = testNumber
-exports.testNumberGreaterThanZero = testNumberGreaterThanZero
-exports.testNumberGreaterThanOrEqualToZero = testNumberGreaterThanOrEqualToZero
-exports.testNumberLessThanOne = testNumberLessThanOne
-exports.testMaxDecimalPlaces = testMaxDecimalPlaces
-exports.testDateBefore = testDateBefore
-exports.testMatchTPTPurpose = testMatchTPTPurpose
-exports.testValidReferenceLineDescription = testValidReferenceLineDescription
+const testNotWaterUndertaker = async (field, value, licence) => {
+  // We include a check for licence to ensure we don't incorrectly give an error if no licence is present
+  if (value === 'Y' && licence && !licence.isWaterUndertaker) {
+    return `${field} cannot be Y if the licence holder is not a water undertaker`
+  }
+
+  return ''
+}
+
+module.exports = {
+  testNotBlank,
+  testAcceptedTerm,
+  testMaxLength,
+  testMaxValue,
+  testMaxDigits,
+  testValidLicence,
+  testLicenceHasInvoiceAccount,
+  testValidDate,
+  testDateAfterLicenceDate,
+  testDateBeforeLicenceDate,
+  testDateBeforeSrocStartDate,
+  testPurpose,
+  testSupportedSourceOrBlank,
+  testPopulatedWhen,
+  testBlankWhen,
+  testDateRange,
+  testNumber,
+  testNumberGreaterThanZero,
+  testNumberGreaterThanOrEqualToZero,
+  testNumberLessThanOne,
+  testMaxDecimalPlaces,
+  testDateBefore,
+  testMatchTPTPurpose,
+  testValidReferenceLineDescription,
+  testNotWaterUndertaker
+}
