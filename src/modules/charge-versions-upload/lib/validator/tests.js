@@ -20,9 +20,9 @@ const testValidLicence = async (field, _licenceNumber, licence) => {
   const { expiredDate, lapsedDate, revokedDate } = licence || {}
   if (licence && [expiredDate, lapsedDate, revokedDate].every(date => !date || new Date(date) >= billing.srocStartDate)) {
     return ''
-  } else {
-    return `${field} is not valid`
   }
+
+  return `${field} is not valid`
 }
 
 const testLicenceHasInvoiceAccount = async (field, _licenceNumber, licence, headings, columns) => {
@@ -30,11 +30,13 @@ const testLicenceHasInvoiceAccount = async (field, _licenceNumber, licence, head
   const invoiceAccount = await helpers.getInvoiceAccount(licence, invoiceAccountNumber)
   if (invoiceAccount) {
     return ''
-  } else if (invoiceAccountNumber) {
-    return `charge_information_billing_account is not valid for ${field}`
-  } else {
-    return `charge_information_billing_account is required for ${field}`
   }
+
+  if (invoiceAccountNumber) {
+    return `charge_information_billing_account is not valid for ${field}`
+  }
+
+  return `charge_information_billing_account is required for ${field}`
 }
 
 const testValidDate = async (field, date = '') => helpers.formatDate(date) ? '' : `"${field} has an incorrect format, expected DD/MM/YYYY"`
@@ -78,9 +80,9 @@ const testDateBeforeSrocStartDate = async (field, date = '') => {
   const { srocStartDate } = billing
   if (date && formattedDate < srocStartDate) {
     return `${field} is before ${moment(srocStartDate).format('D MMMM YYYY')}`
-  } else {
-    return ''
   }
+
+  return ''
 }
 
 const testPurpose = async (field, description, licence) => {
@@ -88,6 +90,7 @@ const testPurpose = async (field, description, licence) => {
     const licenceVersionPurposes = await helpers.getLicenceVersionPurposes(licence.id)
     return licenceVersionPurposes.find(licenceVersionPurpose => licenceVersionPurpose.purposeUse.description === description) ? '' : `${field} is not an accepted term`
   }
+
   return ''
 }
 
@@ -95,25 +98,25 @@ const testSupportedSourceOrBlank = async (field, name) => {
   if (name) {
     const supportedSources = await helpers.getSupportedSources()
     return supportedSources.find(supportedSource => supportedSource.name === name) ? '' : `${field} is not an accepted term`
-  } else {
-    return ''
   }
+
+  return ''
 }
 
 const testPopulatedWhen = (fieldName, fieldValue, fieldTitle) => async (field, val, _licence, headings, columns) => {
   if (getColumnValue(headings, columns, fieldName) === fieldValue) {
     return val ? '' : `${field} is blank when the ${fieldTitle} is "${fieldValue}"`
-  } else {
-    return ''
   }
+
+  return ''
 }
 
 const testBlankWhen = (fieldName, fieldValue, fieldTitle) => async (field, val, _licence, headings, columns) => {
   if (getColumnValue(headings, columns, fieldName) === fieldValue) {
     return val ? `${field} is populated when the ${fieldTitle} is "${fieldValue}"` : ''
-  } else {
-    return ''
   }
+
+  return ''
 }
 
 const testDateRange = async (field, dateRange) => {
@@ -171,36 +174,49 @@ const testMatchTPTPurpose = async (field, term, _licence, headings, columns) => 
     const purposeUses = await helpers.getPurposeUses()
     const purpose = purposeUses.find(purposeUse => purposeUse.description === description)
     return purpose && purpose.isTwoPartTariff ? '' : `${field} does not match the purpose`
-  } else {
-    return ''
   }
+
+  return ''
 }
 
 const testValidReferenceLineDescription = async (field, description) => {
   const invalidCharacters = /[“”?^£≥≤—]/
+
   return invalidCharacters.test(description) ? `${field} contains at least one unaccepted character` : ''
 }
 
-exports.testNotBlank = testNotBlank
-exports.testAcceptedTerm = testAcceptedTerm
-exports.testMaxLength = testMaxLength
-exports.testMaxValue = testMaxValue
-exports.testMaxDigits = testMaxDigits
-exports.testValidLicence = testValidLicence
-exports.testLicenceHasInvoiceAccount = testLicenceHasInvoiceAccount
-exports.testValidDate = testValidDate
-exports.testDateAfterLicenceDate = testDateAfterLicenceDate
-exports.testDateBeforeLicenceDate = testDateBeforeLicenceDate
-exports.testDateBeforeSrocStartDate = testDateBeforeSrocStartDate
-exports.testPurpose = testPurpose
-exports.testSupportedSourceOrBlank = testSupportedSourceOrBlank
-exports.testPopulatedWhen = testPopulatedWhen
-exports.testBlankWhen = testBlankWhen
-exports.testDateRange = testDateRange
-exports.testNumber = testNumber
-exports.testNumberGreaterThanZero = testNumberGreaterThanZero
-exports.testNumberLessThanOne = testNumberLessThanOne
-exports.testMaxDecimalPlaces = testMaxDecimalPlaces
-exports.testDateBefore = testDateBefore
-exports.testMatchTPTPurpose = testMatchTPTPurpose
-exports.testValidReferenceLineDescription = testValidReferenceLineDescription
+const testNotWaterUndertaker = async (field, value, licence) => {
+  // We include a check for licence to ensure we don't incorrectly give an error if no licence is present
+  if (value === 'Y' && licence && !licence.isWaterUndertaker) {
+    return `${field} cannot be Y if the licence holder is not a water undertaker`
+  }
+
+  return ''
+}
+
+module.exports = {
+  testNotBlank,
+  testAcceptedTerm,
+  testMaxLength,
+  testMaxValue,
+  testMaxDigits,
+  testValidLicence,
+  testLicenceHasInvoiceAccount,
+  testValidDate,
+  testDateAfterLicenceDate,
+  testDateBeforeLicenceDate,
+  testDateBeforeSrocStartDate,
+  testPurpose,
+  testSupportedSourceOrBlank,
+  testPopulatedWhen,
+  testBlankWhen,
+  testDateRange,
+  testNumber,
+  testNumberGreaterThanZero,
+  testNumberLessThanOne,
+  testMaxDecimalPlaces,
+  testDateBefore,
+  testMatchTPTPurpose,
+  testValidReferenceLineDescription,
+  testNotWaterUndertaker
+}

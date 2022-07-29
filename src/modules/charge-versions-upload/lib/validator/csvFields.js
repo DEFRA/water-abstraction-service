@@ -4,7 +4,7 @@ const {
   testMaxDecimalPlaces, testBlankWhen, testPopulatedWhen, testSupportedSourceOrBlank, testValidReferenceLineDescription,
   testMaxValue, testMaxDigits, testMatchTPTPurpose, testDateAfterLicenceDate, testDateBefore, testValidDate,
   testDateRange, testPurpose, testDateBeforeSrocStartDate, testDateBeforeLicenceDate, testValidLicence,
-  testLicenceHasInvoiceAccount
+  testLicenceHasInvoiceAccount, testNotWaterUndertaker
 } = require('./tests')
 
 const csvFields = {
@@ -144,7 +144,8 @@ const csvFields = {
   chargeReferenceDetailsPublicWaterSupply: {
     validate: [
       testNotBlank,
-      testAcceptedTerm(['Y', 'N'])
+      testAcceptedTerm(['Y', 'N']),
+      testNotWaterUndertaker
     ]
   },
   chargeReferenceDetailsAggregateFactor: {
