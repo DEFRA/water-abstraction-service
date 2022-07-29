@@ -86,7 +86,6 @@
     "@hapi/lab": "^24.2.0",
     "auto-changelog": "^1.16.4",
     "csv-stringify": "^2.0.4",
-    "mkdir": "^0.0.2",
     "promise-poller": "^1.9.1",
     "sinon": "^7.5.0",
     "standard": "^17.0.0"
