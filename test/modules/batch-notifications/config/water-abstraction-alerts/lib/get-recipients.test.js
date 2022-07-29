@@ -61,7 +61,14 @@ experiment('getRecipients', () => {
       contactId
     })
     sandbox.stub(crmV2Connector.addresses, 'getAddress').resolves({
-      country: 'britain'
+      address1: 'ADDRESS1',
+      address2: 'ADDRESS2',
+      address3: 'ADDRESS3',
+      address4: 'ADDRESS4',
+      town: 'TOWN',
+      county: 'COUNTY',
+      postcode: 'POSTCODE',
+      country: 'COUNTRY'
     })
     sandbox.stub(crmV2Connector.companies, 'getCompany').resolves()
     sandbox.stub(crmV2Connector.companies, 'getCompanyWAAEmailContacts').resolves([])
@@ -202,6 +209,20 @@ experiment('getRecipients', () => {
       const [row] = scheduledNotificationsService.createScheduledNotification.lastCall.args
 
       expect(row.messageRef).to.equal('water_abstraction_alert_resume')
+    })
+
+    test('formats the address coming from the CRM correctly', async () => {
+      await getRecipients(jobData)
+      const [notification] = scheduledNotificationsService.createScheduledNotification.lastCall.args
+      const { personalisation } = notification
+
+      expect(personalisation.address_line_1).to.equal('ADDRESS1')
+      expect(personalisation.address_line_2).to.equal('ADDRESS2')
+      expect(personalisation.address_line_3).to.equal('ADDRESS3')
+      expect(personalisation.address_line_4).to.equal('ADDRESS4')
+      expect(personalisation.address_line_5).to.equal('TOWN')
+      expect(personalisation.address_line_6).to.equal('POSTCODE')
+      expect(personalisation.address_line_7).to.equal('COUNTRY')
     })
   })
 

@@ -64,6 +64,7 @@ const getTestDataForHashing = () => {
   transaction.calcSucFactor = 0.5
   transaction.calcS126Factor = 'S126 x 0.5'
   transaction.calcS127Factor = 'S127 x 0.5'
+  transaction.calcS130Factor = 'S130 x 0.5'
   transaction.calcEiucFactor = 0.5
   transaction.calcEiucSourceFactor = 0.5
 

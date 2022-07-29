@@ -192,23 +192,23 @@ experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients'
           })
 
           test('address_line_1', async () => {
-            expect(personalisation.address_line_1).to.equal('FAO test-contact-salutation test-contact-first-name test-contact-last-name, test-company-name')
+            expect(personalisation.address_line_1).to.equal('test-company-name')
           })
 
           test('address_line_2', async () => {
-            expect(personalisation.address_line_2).to.equal('add-line-1, add-line-2')
+            expect(personalisation.address_line_2).to.equal('FAO test-contact-salutation test-contact-first-name test-contact-last-name')
           })
 
           test('address_line_3', async () => {
-            expect(personalisation.address_line_3).to.equal('add-line-3, add-line-4')
+            expect(personalisation.address_line_3).to.equal('add-line-1')
           })
 
           test('address_line_4', async () => {
-            expect(personalisation.address_line_4).to.equal('test-town')
+            expect(personalisation.address_line_4).to.equal('add-line-2, add-line-3')
           })
 
           test('address_line_5', async () => {
-            expect(personalisation.address_line_5).to.equal('test-county')
+            expect(personalisation.address_line_5).to.equal('test-town')
           })
 
           test('address_line_6', async () => {

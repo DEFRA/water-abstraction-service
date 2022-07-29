@@ -6,7 +6,7 @@ const controller = require('../controller')
 
 const VALID_DAY = Joi.number().integer().min(1).max(31)
 const VALID_MONTH = Joi.number().integer().min(1).max(12)
-const VALID_THRESHOLD_UNITS = Joi.string().required().valid('Ml/d', 'm3/s', 'm3/d', 'l/s', 'mAOD', 'mASD', 'm', 'SLD')
+const VALID_THRESHOLD_UNITS = Joi.string().required().valid('Ml/d', 'm3/s', 'm3/d', 'l/s', 'mAOD', 'mBOD', 'mASD', 'm', 'SLD')
 
 module.exports = {
   getGaugingStations: {

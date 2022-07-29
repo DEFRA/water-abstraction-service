@@ -82,6 +82,14 @@ experiment('validator', () => {
   })
 
   experiment('.validate', () => {
+    const dummyLicence = {
+      startDate: '2022-03-31',
+      expiredDate: '2022-05-01',
+      lapsedDate: '2022-05-01',
+      revokedDate: '2022-05-01',
+      isWaterUndertaker: true
+    }
+
     beforeEach(() => {
       billing.srocStartDate = new Date('2022-04-01')
       helpers.getSupportedSources.resolves([
@@ -91,14 +99,10 @@ experiment('validator', () => {
         { description: PURPOSE_USE_DESCRIPTION, isTwoPartTariff: false },
         { description: PURPOSE_USE_DESCRIPTION_TPT, isTwoPartTariff: true }
       ])
-      helpers.getLicence = async licenceNumber => licenceNumber !== 'INVALID'
-        ? {
-            startDate: '2022-03-31',
-            expiredDate: '2022-05-01',
-            lapsedDate: '2022-05-01',
-            revokedDate: '2022-05-01'
-          }
-        : undefined
+
+      helpers.getLicence = async licenceNumber => licenceNumber === 'INVALID'
+        ? undefined
+        : dummyLicence
       helpers.getLicenceVersionPurposes.resolves([
         { purposeUse: { description: PURPOSE_USE_DESCRIPTION } },
         { purposeUse: { description: PURPOSE_USE_DESCRIPTION_TPT } }
@@ -288,9 +292,14 @@ experiment('validator', () => {
           expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_volume is not a number']))
         })
 
-        test('is not a number', async () => {
+        test('is zero', async () => {
+          const row = { ...testRow, chargeReferenceDetailsVolume: '0' }
+          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_volume is less than or equal to 0']))
+        })
+
+        test('is a negative number', async () => {
           const row = { ...testRow, chargeReferenceDetailsVolume: '-1' }
-          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_volume is less than 0']))
+          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_volume is less than or equal to 0']))
         })
 
         test('has more than 6 decimal places', async () => {
@@ -345,7 +354,7 @@ experiment('validator', () => {
         })
 
         test('contains unaccepted characters', async () => {
-          const row = { ...testRow, chargeReferenceLineDescription: 'I_N_V_A_L_I_D' }
+          const row = { ...testRow, chargeReferenceLineDescription: 'I_N_V_A_L_I_D?' }
           expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_line_description contains at least one unaccepted character']))
         })
       })
@@ -399,6 +408,17 @@ experiment('validator', () => {
         test('is not an accepted term', async () => {
           const row = { ...testRow, chargeReferenceDetailsPublicWaterSupply: 'INVALID' }
           expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_public_water_supply is not an accepted term']))
+        })
+
+        test('is Y when the licence holder is not a water undertaker', async () => {
+          helpers.getLicence = async licenceNumber => {
+            return {
+              ...dummyLicence,
+              isWaterUndertaker: false
+            }
+          }
+          const row = { ...testRow, chargeReferenceDetailsPublicWaterSupply: 'Y' }
+          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_public_water_supply cannot be Y if the licence holder is not a water undertaker']))
         })
       })
 

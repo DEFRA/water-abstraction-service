@@ -39,7 +39,7 @@ const mapValue = (value, refs) => {
  * @param {Integer} index
  * @return {Any | Integer | String} value
  */
-const calcValue = (value, index = 0, startDate = '01-04-2023') => {
+const calcValue = (value, index = 0, startDate = '01-04-2022') => {
   const previousYearsDateLessIndex = moment(startDate)
     .subtract(1, 'year') // previous year
     .subtract(index, 'year') // less the index
