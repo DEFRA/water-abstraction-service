@@ -1,19 +1,19 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
+const Joi = require('joi')
 
-const { version } = require('../../../config');
+const { version } = require('../../../config')
 
-const pathPrefix = `/water/${version}/invoice-accounts/`;
-const controller = require('./controller');
-const { CONTACT_TYPES } = require('../../lib/models/contact-v2');
-const { COMPANY_TYPES, ORGANISATION_TYPES } = require('../../lib/models/company');
-const { ROLES: { manageBillingAccounts } } = require('../../lib/roles');
+const pathPrefix = `/water/${version}/invoice-accounts/`
+const controller = require('./controller')
+const { CONTACT_TYPES } = require('../../lib/models/contact-v2')
+const { COMPANY_TYPES, ORGANISATION_TYPES } = require('../../lib/models/company')
+const { ROLES: { manageBillingAccounts } } = require('../../lib/roles')
 
-const OPTIONAL_NULLABLE_STRING = Joi.string().trim().optional().allow(null);
-const EXAMPLE_GUID = '00000000-0000-0000-0000-000000000000';
-const OPTIONAL_GUID = Joi.string().guid().optional().example(EXAMPLE_GUID);
-const REQUIRED_GUID = Joi.string().guid().required().example(EXAMPLE_GUID);
+const OPTIONAL_NULLABLE_STRING = Joi.string().trim().optional().allow(null)
+const EXAMPLE_GUID = '00000000-0000-0000-0000-000000000000'
+const OPTIONAL_GUID = Joi.string().guid().optional().example(EXAMPLE_GUID)
+const REQUIRED_GUID = Joi.string().guid().required().example(EXAMPLE_GUID)
 
 const addressSchema = Joi.object({
   id: OPTIONAL_GUID,
@@ -27,7 +27,7 @@ const addressSchema = Joi.object({
   postcode: OPTIONAL_NULLABLE_STRING.example('TT1 1TT'),
   uprn: Joi.number().optional().allow(null).example(12345),
   source: OPTIONAL_NULLABLE_STRING.example('wrls')
-}).required();
+}).required()
 
 const companySchema = Joi.object().keys({
   id: OPTIONAL_GUID,
@@ -35,7 +35,7 @@ const companySchema = Joi.object().keys({
   organisationType: Joi.string().valid(...Object.values(ORGANISATION_TYPES)).optional(),
   name: Joi.string().trim().replace(/\./g, '').optional().example('Bottled Water Limited'),
   companyNumber: Joi.string().trim().replace(/\./g, '').uppercase().optional().example('012345678')
-}).allow(null).required();
+}).allow(null).required()
 
 const contactSchema = Joi.object().keys({
   id: OPTIONAL_GUID,
@@ -49,7 +49,7 @@ const contactSchema = Joi.object().keys({
   department: OPTIONAL_NULLABLE_STRING.example('Accounts Department'),
   source: OPTIONAL_NULLABLE_STRING.example('wrls'),
   isTest: Joi.boolean().optional().default(false)
-}).allow(null).required();
+}).allow(null).required()
 
 module.exports = {
   getInvoiceAccount: {
@@ -123,4 +123,4 @@ module.exports = {
       }
     }
   }
-};
+}

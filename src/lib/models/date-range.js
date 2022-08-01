@@ -1,13 +1,13 @@
-'use strict';
+'use strict'
 
-const { isNull } = require('lodash');
+const { isNull } = require('lodash')
 
-const MomentRange = require('moment-range');
-const moment = MomentRange.extendMoment(require('moment'));
+const MomentRange = require('moment-range')
+const moment = MomentRange.extendMoment(require('moment'))
 
-const validators = require('./validators');
-const DATE_FORMAT = 'YYYY-MM-DD';
-const { getDateTimeFromValue } = require('../dates');
+const validators = require('./validators')
+const DATE_FORMAT = 'YYYY-MM-DD'
+const { getDateTimeFromValue } = require('../dates')
 
 class DateRange {
   /**
@@ -17,10 +17,10 @@ class DateRange {
    */
   constructor (startDate, endDate) {
     if (startDate) {
-      this.startDate = startDate;
+      this.startDate = startDate
     }
     if (endDate !== undefined) {
-      this.endDate = endDate;
+      this.endDate = endDate
     }
   }
 
@@ -29,15 +29,15 @@ class DateRange {
    * @return {String} format YYYY-MM-DD
    */
   get startDate () {
-    return this._startDate ? this._startDate.format(DATE_FORMAT) : this._startDate;
+    return this._startDate ? this._startDate.format(DATE_FORMAT) : this._startDate
   }
 
   set startDate (date) {
-    const m = getDateTimeFromValue(date);
+    const m = getDateTimeFromValue(date)
     if (m === null) {
-      throw new Error('startDate cannot be null');
+      throw new Error('startDate cannot be null')
     }
-    this._startDate = m;
+    this._startDate = m
   }
 
   /**
@@ -45,11 +45,11 @@ class DateRange {
    * @return {String} format YYYY-MM-DD
    */
   get endDate () {
-    return this._endDate ? this._endDate.format(DATE_FORMAT) : this._endDate;
+    return this._endDate ? this._endDate.format(DATE_FORMAT) : this._endDate
   }
 
   set endDate (date) {
-    this._endDate = getDateTimeFromValue(date);
+    this._endDate = getDateTimeFromValue(date)
   }
 
   /**
@@ -57,7 +57,7 @@ class DateRange {
    * @return {MomentRange}
    */
   toMomentRange () {
-    return moment.range(this._startDate, this._endDate);
+    return moment.range(this._startDate, this._endDate)
   }
 
   /**
@@ -66,9 +66,9 @@ class DateRange {
    * @return {Boolean}
    */
   includes (date) {
-    const range = this.toMomentRange();
-    const m = moment(date, DATE_FORMAT);
-    return range.contains(m);
+    const range = this.toMomentRange()
+    const m = moment(date, DATE_FORMAT)
+    return range.contains(m)
   }
 
   /**
@@ -77,10 +77,10 @@ class DateRange {
    * @return {Boolean}
    */
   overlaps (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    const rangeA = this.toMomentRange();
-    const rangeB = dateRange.toMomentRange();
-    return rangeA.overlaps(rangeB, { adjacent: true });
+    validators.assertIsInstanceOf(dateRange, DateRange)
+    const rangeA = this.toMomentRange()
+    const rangeB = dateRange.toMomentRange()
+    return rangeA.overlaps(rangeB, { adjacent: true })
   }
 
   /**
@@ -90,10 +90,10 @@ class DateRange {
   get days () {
     // If open-ended range, not possible to get days in range
     if (isNull(this.endDate)) {
-      return undefined;
+      return undefined
     }
 
-    return this._endDate.diff(this._startDate, 'days') + 1;
+    return this._endDate.diff(this._startDate, 'days') + 1
   }
 
   /**
@@ -102,14 +102,14 @@ class DateRange {
    * @return {DateRange}
    */
   static fromMomentRange (momentRange) {
-    return new DateRange(momentRange.start, momentRange.end);
+    return new DateRange(momentRange.start, momentRange.end)
   }
 
   toJSON () {
     return {
       startDate: this.startDate,
       endDate: this.endDate
-    };
+    }
   }
 
   /**
@@ -117,10 +117,10 @@ class DateRange {
    * @return {Boolean}
    */
   get isFinancialYear () {
-    const startYear = this._startDate.year();
+    const startYear = this._startDate.year()
 
     return (this.startDate === `${startYear}-04-01`) &&
-     (this.endDate === `${startYear + 1}-03-31`);
+     (this.endDate === `${startYear + 1}-03-31`)
   }
 
   /**
@@ -130,8 +130,8 @@ class DateRange {
    * @return {Boolean}
    */
   isStartDate (date) {
-    const m = getDateTimeFromValue(date);
-    return this._startDate.isSame(m, 'day');
+    const m = getDateTimeFromValue(date)
+    return this._startDate.isSame(m, 'day')
   }
 
   /**
@@ -140,9 +140,9 @@ class DateRange {
    * @return {Boolean}
    */
   isSameOrAfter (date) {
-    const m = getDateTimeFromValue(date);
-    return this._startDate.isSameOrAfter(m, 'day');
+    const m = getDateTimeFromValue(date)
+    return this._startDate.isSameOrAfter(m, 'day')
   }
 }
 
-module.exports = DateRange;
+module.exports = DateRange

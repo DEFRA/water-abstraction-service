@@ -1,12 +1,12 @@
-'use strict';
+'use strict'
 
 /**
  * Expected data has not been found in DB or API call
  */
 class NotFoundError extends Error {
   constructor (message) {
-    super(message);
-    this.name = 'NotFoundError';
+    super(message)
+    this.name = 'NotFoundError'
   }
 }
 
@@ -15,8 +15,8 @@ class NotFoundError extends Error {
  */
 class StateError extends Error {
   constructor (message) {
-    super(message);
-    this.name = 'StateError';
+    super(message)
+    this.name = 'StateError'
   }
 }
 
@@ -25,8 +25,8 @@ class StateError extends Error {
  */
 class DBError extends Error {
   constructor (message) {
-    super(message);
-    this.name = 'DBError';
+    super(message)
+    this.name = 'DBError'
   }
 }
 
@@ -35,8 +35,8 @@ class DBError extends Error {
  */
 class InvalidEntityError extends Error {
   constructor (message) {
-    super(message);
-    this.name = 'InvalidEntityError';
+    super(message)
+    this.name = 'InvalidEntityError'
   }
 }
 
@@ -45,8 +45,8 @@ class InvalidEntityError extends Error {
  */
 class ConflictingDataError extends Error {
   constructor (message) {
-    super(message);
-    this.name = 'ConflictingDataError';
+    super(message)
+    this.name = 'ConflictingDataError'
   }
 }
 
@@ -55,14 +55,14 @@ class ConflictingDataError extends Error {
  */
 class UnauthorizedError extends Error {
   constructor (message) {
-    super(message);
-    this.name = 'UnauthorizedError';
+    super(message)
+    this.name = 'UnauthorizedError'
   }
 }
 
-exports.NotFoundError = NotFoundError;
-exports.StateError = StateError;
-exports.DBError = DBError;
-exports.InvalidEntityError = InvalidEntityError;
-exports.ConflictingDataError = ConflictingDataError;
-exports.UnauthorizedError = UnauthorizedError;
+exports.NotFoundError = NotFoundError
+exports.StateError = StateError
+exports.DBError = DBError
+exports.InvalidEntityError = InvalidEntityError
+exports.ConflictingDataError = ConflictingDataError
+exports.UnauthorizedError = UnauthorizedError

@@ -1,11 +1,11 @@
-const Contact = require('../contact');
+const Contact = require('../contact')
 
 /**
  * Maps a NALD value, converting 'null' string to null
  * @param  {String} value - the NALD value
  * @return {String|Null}
  */
-const mapValue = value => value === 'null' ? null : value;
+const mapValue = value => value === 'null' ? null : value
 
 /**
  * Maps the type of the NALD party to our internal type
@@ -13,9 +13,9 @@ const mapValue = value => value === 'null' ? null : value;
  * @return {String} contact type
  */
 const mapType = (party) => {
-  const isOrg = party.APAR_TYPE === 'ORG';
-  return isOrg ? Contact.CONTACT_TYPE_ORGANISATION : Contact.CONTACT_TYPE_PERSON;
-};
+  const isOrg = party.APAR_TYPE === 'ORG'
+  return isOrg ? Contact.CONTACT_TYPE_ORGANISATION : Contact.CONTACT_TYPE_PERSON
+}
 
 /**
  * Maps NALD party to the fields in our contact model
@@ -28,7 +28,7 @@ const mapParty = party => ({
   initials: mapValue(party.INITIALS),
   firstName: mapValue(party.FORENAME),
   name: mapValue(party.NAME)
-});
+})
 
 /**
  * Maps NALD address to the fields in out contact model
@@ -44,7 +44,7 @@ const mapAddress = address => ({
   county: mapValue(address.COUNTY),
   postcode: mapValue(address.POSTCODE),
   country: mapValue(address.COUNTRY)
-});
+})
 
 /**
  * Creates a contact model given a role string, a NALD party object, and
@@ -59,7 +59,7 @@ const createContact = (role, party, address) => {
     role,
     ...mapParty(party),
     ...mapAddress(address)
-  });
-};
+  })
+}
 
-exports.createContact = createContact;
+exports.createContact = createContact

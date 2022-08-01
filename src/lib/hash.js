@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const crypto = require('crypto');
+const crypto = require('crypto')
 
 /**
  * Creates an MD5 hash output in a 32 byte hex string
@@ -9,6 +9,6 @@ const crypto = require('crypto');
  */
 const createMd5Hash = input => crypto.createHash('md5')
   .update(input)
-  .digest('hex');
+  .digest('hex')
 
-exports.createMd5Hash = createMd5Hash;
+exports.createMd5Hash = createMd5Hash

@@ -1,6 +1,6 @@
-const Joi = require('joi');
-const evt = require('../../../lib/event');
-const { uniq } = require('lodash');
+const Joi = require('joi')
+const evt = require('../../../lib/event')
+const { uniq } = require('lodash')
 
 /**
  * Gets licence numbers from list of returns
@@ -8,13 +8,13 @@ const { uniq } = require('lodash');
  * @return {Array} unique list of affected licence numbers
  */
 const getLicenceNumbers = (returns) => {
-  const licenceNumbers = returns.map(row => row.licence_ref);
-  return uniq(licenceNumbers);
-};
+  const licenceNumbers = returns.map(row => row.licence_ref)
+  return uniq(licenceNumbers)
+}
 
 const getReturnIds = (returns) => {
-  return returns.map(row => row.return_id);
-};
+  return returns.map(row => row.return_id)
+}
 
 /**
  * Schema for eventFactory options
@@ -24,7 +24,7 @@ const schema = {
   messageRef: Joi.string().required(),
   ref: Joi.string().required(),
   name: Joi.string().required()
-};
+}
 
 /**
  * Create event for logging sent notification
@@ -38,15 +38,15 @@ const schema = {
  * @param {String} name - a friendly name for this type of notification
  */
 function eventFactory (options, returns) {
-  const { error, value } = schema.validate(options);
+  const { error, value } = schema.validate(options)
   if (error) {
-    throw error;
+    throw error
   }
 
-  const { issuer, messageRef, ref, name } = value;
+  const { issuer, messageRef, ref, name } = value
 
   // Create array of affected licence numbers
-  const licences = getLicenceNumbers(returns);
+  const licences = getLicenceNumbers(returns)
 
   return evt.create({
     referenceCode: ref,
@@ -63,7 +63,7 @@ function eventFactory (options, returns) {
       error: 0
     },
     status: 'sending'
-  });
+  })
 }
 
-module.exports = eventFactory;
+module.exports = eventFactory

@@ -1,7 +1,7 @@
-const startUpload = require('./lib/jobs/start-upload');
-const mapToJson = require('./lib/jobs/map-to-json');
-const validateReturns = require('./lib/jobs/validate-returns');
-const persistReturns = require('./lib/jobs/persist-returns');
+const startUpload = require('./lib/jobs/start-upload')
+const mapToJson = require('./lib/jobs/map-to-json')
+const validateReturns = require('./lib/jobs/validate-returns')
+const persistReturns = require('./lib/jobs/persist-returns')
 
 module.exports = {
   name: 'returnsRegisterSubscribersBullMQ',
@@ -11,6 +11,6 @@ module.exports = {
       .register(startUpload)
       .register(mapToJson)
       .register(validateReturns)
-      .register(persistReturns);
+      .register(persistReturns)
   }
-};
+}

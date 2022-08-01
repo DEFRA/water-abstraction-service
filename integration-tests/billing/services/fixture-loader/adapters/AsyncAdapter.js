@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
 class AsyncAdapter {
   constructor () {
-    this._functions = new Map();
+    this._functions = new Map()
   }
 
   /**
@@ -13,8 +13,8 @@ class AsyncAdapter {
    * @return {this}
    */
   add (modelName, asyncFunction) {
-    this._functions.set(modelName, asyncFunction);
-    return this;
+    this._functions.set(modelName, asyncFunction)
+    return this
   }
 
   /**
@@ -26,10 +26,10 @@ class AsyncAdapter {
    */
   create ({ model: modelName }, data) {
     if (!this._functions.has(modelName)) {
-      throw new Error(`No async function registered to load model ${modelName}`);
+      throw new Error(`No async function registered to load model ${modelName}`)
     }
-    return this._functions.get(modelName)(data);
+    return this._functions.get(modelName)(data)
   }
 }
 
-module.exports = AsyncAdapter;
+module.exports = AsyncAdapter

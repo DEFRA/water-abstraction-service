@@ -1,4 +1,4 @@
-const { isArray, isObject, mapValues } = require('lodash');
+const { isArray, isObject, mapValues } = require('lodash')
 
 /**
  * Stringifies array/object data for writing to DB
@@ -8,10 +8,10 @@ const { isArray, isObject, mapValues } = require('lodash');
 const stringifyValues = data => {
   return mapValues(data, (value, key) => {
     if (isArray(value) || isObject(value)) {
-      return JSON.stringify(value);
+      return JSON.stringify(value)
     }
-    return value;
-  });
-};
+    return value
+  })
+}
 
-exports.stringifyValues = stringifyValues;
+exports.stringifyValues = stringifyValues

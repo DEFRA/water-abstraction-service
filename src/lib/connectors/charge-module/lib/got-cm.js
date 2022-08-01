@@ -1,15 +1,15 @@
-'use strict';
+'use strict'
 
-const got = require('got');
+const got = require('got')
 
-const config = require('../../../../../config.js');
-const { logger } = require('../../../../logger.js');
+const config = require('../../../../../config.js')
+const { logger } = require('../../../../logger.js')
 
-const gotWithProxy = require('./got-with-proxy');
-const AccessTokenManager = require('./AccessTokenManager');
+const gotWithProxy = require('./got-with-proxy')
+const AccessTokenManager = require('./AccessTokenManager')
 
 // Create instance of token manager
-const accessTokenManager = new AccessTokenManager();
+const accessTokenManager = new AccessTokenManager()
 
 /**
  * This hook occurs before the request is made in the lifecycle.
@@ -23,12 +23,12 @@ const accessTokenManager = new AccessTokenManager();
  */
 const beforeRequestHook = async () => {
   if (!accessTokenManager.isTokenValid()) {
-    logger.info('Fetching a new Cognito token');
+    logger.info('Fetching a new Cognito token')
     // Save for further requests
-    const accessToken = await accessTokenManager.refreshAccessToken();
-    instance.defaults.options.headers.Authorization = `Bearer ${accessToken}`;
+    const accessToken = await accessTokenManager.refreshAccessToken()
+    instance.defaults.options.headers.Authorization = `Bearer ${accessToken}`
   }
-};
+}
 
 /**
  * This hook occurs after the request is made in the lifecycle.
@@ -43,23 +43,23 @@ const beforeRequestHook = async () => {
 const afterResponseHook = async (response, retryWithMergedOptions) => {
   if (response.statusCode === 401) { // Unauthorized
     // Refresh the access token
-    const accessToken = await accessTokenManager.refreshAccessToken();
+    const accessToken = await accessTokenManager.refreshAccessToken()
     const updatedOptions = {
       headers: {
         Authorization: `Bearer ${accessToken}`
       }
-    };
+    }
 
     // Save for further requests
-    instance.defaults.options = got.mergeOptions(instance.defaults.options, updatedOptions);
+    instance.defaults.options = got.mergeOptions(instance.defaults.options, updatedOptions)
 
     // Make a new retry
-    return retryWithMergedOptions(updatedOptions);
+    return retryWithMergedOptions(updatedOptions)
   }
 
   // No changes otherwise
-  return response;
-};
+  return response
+}
 
 /**
  * Creates a got instance which is further extended to include:
@@ -75,8 +75,8 @@ const instance = gotWithProxy.extend({
     afterResponse: [afterResponseHook]
   },
   mutableDefaults: true
-});
+})
 
-module.exports = instance;
-module.exports._beforeRequestHook = beforeRequestHook;
-module.exports._afterResponseHook = afterResponseHook;
+module.exports = instance
+module.exports._beforeRequestHook = beforeRequestHook
+module.exports._afterResponseHook = afterResponseHook

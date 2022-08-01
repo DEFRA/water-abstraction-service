@@ -5,4 +5,4 @@ module.exports = {
   ...require('./routes/licences'),
   ...require('./routes/invoices'),
   ...require('./routes/licence-version-purpose-conditions')
-};
+}

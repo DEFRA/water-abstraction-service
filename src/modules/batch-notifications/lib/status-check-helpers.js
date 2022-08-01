@@ -1,4 +1,4 @@
-const moment = require('moment');
+const moment = require('moment')
 
 /**
  * Calculates the next check time
@@ -14,22 +14,22 @@ const getNextCheckTime = (message, now = moment()) => {
     message_type: messageType,
     send_after: sent,
     status_checks: checkCount
-  } = message;
+  } = message
 
-  const momentSent = moment(sent || now);
+  const momentSent = moment(sent || now)
 
   // For letters, check their status every 12 hours
   if (messageType === 'letter') {
-    const hours = 12 * (checkCount + 1);
-    momentSent.add(hours, 'hour');
+    const hours = 12 * (checkCount + 1)
+    momentSent.add(hours, 'hour')
   }
   // For emails, use an exponential check time starting with 1 minute
   if (messageType === 'email') {
-    const minutes = Math.pow(checkCount + 1, 2);
-    momentSent.add(minutes, 'minute');
+    const minutes = Math.pow(checkCount + 1, 2)
+    momentSent.add(minutes, 'minute')
   }
-  return momentSent.format();
-};
+  return momentSent.format()
+}
 
 /**
  * Gets the next value for the status_checks counter
@@ -38,11 +38,11 @@ const getNextCheckTime = (message, now = moment()) => {
  * @return {Number} the number of status checks incremented
  */
 const getNextCheckCount = (message) => {
-  const count = message.status_checks || 0;
-  return count + 1;
-};
+  const count = message.status_checks || 0
+  return count + 1
+}
 
 module.exports = {
   getNextCheckTime,
   getNextCheckCount
-};
+}

@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
-const moment = require('moment');
-const { isString } = require('lodash');
-const { assertIsoString } = require('./models/validators');
+const moment = require('moment')
+const { isString } = require('lodash')
+const { assertIsoString } = require('./models/validators')
 
-const DATE_FORMAT = 'YYYY-MM-DD';
+const DATE_FORMAT = 'YYYY-MM-DD'
 
 /**
  * Takes an input and turns it into a string representation of a date
@@ -13,8 +13,8 @@ const DATE_FORMAT = 'YYYY-MM-DD';
  * @param {*} input A date, moment, string or null to format
  */
 const formatDate = input => {
-  return input ? moment(input).format(DATE_FORMAT) : null;
-};
+  return input ? moment(input).format(DATE_FORMAT) : null
+}
 
 /**
  * Helper for getting date time values. Will handle null, ISO strings, JS Dates or
@@ -27,20 +27,20 @@ const formatDate = input => {
  */
 const getDateTimeFromValue = value => {
   if (value === null || moment.isMoment(value)) {
-    return value;
+    return value
   }
 
   if (isString(value)) {
-    assertIsoString(value);
-    return moment(value);
+    assertIsoString(value)
+    return moment(value)
   }
 
   if (moment.isDate(value)) {
-    return moment(value);
+    return moment(value)
   }
 
-  throw new Error('Unexpected type for date input. Requires null, ISO string, date or moment');
-};
+  throw new Error('Unexpected type for date input. Requires null, ISO string, date or moment')
+}
 
-exports.formatDate = formatDate;
-exports.getDateTimeFromValue = getDateTimeFromValue;
+exports.formatDate = formatDate
+exports.getDateTimeFromValue = getDateTimeFromValue

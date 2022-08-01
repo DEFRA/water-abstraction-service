@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const is = require('@sindresorhus/is');
-const Decimal = require('decimal.js-light');
+const is = require('@sindresorhus/is')
+const Decimal = require('decimal.js-light')
 
 /**
  * Analogous to Math.min, returns the smallest Decimal value
@@ -10,7 +10,7 @@ const Decimal = require('decimal.js-light');
  */
 const min = (...decimals) => decimals.reduce(
   (acc, decimal) => decimal.lessThan(acc) ? decimal : acc
-);
+)
 
 /**
  * Analogous to Math.max, returns the greatest Decimal value
@@ -19,15 +19,15 @@ const min = (...decimals) => decimals.reduce(
  */
 const max = (...decimals) => decimals.reduce(
   (acc, decimal) => decimal.greaterThan(acc) ? decimal : acc
-);
+)
 
 /**
  * Checks whether the supplied value is a Decimal
  * @param {*} value
  * @return {Boolean}
  */
-const isDecimal = value => is.object(value) && is.directInstanceOf(value, Decimal);
+const isDecimal = value => is.object(value) && is.directInstanceOf(value, Decimal)
 
-exports.min = min;
-exports.max = max;
-exports.isDecimal = isDecimal;
+exports.min = min
+exports.max = max
+exports.isDecimal = isDecimal

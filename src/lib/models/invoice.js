@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const { uniq, get, flatMap, isNull } = require('lodash');
+const { uniq, get, flatMap, isNull } = require('lodash')
 
 const {
   assertIsInstanceOf, assertIsArrayOfType,
@@ -12,36 +12,36 @@ const {
   assertIsNullableBoolean,
   assertNullableEnum,
   assertId
-} = require('./validators');
+} = require('./validators')
 
-const Address = require('./address');
-const InvoiceAccount = require('./invoice-account');
-const InvoiceLicence = require('./invoice-licence');
-const Company = require('./company');
-const Contact = require('./contact-v2');
-const FinancialYear = require('./financial-year');
-const Totals = require('./totals');
+const Address = require('./address')
+const InvoiceAccount = require('./invoice-account')
+const InvoiceLicence = require('./invoice-licence')
+const Company = require('./company')
+const Contact = require('./contact-v2')
+const FinancialYear = require('./financial-year')
+const Totals = require('./totals')
 
 const rebillingState = {
   rebill: 'rebill',
   reversal: 'reversal',
   rebilled: 'rebilled',
   unrebillable: 'unrebillable'
-};
+}
 const rebillingStateLabel = {
   rebill: 'rebill',
   reversal: 'reversal',
   rebilled: 'rebilled',
   unrebillable: 'original',
   original: 'original'
-};
+}
 
 class Invoice extends Totals {
   constructor (id) {
-    super(id);
-    this._invoiceLicences = [];
-    this.isDeMinimis = false;
-    this._linkedInvoices = [];
+    super(id)
+    this._invoiceLicences = []
+    this.isDeMinimis = false
+    this._linkedInvoices = []
   }
 
   /**
@@ -49,8 +49,8 @@ class Invoice extends Totals {
    * @param {InvoiceAccount} invoiceAccount
    */
   set invoiceAccount (invoiceAccount) {
-    assertIsInstanceOf(invoiceAccount, InvoiceAccount);
-    this._invoiceAccount = invoiceAccount;
+    assertIsInstanceOf(invoiceAccount, InvoiceAccount)
+    this._invoiceAccount = invoiceAccount
   }
 
   /**
@@ -58,7 +58,7 @@ class Invoice extends Totals {
    * @return {InvoiceAccount}
    */
   get invoiceAccount () {
-    return this._invoiceAccount;
+    return this._invoiceAccount
   }
 
   /**
@@ -66,8 +66,8 @@ class Invoice extends Totals {
    * @param {Address} address
    */
   set address (address) {
-    assertIsInstanceOf(address, Address);
-    this._address = address;
+    assertIsInstanceOf(address, Address)
+    this._address = address
   }
 
   /**
@@ -75,7 +75,7 @@ class Invoice extends Totals {
    * @return {Address}
    */
   get address () {
-    return this._address;
+    return this._address
   }
 
   /**
@@ -83,8 +83,8 @@ class Invoice extends Totals {
    * @param {Company} company
    */
   set agentCompany (company) {
-    assertIsNullableInstanceOf(company, Company);
-    this._agentCompany = company;
+    assertIsNullableInstanceOf(company, Company)
+    this._agentCompany = company
   }
 
   /**
@@ -92,7 +92,7 @@ class Invoice extends Totals {
    * @return {Company}
    */
   get agentCompany () {
-    return this._agentCompany;
+    return this._agentCompany
   }
 
   /**
@@ -100,8 +100,8 @@ class Invoice extends Totals {
    * @param {Contact} contact
    */
   set contact (contact) {
-    assertIsNullableInstanceOf(contact, Contact);
-    this._contact = contact;
+    assertIsNullableInstanceOf(contact, Contact)
+    this._contact = contact
   }
 
   /**
@@ -109,7 +109,7 @@ class Invoice extends Totals {
    * @return {Contact}
    */
   get contact () {
-    return this._contact;
+    return this._contact
   }
 
   /**
@@ -117,7 +117,7 @@ class Invoice extends Totals {
    * @param {String} dateCreated
    */
   set dateCreated (dateCreated) {
-    this._dateCreated = dateCreated;
+    this._dateCreated = dateCreated
   }
 
   /**
@@ -125,16 +125,16 @@ class Invoice extends Totals {
    * @return {String}
    */
   get dateCreated () {
-    return this._dateCreated;
+    return this._dateCreated
   }
 
   set invoiceLicences (invoiceLicences) {
-    assertIsArrayOfType(invoiceLicences, InvoiceLicence);
-    this._invoiceLicences = invoiceLicences;
+    assertIsArrayOfType(invoiceLicences, InvoiceLicence)
+    this._invoiceLicences = invoiceLicences
   }
 
   get invoiceLicences () {
-    return this._invoiceLicences;
+    return this._invoiceLicences
   }
 
   /**
@@ -145,7 +145,7 @@ class Invoice extends Totals {
   getInvoiceLicenceByLicenceNumber (licenceNumber) {
     return this._invoiceLicences.find(
       invoiceLicence => invoiceLicence.licence.licenceNumber === licenceNumber
-    );
+    )
   }
 
   /**
@@ -155,8 +155,8 @@ class Invoice extends Totals {
    */
   getLicenceNumbers () {
     return flatMap(this.invoiceLicences, invoiceLicence => {
-      return get(invoiceLicence, 'licence.licenceNumber');
-    });
+      return get(invoiceLicence, 'licence.licenceNumber')
+    })
   }
 
   /**
@@ -166,8 +166,8 @@ class Invoice extends Totals {
    */
   getLicenceIds () {
     return uniq(flatMap(this.invoiceLicences, invoiceLicence => {
-      return get(invoiceLicence, 'licence.id');
-    }));
+      return get(invoiceLicence, 'licence.id')
+    }))
   }
 
   /**
@@ -175,12 +175,12 @@ class Invoice extends Totals {
    * @param {FinancialYear} financialYear
    */
   set financialYear (financialYear) {
-    assertIsInstanceOf(financialYear, FinancialYear);
-    this._financialYear = financialYear;
+    assertIsInstanceOf(financialYear, FinancialYear)
+    this._financialYear = financialYear
   }
 
   get financialYear () {
-    return this._financialYear;
+    return this._financialYear
   }
 
   /**
@@ -189,12 +189,12 @@ class Invoice extends Totals {
    * @param {Boolean} isDeMinimis
    */
   set isDeMinimis (isDeMinimis) {
-    assertIsBoolean(isDeMinimis);
-    this._isDeMinimis = isDeMinimis;
+    assertIsBoolean(isDeMinimis)
+    this._isDeMinimis = isDeMinimis
   }
 
   get isDeMinimis () {
-    return this._isDeMinimis;
+    return this._isDeMinimis
   }
 
   /**
@@ -202,12 +202,12 @@ class Invoice extends Totals {
    * @param {String} invoiceNumber
    */
   set invoiceNumber (invoiceNumber) {
-    assertNullableString(invoiceNumber);
-    this._invoiceNumber = invoiceNumber;
+    assertNullableString(invoiceNumber)
+    this._invoiceNumber = invoiceNumber
   }
 
   get invoiceNumber () {
-    return this._invoiceNumber;
+    return this._invoiceNumber
   }
 
   /**
@@ -215,12 +215,12 @@ class Invoice extends Totals {
    * @param {Integer} netTotal
    */
   set netTotal (netTotal) {
-    assertNullableInteger(netTotal);
-    this._netTotal = isNull(netTotal) ? null : parseInt(netTotal);
+    assertNullableInteger(netTotal)
+    this._netTotal = isNull(netTotal) ? null : parseInt(netTotal)
   }
 
   get netTotal () {
-    return this._netTotal;
+    return this._netTotal
   }
 
   /**
@@ -228,12 +228,12 @@ class Invoice extends Totals {
    * @param {Boolean} isCredit
    */
   set isCredit (isCredit) {
-    assertIsNullableBoolean(isCredit);
-    this._isCredit = isCredit;
+    assertIsNullableBoolean(isCredit)
+    this._isCredit = isCredit
   }
 
   get isCredit () {
-    return this._isCredit;
+    return this._isCredit
   }
 
   /**
@@ -241,12 +241,12 @@ class Invoice extends Totals {
    * @param {String} legacyId
    */
   set legacyId (legacyId) {
-    assertNullableString(legacyId);
-    this._legacyId = legacyId;
+    assertNullableString(legacyId)
+    this._legacyId = legacyId
   }
 
   get legacyId () {
-    return this._legacyId;
+    return this._legacyId
   }
 
   /**
@@ -254,12 +254,12 @@ class Invoice extends Totals {
    * @param {Object} metadata
    */
   set metadata (metadata) {
-    assertNullableObject(metadata);
-    this._metadata = metadata;
+    assertNullableObject(metadata)
+    this._metadata = metadata
   }
 
   get metadata () {
-    return this._metadata;
+    return this._metadata
   }
 
   /**
@@ -267,12 +267,12 @@ class Invoice extends Totals {
    * @param {Integer} invoiceValue
    */
   set invoiceValue (invoiceValue) {
-    assertNullablePositiveOrZeroInteger(invoiceValue);
-    this._invoiceValue = invoiceValue;
+    assertNullablePositiveOrZeroInteger(invoiceValue)
+    this._invoiceValue = invoiceValue
   }
 
   get invoiceValue () {
-    return this._invoiceValue;
+    return this._invoiceValue
   }
 
   /**
@@ -280,40 +280,40 @@ class Invoice extends Totals {
    * @param {Integer} creditNoteValue
    */
   set creditNoteValue (creditNoteValue) {
-    assertNullableNegativeOrZeroInteger(creditNoteValue);
-    this._creditNoteValue = creditNoteValue;
+    assertNullableNegativeOrZeroInteger(creditNoteValue)
+    this._creditNoteValue = creditNoteValue
   }
 
   get creditNoteValue () {
-    return this._creditNoteValue;
+    return this._creditNoteValue
   }
 
   get hasTransactionErrors () {
-    return this.invoiceLicences.some(invoiceLicence => invoiceLicence.hasTransactionErrors);
+    return this.invoiceLicences.some(invoiceLicence => invoiceLicence.hasTransactionErrors)
   }
 
   /**
    * Sets the external ID.  This is the invoice ID in the charge module.
    */
   get externalId () {
-    return this._externalId;
+    return this._externalId
   }
 
   set externalId (externalId) {
-    assertNullableId(externalId);
-    this._externalId = externalId;
+    assertNullableId(externalId)
+    this._externalId = externalId
   }
 
   get billingBatchId () {
-    return this._billingBatchId;
+    return this._billingBatchId
   }
 
   /**
    * Sets the batch ID.
    */
   set billingBatchId (billingBatchId) {
-    assertId(billingBatchId);
-    this._billingBatchId = billingBatchId;
+    assertId(billingBatchId)
+    this._billingBatchId = billingBatchId
   }
 
   /**
@@ -321,50 +321,50 @@ class Invoice extends Totals {
    * @param {Boolean} isFlaggedForRebilling
    */
   set isFlaggedForRebilling (isFlaggedForRebilling) {
-    assertIsNullableBoolean(isFlaggedForRebilling);
-    this._isFlaggedForRebilling = isFlaggedForRebilling;
+    assertIsNullableBoolean(isFlaggedForRebilling)
+    this._isFlaggedForRebilling = isFlaggedForRebilling
   }
 
   get isFlaggedForRebilling () {
-    return this._isFlaggedForRebilling;
+    return this._isFlaggedForRebilling
   }
 
   get displayLabel () {
     if (this.invoiceNumber) {
-      return this.invoiceNumber;
+      return this.invoiceNumber
     }
     if (this.isDeMinimis) {
-      return 'De minimis bill';
+      return 'De minimis bill'
     }
     if (this.legacyId) {
-      return 'NALD revised bill';
+      return 'NALD revised bill'
     }
     if (this.netTotal === 0) {
-      return 'Zero value bill';
+      return 'Zero value bill'
     }
     // Prevents an error being thrown if there is an unexpected case
-    return null;
+    return null
   }
 
   /**
    * sets the rebilling state label only used by the UI
    */
   set rebillingStateLabel (value) {
-    assertNullableEnum(value, Object.keys(rebillingStateLabel));
-    this._rebillingStateLabel = value;
+    assertNullableEnum(value, Object.keys(rebillingStateLabel))
+    this._rebillingStateLabel = value
   }
 
   get rebillingStateLabel () {
-    return this._rebillingStateLabel;
+    return this._rebillingStateLabel
   }
 
   toJSON () {
-    const { hasTransactionErrors, displayLabel } = this;
+    const { hasTransactionErrors, displayLabel } = this
     return {
       hasTransactionErrors,
       displayLabel,
       ...super.toJSON()
-    };
+    }
   }
 
   /**
@@ -375,12 +375,12 @@ class Invoice extends Totals {
    * @param {String} value  - reversal|rebill
    */
   set rebillingState (value) {
-    assertNullableEnum(value, Object.values(rebillingState));
-    this._rebillingState = value;
+    assertNullableEnum(value, Object.values(rebillingState))
+    this._rebillingState = value
   }
 
   get rebillingState () {
-    return this._rebillingState;
+    return this._rebillingState
   }
 
   /**
@@ -388,12 +388,12 @@ class Invoice extends Totals {
    * @param {String|Null} id - guid
    */
   set originalInvoiceId (id) {
-    assertNullableId(id);
-    this._originalInvoiceId = id;
+    assertNullableId(id)
+    this._originalInvoiceId = id
   }
 
   get originalInvoiceId () {
-    return this._originalInvoiceId;
+    return this._originalInvoiceId
   }
 
   /**
@@ -401,14 +401,14 @@ class Invoice extends Totals {
    * @param {String|Null} id - guid
    */
   set linkedInvoices (invoices) {
-    assertIsArrayOfType(invoices, Invoice);
-    this._linkedInvoices = invoices;
+    assertIsArrayOfType(invoices, Invoice)
+    this._linkedInvoices = invoices
   }
 
   get linkedInvoices () {
-    return this._linkedInvoices;
+    return this._linkedInvoices
   }
 }
 
-module.exports = Invoice;
-module.exports.rebillingState = rebillingState;
+module.exports = Invoice
+module.exports.rebillingState = rebillingState

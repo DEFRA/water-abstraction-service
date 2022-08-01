@@ -1,49 +1,49 @@
-'use strict';
+'use strict'
 
 /**
  * @module controller for returns APIs
  */
-const Boom = require('@hapi/boom');
-const { uniq, xor } = require('lodash');
-const bluebird = require('bluebird');
+const Boom = require('@hapi/boom')
+const { uniq, xor } = require('lodash')
+const bluebird = require('bluebird')
 
-const apiConnector = require('../lib/api-connector');
-const { mapReturnToModel } = require('../lib/model-returns-mapper');
-const returnsFacade = require('../lib/facade');
-const eventFactory = require('../lib/event-factory');
-const eventsService = require('../../../lib/services/events');
-const licencesService = require('../../../lib/services/licences');
-const returnsService = require('../../../lib/services/returns');
+const apiConnector = require('../lib/api-connector')
+const { mapReturnToModel } = require('../lib/model-returns-mapper')
+const returnsFacade = require('../lib/facade')
+const eventFactory = require('../lib/event-factory')
+const eventsService = require('../../../lib/services/events')
+const licencesService = require('../../../lib/services/licences')
+const returnsService = require('../../../lib/services/returns')
 
 /**
  * A controller method to get a unified view of a return, to avoid handling
  * in UI layer
  */
 const getReturn = async (request) => {
-  const { returnId, versionNumber } = request.query;
+  const { returnId, versionNumber } = request.query
 
-  const { return: ret, version, lines, versions } = await returnsFacade.getReturnData(returnId, versionNumber);
+  const { return: ret, version, lines, versions } = await returnsFacade.getReturnData(returnId, versionNumber)
 
-  return mapReturnToModel(ret, version, lines, versions);
-};
+  return mapReturnToModel(ret, version, lines, versions)
+}
 
 /**
  * Accepts posted return data from UI layer and submits back to returns service
  */
 const postReturn = async (request) => {
-  const ret = request.payload;
+  const ret = request.payload
 
   // Persist data to return service
-  const returnServiceData = await apiConnector.persistReturnData(ret);
+  const returnServiceData = await apiConnector.persistReturnData(ret)
 
   // Log event in water service event log
-  const event = eventFactory.createSubmissionEvent(ret, returnServiceData.version);
-  await eventsService.update(event);
+  const event = eventFactory.createSubmissionEvent(ret, returnServiceData.version)
+  await eventsService.update(event)
 
   return {
     error: null
-  };
-};
+  }
+}
 
 /**
  * Allows the patching of return header data
@@ -54,41 +54,41 @@ const postReturn = async (request) => {
  * @return {Promise} resolves with JSON payload
  */
 const patchReturnHeader = async (request) => {
-  const data = await apiConnector.patchReturnData(request.payload);
+  const data = await apiConnector.patchReturnData(request.payload)
 
   // Log event in water service event log
   const eventData = {
     ...request.payload,
     licenceNumber: data.licence_ref
-  };
+  }
 
-  const event = eventFactory.createSubmissionEvent(eventData, null, 'return.status');
-  await eventsService.update(event);
+  const event = eventFactory.createSubmissionEvent(eventData, null, 'return.status')
+  await eventsService.update(event)
 
   return {
     returnId: data.return_id,
     status: data.status,
     receivedDate: data.received_date,
     isUnderQuery: data.under_query
-  };
-};
+  }
+}
 
-const getLicenceNumber = licence => licence.licenceNumber;
-const toUpperCase = str => str.toUpperCase();
+const getLicenceNumber = licence => licence.licenceNumber
+const toUpperCase = str => str.toUpperCase()
 
 const createNotFoundBoomError = licenceNumbers => {
-  const boomError = Boom.notFound('Licences not found');
-  boomError.output.payload.validationDetails = { licenceNumbers };
-  return boomError;
-};
+  const boomError = Boom.notFound('Licences not found')
+  boomError.output.payload.validationDetails = { licenceNumbers }
+  return boomError
+}
 
 const getLicenceDocumentReturns = async licence => {
-  const documents = await returnsService.getReturnsWithContactsForLicence(licence.licenceNumber);
+  const documents = await returnsService.getReturnsWithContactsForLicence(licence.licenceNumber)
   return {
     licence,
     documents
-  };
-};
+  }
+}
 
 /**
  * Retrieves a list of paper forms that need sending to licence holders
@@ -96,21 +96,21 @@ const getLicenceDocumentReturns = async licence => {
  */
 const getIncompleteReturns = async request => {
   // Get unique list of upper-cased licence number strings
-  const licenceNumbers = uniq(request.query.licenceNumbers).map(toUpperCase);
+  const licenceNumbers = uniq(request.query.licenceNumbers).map(toUpperCase)
 
   // Find licence service models
-  const licences = await licencesService.getLicencesByLicenceRefs(licenceNumbers);
+  const licences = await licencesService.getLicencesByLicenceRefs(licenceNumbers)
 
   // Check if any requested were not found, and return 404
-  const notFound = xor(licenceNumbers, licences.map(getLicenceNumber));
+  const notFound = xor(licenceNumbers, licences.map(getLicenceNumber))
   if (notFound.length) {
-    return createNotFoundBoomError(notFound);
+    return createNotFoundBoomError(notFound)
   }
 
-  return bluebird.map(licences, getLicenceDocumentReturns);
-};
+  return bluebird.map(licences, getLicenceDocumentReturns)
+}
 
-exports.getReturn = getReturn;
-exports.postReturn = postReturn;
-exports.patchReturnHeader = patchReturnHeader;
-exports.getIncompleteReturns = getIncompleteReturns;
+exports.getReturn = getReturn
+exports.postReturn = postReturn
+exports.patchReturnHeader = patchReturnHeader
+exports.getIncompleteReturns = getIncompleteReturns

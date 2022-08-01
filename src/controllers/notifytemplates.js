@@ -2,9 +2,9 @@
  * Scheduler
  * Scheduler defines and reports on tasks
  */
-const HAPIRestAPI = require('@envage/hapi-pg-rest-api');
-const Joi = require('joi');
-const { pool } = require('../lib/connectors/db.js');
+const HAPIRestAPI = require('@envage/hapi-pg-rest-api')
+const Joi = require('joi')
+const { pool } = require('../lib/connectors/db.js')
 
 const NotificationsApi = new HAPIRestAPI({
   table: 'water.notify_templates',
@@ -23,8 +23,8 @@ const NotificationsApi = new HAPIRestAPI({
     notify_key: Joi.string(),
     notes: Joi.string()
   }
-});
+})
 
-module.exports = NotificationsApi.getRoutes();
+module.exports = NotificationsApi.getRoutes()
 
-module.exports.repository = NotificationsApi.repo;
+module.exports.repository = NotificationsApi.repo

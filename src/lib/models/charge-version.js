@@ -1,19 +1,19 @@
-'use strict';
+'use strict'
 
-const validators = require('./validators');
+const validators = require('./validators')
 
-const Company = require('./company');
-const ChargeElement = require('./charge-element');
-const DateRange = require('./date-range');
-const InvoiceAccount = require('./invoice-account');
-const Licence = require('./licence');
-const Model = require('./model');
-const Region = require('./region');
-const ChangeReason = require('./change-reason');
-const User = require('./user');
-const Note = require('./note');
+const Company = require('./company')
+const ChargeElement = require('./charge-element')
+const DateRange = require('./date-range')
+const InvoiceAccount = require('./invoice-account')
+const Licence = require('./licence')
+const Model = require('./model')
+const Region = require('./region')
+const ChangeReason = require('./change-reason')
+const User = require('./user')
+const Note = require('./note')
 
-const { SCHEME, STATUS, SOURCE } = require('./constants');
+const { SCHEME, STATUS, SOURCE } = require('./constants')
 
 class ChargeVersion extends Model {
   /**
@@ -21,13 +21,13 @@ class ChargeVersion extends Model {
    * @param {String} id - the id from water.charge_versions.charge_version_id
    */
   constructor (id) {
-    super(id);
-    this._chargeElements = [];
-    this._scheme = SCHEME.alcs;
+    super(id)
+    this._chargeElements = []
+    this._scheme = SCHEME.alcs
   }
 
   get licence () {
-    return this._licence;
+    return this._licence
   }
 
   /**
@@ -35,12 +35,12 @@ class ChargeVersion extends Model {
    * @param {Licence} licence
    */
   set licence (licence) {
-    validators.assertIsInstanceOf(licence, Licence);
-    this._licence = licence;
+    validators.assertIsInstanceOf(licence, Licence)
+    this._licence = licence
   }
 
   get scheme () {
-    return this._scheme;
+    return this._scheme
   }
 
   /**
@@ -48,12 +48,12 @@ class ChargeVersion extends Model {
    * @param {String} scheme
    */
   set scheme (scheme) {
-    validators.assertEnum(scheme, Object.values(SCHEME));
-    this._scheme = scheme;
+    validators.assertEnum(scheme, Object.values(SCHEME))
+    this._scheme = scheme
   }
 
   get versionNumber () {
-    return this._versionNumber;
+    return this._versionNumber
   }
 
   /**
@@ -61,12 +61,12 @@ class ChargeVersion extends Model {
    * @param {Number} versionNumber
    */
   set versionNumber (versionNumber) {
-    validators.assertNullablePositiveInteger(versionNumber);
-    this._versionNumber = versionNumber;
+    validators.assertNullablePositiveInteger(versionNumber)
+    this._versionNumber = versionNumber
   }
 
   get dateRange () {
-    return this._dateRange;
+    return this._dateRange
   }
 
   /**
@@ -74,12 +74,12 @@ class ChargeVersion extends Model {
    * @param {String} dateRange
    */
   set dateRange (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    this._dateRange = dateRange;
+    validators.assertIsInstanceOf(dateRange, DateRange)
+    this._dateRange = dateRange
   }
 
   get status () {
-    return this._status;
+    return this._status
   }
 
   /**
@@ -87,8 +87,8 @@ class ChargeVersion extends Model {
    * @param {String} status
    */
   set status (status) {
-    validators.assertEnum(status, Object.values(STATUS));
-    this._status = status;
+    validators.assertEnum(status, Object.values(STATUS))
+    this._status = status
   }
 
   /**
@@ -96,16 +96,16 @@ class ChargeVersion extends Model {
    * @return {Region}
    */
   get region () {
-    return this._region;
+    return this._region
   }
 
   set region (region) {
-    validators.assertIsInstanceOf(region, Region);
-    this._region = region;
+    validators.assertIsInstanceOf(region, Region)
+    this._region = region
   }
 
   get source () {
-    return this._source;
+    return this._source
   }
 
   /**
@@ -113,12 +113,12 @@ class ChargeVersion extends Model {
    * @param {String} source
    */
   set source (source) {
-    validators.assertEnum(source, Object.values(SOURCE));
-    this._source = source;
+    validators.assertEnum(source, Object.values(SOURCE))
+    this._source = source
   }
 
   get company () {
-    return this._company;
+    return this._company
   }
 
   /**
@@ -126,12 +126,12 @@ class ChargeVersion extends Model {
    * @param {String} company
    */
   set company (company) {
-    validators.assertIsInstanceOf(company, Company);
-    this._company = company;
+    validators.assertIsInstanceOf(company, Company)
+    this._company = company
   }
 
   get invoiceAccount () {
-    return this._invoiceAccount;
+    return this._invoiceAccount
   }
 
   /**
@@ -139,12 +139,12 @@ class ChargeVersion extends Model {
    * @param {String} invoiceAccount
    */
   set invoiceAccount (invoiceAccount) {
-    validators.assertIsNullableInstanceOf(invoiceAccount, InvoiceAccount);
-    this._invoiceAccount = invoiceAccount;
+    validators.assertIsNullableInstanceOf(invoiceAccount, InvoiceAccount)
+    this._invoiceAccount = invoiceAccount
   }
 
   get note () {
-    return this._note;
+    return this._note
   }
 
   /**
@@ -152,12 +152,12 @@ class ChargeVersion extends Model {
    * @param {Note} note
    */
   set note (note) {
-    validators.assertIsNullableInstanceOf(note, Note);
-    this._note = note;
+    validators.assertIsNullableInstanceOf(note, Note)
+    this._note = note
   }
 
   get chargeElements () {
-    return this._chargeElements;
+    return this._chargeElements
   }
 
   /**
@@ -165,12 +165,12 @@ class ChargeVersion extends Model {
    * @param {Array<ChargeElement>} chargeElements
    */
   set chargeElements (chargeElements) {
-    validators.assertIsArrayOfType(chargeElements, ChargeElement);
-    this._chargeElements = chargeElements;
+    validators.assertIsArrayOfType(chargeElements, ChargeElement)
+    this._chargeElements = chargeElements
   }
 
   get changeReason () {
-    return this._changeReason;
+    return this._changeReason
   }
 
   /**
@@ -178,12 +178,12 @@ class ChargeVersion extends Model {
    * @param {ChangeReason} changeReason
    */
   set changeReason (changeReason) {
-    validators.assertIsNullableInstanceOf(changeReason, ChangeReason);
-    this._changeReason = changeReason;
+    validators.assertIsNullableInstanceOf(changeReason, ChangeReason)
+    this._changeReason = changeReason
   }
 
   get apportionment () {
-    return this._apportionment;
+    return this._apportionment
   }
 
   /*
@@ -191,12 +191,12 @@ class ChargeVersion extends Model {
    * @param {Boolean} apportionment
    */
   set apportionment (apportionment) {
-    validators.assertIsNullableBoolean(apportionment);
-    this._apportionment = apportionment;
+    validators.assertIsNullableBoolean(apportionment)
+    this._apportionment = apportionment
   }
 
   get error () {
-    return this._error;
+    return this._error
   }
 
   /**
@@ -204,12 +204,12 @@ class ChargeVersion extends Model {
    * @param {Boolean} error
    */
   set error (error) {
-    validators.assertIsNullableBoolean(error);
-    this._error = error;
+    validators.assertIsNullableBoolean(error)
+    this._error = error
   }
 
   get billedUpToDate () {
-    return this._billedUpToDate;
+    return this._billedUpToDate
   }
 
   /**
@@ -217,27 +217,27 @@ class ChargeVersion extends Model {
    * @param {String} billedUpToDate
    */
   set billedUpToDate (billedUpToDate) {
-    this._billedUpToDate = this.getDateTimeFromValue(billedUpToDate);
+    this._billedUpToDate = this.getDateTimeFromValue(billedUpToDate)
   }
 
   get dateCreated () {
-    return this._dateCreated;
+    return this._dateCreated
   }
 
   set dateCreated (value) {
-    this._dateCreated = this.getDateTimeFromValue(value);
+    this._dateCreated = this.getDateTimeFromValue(value)
   }
 
   get dateUpdated () {
-    return this._dateUpdated;
+    return this._dateUpdated
   }
 
   set dateUpdated (value) {
-    this._dateUpdated = this.getDateTimeFromValue(value);
+    this._dateUpdated = this.getDateTimeFromValue(value)
   }
 
   get createdBy () {
-    return this._createdBy;
+    return this._createdBy
   }
 
   /**
@@ -245,12 +245,12 @@ class ChargeVersion extends Model {
    * @param {User} createdBy
    */
   set createdBy (createdBy) {
-    validators.assertIsNullableInstanceOf(createdBy, User);
-    this._createdBy = createdBy;
+    validators.assertIsNullableInstanceOf(createdBy, User)
+    this._createdBy = createdBy
   }
 
   get approvedBy () {
-    return this._approvedBy;
+    return this._approvedBy
   }
 
   /**
@@ -258,12 +258,12 @@ class ChargeVersion extends Model {
    * @return {User}
    */
   set approvedBy (approvedBy) {
-    validators.assertIsNullableInstanceOf(approvedBy, User);
-    this._approvedBy = approvedBy;
+    validators.assertIsNullableInstanceOf(approvedBy, User)
+    this._approvedBy = approvedBy
   }
 }
 
-module.exports = ChargeVersion;
-module.exports.SCHEME = SCHEME;
-module.exports.SOURCE = SOURCE;
-module.exports.STATUS = STATUS;
+module.exports = ChargeVersion
+module.exports.SCHEME = SCHEME
+module.exports.SOURCE = SOURCE
+module.exports.STATUS = STATUS

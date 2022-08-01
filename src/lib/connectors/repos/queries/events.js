@@ -5,7 +5,7 @@ SELECT * FROM water.scheduled_notification
       AND status = 'completed'
       ORDER BY created DESC LIMIT 1)
     AND licences \\? :licenceRef
-    `;
+    `
 
 exports.getKPIReturnsMonthlyData = `
 select 
@@ -61,7 +61,7 @@ left join (
     and e.status in ('sent', 'completed')
   ) e on m.month=e.month and m.year=e.year
   group by m.year, m.month
-`;
+`
 
 exports.getKPILicenceNamesData = `
 SELECT date_part('month', created)::integer AS month, 
@@ -71,7 +71,7 @@ SUM (CASE WHEN subtype = 'rename' THEN 1 ELSE 0 END)::integer AS renamed,
 CASE WHEN date_part('year', CURRENT_DATE) = date_part('year', created) THEN true ELSE false END AS current_year
 FROM water.events  
 WHERE type = 'licence:name'
-GROUP BY month, year, current_year ORDER BY year desc, month desc;`;
+GROUP BY month, year, current_year ORDER BY year desc, month desc;`
 
 /**
  * The findNotifications query finds:
@@ -121,7 +121,7 @@ order by e.created desc
 ) as cte where cte.category_value = any(string_to_array(:categories, ',')) or :categories = ''
 limit :limit 
 offset :offset
-`;
+`
 
 exports.findNotificationsCount = `
 select count(*) from (
@@ -161,8 +161,8 @@ where
 group by e.event_id, e2.recipient_count, e2.message_ref, e2.statuses, snc.category_value
 order by e.created desc
 ) as cte where cte.category_value = any(string_to_array(:categories, ',')) or :categories = ''
-`;
+`
 
 exports.findNotificationCategories = `
     select category_value as value, category_label as label from water.scheduled_notification_categories where is_enabled is true;
-`;
+`

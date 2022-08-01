@@ -1,21 +1,21 @@
-'use strict';
+'use strict'
 
-const { get } = require('lodash');
-const repo = require('../connectors/repos/scheduled-notifications');
-const mapper = require('../mappers/scheduled-notification');
-const service = require('./service');
-const { MESSAGE_STATUSES } = require('../models/scheduled-notification');
+const { get } = require('lodash')
+const repo = require('../connectors/repos/scheduled-notifications')
+const mapper = require('../mappers/scheduled-notification')
+const service = require('./service')
+const { MESSAGE_STATUSES } = require('../models/scheduled-notification')
 
 const getScheduledNotificationById = id =>
-  service.findOne(id, repo.findOne, mapper);
+  service.findOne(id, repo.findOne, mapper)
 
-const getScheduledNotificationByNotifyId = notifyId => repo.findOneByNotifyId(notifyId);
+const getScheduledNotificationByNotifyId = notifyId => repo.findOneByNotifyId(notifyId)
 
 const createScheduledNotification = async scheduledNotification => {
-  const dbRow = mapper.modelToDb(scheduledNotification);
-  const saved = await repo.create(dbRow);
-  return mapper.dbToModel(saved);
-};
+  const dbRow = mapper.modelToDb(scheduledNotification)
+  const saved = await repo.create(dbRow)
+  return mapper.dbToModel(saved)
+}
 
 /**
  * Updates message with notify response and marks message as sent
@@ -24,17 +24,17 @@ const createScheduledNotification = async scheduledNotification => {
  * @return {Promise} resolves when scheduled notification record updated
  */
 const updateScheduledNotificationWithNotifyResponse = (messageId, notifyResponse) => {
-  const notifyId = get(notifyResponse, 'body.id', null);
-  const plainText = get(notifyResponse, 'body.content.body', '');
+  const notifyId = get(notifyResponse, 'body.id', null)
+  const plainText = get(notifyResponse, 'body.content.body', '')
   const changes = {
     status: MESSAGE_STATUSES.sent,
     notify_id: notifyId,
     plaintext: plainText
-  };
-  return repo.update(messageId, changes);
-};
+  }
+  return repo.update(messageId, changes)
+}
 
-const updateScheduledNotificationWithNotifyCallback = (messageId, status) => repo.update(messageId, { notifyStatus: status });
+const updateScheduledNotificationWithNotifyCallback = (messageId, status) => repo.update(messageId, { notifyStatus: status })
 
 /**
  * Get all scheduled notifications by event ID
@@ -42,9 +42,9 @@ const updateScheduledNotificationWithNotifyCallback = (messageId, status) => rep
  * @return {Promise<ScheduledNotification>}
  */
 const getByEventId = async eventId => {
-  const data = await repo.findByEventId(eventId);
-  return data.map(mapper.dbToModel);
-};
+  const data = await repo.findByEventId(eventId)
+  return data.map(mapper.dbToModel)
+}
 
 /**
  * Gets the scheduled notifications by licence ID.
@@ -55,20 +55,20 @@ const getByEventId = async eventId => {
  */
 const getScheduledNotificationsByLicenceNumber = async (licenceNumber, page = 1, perPage = 10) => {
   // Query for notifications
-  const { pagination, data } = await repo.findByLicenceNumber(licenceNumber, page, perPage);
+  const { pagination, data } = await repo.findByLicenceNumber(licenceNumber, page, perPage)
   return {
     pagination,
     data: data.map(mapper.dbToModel)
-  };
-};
+  }
+}
 
-const getNotificationCategories = repo.getScheduledNotificationCategories;
+const getNotificationCategories = repo.getScheduledNotificationCategories
 
-exports.getScheduledNotificationById = getScheduledNotificationById;
-exports.getScheduledNotificationByNotifyId = getScheduledNotificationByNotifyId;
-exports.createScheduledNotification = createScheduledNotification;
-exports.updateScheduledNotificationWithNotifyResponse = updateScheduledNotificationWithNotifyResponse;
-exports.updateScheduledNotificationWithNotifyCallback = updateScheduledNotificationWithNotifyCallback;
-exports.getByEventId = getByEventId;
-exports.getScheduledNotificationsByLicenceNumber = getScheduledNotificationsByLicenceNumber;
-exports.getNotificationCategories = getNotificationCategories;
+exports.getScheduledNotificationById = getScheduledNotificationById
+exports.getScheduledNotificationByNotifyId = getScheduledNotificationByNotifyId
+exports.createScheduledNotification = createScheduledNotification
+exports.updateScheduledNotificationWithNotifyResponse = updateScheduledNotificationWithNotifyResponse
+exports.updateScheduledNotificationWithNotifyCallback = updateScheduledNotificationWithNotifyCallback
+exports.getByEventId = getByEventId
+exports.getScheduledNotificationsByLicenceNumber = getScheduledNotificationsByLicenceNumber
+exports.getNotificationCategories = getNotificationCategories

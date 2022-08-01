@@ -1,6 +1,6 @@
-const { range } = require('lodash');
-const moment = require('moment');
-const validators = require('./validators');
+const { range } = require('lodash')
+const moment = require('moment')
+const validators = require('./validators')
 
 class FinancialYear {
   /**
@@ -8,36 +8,36 @@ class FinancialYear {
    * @param {Number} yearEnding The year the financial year ends e.g. 2019 would be the year 01/04/2018 to 31/03/2019
    */
   constructor (yearEnding) {
-    validators.assertPositiveInteger(yearEnding);
-    this.yearEnding = parseInt(yearEnding);
+    validators.assertPositiveInteger(yearEnding)
+    this.yearEnding = parseInt(yearEnding)
   }
 
   /**
    * Gets the start year of the financial year
    */
   get startYear () {
-    return this.yearEnding - 1;
+    return this.yearEnding - 1
   }
 
   /**
    * Gets the end year of the financial year
    */
   get endYear () {
-    return this.yearEnding;
+    return this.yearEnding
   }
 
   /**
    * Gets the start date of the financial year e.g. 01/04/2019
    */
   get start () {
-    return moment(`${this.startYear}-04-01`);
+    return moment(`${this.startYear}-04-01`)
   }
 
   /**
    * Gets the end date of the financial year e.g. 31/03/2019
    */
   get end () {
-    return moment(`${this.endYear}-03-31`);
+    return moment(`${this.endYear}-03-31`)
   }
 
   /**
@@ -47,8 +47,8 @@ class FinancialYear {
    * @return {Boolean}
    */
   isEqualTo (financialYear) {
-    validators.assertIsInstanceOf(financialYear, FinancialYear);
-    return this.yearEnding === financialYear.yearEnding;
+    validators.assertIsInstanceOf(financialYear, FinancialYear)
+    return this.yearEnding === financialYear.yearEnding
   }
 
   /**
@@ -60,9 +60,9 @@ class FinancialYear {
    */
   static getFinancialYears (from, to) {
     return range(from, to + 1).reduce((years, year) => {
-      return [...years, new FinancialYear(year)];
-    }, []);
+      return [...years, new FinancialYear(year)]
+    }, [])
   }
 }
 
-module.exports = FinancialYear;
+module.exports = FinancialYear

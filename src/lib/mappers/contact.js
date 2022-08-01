@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
-const { omit, isObject } = require('lodash');
-const Contact = require('../models/contact-v2');
+const { omit, isObject } = require('lodash')
+const Contact = require('../models/contact-v2')
 
-const { createMapper } = require('../object-mapper');
-const { createModel } = require('./lib/helpers');
+const { createMapper } = require('../object-mapper')
+const { createModel } = require('./lib/helpers')
 
 /**
  * Maps a row of CRM v2 contact data to a Contact instance
@@ -25,9 +25,9 @@ const crmToModelMapper = createMapper()
     'isTest'
   )
   .map('contactId').to('id')
-  .map('contactType').to('type');
+  .map('contactType').to('type')
 
-const crmToModel = row => createModel(Contact, row, crmToModelMapper);
+const crmToModel = row => createModel(Contact, row, crmToModelMapper)
 
 /**
  * Maps only an id or new contact data from the UI
@@ -35,14 +35,14 @@ const crmToModel = row => createModel(Contact, row, crmToModelMapper);
  * @return {Contact}
  */
 const uiToModel = contactData => {
-  if (!contactData) return null;
+  if (!contactData) return null
   if (contactData.contactId) {
-    return new Contact(contactData.contactId);
+    return new Contact(contactData.contactId)
   }
-  const contact = new Contact();
-  contact.dataSource = contactData.source || Contact.DATA_SOURCE_TYPES.wrls;
-  return contact.fromHash(omit(contactData, 'source'));
-};
+  const contact = new Contact()
+  contact.dataSource = contactData.source || Contact.DATA_SOURCE_TYPES.wrls
+  return contact.fromHash(omit(contactData, 'source'))
+}
 
 /**
  * Maps data from contact service model to expected crm shape
@@ -50,17 +50,17 @@ const uiToModel = contactData => {
  * @return {Object}
  */
 const modelToCrm = contact => {
-  const data = contact.toJSON();
+  const data = contact.toJSON()
   return {
     ...omit(data, 'fullName')
-  };
-};
+  }
+}
 
 const pojoToModel = object => {
   if (!isObject(object)) {
-    return null;
+    return null
   }
-  const model = new Contact();
+  const model = new Contact()
   return model.pickFrom(object, [
     'id',
     'firstName',
@@ -72,10 +72,10 @@ const pojoToModel = object => {
     'type',
     'dataSource',
     'salutation'
-  ]);
-};
+  ])
+}
 
-exports.crmToModel = crmToModel;
-exports.uiToModel = uiToModel;
-exports.modelToCrm = modelToCrm;
-exports.pojoToModel = pojoToModel;
+exports.crmToModel = crmToModel
+exports.uiToModel = uiToModel
+exports.modelToCrm = modelToCrm
+exports.pojoToModel = pojoToModel

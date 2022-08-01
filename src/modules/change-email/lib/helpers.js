@@ -1,5 +1,5 @@
-const uuid = require('uuid/v4');
-const event = require('../../../lib/event');
+const uuid = require('uuid/v4')
+const event = require('../../../lib/event')
 
 /**
  * create event object to be inserted into event log
@@ -16,7 +16,7 @@ const createEventObject = (userName, entityId, newEmail, userId) => {
       newEmail,
       userId
     }
-  });
-};
+  })
+}
 
-exports.createEventObject = createEventObject;
+exports.createEventObject = createEventObject

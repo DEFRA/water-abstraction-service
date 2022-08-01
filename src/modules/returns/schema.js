@@ -1,22 +1,22 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
-const isoDateRegex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
-const allowedPeriods = ['year', 'month', 'week', 'day'];
-const methods = ['abstractionVolumes', 'oneMeter'];
-const readingTypes = ['estimated', 'measured'];
-const statuses = ['due', 'completed', 'received', 'void'];
-const units = ['m³', 'l', 'Ml', 'gal'];
-const userTypes = ['internal', 'external'];
+const Joi = require('joi')
+const isoDateRegex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/
+const allowedPeriods = ['year', 'month', 'week', 'day']
+const methods = ['abstractionVolumes', 'oneMeter']
+const readingTypes = ['estimated', 'measured']
+const statuses = ['due', 'completed', 'received', 'void']
+const units = ['m³', 'l', 'Ml', 'gal']
+const userTypes = ['internal', 'external']
 
-const waterHelpers = require('@envage/water-abstraction-helpers');
-const { returnIDRegex } = waterHelpers.returns;
+const waterHelpers = require('@envage/water-abstraction-helpers')
+const { returnIDRegex } = waterHelpers.returns
 
 const userSchema = Joi.object().required().keys({
   email: Joi.string().required(),
   type: Joi.string().valid(...userTypes).required(),
   entityId: Joi.string().guid().required()
-});
+})
 
 /**
  * Schema for return lines, either via single/multiple flow
@@ -34,10 +34,10 @@ const lines = Joi.when('isNil', {
         quantity: Joi.number().allow(null, 0).positive().required(),
         readingType: Joi.string().valid(...readingTypes)
       })
-});
+})
 
-const validCustomDate = Joi.when('totalCustomDates', { is: true, then: Joi.string().regex(isoDateRegex).required() });
-const validMeterDetail = Joi.when('meterDetailsProvided', { is: true, then: Joi.string().required() });
+const validCustomDate = Joi.when('totalCustomDates', { is: true, then: Joi.string().regex(isoDateRegex).required() })
+const validMeterDetail = Joi.when('meterDetailsProvided', { is: true, then: Joi.string().required() })
 
 /**
  * Schema for return
@@ -98,7 +98,7 @@ const returnSchema = Joi.object({
   metadata: Joi.object(),
   user: userSchema,
   isUnderQuery: Joi.boolean()
-});
+})
 
 /**
  * Schema for updating under query / received date only
@@ -110,10 +110,10 @@ const headerSchema = {
   receivedDate: Joi.string().regex(isoDateRegex).allow(null).required(),
   user: userSchema,
   isUnderQuery: Joi.boolean().required()
-};
+}
 
 module.exports = {
   returnSchema,
   headerSchema,
   statuses
-};
+}

@@ -1,12 +1,12 @@
-const controller = require('./controller');
-const Joi = require('joi');
-const config = require('../../../config');
+const controller = require('./controller')
+const Joi = require('joi')
+const config = require('../../../config')
 
 const getEmailRegex = () => {
   return (config.testMode)
     ? /(\.gov\.uk|gmail\.com)$/
-    : /\.gov\.uk$/;
-};
+    : /\.gov\.uk$/
+}
 
 const VALID_PERMISSIONS_KEY = Joi.string().valid(
   'basic',
@@ -17,9 +17,9 @@ const VALID_PERMISSIONS_KEY = Joi.string().valid(
   'nps_ar_approver',
   'psc',
   'wirs'
-).required();
-const VALID_USER_ID = Joi.number().integer().required();
-const VALID_NEW_USER_EMAIL = Joi.string().email().lowercase().trim().regex(getEmailRegex());
+).required()
+const VALID_USER_ID = Joi.number().integer().required()
+const VALID_NEW_USER_EMAIL = Joi.string().email().lowercase().trim().regex(getEmailRegex())
 
 module.exports = {
   getStatus: {
@@ -82,4 +82,4 @@ module.exports = {
       }
     }
   }
-};
+}

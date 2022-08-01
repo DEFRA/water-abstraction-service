@@ -3,10 +3,10 @@ const defaults = {
   abstractionPeriodStartMonth: 1,
   abstractionPeriodEndDay: 31,
   abstractionPeriodEndMonth: 12
-};
+}
 
 const createChargeElement = (opts = {}) => {
-  const options = Object.assign({}, defaults, opts);
+  const options = Object.assign({}, defaults, opts)
   const chargeElement = {
     id: options.chargeElementId || 'charge-element-id',
     abstractionPeriod: {
@@ -42,16 +42,16 @@ const createChargeElement = (opts = {}) => {
       name: 'Spray Irrigation - Direct',
       isTwoPartTariff: options.isTwoPartTariff
     }
-  };
+  }
 
   if (options.timeLimitedStartDate || options.timeLimitedEndDate) {
     chargeElement.timeLimitedPeriod = {
       startDate: options.timeLimitedStartDate,
       endDate: options.timeLimitedEndDate
-    };
+    }
   }
 
-  return chargeElement;
-};
+  return chargeElement
+}
 
-exports.createChargeElement = createChargeElement;
+exports.createChargeElement = createChargeElement

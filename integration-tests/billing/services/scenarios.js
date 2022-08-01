@@ -1,10 +1,10 @@
-const promisePoller = require('promise-poller').default;
+const promisePoller = require('promise-poller').default
 
-const { ROLES } = require('../../../src/lib/roles');
+const { ROLES } = require('../../../src/lib/roles')
 
-const server = require('../../../index');
+const server = require('../../../index')
 
-const batches = require('./batches');
+const batches = require('./batches')
 
 /**
  * Run scenario by injecting request into hapi server
@@ -15,7 +15,7 @@ const batches = require('./batches');
  * @return {String} batchId
  */
 const runScenario = async (regionId, batchType, financialYearEnding = 2020, isSummer = false) => {
-  await server._start();
+  await server._start()
   const response = await server.inject({
     auth: {
       strategy: 'jwt',
@@ -32,10 +32,10 @@ const runScenario = async (regionId, batchType, financialYearEnding = 2020, isSu
       financialYearEnding,
       isSummer
     }
-  });
-  const batchId = JSON.parse(response.payload).data.batch.id;
-  return getBatchWhenProcessed(batchId);
-};
+  })
+  const batchId = JSON.parse(response.payload).data.batch.id
+  return getBatchWhenProcessed(batchId)
+}
 
 /**
  * Gets batch by ID.
@@ -44,13 +44,13 @@ const runScenario = async (regionId, batchType, financialYearEnding = 2020, isSu
  * @return {Promise<Object>}
  */
 const getProcessedBatch = async batchId => {
-  console.log(`Test: polling batch ${batchId}`);
-  const batch = await batches.getBatchById(batchId);
+  console.log(`Test: polling batch ${batchId}`)
+  const batch = await batches.getBatchById(batchId)
   if (batch.get('status') === 'processing') {
-    throw new Error('Batch still processing');
+    throw new Error('Batch still processing')
   }
-  return batch.toJSON();
-};
+  return batch.toJSON()
+}
 
 /**
  * Gets batch when processing is complete
@@ -60,7 +60,7 @@ const getBatchWhenProcessed = batchId => promisePoller({
   taskFn: () => getProcessedBatch(batchId),
   interval: 5000,
   retries: 30
-});
+})
 
 /**
    * Approves the review stage of a two part tariff batch, the water
@@ -81,10 +81,10 @@ const approveTwoPartTariffBatch = async (batchId) => {
     },
     method: 'POST',
     url: `/water/1.0/billing/batches/${batchId}/approve-review`
-  });
+  })
 
-  return getBatchWhenProcessed(batchId);
-};
+  return getBatchWhenProcessed(batchId)
+}
 
-exports.approveTwoPartTariffBatch = approveTwoPartTariffBatch;
-exports.runScenario = runScenario;
+exports.approveTwoPartTariffBatch = approveTwoPartTariffBatch
+exports.runScenario = runScenario

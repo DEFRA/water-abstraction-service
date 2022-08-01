@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
-const { BillingBatchChargeVersionYear, bookshelf } = require('../bookshelf');
-const raw = require('./lib/raw');
-const helpers = require('./lib/helpers');
-const queries = require('./queries/billing-batch-charge-version-years');
-const { TRANSACTION_TYPE } = require('../../models/charge-version-year');
+const { BillingBatchChargeVersionYear, bookshelf } = require('../bookshelf')
+const raw = require('./lib/raw')
+const helpers = require('./lib/helpers')
+const queries = require('./queries/billing-batch-charge-version-years')
+const { TRANSACTION_TYPE } = require('../../models/charge-version-year')
 
 /**
  * Finds a charge version year with related model data by ID
@@ -26,26 +26,28 @@ const findOne = async id => {
     'chargeVersion.chargeElements',
     // 'chargeVersion.chargeElements.purposePrimary',
     // 'chargeVersion.chargeElements.purposeSecondary',
+    'chargeVersion.chargeElements.chargeCategory',
+    'chargeVersion.chargeElements.chargePurposes',
     'chargeVersion.chargeElements.purposeUse',
     'chargeVersion.licence',
     'chargeVersion.licence.licenceAgreements',
     'chargeVersion.licence.licenceAgreements.financialAgreementType'
-  ];
+  ]
 
-  return helpers.findOne(BillingBatchChargeVersionYear, 'billingBatchChargeVersionYearId', id, withRelated);
-};
+  return helpers.findOne(BillingBatchChargeVersionYear, 'billingBatchChargeVersionYearId', id, withRelated)
+}
 
 const update = (id, data) =>
   BillingBatchChargeVersionYear
     .forge({ billingBatchChargeVersionYearId: id })
-    .save(data);
+    .save(data)
 
 /**
  * Gets a count of the charge version years in each status by batch ID
  * @param {String} batchId - guid
  */
 const findStatusCountsByBatchId = batchId =>
-  raw.multiRow(queries.findStatusCountsByBatchId, { batchId });
+  raw.multiRow(queries.findStatusCountsByBatchId, { batchId })
 
 /**
  * Deletes all billing batch charge version years for given batch
@@ -55,7 +57,7 @@ const findStatusCountsByBatchId = batchId =>
 const deleteByBatchId = async (batchId, isDeletionRequired = true) => BillingBatchChargeVersionYear
   .forge()
   .where({ billing_batch_id: batchId })
-  .destroy({ require: isDeletionRequired });
+  .destroy({ require: isDeletionRequired })
 
 /*
   * Deletes all charge version years associated with an invoice ID
@@ -64,7 +66,7 @@ const deleteByBatchId = async (batchId, isDeletionRequired = true) => BillingBat
   */
 const deleteByInvoiceId = billingInvoiceId => bookshelf
   .knex
-  .raw(queries.deleteByInvoiceId, { billingInvoiceId });
+  .raw(queries.deleteByInvoiceId, { billingInvoiceId })
 
 /**
  * Finds all charge version years for the supplied batch ID
@@ -74,12 +76,12 @@ const deleteByInvoiceId = billingInvoiceId => bookshelf
 const findByBatchId = async (billingBatchId, includeRelated = false) => {
   const conditions = {
     billing_batch_id: billingBatchId
-  };
+  }
 
-  const withRelated = includeRelated ? ['chargeVersion'] : [];
+  const withRelated = includeRelated ? ['chargeVersion'] : []
 
-  return helpers.findMany(BillingBatchChargeVersionYear, conditions, withRelated);
-};
+  return helpers.findMany(BillingBatchChargeVersionYear, conditions, withRelated)
+}
 
 /**
  * Finds water.billing_batch_charge_version_years records in batch where
@@ -92,11 +94,11 @@ const findTwoPartTariffByBatchId = async (billingBatchId, includeRelated) => {
   const conditions = {
     billing_batch_id: billingBatchId,
     transaction_type: TRANSACTION_TYPE.twoPartTariff
-  };
-  const withRelated = includeRelated ? ['chargeVersion'] : [];
+  }
+  const withRelated = includeRelated ? ['chargeVersion'] : []
 
-  return helpers.findMany(BillingBatchChargeVersionYear, conditions, withRelated);
-};
+  return helpers.findMany(BillingBatchChargeVersionYear, conditions, withRelated)
+}
 
 /**
  * Deletes charge version years in a batch for a particular licence ID
@@ -107,8 +109,8 @@ const findTwoPartTariffByBatchId = async (billingBatchId, includeRelated) => {
 const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId, twoPartTarrifOnly = false) => {
   return twoPartTarrifOnly
     ? bookshelf.knex.raw(queries.delete2PTByBatchIdAndLicenceId, { billingBatchId, licenceId })
-    : bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId });
-};
+    : bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId })
+}
 
 /**
  * Creates a new record in water.billing_batch_charge_version_years
@@ -119,7 +121,7 @@ const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId, twoPartTarrifOnl
  * @param {String} data.transactionType annual | two_part_tariff
  * @param {Boolean} data.isSummer
  */
-const create = async data => helpers.create(BillingBatchChargeVersionYear, data);
+const create = async data => helpers.create(BillingBatchChargeVersionYear, data)
 
 /**
  * Deletes records from BBCYV table given a specific financial year, licenceId and batchId
@@ -131,15 +133,15 @@ const create = async data => helpers.create(BillingBatchChargeVersionYear, data)
 const deleteByBatchIdAndLicenceIdAndFinancialYearEnding = (batchId, licenceId, financialYearEnding) =>
   bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceIdAndFinancialYearEnding, {
     batchId, licenceId, financialYearEnding
-  });
+  })
 
-exports.findOne = findOne;
-exports.update = update;
-exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
-exports.deleteByBatchId = deleteByBatchId;
-exports.deleteByInvoiceId = deleteByInvoiceId;
-exports.findByBatchId = findByBatchId;
-exports.findTwoPartTariffByBatchId = findTwoPartTariffByBatchId;
-exports.deleteByBatchIdAndLicenceId = deleteByBatchIdAndLicenceId;
-exports.create = create;
-exports.deleteByBatchIdAndLicenceIdAndFinancialYearEnding = deleteByBatchIdAndLicenceIdAndFinancialYearEnding;
+exports.findOne = findOne
+exports.update = update
+exports.findStatusCountsByBatchId = findStatusCountsByBatchId
+exports.deleteByBatchId = deleteByBatchId
+exports.deleteByInvoiceId = deleteByInvoiceId
+exports.findByBatchId = findByBatchId
+exports.findTwoPartTariffByBatchId = findTwoPartTariffByBatchId
+exports.deleteByBatchIdAndLicenceId = deleteByBatchIdAndLicenceId
+exports.create = create
+exports.deleteByBatchIdAndLicenceIdAndFinancialYearEnding = deleteByBatchIdAndLicenceIdAndFinancialYearEnding

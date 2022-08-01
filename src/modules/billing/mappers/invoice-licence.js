@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
-const InvoiceLicence = require('../../../lib/models/invoice-licence');
+const InvoiceLicence = require('../../../lib/models/invoice-licence')
 
 // Mappers
-const transaction = require('./transaction');
-const licence = require('../../../lib/mappers/licence');
+const transaction = require('./transaction')
+const licence = require('../../../lib/mappers/licence')
 
 /**
  * Maps a row of data from water.billing_invoice_licences
@@ -13,16 +13,16 @@ const licence = require('../../../lib/mappers/licence');
  * @return {InvoiceLicence}
  */
 const dbToModel = row => {
-  const invoiceLicence = new InvoiceLicence(row.billingInvoiceLicenceId);
+  const invoiceLicence = new InvoiceLicence(row.billingInvoiceLicenceId)
   if (row.billingTransactions) {
-    invoiceLicence.transactions = row.billingTransactions.map(transaction.dbToModel);
+    invoiceLicence.transactions = row.billingTransactions.map(transaction.dbToModel)
   }
   if (row.licence) {
-    invoiceLicence.licence = licence.dbToModel(row.licence);
+    invoiceLicence.licence = licence.dbToModel(row.licence)
   }
-  invoiceLicence.invoiceId = row.billingInvoiceId;
-  return invoiceLicence;
-};
+  invoiceLicence.invoiceId = row.billingInvoiceId
+  return invoiceLicence
+}
 
 /**
  * Maps data from an InvoiceLicence model to the correct shape for water.billing_invoice_licences
@@ -37,8 +37,8 @@ const modelToDb = (invoice, invoiceLicence) => {
     billingInvoiceId: invoice.id,
     licenceRef: invoiceLicence.licence.licenceNumber,
     licenceId: invoiceLicence.licence.id
-  };
-};
+  }
+}
 
-exports.dbToModel = dbToModel;
-exports.modelToDB = modelToDb;
+exports.dbToModel = dbToModel
+exports.modelToDB = modelToDb

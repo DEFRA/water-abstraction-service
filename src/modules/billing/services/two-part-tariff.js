@@ -1,15 +1,15 @@
-'use strict';
+'use strict'
 
-const bluebird = require('bluebird');
+const bluebird = require('bluebird')
 
-const Batch = require('../../../lib/models/batch');
-const FinancialYear = require('../../../lib/models/financial-year');
+const Batch = require('../../../lib/models/batch')
+const FinancialYear = require('../../../lib/models/financial-year')
 
-const validators = require('../../../lib/models/validators');
+const validators = require('../../../lib/models/validators')
 
-const chargeVersionYearService = require('./charge-version-year');
-const billingVolumesService = require('./billing-volumes-service');
-const volumeMatchingService = require('./volume-matching-service');
+const chargeVersionYearService = require('./charge-version-year')
+const billingVolumesService = require('./billing-volumes-service')
+const volumeMatchingService = require('./volume-matching-service')
 
 /**
  * Decorates each BillingVolume in the supplied array with the
@@ -19,9 +19,9 @@ const volumeMatchingService = require('./volume-matching-service');
  */
 const decorateBillingVolumesWithBatchId = (billingVolumes, billingBatchId) =>
   billingVolumes.forEach(billingVolume => {
-    billingVolume.billingBatchId = billingBatchId;
-    return billingVolume;
-  });
+    billingVolume.billingBatchId = billingBatchId
+    return billingVolume
+  })
 
 /**
  * Processes the supplied charge version year and season flag and persists
@@ -33,12 +33,12 @@ const decorateBillingVolumesWithBatchId = (billingVolumes, billingBatchId) =>
  * @return {Promise<Array>}
  */
 const processChargeVersionYear = async chargeVersionYear => {
-  const { chargeVersionId, financialYearEnding, isSummer, billingBatchId } = chargeVersionYear;
+  const { chargeVersionId, financialYearEnding, isSummer, billingBatchId } = chargeVersionYear
 
-  const billingVolumes = await volumeMatchingService.matchVolumes(chargeVersionId, new FinancialYear(financialYearEnding), isSummer);
-  decorateBillingVolumesWithBatchId(billingVolumes, billingBatchId);
-  return bluebird.mapSeries(billingVolumes, billingVolumesService.persist);
-};
+  const billingVolumes = await volumeMatchingService.matchVolumes(chargeVersionId, new FinancialYear(financialYearEnding), isSummer)
+  decorateBillingVolumesWithBatchId(billingVolumes, billingBatchId)
+  return bluebird.mapSeries(billingVolumes, billingVolumesService.persist)
+}
 
 /**
  * Processes an array of charge version years
@@ -46,7 +46,7 @@ const processChargeVersionYear = async chargeVersionYear => {
  * @return {Promise<Array>}
  */
 const processChargeVersionYears = chargeVersionYears =>
-  bluebird.mapSeries(chargeVersionYears, processChargeVersionYear);
+  bluebird.mapSeries(chargeVersionYears, processChargeVersionYear)
 
 /**
  * For a supplementary batch, we check which TPT bill runs have previously been sent in the
@@ -55,9 +55,9 @@ const processChargeVersionYears = chargeVersionYears =>
  * @return {Promise}
  */
 const processSupplementaryBatch = async batch => {
-  const tptBillingBatchChargeVersionYears = await chargeVersionYearService.getTwoPartTariffForBatch(batch.id);
-  return processChargeVersionYears(tptBillingBatchChargeVersionYears);
-};
+  const tptBillingBatchChargeVersionYears = await chargeVersionYearService.getTwoPartTariffForBatch(batch.id)
+  return processChargeVersionYears(tptBillingBatchChargeVersionYears)
+}
 
 /**
  * For a two-part tariff batch, we already know that all the water.billing_batch_charge_version_years
@@ -66,14 +66,14 @@ const processSupplementaryBatch = async batch => {
  * @return {Promise}
  */
 const processTwoPartTariffBatch = async batch => {
-  const tptBillingBatchChargeVersionYears = await chargeVersionYearService.getForBatch(batch.id);
-  return processChargeVersionYears(tptBillingBatchChargeVersionYears);
-};
+  const tptBillingBatchChargeVersionYears = await chargeVersionYearService.getForBatch(batch.id)
+  return processChargeVersionYears(tptBillingBatchChargeVersionYears)
+}
 
 const processors = {
   [Batch.BATCH_TYPE.twoPartTariff]: processTwoPartTariffBatch,
   [Batch.BATCH_TYPE.supplementary]: processSupplementaryBatch
-};
+}
 
 /**
  * Performs two-part tariff processing on the specified batch
@@ -81,8 +81,8 @@ const processors = {
  * @return {Promise}
  */
 const processBatch = async batch => {
-  validators.assertIsInstanceOf(batch, Batch);
-  return processors[batch.type](batch);
-};
+  validators.assertIsInstanceOf(batch, Batch)
+  return processors[batch.type](batch)
+}
 
-exports.processBatch = processBatch;
+exports.processBatch = processBatch

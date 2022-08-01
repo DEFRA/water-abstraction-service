@@ -1,5 +1,5 @@
-const moment = require('moment');
-const dateFormat = 'YYYY-MM-DD';
+const moment = require('moment')
+const dateFormat = 'YYYY-MM-DD'
 
 const createReturn = options => {
   return {
@@ -29,8 +29,8 @@ const createReturn = options => {
       isTwoPartTariff: true
     },
     isUnderQuery: options.isUnderQuery
-  };
-};
+  }
+}
 
 const createPurposeData = tertiaryCode => {
   return [{
@@ -47,8 +47,8 @@ const createPurposeData = tertiaryCode => {
       code: 'AGR',
       description: 'General Agriculture'
     }
-  }];
-};
+  }]
+}
 
 const getReturnLines = (frequency, lineData) => {
   return lineData.map(line => {
@@ -58,39 +58,39 @@ const getReturnLines = (frequency, lineData) => {
       quantity: line.quantity,
       quantityAllocated: line.quantityAllocated,
       timePeriod: frequency
-    };
-  });
-};
+    }
+  })
+}
 
 const createLineData = (startDate, frequency, quantities) => {
-  const totalLines = quantities.length;
-  const lineData = [];
-  for (var i = 0; i < totalLines; i++) {
-    const startDateForLine = moment(startDate).add(i, frequency);
+  const totalLines = quantities.length
+  const lineData = []
+  for (let i = 0; i < totalLines; i++) {
+    const startDateForLine = moment(startDate).add(i, frequency)
     lineData.push({
       startDate: startDateForLine.format(dateFormat),
       endDate: startDateForLine.endOf(frequency).format(dateFormat),
       quantity: quantities[i] !== null ? quantities[i] : null
-    });
+    })
   }
-  return lineData;
-};
+  return lineData
+}
 
 /**
  * Requires: start & end dates, abstraction start & end day and month, tertiary code
  * @param {Object} options
  */
 const createMonthlyReturn = options => {
-  const { startDate, quantities } = options;
-  const lineData = createLineData(startDate, 'month', quantities);
+  const { startDate, quantities } = options
+  const lineData = createLineData(startDate, 'month', quantities)
   return createReturn({
     ...options,
     lineData,
     frequency: 'month'
-  });
-};
+  })
+}
 
-exports.createReturn = createReturn;
-exports.createMonthlyReturn = createMonthlyReturn;
-exports.createPurposeData = createPurposeData;
-exports.createLineData = createLineData;
+exports.createReturn = createReturn
+exports.createMonthlyReturn = createMonthlyReturn
+exports.createPurposeData = createPurposeData
+exports.createLineData = createLineData

@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const { bookshelf } = require('./bookshelf.js');
+const { bookshelf } = require('./bookshelf.js')
 
 module.exports = bookshelf.model('ChargeVersion', {
   tableName: 'water.charge_versions',
@@ -10,18 +10,18 @@ module.exports = bookshelf.model('ChargeVersion', {
   idAttribute: 'charge_version_id',
 
   chargeElements () {
-    return this.hasMany('ChargeElement', 'charge_version_id', 'charge_version_id');
+    return this.hasMany('ChargeElement', 'charge_version_id', 'charge_version_id')
   },
 
   licence () {
-    return this.belongsTo('Licence', 'licence_ref', 'licence_ref');
+    return this.belongsTo('Licence', 'licence_ref', 'licence_ref')
   },
 
   note () {
-    return this.hasOne('Note', 'note_id', 'note_id');
+    return this.hasOne('Note', 'note_id', 'note_id')
   },
 
   changeReason () {
-    return this.hasOne('ChangeReason', 'change_reason_id', 'change_reason_id');
+    return this.hasOne('ChangeReason', 'change_reason_id', 'change_reason_id')
   }
-});
+})

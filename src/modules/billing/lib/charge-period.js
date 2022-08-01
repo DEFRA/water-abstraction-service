@@ -1,12 +1,12 @@
-'use strict';
+'use strict'
 
-const moment = require('moment');
-const { sortBy, first, last, identity } = require('lodash');
+const moment = require('moment')
+const { sortBy, first, last, identity } = require('lodash')
 
-const config = require('../../../../config');
+const config = require('../../../../config')
 
-const DATE_FORMAT = 'YYYY-MM-DD';
-const DateRange = require('../../../lib/models/date-range');
+const DATE_FORMAT = 'YYYY-MM-DD'
+const DateRange = require('../../../lib/models/date-range')
 
 /**
  * Given an array of dates which can be parsed by Moment,
@@ -20,10 +20,10 @@ const getSortedDates = arr => sortBy(
     .filter(identity)
     .map(value => moment(value)),
   m => m.unix()
-);
+)
 
-const getMinDate = arr => first(getSortedDates(arr));
-const getMaxDate = arr => last(getSortedDates(arr));
+const getMinDate = arr => first(getSortedDates(arr))
+const getMaxDate = arr => last(getSortedDates(arr))
 
 /**
  * Gets dates for charge period start and end date functions
@@ -32,26 +32,26 @@ const getMaxDate = arr => last(getSortedDates(arr));
  * @param {Boolean} isStartDate
  */
 const getDates = (financialYear, chargeVersion, isStartDate = true) => {
-  const dateType = isStartDate ? 'start' : 'end';
-  const dateRef = `${dateType}Date`;
+  const dateType = isStartDate ? 'start' : 'end'
+  const dateRef = `${dateType}Date`
   return [
     chargeVersion.licence[dateRef],
     financialYear[dateType],
     chargeVersion.dateRange[dateRef]
-  ];
-};
+  ]
+}
 
 const getChargePeriodStartDate = (financialYear, chargeVersion) => getMaxDate(
-  getDates(financialYear, chargeVersion)).format(DATE_FORMAT);
+  getDates(financialYear, chargeVersion)).format(DATE_FORMAT)
 
 const getChargePeriodEndDate = (financialYear, chargeVersion) => getMinDate(
-  getDates(financialYear, chargeVersion, false)).format(DATE_FORMAT);
+  getDates(financialYear, chargeVersion, false)).format(DATE_FORMAT)
 
 const getChargePeriod = (financialYear, chargeVersion) => {
-  const startDate = getChargePeriodStartDate(financialYear, chargeVersion);
-  const endDate = getChargePeriodEndDate(financialYear, chargeVersion);
-  return new DateRange(startDate, endDate);
-};
+  const startDate = getChargePeriodStartDate(financialYear, chargeVersion)
+  const endDate = getChargePeriodEndDate(financialYear, chargeVersion)
+  return new DateRange(startDate, endDate)
+}
 
 /**
  * Predicate to check whether the supplied date is
@@ -63,12 +63,12 @@ const getChargePeriod = (financialYear, chargeVersion) => {
  * @return {Boolean}
  */
 const isNaldTransaction = chargePeriodStartDate => {
-  const startDate = moment(chargePeriodStartDate, DATE_FORMAT);
-  const comparisonDate = moment(config.billing.naldSwitchOverDate, DATE_FORMAT);
-  return startDate.isBefore(comparisonDate);
-};
+  const startDate = moment(chargePeriodStartDate, DATE_FORMAT)
+  const comparisonDate = moment(config.billing.naldSwitchOverDate, DATE_FORMAT)
+  return startDate.isBefore(comparisonDate)
+}
 
-exports.getChargePeriodEndDate = getChargePeriodEndDate;
-exports.getChargePeriodStartDate = getChargePeriodStartDate;
-exports.getChargePeriod = getChargePeriod;
-exports.isNaldTransaction = isNaldTransaction;
+exports.getChargePeriodEndDate = getChargePeriodEndDate
+exports.getChargePeriodStartDate = getChargePeriodStartDate
+exports.getChargePeriod = getChargePeriod
+exports.isNaldTransaction = isNaldTransaction

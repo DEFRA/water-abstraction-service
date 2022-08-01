@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 /**
  * Statuses that the event (water.events) can have
@@ -10,4 +10,4 @@ exports.jobStatus = {
   error: 'error',
   deleted: 'deleted',
   review: 'review-ready'
-};
+}

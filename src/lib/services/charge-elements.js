@@ -1,48 +1,48 @@
-'use strict';
+'use strict'
 
-const ChargeElement = require('../models/charge-element');
-const ChargeVersion = require('../models/charge-version');
+const ChargeElement = require('../models/charge-element')
+const ChargeVersion = require('../models/charge-version')
 
-const validators = require('../models/validators');
+const validators = require('../models/validators')
 
-const { CHARGE_SEASON, SCHEME } = require('../models/constants');
-const AbstractionPeriod = require('../models/abstraction-period');
-const SPRAY_ANTI_FROST = '380';
+const { CHARGE_SEASON, SCHEME } = require('../models/constants')
+const AbstractionPeriod = require('../models/abstraction-period')
+const SPRAY_ANTI_FROST = '380'
 
-const chargeElementMapper = require('../mappers/charge-element');
-const chargeElementRepo = require('../connectors/repos/charge-elements');
+const chargeElementMapper = require('../mappers/charge-element')
+const chargeElementRepo = require('../connectors/repos/charge-elements')
 
-const chargePurposesService = require('./charge-purposes');
+const chargePurposesService = require('./charge-purposes')
 
-const unitConversion = require('../../lib/unit-conversion');
-const toFixed = require('../../lib/to-fixed');
+const unitConversion = require('../../lib/unit-conversion')
+const toFixed = require('../../lib/to-fixed')
 
 const calculateSeason = (purposeUse, abstractionPeriod) => {
   if (purposeUse.isTwoPartTariff) {
     if (purposeUse.code === SPRAY_ANTI_FROST) {
-      return CHARGE_SEASON.allYear;
+      return CHARGE_SEASON.allYear
     }
 
-    const winter = AbstractionPeriod.getWinter();
+    const winter = AbstractionPeriod.getWinter()
     return abstractionPeriod.isWithinAbstractionPeriod(winter)
       ? CHARGE_SEASON.winter
-      : CHARGE_SEASON.summer;
+      : CHARGE_SEASON.summer
   }
 
-  return abstractionPeriod.getChargeSeason();
-};
+  return abstractionPeriod.getChargeSeason()
+}
 
 const getIsFactorsOverridden = chargeElement => {
   if (chargeElement.scheme === 'alcs') {
-    const { source, season, loss, purposeUse, abstractionPeriod } = chargeElement;
-    const isLossMismatch = loss !== purposeUse.lossFactor;
-    const isSeasonMismatch = season !== calculateSeason(purposeUse, abstractionPeriod);
-    const isSourceNotUnsupported = source !== ChargeElement.sources.unsupported;
-    return isLossMismatch || isSeasonMismatch || isSourceNotUnsupported;
+    const { source, season, loss, purposeUse, abstractionPeriod } = chargeElement
+    const isLossMismatch = loss !== purposeUse.lossFactor
+    const isSeasonMismatch = season !== calculateSeason(purposeUse, abstractionPeriod)
+    const isSourceNotUnsupported = source !== ChargeElement.sources.unsupported
+    return isLossMismatch || isSeasonMismatch || isSourceNotUnsupported
   } else {
-    return false; // todo requires implementation for SROC if required
+    return false // todo requires implementation for SROC if required
   }
-};
+}
 
 /**
  * Takes a LicenceVersion object and translates the data into the default charge
@@ -52,27 +52,27 @@ const getIsFactorsOverridden = chargeElement => {
  */
 const getChargeElementsFromLicenceVersion = licenceVersion => {
   return licenceVersion.licenceVersionPurposes.map(licenceVersionPurpose => {
-    const chargeElement = new ChargeElement();
-    chargeElement.source = 'unsupported';
-    chargeElement.loss = licenceVersionPurpose.purposeUse.lossFactor;
-    chargeElement.abstractionPeriod = licenceVersionPurpose.abstractionPeriod;
+    const chargeElement = new ChargeElement()
+    chargeElement.source = 'unsupported'
+    chargeElement.loss = licenceVersionPurpose.purposeUse.lossFactor
+    chargeElement.abstractionPeriod = licenceVersionPurpose.abstractionPeriod
     chargeElement.authorisedAnnualQuantity = toFixed(
       unitConversion.cubicMetresToMegalitres(licenceVersionPurpose.annualQuantity || 0), 6
-    );
-    chargeElement.billableAnnualQuantity = null;
-    chargeElement.purposePrimary = licenceVersionPurpose.purposePrimary;
-    chargeElement.purposeSecondary = licenceVersionPurpose.purposeSecondary;
-    chargeElement.purposeUse = licenceVersionPurpose.purposeUse;
-    chargeElement.description = licenceVersionPurpose.purposeUse.name;
-    chargeElement.season = calculateSeason(licenceVersionPurpose.purposeUse, licenceVersionPurpose.abstractionPeriod);
+    )
+    chargeElement.billableAnnualQuantity = null
+    chargeElement.purposePrimary = licenceVersionPurpose.purposePrimary
+    chargeElement.purposeSecondary = licenceVersionPurpose.purposeSecondary
+    chargeElement.purposeUse = licenceVersionPurpose.purposeUse
+    chargeElement.description = licenceVersionPurpose.purposeUse.name
+    chargeElement.season = calculateSeason(licenceVersionPurpose.purposeUse, licenceVersionPurpose.abstractionPeriod)
 
     if (licenceVersionPurpose.timeLimitedPeriod) {
-      chargeElement.timeLimitedPeriod = licenceVersionPurpose.timeLimitedPeriod;
+      chargeElement.timeLimitedPeriod = licenceVersionPurpose.timeLimitedPeriod
     }
 
-    return chargeElement;
-  });
-};
+    return chargeElement
+  })
+}
 
 /**
  * Creates a new charge element in the specified charge version
@@ -81,22 +81,22 @@ const getChargeElementsFromLicenceVersion = licenceVersion => {
  * @return {Promise<ChargeElement>} persisted charge element
  */
 const create = async (chargeVersion, chargeElement) => {
-  validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
-  validators.assertIsInstanceOf(chargeElement, ChargeElement);
-  chargeElement.isFactorsOverridden = getIsFactorsOverridden(chargeElement);
-  const dbRow = chargeElementMapper.modelToDb(chargeElement, chargeVersion);
-  const result = await chargeElementRepo.create(dbRow);
-  const persistedChargeElement = chargeElementMapper.dbToModel(result);
+  validators.assertIsInstanceOf(chargeVersion, ChargeVersion)
+  validators.assertIsInstanceOf(chargeElement, ChargeElement)
+  chargeElement.isFactorsOverridden = getIsFactorsOverridden(chargeElement)
+  const dbRow = chargeElementMapper.modelToDb(chargeElement, chargeVersion)
+  const result = await chargeElementRepo.create(dbRow)
+  const persistedChargeElement = chargeElementMapper.dbToModel(result)
   // Persist charge purposes if scheme is sroc
   if (chargeElement.scheme === SCHEME.sroc) {
     const tasks = chargeElement.chargePurposes.map(chargePurpose =>
       chargePurposesService.create(persistedChargeElement, chargePurpose)
-    );
-    persistedChargeElement.chargePurposes = await Promise.all(tasks);
+    )
+    persistedChargeElement.chargePurposes = await Promise.all(tasks)
   }
-  return persistedChargeElement;
-};
+  return persistedChargeElement
+}
 
-exports.getChargeElementsFromLicenceVersion = getChargeElementsFromLicenceVersion;
-exports.create = create;
-exports._getIsFactorsOverridden = getIsFactorsOverridden;
+exports.getChargeElementsFromLicenceVersion = getChargeElementsFromLicenceVersion
+exports.create = create
+exports._getIsFactorsOverridden = getIsFactorsOverridden

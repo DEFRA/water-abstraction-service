@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
+const Joi = require('joi')
 
-const controller = require('../controllers/invoices');
-const { ROLES: { billing } } = require('../../../lib/roles');
+const controller = require('../controllers/invoices')
+const { ROLES: { billing } } = require('../../../lib/roles')
 
 exports.patchInvoice = {
   method: 'PATCH',
@@ -22,4 +22,4 @@ exports.patchInvoice = {
       scope: [billing]
     }
   }
-};
+}

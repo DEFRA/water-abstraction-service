@@ -1,34 +1,34 @@
-'use strict';
+'use strict'
 
-const bluebird = require('bluebird');
-const { get } = require('lodash');
+const bluebird = require('bluebird')
+const { get } = require('lodash')
 // Services
-const service = require('../../../lib/services/service');
-const documentsService = require('../../../lib/services/documents-service');
-const chargeVersionService = require('../../../lib/services/charge-versions');
-const licencesService = require('../../../lib/services/licences');
+const service = require('../../../lib/services/service')
+const documentsService = require('../../../lib/services/documents-service')
+const chargeVersionService = require('../../../lib/services/charge-versions')
+const licencesService = require('../../../lib/services/licences')
 // Repos
-const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-version-workflows');
+const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-version-workflows')
 
 // Mappers
-const chargeVersionWorkflowMapper = require('../../../lib/mappers/charge-version-workflow');
+const chargeVersionWorkflowMapper = require('../../../lib/mappers/charge-version-workflow')
 
 // Models
-const validators = require('../../../lib/models/validators');
-const ChargeVersionWorkflow = require('../../../lib/models/charge-version-workflow');
-const { CHARGE_VERSION_WORKFLOW_STATUS } = require('../../../lib/models/charge-version-workflow');
-const ChargeVersion = require('../../../lib/models/charge-version');
-const User = require('../../../lib/models/user');
-const Licence = require('../../../lib/models/licence');
-const Role = require('../../../lib/models/role');
-const { NotFoundError, InvalidEntityError } = require('../../../lib/errors');
-const { logger } = require('../../../logger');
+const validators = require('../../../lib/models/validators')
+const ChargeVersionWorkflow = require('../../../lib/models/charge-version-workflow')
+const { CHARGE_VERSION_WORKFLOW_STATUS } = require('../../../lib/models/charge-version-workflow')
+const ChargeVersion = require('../../../lib/models/charge-version')
+const User = require('../../../lib/models/user')
+const Licence = require('../../../lib/models/licence')
+const Role = require('../../../lib/models/role')
+const { NotFoundError, InvalidEntityError } = require('../../../lib/errors')
+const { logger } = require('../../../logger')
 
 /**
  * Gets all charge version workflows from the DB
  * @return {Promise<Array>}
  */
-const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeVersionWorkflowMapper);
+const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeVersionWorkflowMapper)
 
 /**
  * Gets paged charge version workflows where the state = tabFilter
@@ -38,9 +38,9 @@ const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeV
  * @returns {Array} returns an array of ChargeVersionWorkflow model instances
  */
 const getAllWithPaging = async (tabFilter, page, perPage) => {
-  const result = await chargeVersionWorkflowsRepo.findAllWithPaging(tabFilter, page, perPage);
-  return { data: result.data, pagination: result.pagination };
-};
+  const result = await chargeVersionWorkflowsRepo.findAllWithPaging(tabFilter, page, perPage)
+  return { data: result.data, pagination: result.pagination }
+}
 
 /**
  * Gets the licence-holder role for the supplied ChargeVersionWorkflow model
@@ -50,28 +50,28 @@ const getAllWithPaging = async (tabFilter, page, perPage) => {
  * @return {Promise<Role>}
  */
 const getLicenceHolderRole = async chargeVersionWorkflow => {
-  let isDataMapped = true;
-  let startDateKey = 'chargeVersion.dateRange.startDate';
+  let isDataMapped = true
+  let startDateKey = 'chargeVersion.dateRange.startDate'
 
-  let { licenceNumber, licenceRef } = chargeVersionWorkflow.licence;
+  let { licenceNumber, licenceRef } = chargeVersionWorkflow.licence
   if (!licenceNumber) {
-    licenceNumber = licenceRef;
-    isDataMapped = false;
-    startDateKey = 'data.chargeVersion.dateRange.startDate';
+    licenceNumber = licenceRef
+    isDataMapped = false
+    startDateKey = 'data.chargeVersion.dateRange.startDate'
   }
 
   const startDate = chargeVersionWorkflow.status === 'to_setup'
     ? chargeVersionWorkflow.licenceVersion.startDate
-    : get(chargeVersionWorkflow, startDateKey, null);
+    : get(chargeVersionWorkflow, startDateKey, null)
 
-  const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate);
-  const role = doc ? doc.getRoleOnDate(Role.ROLE_NAMES.licenceHolder, startDate) : {};
+  const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate)
+  const role = doc ? doc.getRoleOnDate(Role.ROLE_NAMES.licenceHolder, startDate) : {}
 
   return {
     ...(isDataMapped ? chargeVersionWorkflow.toJSON() : chargeVersionWorkflow),
     licenceHolderRole: role
-  };
-};
+  }
+}
 
 /**
  * Gets all charge version workflows from the DB, including the
@@ -79,24 +79,24 @@ const getLicenceHolderRole = async chargeVersionWorkflow => {
  * @return {Promise<Array>}
  */
 const getAllWithLicenceHolder = async () => {
-  const chargeVersionWorkflows = await getAll();
-  return bluebird.map(chargeVersionWorkflows, getLicenceHolderRole);
-};
+  const chargeVersionWorkflows = await getAll()
+  return bluebird.map(chargeVersionWorkflows, getLicenceHolderRole)
+}
 
 const getAllWithLicenceHolderWithPaging = async (tabFilter, page, perPage) => {
-  const chargeVersionWorkflows = await getAllWithPaging(tabFilter, page, perPage);
-  const data = await bluebird.map(chargeVersionWorkflows.data, getLicenceHolderRole);
+  const chargeVersionWorkflows = await getAllWithPaging(tabFilter, page, perPage)
+  const data = await bluebird.map(chargeVersionWorkflows.data, getLicenceHolderRole)
   return {
-    data: data,
+    data,
     pagination: chargeVersionWorkflows.pagination
-  };
-};
+  }
+}
 
 /**
  * Gets a single charge version workflow by ID
  * @param {String} id
  */
-const getById = id => service.findOne(id, chargeVersionWorkflowsRepo.findOne, chargeVersionWorkflowMapper);
+const getById = id => service.findOne(id, chargeVersionWorkflowsRepo.findOne, chargeVersionWorkflowMapper)
 
 /**
  * Gets a single charge version workflow by ID
@@ -104,9 +104,9 @@ const getById = id => service.findOne(id, chargeVersionWorkflowsRepo.findOne, ch
  * @param {String} id
  */
 const getByIdWithLicenceHolder = async id => {
-  const chargeVersionWorkflow = await getById(id);
-  return chargeVersionWorkflow && getLicenceHolderRole(chargeVersionWorkflow);
-};
+  const chargeVersionWorkflow = await getById(id)
+  return chargeVersionWorkflow && getLicenceHolderRole(chargeVersionWorkflow)
+}
 
 /**
  * Gets all charge version workflow for the
@@ -114,7 +114,7 @@ const getByIdWithLicenceHolder = async id => {
  * @param {String} licenceId
  */
 const getManyByLicenceId = async licenceId =>
-  service.findMany(licenceId, chargeVersionWorkflowsRepo.findManyForLicence, chargeVersionWorkflowMapper);
+  service.findMany(licenceId, chargeVersionWorkflowsRepo.findManyForLicence, chargeVersionWorkflowMapper)
 
 /**
  * Updates the properties on the model - if any errors,
@@ -124,12 +124,12 @@ const getManyByLicenceId = async licenceId =>
  */
 const setOrThrowInvalidEntityError = (chargeVersionWorkflow, changes) => {
   try {
-    return chargeVersionWorkflow.fromHash(changes);
+    return chargeVersionWorkflow.fromHash(changes)
   } catch (err) {
-    logger.error(err);
-    throw new InvalidEntityError(`Invalid data for charge version workflow ${chargeVersionWorkflow.id}`);
+    logger.error(err)
+    throw new InvalidEntityError(`Invalid data for charge version workflow ${chargeVersionWorkflow.id}`)
   }
-};
+}
 
 /**
  * Create a new charge version workflow record
@@ -141,29 +141,29 @@ const setOrThrowInvalidEntityError = (chargeVersionWorkflow, changes) => {
  * @return {Promise<ChargeVersionWorkflow>}
  */
 const create = async (licence, chargeVersion, user, status = CHARGE_VERSION_WORKFLOW_STATUS.review, licenceVersionId = null) => {
-  validators.assertIsInstanceOf(licence, Licence);
-  validators.assertNullableId(licenceVersionId);
+  validators.assertIsInstanceOf(licence, Licence)
+  validators.assertNullableId(licenceVersionId)
 
   if (status !== CHARGE_VERSION_WORKFLOW_STATUS.toSetup) {
-    validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
-    validators.assertIsInstanceOf(user, User);
+    validators.assertIsInstanceOf(chargeVersion, ChargeVersion)
+    validators.assertIsInstanceOf(user, User)
   }
 
   // Map all data to ChargeVersionWorkflow model
-  const chargeVersionWorkflow = new ChargeVersionWorkflow();
+  const chargeVersionWorkflow = new ChargeVersionWorkflow()
 
   setOrThrowInvalidEntityError(chargeVersionWorkflow, {
     createdBy: user,
-    licence: licence,
+    licence,
     chargeVersion,
     status,
     licenceVersionId
-  });
+  })
 
-  const dbRow = chargeVersionWorkflowMapper.modelToDb(chargeVersionWorkflow);
-  const updated = await chargeVersionWorkflowsRepo.create(dbRow);
-  return chargeVersionWorkflowMapper.dbToModel(updated);
-};
+  const dbRow = chargeVersionWorkflowMapper.modelToDb(chargeVersionWorkflow)
+  const updated = await chargeVersionWorkflowsRepo.create(dbRow)
+  return chargeVersionWorkflowMapper.dbToModel(updated)
+}
 
 /**
  * Updates a ChargeVersionWorkflow model
@@ -173,18 +173,18 @@ const create = async (licence, chargeVersion, user, status = CHARGE_VERSION_WORK
  */
 const update = async (chargeVersionWorkflowId, changes) => {
   // Load existing model
-  const model = await getById(chargeVersionWorkflowId);
+  const model = await getById(chargeVersionWorkflowId)
   if (!model) {
-    throw new NotFoundError(`Charge version workflow ${chargeVersionWorkflowId} not found`);
+    throw new NotFoundError(`Charge version workflow ${chargeVersionWorkflowId} not found`)
   }
 
-  setOrThrowInvalidEntityError(model, changes);
+  setOrThrowInvalidEntityError(model, changes)
 
   // Persist
-  const dbRow = chargeVersionWorkflowMapper.modelToDb(model);
-  const data = await chargeVersionWorkflowsRepo.update(chargeVersionWorkflowId, dbRow);
-  return chargeVersionWorkflowMapper.dbToModel(data);
-};
+  const dbRow = chargeVersionWorkflowMapper.modelToDb(model)
+  const data = await chargeVersionWorkflowsRepo.update(chargeVersionWorkflowId, dbRow)
+  return chargeVersionWorkflowMapper.dbToModel(data)
+}
 
 /**
  * Deletes a charge version workflow record by ID
@@ -196,12 +196,12 @@ const deleteOne = async (chargeVersionWorkflow, isSoftDelete = true) => {
   try {
     const deleteFunc = isSoftDelete
       ? chargeVersionWorkflowsRepo.softDeleteOne
-      : chargeVersionWorkflowsRepo.deleteOne;
-    await deleteFunc(chargeVersionWorkflow.id);
+      : chargeVersionWorkflowsRepo.deleteOne
+    await deleteFunc(chargeVersionWorkflow.id)
   } catch (err) {
-    throw new NotFoundError(`Charge version workflow ${chargeVersionWorkflow.id} not found`);
+    throw new NotFoundError(`Charge version workflow ${chargeVersionWorkflow.id} not found`)
   }
-};
+}
 
 /**
  * Creates a charge version from the supplied charge version workflow
@@ -210,39 +210,39 @@ const deleteOne = async (chargeVersionWorkflow, isSoftDelete = true) => {
  * @return {Promise<ChargeVersion>}
  */
 const approve = async (chargeVersionWorkflow, approvedBy) => {
-  validators.assertIsInstanceOf(chargeVersionWorkflow, ChargeVersionWorkflow);
-  validators.assertIsInstanceOf(approvedBy, User);
+  validators.assertIsInstanceOf(chargeVersionWorkflow, ChargeVersionWorkflow)
+  validators.assertIsInstanceOf(approvedBy, User)
 
-  const { chargeVersion, licence } = chargeVersionWorkflow;
+  const { chargeVersion, licence } = chargeVersionWorkflow
 
   // Store users who created/approved
   chargeVersion.fromHash({
     createdBy: chargeVersionWorkflow.createdBy,
     approvedBy,
     licence
-  });
+  })
 
   // Persist the new charge version
-  const persistedChargeVersion = await chargeVersionService.create(chargeVersion);
+  const persistedChargeVersion = await chargeVersionService.create(chargeVersion)
 
   // flag for supplementary billing
-  await licencesService.flagForSupplementaryBilling(chargeVersionWorkflow.licence.id);
+  await licencesService.flagForSupplementaryBilling(chargeVersionWorkflow.licence.id)
 
   // Delete the charge version workflow record as it is no longer needed
-  await deleteOne(chargeVersionWorkflow, false);
+  await deleteOne(chargeVersionWorkflow, false)
 
-  return persistedChargeVersion;
-};
+  return persistedChargeVersion
+}
 
-exports.getAll = getAll;
-exports.getAllWithPaging = getAllWithPaging;
-exports.getAllWithLicenceHolderWithPaging = getAllWithLicenceHolderWithPaging;
-exports.getAllWithLicenceHolder = getAllWithLicenceHolder;
-exports.getById = getById;
-exports.getByIdWithLicenceHolder = getByIdWithLicenceHolder;
-exports.create = create;
-exports.getLicenceHolderRole = getLicenceHolderRole;
-exports.getManyByLicenceId = getManyByLicenceId;
-exports.update = update;
-exports.delete = deleteOne;
-exports.approve = approve;
+exports.getAll = getAll
+exports.getAllWithPaging = getAllWithPaging
+exports.getAllWithLicenceHolderWithPaging = getAllWithLicenceHolderWithPaging
+exports.getAllWithLicenceHolder = getAllWithLicenceHolder
+exports.getById = getById
+exports.getByIdWithLicenceHolder = getByIdWithLicenceHolder
+exports.create = create
+exports.getLicenceHolderRole = getLicenceHolderRole
+exports.getManyByLicenceId = getManyByLicenceId
+exports.update = update
+exports.delete = deleteOne
+exports.approve = approve

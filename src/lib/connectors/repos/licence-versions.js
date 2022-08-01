@@ -1,11 +1,11 @@
-'use strict';
+'use strict'
 
-const LicenceVersion = require('../bookshelf/LicenceVersion');
-const queries = require('./queries/licence-versions');
-const raw = require('./lib/raw');
-const helpers = require('./lib/helpers');
-const moment = require('moment');
-const { naldSwitchOverDate } = require('../../../../config').billing;
+const LicenceVersion = require('../bookshelf/LicenceVersion')
+const queries = require('./queries/licence-versions')
+const raw = require('./lib/raw')
+const helpers = require('./lib/helpers')
+const moment = require('moment')
+const { naldSwitchOverDate } = require('../../../../config').billing
 
 /**
  * Gets a licence version including any licenceVersionPurposes,
@@ -23,10 +23,10 @@ const findOne = async licenceVersionId => {
         'licenceVersionPurposes.purposeUse'
       ],
       require: false
-    });
+    })
 
-  return licenceVersion && licenceVersion.toJSON();
-};
+  return licenceVersion && licenceVersion.toJSON()
+}
 
 /**
  * Gets a list of licence versions for the given licence id
@@ -37,10 +37,10 @@ const findByLicenceId = async licenceId => {
   const licenceVersions = await LicenceVersion
     .forge()
     .where('licence_id', licenceId)
-    .fetchAll();
+    .fetchAll()
 
-  return licenceVersions.toJSON();
-};
+  return licenceVersions.toJSON()
+}
 
 /**
  * Finds licence version id created on or after a timestamp
@@ -50,10 +50,10 @@ const findIdsByDateNotInChargeVersionWorkflows = dateAndTime =>
   raw.multiRow(
     queries.getNewLicenceVersionsForChargeVersionWorkflow,
     { dateAndTime: dateAndTime || moment(naldSwitchOverDate).toISOString() }
-  );
+  )
 
-exports.create = data => helpers.create(LicenceVersion, data);
+exports.create = data => helpers.create(LicenceVersion, data)
 
-exports.findIdsByDateNotInChargeVersionWorkflows = findIdsByDateNotInChargeVersionWorkflows;
-exports.findByLicenceId = findByLicenceId;
-exports.findOne = findOne;
+exports.findIdsByDateNotInChargeVersionWorkflows = findIdsByDateNotInChargeVersionWorkflows
+exports.findByLicenceId = findByLicenceId
+exports.findOne = findOne

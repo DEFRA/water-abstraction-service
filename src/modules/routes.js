@@ -31,4 +31,4 @@ module.exports = [
   ...Object.values(require('./gauging-stations/routes')),
   ...Object.values(require('./charge-categories/routes')),
   ...Object.values(require('./supported-sources/routes'))
-];
+]

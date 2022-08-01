@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 /**
  * Helper function to abstract the process of retrieving a single item
@@ -9,9 +9,9 @@
  * @param {Object} mapper The object containing the dbToModel mapping function
  */
 const findOne = async (id, fetchDataFunc, mapper) => {
-  const data = await fetchDataFunc(id);
-  return data && mapper.dbToModel(data);
-};
+  const data = await fetchDataFunc(id)
+  return data && mapper.dbToModel(data)
+}
 
 /**
  * Helper function to abstract the process of retrieving multiple items
@@ -22,9 +22,9 @@ const findOne = async (id, fetchDataFunc, mapper) => {
  * @param {Object} mapper The object containing the dbToModel mapping function
  */
 const findMany = async (id, fetchDataFunc, mapper) => {
-  const data = await fetchDataFunc(id);
-  return data.map(mapper.dbToModel);
-};
+  const data = await fetchDataFunc(id)
+  return data.map(mapper.dbToModel)
+}
 
 /**
  * Helper function to abstract the process of retrieving all items
@@ -34,10 +34,10 @@ const findMany = async (id, fetchDataFunc, mapper) => {
  * @param {Object} mapper The object containing the dbToModel mapping function
  */
 const findAll = async (fetchDataFunc, mapper) => {
-  const data = await fetchDataFunc();
-  return data.map(mapper.dbToModel);
-};
+  const data = await fetchDataFunc()
+  return data.map(mapper.dbToModel)
+}
 
-exports.findOne = findOne;
-exports.findMany = findMany;
-exports.findAll = findAll;
+exports.findOne = findOne
+exports.findMany = findMany
+exports.findAll = findAll

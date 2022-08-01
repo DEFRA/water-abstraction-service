@@ -1,25 +1,25 @@
-'use strict';
+'use strict'
 
-const Model = require('./model');
+const Model = require('./model')
 
 const {
   assertEnum,
   assertString
-} = require('./validators');
+} = require('./validators')
 
 const PURPOSE_TYPES = {
   primary: 'primary',
   secondary: 'secondary'
-};
+}
 
 class Purpose extends Model {
   get type () {
-    return this._type;
+    return this._type
   }
 
   set type (type) {
-    assertEnum(type, Object.values(PURPOSE_TYPES));
-    this._type = type;
+    assertEnum(type, Object.values(PURPOSE_TYPES))
+    this._type = type
   }
 
   /**
@@ -27,12 +27,12 @@ class Purpose extends Model {
    * @return {String}
    */
   get name () {
-    return this._name;
+    return this._name
   }
 
   set name (name) {
-    assertString(name);
-    this._name = name;
+    assertString(name)
+    this._name = name
   }
 
   /**
@@ -40,24 +40,24 @@ class Purpose extends Model {
    * @return {String}
    */
   get code () {
-    return this._code;
+    return this._code
   }
 
   set code (code) {
-    assertString(code);
-    this._code = code;
+    assertString(code)
+    this._code = code
   }
 
-  get dateCreated () { return this._dateCreated; }
+  get dateCreated () { return this._dateCreated }
   set dateCreated (dateCreated) {
-    this._dateCreated = this.getDateOrThrow(dateCreated, 'Date created');
+    this._dateCreated = this.getDateOrThrow(dateCreated, 'Date created')
   }
 
-  get dateUpdated () { return this._dateUpdated; }
+  get dateUpdated () { return this._dateUpdated }
   set dateUpdated (dateUpdated) {
-    this._dateUpdated = this.getDateTimeFromValue(dateUpdated);
+    this._dateUpdated = this.getDateTimeFromValue(dateUpdated)
   }
 }
 
-module.exports = Purpose;
-module.exports.PURPOSE_TYPES = PURPOSE_TYPES;
+module.exports = Purpose
+module.exports.PURPOSE_TYPES = PURPOSE_TYPES

@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 /**
  * A query to get charge versions in a particular region :regionId
@@ -46,7 +46,7 @@ from (
     on cv.change_reason_id = cr.change_reason_id
   where l.region_id=:regionId
     and cv.status='current'
-    and cv.scheme = 'alcs'
+    and cv.scheme =:scheme
     and (cv.change_reason_id is null or cr.type = 'new_chargeable_charge_version')
     and l.licence_id not in (
       select cvw.licence_id 
@@ -67,7 +67,7 @@ left join (
       and (la.end_date is null or la.end_date>=la.start_date) and date_deleted IS NULL
 ) t2 on t1.licence_ref=t2.licence_ref and t1.charge_period_dates * t2.two_part_tariff_dates <> 'empty'
 where t1.charge_period_dates <> 'empty'
-`;
+`
 
 const findValidInRegionAndFinancialYearSupplementary = `
 select distinct
@@ -132,7 +132,7 @@ left join (
       and (la.end_date is null or la.end_date>=la.start_date) and date_deleted IS NULL
 ) t2 on t1.licence_ref=t2.licence_ref and t1.charge_period_dates * t2.two_part_tariff_dates <> 'empty'
 where t1.charge_period_dates <> 'empty'
-`;
+`
 
-exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear;
-exports.findValidInRegionAndFinancialYearSupplementary = findValidInRegionAndFinancialYearSupplementary;
+exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear
+exports.findValidInRegionAndFinancialYearSupplementary = findValidInRegionAndFinancialYearSupplementary

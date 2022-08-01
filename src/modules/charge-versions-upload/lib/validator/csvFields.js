@@ -1,11 +1,11 @@
-const { WATER_MODEL } = require('../../../../lib/models/constants');
+const { WATER_MODEL } = require('../../../../lib/models/constants')
 const {
   testAcceptedTerm, testNotBlank, testMaxLength, testNumberLessThanOne, testNumberGreaterThanZero, testNumber,
   testMaxDecimalPlaces, testBlankWhen, testPopulatedWhen, testSupportedSourceOrBlank, testValidReferenceLineDescription,
   testMaxValue, testMaxDigits, testMatchTPTPurpose, testDateAfterLicenceDate, testDateBefore, testValidDate,
   testDateRange, testPurpose, testDateBeforeSrocStartDate, testDateBeforeLicenceDate, testValidLicence,
-  testLicenceHasInvoiceAccount, testNumberGreaterThanOrEqualToZero
-} = require('./tests');
+  testLicenceHasInvoiceAccount, testNotWaterUndertaker
+} = require('./tests')
 
 const csvFields = {
   licenceNumber: {
@@ -104,7 +104,7 @@ const csvFields = {
       testNotBlank,
       testMaxDigits(17),
       testNumber,
-      testNumberGreaterThanOrEqualToZero,
+      testNumberGreaterThanZero,
       testMaxDecimalPlaces(6),
       testMaxValue(1000000000000000)
     ]
@@ -144,7 +144,8 @@ const csvFields = {
   chargeReferenceDetailsPublicWaterSupply: {
     validate: [
       testNotBlank,
-      testAcceptedTerm(['Y', 'N'])
+      testAcceptedTerm(['Y', 'N']),
+      testNotWaterUndertaker
     ]
   },
   chargeReferenceDetailsAggregateFactor: {
@@ -195,6 +196,6 @@ const csvFields = {
       testMaxLength(500)
     ]
   }
-};
+}
 
-exports.csvFields = csvFields;
+exports.csvFields = csvFields

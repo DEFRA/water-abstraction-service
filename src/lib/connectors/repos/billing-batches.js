@@ -1,13 +1,13 @@
-'use strict';
+'use strict'
 
-const { BillingBatch } = require('../bookshelf');
-const { BATCH_STATUS } = require('../../models/batch');
-const { paginatedEnvelope } = require('./lib/envelope');
-const helpers = require('./lib/helpers');
-const queries = require('./queries/billing-batches');
-const { bookshelf } = require('../bookshelf/bookshelf');
+const { BillingBatch } = require('../bookshelf')
+const { BATCH_STATUS } = require('../../models/batch')
+const { paginatedEnvelope } = require('./lib/envelope')
+const helpers = require('./lib/helpers')
+const queries = require('./queries/billing-batches')
+const { bookshelf } = require('../bookshelf/bookshelf')
 
-const mapModel = model => model ? model.toJSON() : null;
+const mapModel = model => model ? model.toJSON() : null
 
 const findOne = async (id) => {
   const model = await BillingBatch
@@ -16,10 +16,10 @@ const findOne = async (id) => {
       withRelated: [
         'region'
       ]
-    });
+    })
 
-  return mapModel(model);
-};
+  return mapModel(model)
+}
 
 const findPage = async (page, pageSize) => {
   const result = await BillingBatch
@@ -32,19 +32,19 @@ const findPage = async (page, pageSize) => {
       withRelated: [
         'region'
       ]
-    });
-  return paginatedEnvelope(result);
-};
+    })
+  return paginatedEnvelope(result)
+}
 
 const findByStatuses = async statuses => {
   const batches = await BillingBatch
     .forge()
     .query('whereIn', 'status', statuses)
     .orderBy('date_created', 'desc')
-    .fetchAll({ withRelated: ['region'] });
+    .fetchAll({ withRelated: ['region'] })
 
-  return batches.toJSON();
-};
+  return batches.toJSON()
+}
 
 /**
  * Updates a billing_batch records for the given id
@@ -55,9 +55,9 @@ const findByStatuses = async statuses => {
 const update = async (batchId, changes) => {
   const result = await BillingBatch
     .forge({ billingBatchId: batchId })
-    .save(changes, { method: 'update' });
-  return mapModel(result);
-};
+    .save(changes, { method: 'update' })
+  return mapModel(result)
+}
 
 /**
  * Deletes the billing_batch record with the given id
@@ -67,7 +67,7 @@ const update = async (batchId, changes) => {
  */
 const deleteById = (batchId, isDeletionRequired = true) => BillingBatch
   .forge({ billingBatchId: batchId })
-  .destroy({ require: isDeletionRequired });
+  .destroy({ require: isDeletionRequired })
 
 const findOneWithInvoices = async (id) => {
   const model = await BillingBatch
@@ -81,10 +81,10 @@ const findOneWithInvoices = async (id) => {
         'billingInvoices.billingInvoiceLicences.licence.region'
 
       ]
-    });
+    })
 
-  return mapModel(model);
-};
+  return mapModel(model)
+}
 
 const findOneWithInvoicesWithTransactions = async (id) => {
   const model = await BillingBatch
@@ -101,10 +101,10 @@ const findOneWithInvoicesWithTransactions = async (id) => {
         'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement',
         'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
       ]
-    });
+    })
 
-  return mapModel(model);
-};
+  return mapModel(model)
+}
 
 /**
  * Create a new billing batch
@@ -113,12 +113,12 @@ const findOneWithInvoicesWithTransactions = async (id) => {
 const create = async data => {
   const model = await BillingBatch
     .forge(data)
-    .save();
-  return model.toJSON();
-};
+    .save()
+  return model.toJSON()
+}
 
 const findByRegionId = async regionId =>
-  helpers.findMany(BillingBatch, { region_id: regionId }, ['region']);
+  helpers.findMany(BillingBatch, { region_id: regionId }, ['region'])
 
 const findSentTptBatchesForFinancialYearAndRegion = async (financialYear, regionId, batchType) => {
   const conditions = {
@@ -126,36 +126,36 @@ const findSentTptBatchesForFinancialYearAndRegion = async (financialYear, region
     to_financial_year_ending: financialYear,
     status: BATCH_STATUS.sent,
     region_id: regionId
-  };
+  }
   const withRelated = [
     'billingInvoices',
     'billingInvoices.billingInvoiceLicences',
     'billingInvoices.billingInvoiceLicences.licence'
-  ];
-  return helpers.findMany(BillingBatch, conditions, withRelated);
-};
+  ]
+  return helpers.findMany(BillingBatch, conditions, withRelated)
+}
 
 /**
  * Find all records
  * @return {Promise<Object>}
  */
-const find = () => helpers.findMany(BillingBatch);
+const find = () => helpers.findMany(BillingBatch)
 
 /**
  * Truncates all tables in water.billing_
  * @return {Promise}
  */
-const deleteAllBillingData = () => bookshelf.knex.raw(queries.deleteAllBillingData);
+const deleteAllBillingData = () => bookshelf.knex.raw(queries.deleteAllBillingData)
 
-exports.delete = deleteById;
-exports.findByStatuses = findByStatuses;
-exports.findOne = findOne;
-exports.findPage = findPage;
-exports.update = update;
-exports.findOneWithInvoices = findOneWithInvoices;
-exports.findOneWithInvoicesWithTransactions = findOneWithInvoicesWithTransactions;
-exports.create = create;
-exports.findByRegionId = findByRegionId;
-exports.findSentTptBatchesForFinancialYearAndRegion = findSentTptBatchesForFinancialYearAndRegion;
-exports.find = find;
-exports.deleteAllBillingData = deleteAllBillingData;
+exports.delete = deleteById
+exports.findByStatuses = findByStatuses
+exports.findOne = findOne
+exports.findPage = findPage
+exports.update = update
+exports.findOneWithInvoices = findOneWithInvoices
+exports.findOneWithInvoicesWithTransactions = findOneWithInvoicesWithTransactions
+exports.create = create
+exports.findByRegionId = findByRegionId
+exports.findSentTptBatchesForFinancialYearAndRegion = findSentTptBatchesForFinancialYearAndRegion
+exports.find = find
+exports.deleteAllBillingData = deleteAllBillingData

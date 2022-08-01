@@ -1,18 +1,18 @@
-const Model = require('./model');
+const Model = require('./model')
 const {
   assertNullablePositiveOrZeroInteger,
   assertNullableNegativeOrZeroInteger,
   assertNullableInteger
-} = require('./validators');
+} = require('./validators')
 
 class Totals extends Model {
   constructor (id) {
-    super(id);
-    this.creditNoteCount = null;
-    this.creditNoteValue = null;
-    this.invoiceCount = null;
-    this.invoiceValue = null;
-    this.netTotal = null;
+    super(id)
+    this.creditNoteCount = null
+    this.creditNoteValue = null
+    this.invoiceCount = null
+    this.invoiceValue = null
+    this.netTotal = null
   }
 
   /**
@@ -20,12 +20,12 @@ class Totals extends Model {
    * @param {Number} count
    */
   set creditNoteCount (count) {
-    assertNullablePositiveOrZeroInteger(count);
-    this._creditNoteCount = count;
+    assertNullablePositiveOrZeroInteger(count)
+    this._creditNoteCount = count
   }
 
   get creditNoteCount () {
-    return this._creditNoteCount;
+    return this._creditNoteCount
   }
 
   /**
@@ -33,12 +33,12 @@ class Totals extends Model {
    * @param {Number} value - in pence
    */
   set creditNoteValue (value) {
-    assertNullableNegativeOrZeroInteger(value);
-    this._creditNoteValue = value;
+    assertNullableNegativeOrZeroInteger(value)
+    this._creditNoteValue = value
   }
 
   get creditNoteValue () {
-    return this._creditNoteValue;
+    return this._creditNoteValue
   }
 
   /**
@@ -46,12 +46,12 @@ class Totals extends Model {
    * @param {Number} count
    */
   set invoiceCount (count) {
-    assertNullablePositiveOrZeroInteger(count);
-    this._invoiceCount = count;
+    assertNullablePositiveOrZeroInteger(count)
+    this._invoiceCount = count
   }
 
   get invoiceCount () {
-    return this._invoiceCount;
+    return this._invoiceCount
   }
 
   /**
@@ -59,12 +59,12 @@ class Totals extends Model {
    * @param {Number} value - in pence
    */
   set invoiceValue (value) {
-    assertNullablePositiveOrZeroInteger(value);
-    this._invoiceValue = value;
+    assertNullablePositiveOrZeroInteger(value)
+    this._invoiceValue = value
   }
 
   get invoiceValue () {
-    return this._invoiceValue;
+    return this._invoiceValue
   }
 
   /**
@@ -72,13 +72,13 @@ class Totals extends Model {
    * @param {Number} value - in pence
    */
   set netTotal (value) {
-    assertNullableInteger(value);
-    this._netTotal = value;
+    assertNullableInteger(value)
+    this._netTotal = value
   }
 
   get netTotal () {
-    return this._netTotal;
+    return this._netTotal
   }
 }
 
-module.exports = Totals;
+module.exports = Totals

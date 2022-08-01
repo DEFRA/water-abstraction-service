@@ -1,11 +1,11 @@
-const ChargeVersionYear = require('../../../lib/models/charge-version-year');
-const FinancialYear = require('../../../lib/models/financial-year');
+const ChargeVersionYear = require('../../../lib/models/charge-version-year')
+const FinancialYear = require('../../../lib/models/financial-year')
 
-const batchMapper = require('./batch');
-const chargeVersionMapper = require('../../../lib/mappers/charge-version');
+const batchMapper = require('./batch')
+const chargeVersionMapper = require('../../../lib/mappers/charge-version')
 
-const { createMapper } = require('../../../lib/object-mapper');
-const helpers = require('../../../lib/mappers/lib/helpers');
+const { createMapper } = require('../../../lib/object-mapper')
+const helpers = require('../../../lib/mappers/lib/helpers')
 
 const dbToModelMapper = createMapper()
   .copy(
@@ -17,7 +17,7 @@ const dbToModelMapper = createMapper()
   .map('billingBatchChargeVersionYearId').to('id')
   .map('billingBatch').to('batch', batchMapper.dbToModel)
   .map('chargeVersion').to('chargeVersion', chargeVersionMapper.dbToModel)
-  .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding));
+  .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding))
 
 /**
  * Converts DB representation to a ChargeVersionWorkflow service model
@@ -25,6 +25,6 @@ const dbToModelMapper = createMapper()
  * @return {ChargeVersionWorkflow}
  */
 const dbToModel = row =>
-  helpers.createModel(ChargeVersionYear, row, dbToModelMapper);
+  helpers.createModel(ChargeVersionYear, row, dbToModelMapper)
 
-exports.dbToModel = dbToModel;
+exports.dbToModel = dbToModel

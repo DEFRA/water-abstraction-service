@@ -1,8 +1,8 @@
-const moment = require('moment');
-const { find, intersection } = require('lodash');
+const moment = require('moment')
+const { find, intersection } = require('lodash')
 
-const inReviewFilter = action => action.payload.status === 'In review';
-const approvedFilter = action => action.payload.status === 'Approved';
+const inReviewFilter = action => action.payload.status === 'In review'
+const approvedFilter = action => action.payload.status === 'Approved'
 
 /**
  * Given an action in the AR licence, returns the timestamp formatted as string
@@ -10,8 +10,8 @@ const approvedFilter = action => action.payload.status === 'Approved';
  * @return {String} ISO 8601 formatted timestamp
  */
 const getActionTimestamp = (action) => {
-  return moment(action.payload.timestamp).format();
-};
+  return moment(action.payload.timestamp).format()
+}
 
 /**
  * Gets the ISO 8601 timestamp of the first edit
@@ -19,8 +19,8 @@ const getActionTimestamp = (action) => {
  * @return {String} ISO 8601 timestamp
  */
 const getFirstEditTimestamp = (actions) => {
-  return actions.length ? getActionTimestamp(actions[0]) : null;
-};
+  return actions.length ? getActionTimestamp(actions[0]) : null
+}
 
 /**
  * Gets timestamp of the first action that passes the predicate
@@ -29,9 +29,9 @@ const getFirstEditTimestamp = (actions) => {
  * @return {String} ISO 8601 timestamp
  */
 const getTimestamp = (actions, predicate) => {
-  const action = find(actions, predicate);
-  return action ? getActionTimestamp(action) : null;
-};
+  const action = find(actions, predicate)
+  return action ? getActionTimestamp(action) : null
+}
 
 /**
  * Checks whether a party or address has been edited within the supplied
@@ -40,11 +40,11 @@ const getTimestamp = (actions, predicate) => {
  * @return {Boolean} whether contact edited
  */
 const isContactEdited = (actions) => {
-  const actionTypes = actions.map(action => action.type);
-  return intersection(['edit.party', 'edit.address'], actionTypes).length > 0;
-};
+  const actionTypes = actions.map(action => action.type)
+  return intersection(['edit.party', 'edit.address'], actionTypes).length > 0
+}
 
-const getStatus = status => status || 'In progress';
+const getStatus = status => status || 'In progress'
 
 /**
  * A function to map an AR licence JSON object to a row of data for the
@@ -55,7 +55,7 @@ const getStatus = status => status || 'In progress';
  * @return {Object}
  */
 const mapLicenceToTableRow = (regionCode, licenceRef, licence) => {
-  const { status, actions } = licence;
+  const { status, actions } = licence
   return {
     licence_ref: licenceRef,
     status: getStatus(status),
@@ -64,9 +64,9 @@ const mapLicenceToTableRow = (regionCode, licenceRef, licence) => {
     review_date: getTimestamp(actions, inReviewFilter),
     approved_date: getTimestamp(actions, approvedFilter),
     contact_correct: !isContactEdited(actions)
-  };
-};
+  }
+}
 
 module.exports = {
   mapLicenceToTableRow
-};
+}

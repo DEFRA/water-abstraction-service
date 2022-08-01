@@ -1,120 +1,118 @@
 name: CI
 
-on:
-  push:
-    branches:
-      - '**'
-      - '!dependabot/**'
+on: push
 
 jobs:
-  base-node-pipeline:
-    uses: DEFRA/water-abstraction-orchestration/.github/workflows/base-node-pipeline.yml@develop
-    with:
-      serviceName: DEFRA_water-abstraction-service
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  docker-build-and-push-image:
-    uses: DEFRA/water-abstraction-orchestration/.github/workflows/docker.yml@develop
-  test:
+  build:
     runs-on: ubuntu-latest
-    name: Test
     env:
+      ENVIRONMENT: dev
+      DATABASE_URL: postgres://water_user:password@localhost:5432/wabs_test
+      JWT_SECRET: ItsNoSecretBecauseYouToldEverybody
+      JWT_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6InRlc3QiLCJpYXQiOjE1MDMzMTg0NDV9.eWghqjYlPrb8ZjWacYzTCTh1PBtr2BeSv-_ZIwrtmwE
       # These need to be duplicated in services section for postgres. Unfortunately, there is not a way to reuse them
       PGUSER: water_user
-      PGHOST: localhost
       PGPASSWORD: password
+      PGDATABASE: wabs_test
+      PGHOST: localhost
       PGPORT: 5432
-      PGDATABASE: permits
-      ENVIRONMENT: dev
-      DATABASE_URL: postgres://water_user:password@localhost:5432/permits
-      JWT_SECRET: secret
-      JWT_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTIzNH0.MOREC6-Kszb9bDFw0O1UKywpnkcP-c5cPjASMpjk8Po
-      NOTIFY_KEY: somerealnotifykey-00000000-0000-0000-0000-000000000000-00000000-0000-0000-0000-000000000000
+      # Additional config needed by the service
+      NALD_SERVICE_MAILBOX: some@mailbox.com
+      # The unit tests rely on real, valid API keys being provided. Hence, we store them secretly in the repo settings
+      # See https://github.com/DEFRA/water-abstraction-team/issues/35 for more details
       TEST_NOTIFY_KEY: ${{ secrets.TEST_NOTIFY_KEY }}
       WHITELIST_NOTIFY_KEY: ${{ secrets.WHITELIST_NOTIFY_KEY }}
-      LIVE_NOTIFY_KEY: somerealnotifykey-00000000-0000-0000-0000-000000000000-00000000-0000-0000-0000-000000000000
-      TEST_MODE: 1
-      NODE_ENV: test
-      CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-      WATER_URI: http://127.0.0.1:8001/water/1.0
-      WATER_URI_INTERNAL: http://127.0.0.1:8001/water/1.0
-      PERMIT_URI: http://127.0.0.1:8004/API/1.0/
-      ADMIN_URI: http://127.0.0.1:8005/API/1.0/
-      CRM_URI: http://127.0.0.1:8002/crm/1.0
-      RETURNS_URI: http://127.0.0.1:8006/returns/1.0
-      NALD_SERVICE_MAILBOX: some@mailbox.com
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD:
+
+    # Service containers to run with `runner-job`
     services:
+      # Label used to access the service container
       postgres:
-        image: postgres:10-alpine
+        # Docker Hub image
+        image: postgres:12-alpine
+        # Provide the password for postgres
         env:
           POSTGRES_USER: water_user
-          POSTGRES_HOST: localhost
           POSTGRES_PASSWORD: password
-          POSTGRES_PORT: 5432
-          POSTGRES_DB: permits
+          POSTGRES_DB: wabs_test
+        # Maps tcp port 5432 on service container to the host
         ports:
           - 5432:5432
+        # Set health checks to wait until postgres has started. You must have this so the runner knows to wait till
+        # postgres is up and running before proceeding
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
       redis:
         image: redis
         ports:
           - 6379:6379
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - name: Install node modules
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of sonarcloud analysis
+
+      # Before we do anything, check we haven't accidentally left any `experiment.only()` or `test.only(` statements in
+      # the tests
+      #
+      # Reworking of https://stackoverflow.com/a/21788642/6117745
+      - name: Temporary tag check
         run: |
-          npm ci
-      - name: Create database
+          ! grep -R 'experiment.only(\|test.only(' test
+
+      # Our projects use .nvmrc files to specify the node version to use. We can read and then output it as the result
+      # this step. Subsequent steps can then access the value
+      - name: Read Node version
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        # Give the step an ID to make it easier to refer to
+        id: nvm
+
+      # Gets the version to use by referring to the previous step
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "${{ steps.nvm.outputs.NVMRC }}"
+
+      # Speeds up workflows by reading the node modules from cache. Obviously you need to run it at least once, and the
+      # cache will be updated should the package-lock.json file change
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
+
+      # Performs a clean installation of all dependencies in the `package.json` file
+      # For more information, see https://docs.npmjs.com/cli/ci.html
+      - name: Install dependencies
+        run: npm ci
+
+      # Run linting first. No point running the tests if there is a linting issue
+      - name: Run lint check
         run: |
-          PGPASSWORD=password psql -U water_user -tc "SELECT 'CREATE DATABASE water' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'water_user')"
-      - name: Run database migrations
+          npm run lint
+
+      - name: Database migrations
         run: |
           npm run migrate
-      - name: Test
+
+      # This includes an extra run step. The sonarcloud analysis will be run in a docker container with the current
+      # folder mounted as `/github/workspace`. The problem is when the lcov.info file is generated it will reference the
+      # code in the current folder. So to enable sonarcloud to matchup code coverage with the files we use sed to update
+      # the references in lcov.info
+      # https://community.sonarsource.com/t/code-coverage-doesnt-work-with-github-action/16747/6
+      - name: Run unit tests
         run: |
-          REDIS_HOST=localhost REDIS_PORT=6379 npm run test:ci
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage
-          path: coverage/
+          npm test
+          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' coverage/lcov.info
 
-  Code-Climate:
-    needs: [test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-      - name: Upload to Code Climate
-        uses: paambaati/codeclimate-action@v3.0.0
+      - name: Analyze with SonarCloud
+        if: github.actor != 'dependabot[bot]'
+        uses: sonarsource/sonarcloud-github-action@master
         env:
-          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-        with:
-          coverageLocations: |
-            ${{github.workspace}}/coverage/*.lcov:lcov
-
-  Code-Cov:
-    needs: [test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-      - name: Upload to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          directory: ./coverage/
-
-
-
-
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This is provided automatically by GitHub
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # This needs to be set in your repo; settings -> secrets

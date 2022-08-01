@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const { ChargeVersion } = require('../bookshelf');
-const raw = require('./lib/raw');
-const queries = require('./queries/charge-versions');
-const helpers = require('./lib/helpers');
+const { ChargeVersion } = require('../bookshelf')
+const raw = require('./lib/raw')
+const queries = require('./queries/charge-versions')
+const helpers = require('./lib/helpers')
 
 const sharedRelations = [
   'chargeElements',
@@ -21,17 +21,17 @@ const sharedRelations = [
   'licence.licenceAgreements.financialAgreementType',
   'changeReason',
   'note'
-];
+]
 
 const findOne = async chargeVersionId => {
   const model = await ChargeVersion
     .forge({ chargeVersionId })
     .fetch({
       withRelated: sharedRelations
-    });
+    })
 
-  return model.toJSON();
-};
+  return model.toJSON()
+}
 
 const findMany = async chargeVersionIds => {
   const models = await ChargeVersion
@@ -39,9 +39,9 @@ const findMany = async chargeVersionIds => {
     .where('charge_version_id', 'in', chargeVersionIds)
     .fetchAll({
       withRelated: ['changeReason']
-    });
-  return models.toJSON();
-};
+    })
+  return models.toJSON()
+}
 
 const findByLicenceRef = async licenceRef => {
   const models = await ChargeVersion
@@ -50,10 +50,10 @@ const findByLicenceRef = async licenceRef => {
     .orderBy('start_date')
     .fetchAll({
       withRelated: sharedRelations
-    });
+    })
 
-  return models.toJSON();
-};
+  return models.toJSON()
+}
 
 const findByLicenceId = async licenceId => {
   const models = await ChargeVersion
@@ -62,14 +62,14 @@ const findByLicenceId = async licenceId => {
     .orderBy('start_date')
     .fetchAll({
       withRelated: sharedRelations
-    });
-  return models.toJSON();
-};
+    })
+  return models.toJSON()
+}
 
 const create = async data => {
-  const model = await ChargeVersion.forge(data).save();
-  return model.toJSON();
-};
+  const model = await ChargeVersion.forge(data).save()
+  return model.toJSON()
+}
 
 /**
  * Gets the charge versions that are valid for charging
@@ -79,15 +79,16 @@ const create = async data => {
  * @param {Number} financialYearEnding
  * @param {Boolean} isSupplementaryBatch
  */
-const findValidInRegionAndFinancialYear = (regionId, financialYearEnding, isSupplementaryBatch) => {
+const findValidInRegionAndFinancialYear = (regionId, financialYearEnding, isSupplementaryBatch, scheme) => {
   const params = {
     regionId,
-    financialYearEnding
-  };
+    financialYearEnding,
+    scheme
+  }
   return isSupplementaryBatch
     ? raw.multiRow(queries.findValidInRegionAndFinancialYearSupplementary, params)
-    : raw.multiRow(queries.findValidInRegionAndFinancialYear, params);
-};
+    : raw.multiRow(queries.findValidInRegionAndFinancialYear, params)
+}
 
 /**
  * Updates the specified charge version with the supplied changes
@@ -96,12 +97,12 @@ const findValidInRegionAndFinancialYear = (regionId, financialYearEnding, isSupp
  * @param {Object} changes
  */
 const update = (id, changes) =>
-  helpers.update(ChargeVersion, 'chargeVersionId', id, changes);
+  helpers.update(ChargeVersion, 'chargeVersionId', id, changes)
 
-exports.create = create;
-exports.findOne = findOne;
-exports.findMany = findMany;
-exports.findByLicenceRef = findByLicenceRef;
-exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear;
-exports.update = update;
-exports.findByLicenceId = findByLicenceId;
+exports.create = create
+exports.findOne = findOne
+exports.findMany = findMany
+exports.findByLicenceRef = findByLicenceRef
+exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear
+exports.update = update
+exports.findByLicenceId = findByLicenceId

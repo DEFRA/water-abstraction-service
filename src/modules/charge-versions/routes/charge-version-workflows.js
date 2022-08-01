@@ -1,14 +1,14 @@
-'use strict';
+'use strict'
 
-const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer, viewChargeVersions } } = require('../../../lib/roles');
+const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer, viewChargeVersions } } = require('../../../lib/roles')
 
-const controller = require('../controllers/charge-version-workflow');
-const Joi = require('joi');
-const preHandlers = require('../controllers/pre-handlers');
+const controller = require('../controllers/charge-version-workflow')
+const Joi = require('joi')
+const preHandlers = require('../controllers/pre-handlers')
 
 const headers = async values => {
-  Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
-};
+  Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required())
+}
 
 module.exports = {
 
@@ -126,4 +126,4 @@ module.exports = {
       ]
     }
   }
-};
+}

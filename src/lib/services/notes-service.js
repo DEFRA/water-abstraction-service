@@ -1,5 +1,5 @@
-const noteRepo = require('../connectors/repos/notes');
-const mappers = require('../mappers');
+const noteRepo = require('../connectors/repos/notes')
+const mappers = require('../mappers')
 
 /**
  * Gets the related note for the supplied model
@@ -7,11 +7,11 @@ const mappers = require('../mappers');
  * @return {Object} decorated with note
  */
 const decorateWithNote = async model => {
-  const note = await noteRepo.findByChargeVersionId(model.id);
+  const note = await noteRepo.findByChargeVersionId(model.id)
   if (note) {
-    model.note = mappers.note.dbToModel(note);
+    model.note = mappers.note.dbToModel(note)
   }
-  return model;
-};
+  return model
+}
 
-exports.decorateWithNote = decorateWithNote;
+exports.decorateWithNote = decorateWithNote

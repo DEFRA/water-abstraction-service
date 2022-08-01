@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const AbstractionPeriod = require('../models/abstraction-period');
+const AbstractionPeriod = require('../models/abstraction-period')
 
 const dbToModel = dbRow => {
-  const abstractionPeriod = new AbstractionPeriod();
+  const abstractionPeriod = new AbstractionPeriod()
   // we only want to map the abstraction period for ALCS Charge Elements or
   // when it is an SROC charge purpose.
   if (dbRow.scheme === 'alcs' || dbRow.chargePurposeId) {
@@ -12,16 +12,16 @@ const dbToModel = dbRow => {
       startMonth: dbRow.abstractionPeriodStartMonth,
       endDay: dbRow.abstractionPeriodEndDay,
       endMonth: dbRow.abstractionPeriodEndMonth
-    });
+    })
   }
-  return abstractionPeriod;
-};
+  return abstractionPeriod
+}
 
 /**
  * Creates a plain object which can be used in the getBillableDays helper
  * @param {AbstractionPeriod} absPeriod
  */
-const modelToHelpers = absPeriod => absPeriod.pick(['startDay', 'startMonth', 'endDay', 'endMonth']);
+const modelToHelpers = absPeriod => absPeriod.pick(['startDay', 'startMonth', 'endDay', 'endMonth'])
 
 /**
  * Converts plain JS object representation of abstraction period to
@@ -30,10 +30,10 @@ const modelToHelpers = absPeriod => absPeriod.pick(['startDay', 'startMonth', 'e
  * @return {AbstractionPeriod}
  */
 const pojoToModel = pojo => {
-  const abstractionPeriod = new AbstractionPeriod();
-  return abstractionPeriod.fromHash(pojo);
-};
+  const abstractionPeriod = new AbstractionPeriod()
+  return abstractionPeriod.fromHash(pojo)
+}
 
-exports.dbToModel = dbToModel;
-exports.modelToHelpers = modelToHelpers;
-exports.pojoToModel = pojoToModel;
+exports.dbToModel = dbToModel
+exports.modelToHelpers = modelToHelpers
+exports.pojoToModel = pojoToModel

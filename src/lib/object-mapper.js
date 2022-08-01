@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 /**
  * @module an object mapper with fluent interface based on map-factory NPM module
@@ -6,21 +6,21 @@
  *         by default nulls are mapped, with an option of ignoring them
  */
 
-const { identity, get, set, isUndefined, isNull, isFunction, last, isObject, isArray } = require('lodash');
+const { identity, get, set, isUndefined, isNull, isFunction, last, isObject, isArray } = require('lodash')
 
 const getSourceKeys = value => {
   if (isArray(value)) {
-    return value;
+    return value
   } else if (isUndefined(value)) {
-    return [];
+    return []
   }
-  return [value];
-};
+  return [value]
+}
 
 class Mapper {
   constructor (options) {
-    this._rules = [];
-    this._options = Object.assign({}, { mapNull: true }, options);
+    this._rules = []
+    this._options = Object.assign({}, { mapNull: true }, options)
   }
 
   /**
@@ -28,8 +28,8 @@ class Mapper {
    * @param {String|Array} [keys] - if not supplied, selects the entire data object.  Can use dot notation, e.g 'foo.bar.baz'
    */
   map (keys) {
-    this._sourceKeys = getSourceKeys(keys);
-    return this;
+    this._sourceKeys = getSourceKeys(keys)
+    return this
   }
 
   /**
@@ -40,11 +40,11 @@ class Mapper {
    * @param {Boolean} [options.mapNull]  can control if null is mapped per property
    */
   to (targetKey, ...args) {
-    const mapper = isFunction(args[0]) ? args[0] : null;
-    const options = isObject(last(args)) ? last(args) : {};
+    const mapper = isFunction(args[0]) ? args[0] : null
+    const options = isObject(last(args)) ? last(args) : {}
 
     if (this._sourceKeys.length > 1 && !mapper) {
-      throw new Error(`error mapping to .${targetKey}: when >1 source key, a mapper is required`);
+      throw new Error(`error mapping to .${targetKey}: when >1 source key, a mapper is required`)
     }
 
     this._rules.push({
@@ -52,8 +52,8 @@ class Mapper {
       targetKey,
       mapper: mapper || identity,
       options: Object.assign({}, this._options, options)
-    });
-    return this;
+    })
+    return this
   }
 
   /**
@@ -62,9 +62,9 @@ class Mapper {
    */
   copy (...sourceKeys) {
     for (const key of sourceKeys) {
-      this.map(key).to(key);
+      this.map(key).to(key)
     }
-    return this;
+    return this
   }
 
   /**
@@ -77,23 +77,23 @@ class Mapper {
       // If the source key is omitted, supply the entire object
       const values = row.sourceKeys.length === 0
         ? [data]
-        : row.sourceKeys.map(key => get(data, key));
+        : row.sourceKeys.map(key => get(data, key))
 
       // Undefined values in the source are skipped
       if (values.every(isUndefined)) {
-        return acc;
+        return acc
       }
 
       // Optionally skip null values in source (by default they are mapped)
       if (!row.options.mapNull && values.every(isNull)) {
-        return acc;
+        return acc
       }
 
-      return set(acc, row.targetKey, row.mapper(...values));
-    }, {});
+      return set(acc, row.targetKey, row.mapper(...values))
+    }, {})
   }
 }
 
-const createMapper = options => new Mapper(options);
+const createMapper = options => new Mapper(options)
 
-exports.createMapper = createMapper;
+exports.createMapper = createMapper

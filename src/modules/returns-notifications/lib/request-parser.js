@@ -7,10 +7,10 @@ const getConfig = (config) => {
   const defaults = {
     prefix: 'RFORM-',
     rolePriority: ['returns_to', 'licence_holder']
-  };
+  }
 
-  return Object.assign(defaults, config);
-};
+  return Object.assign(defaults, config)
+}
 
 /**
  * Parses variables used by the controller out of the request
@@ -18,12 +18,12 @@ const getConfig = (config) => {
  * @return {Object} controller variables
  */
 const parseRequest = (request) => {
-  const { notificationId: messageRef } = request.params;
+  const { notificationId: messageRef } = request.params
 
   // Get params to query returns service
-  const { filter, issuer, name, config } = request.payload;
-  const columns = ['return_id', 'licence_ref'];
-  const sort = {};
+  const { filter, issuer, name, config } = request.payload
+  const columns = ['return_id', 'licence_ref']
+  const sort = {}
 
   return {
     messageRef,
@@ -33,8 +33,8 @@ const parseRequest = (request) => {
     columns,
     sort,
     config: getConfig(config)
-  };
-};
+  }
+}
 
-exports.getConfig = getConfig;
-exports.parseRequest = parseRequest;
+exports.getConfig = getConfig
+exports.parseRequest = parseRequest

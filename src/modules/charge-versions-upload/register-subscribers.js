@@ -1,6 +1,6 @@
-const startUpload = require('./jobs/update-charge-information-start');
-const mapToJson = require('./jobs/update-charge-information-to-json');
-const updateChargeInformation = require('./jobs/update-charge-information-save');
+const startUpload = require('./jobs/update-charge-information-start')
+const mapToJson = require('./jobs/update-charge-information-to-json')
+const updateChargeInformation = require('./jobs/update-charge-information-save')
 
 module.exports = {
   name: 'chargeInformationRegisterSubscribersBullMQ',
@@ -9,6 +9,6 @@ module.exports = {
     server.queueManager
       .register(startUpload)
       .register(mapToJson)
-      .register(updateChargeInformation);
+      .register(updateChargeInformation)
   }
-};
+}

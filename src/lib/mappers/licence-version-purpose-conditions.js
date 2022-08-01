@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-const LicenceVersionPurposeCondition = require('../models/licence-version-purpose-condition');
-const { createMapper } = require('../object-mapper');
-const helpers = require('./lib/helpers');
+const LicenceVersionPurposeCondition = require('../models/licence-version-purpose-condition')
+const { createMapper } = require('../object-mapper')
+const helpers = require('./lib/helpers')
 
 const dbToModelMapper = createMapper()
   .map('licenceVersionPurposeConditionId').to('id')
@@ -10,8 +10,8 @@ const dbToModelMapper = createMapper()
     'param1',
     'param2',
     'notes'
-  );
+  )
 
-const dbToModel = row => helpers.createModel(LicenceVersionPurposeCondition, row, dbToModelMapper);
+const dbToModel = row => helpers.createModel(LicenceVersionPurposeCondition, row, dbToModelMapper)
 
-exports.dbToModel = dbToModel;
+exports.dbToModel = dbToModel

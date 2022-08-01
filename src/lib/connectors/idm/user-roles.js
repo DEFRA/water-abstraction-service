@@ -1,5 +1,5 @@
-const { serviceRequest } = require('@envage/water-abstraction-helpers');
-const config = require('../../../../config');
+const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const config = require('../../../../config')
 
 /**
  * Sets the roles and groups for a given user
@@ -10,10 +10,10 @@ const config = require('../../../../config');
  * @param {Array} groups An array of groups names
  */
 const setUserRoles = (application, userId, roles = [], groups = []) => {
-  const url = `${config.services.idm}/user/${userId}/roles`;
-  const body = { application, roles, groups };
-  return serviceRequest.put(url, { body });
-};
+  const url = `${config.services.idm}/user/${userId}/roles`
+  const body = { application, roles, groups }
+  return serviceRequest.put(url, { body })
+}
 
 /**
  * Sets the roles and groups for a given internal user
@@ -23,6 +23,6 @@ const setUserRoles = (application, userId, roles = [], groups = []) => {
  * @param {Array} groups An array of groups names
  */
 const setInternalUserRoles = (userId, roles, groups) =>
-  setUserRoles(config.idm.application.internalUser, userId, roles, groups);
+  setUserRoles(config.idm.application.internalUser, userId, roles, groups)
 
-exports.setInternalUserRoles = setInternalUserRoles;
+exports.setInternalUserRoles = setInternalUserRoles

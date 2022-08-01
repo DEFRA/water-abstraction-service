@@ -1,0 +1,51 @@
+#### Do not use this for re-billing tests as transactions will not exist in the charge module
+
+- ref: $$$[batchType]Batch$$[index]
+  model: BillingBatch
+  fields:
+    regionId: $region.regionId
+    batchType: $$[batchType]
+    fromFinancialYearEnding: $$[billingYear]
+    toFinancialYearEnding: $$[billingYear]
+    status: sent
+    isSummer: false
+    source: wrls
+    invoiceCount: 1
+    creditNoteCount: 0
+    invoiceValue: 55020
+    netTotal: 55020
+    externalId: $$[externalId]
+    billRunNumber: $$[billRunNumber]
+    metadata: { source: "acceptance-test-setup" }
+    dateCreated: '$$[batchDate] 10:00:00.000000'
+
+- ref: $$$[batchType]InvoiceL1$$[index]
+  model: BillingInvoice
+  fields:
+    invoiceAccountId: $invoiceAccountL1.invoiceAccountId
+    address: {
+      address1: "Big Farm",
+      address2: "Windy road",
+      address3: "Buttercup meadow",
+      address4: "Buttercup Village",
+      town: "Testington",
+      county: "Testingshire",
+      postcode: "TT1 1TT",
+      source: "nald" }
+    invoiceAccountNumber: $invoiceAccountL1.invoiceAccountNumber
+    netAmount: 55020
+    isCredit: false
+    billingBatchId: $$$[batchType]Batch$$[index].billingBatchId
+    financialYearEnding: $$[billingYear]
+    invoiceNumber: $$[invoiceNumberL1]
+    metadata: { source: "acceptance-test-setup" }
+    isDeMinimis: false
+    dateCreated: '$$[batchDate] 10:00:00.000000'
+
+- ref: $$$[batchType]InvoiceLicenceL1$$[index]
+  model: BillingInvoiceLicence
+  fields:
+    billingInvoiceId: $$$[batchType]InvoiceL1$$[index].billingInvoiceId
+    licenceRef: $licenceL1.licenceRef
+    licenceId: $licenceL1.licenceId
+    dateCreated: '$$[batchDate] 10:00:00.000000'

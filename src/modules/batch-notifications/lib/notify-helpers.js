@@ -1,4 +1,4 @@
-const { compact } = require('lodash');
+const { compact } = require('lodash')
 
 /**
  * Reduces the number of address lines to 6 (the max in Notify)
@@ -7,15 +7,15 @@ const { compact } = require('lodash');
  * @return {Array}
  */
 const reduceAddressLines = lines => {
-  const compacted = compact(lines);
-  let index = 1;
+  const compacted = compact(lines)
+  let index = 1
   while (compacted.length > 6) {
-    const newLine = compacted.slice(index, index + 2).join(', ');
-    compacted.splice(index, 2, newLine);
-    index++;
+    const newLine = compacted.slice(index, index + 2).join(', ')
+    compacted.splice(index, 2, newLine)
+    index++
   }
-  return compacted;
-};
+  return compacted
+}
 
 /**
  * Creates the notification address in the format expected by existing
@@ -24,7 +24,7 @@ const reduceAddressLines = lines => {
  * @return {Object} contact details object for personalisation
  */
 const mapContactAddress = (contact) => {
-  const { postcode } = contact;
+  const { postcode } = contact
 
   const addressLines = reduceAddressLines([
     contact.getFullName(),
@@ -35,12 +35,12 @@ const mapContactAddress = (contact) => {
     contact.town,
     contact.county,
     contact.country
-  ]);
+  ])
 
   return addressLines.reduce((acc, line, index) => ({
     ...acc,
     [`address_line_${index + 1}`]: line
-  }), { postcode });
-};
+  }), { postcode })
+}
 
-exports.mapContactAddress = mapContactAddress;
+exports.mapContactAddress = mapContactAddress

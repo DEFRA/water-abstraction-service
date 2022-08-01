@@ -1,6 +1,6 @@
-const { pool } = require('../../../lib/connectors/db');
-const { MESSAGE_STATUS_SENDING, MESSAGE_STATUS_SENT } = require('./message-statuses');
-const { EVENT_STATUS_SENDING } = require('./event-statuses');
+const { pool } = require('../../../lib/connectors/db')
+const { MESSAGE_STATUS_SENDING, MESSAGE_STATUS_SENT } = require('./message-statuses')
+const { EVENT_STATUS_SENDING } = require('./event-statuses')
 
 /**
  * Gets a batch of messages to scheduled sending
@@ -12,11 +12,11 @@ const getSendingMessageBatch = async () => {
     WHERE status=$1
     AND send_after<NOW() AND send_after>(CURRENT_TIMESTAMP - interval '1 week')
     ORDER BY send_after
-    LIMIT 100`;
-  const params = [MESSAGE_STATUS_SENDING];
-  const { rows } = await pool.query(query, params);
-  return rows;
-};
+    LIMIT 100`
+  const params = [MESSAGE_STATUS_SENDING]
+  const { rows } = await pool.query(query, params)
+  return rows
+}
 
 /**
  * Gets all recent notification events with a status of 'sending'
@@ -27,11 +27,11 @@ const getSendingEvents = async () => {
     FROM water.events
     WHERE type='notification' AND status=$1
     AND created>(CURRENT_TIMESTAMP - interval '1 week')
-    `;
-  const params = [EVENT_STATUS_SENDING];
-  const { rows } = await pool.query(query, params);
-  return rows;
-};
+    `
+  const params = [EVENT_STATUS_SENDING]
+  const { rows } = await pool.query(query, params)
+  return rows
+}
 
 /**
  * Gets a breakdown of message statuses for a particular event ID
@@ -43,12 +43,12 @@ const getMessageStatuses = async eventId => {
     FROM water.scheduled_notification
     WHERE event_id=$1
     GROUP BY status
-  `;
-  const params = [eventId];
+  `
+  const params = [eventId]
 
-  const { rows } = await pool.query(query, params);
-  return rows;
-};
+  const { rows } = await pool.query(query, params)
+  return rows
+}
 
 /**
  * Gets a list of all scheduled notifications that require a Notify status check
@@ -62,15 +62,15 @@ const getNotifyStatusChecks = async () => {
     AND (next_status_check IS NULL OR next_status_check<=CURRENT_TIMESTAMP)
     AND notify_id IS NOT NULL
     AND status=$1
-  `;
-  const params = [MESSAGE_STATUS_SENT];
-  const { rows } = await pool.query(query, params);
-  return rows;
-};
+  `
+  const params = [MESSAGE_STATUS_SENT]
+  const { rows } = await pool.query(query, params)
+  return rows
+}
 
 module.exports = {
   getSendingMessageBatch,
   getSendingEvents,
   getMessageStatuses,
   getNotifyStatusChecks
-};
+}

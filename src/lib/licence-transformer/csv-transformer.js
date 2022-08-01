@@ -2,13 +2,13 @@
  * Transforms NALD data into VML native format
  * @module lib/licence-transformer/nald-transformer
  */
-const { find, uniqBy } = require('lodash');
-const BaseTransformer = require('./base-transformer');
-const LicenceTitleLoader = require('./licence-title-loader');
-const licenceTitleLoader = new LicenceTitleLoader();
-const { logger } = require('../../logger');
+const { find, uniqBy } = require('lodash')
+const BaseTransformer = require('./base-transformer')
+const LicenceTitleLoader = require('./licence-title-loader')
+const licenceTitleLoader = new LicenceTitleLoader()
+const { logger } = require('../../logger')
 
-const nald = require('@envage/water-abstraction-helpers').nald;
+const nald = require('@envage/water-abstraction-helpers').nald
 
 class CSVTransformer extends BaseTransformer {
   /**
@@ -16,7 +16,7 @@ class CSVTransformer extends BaseTransformer {
    * @param {Object} data - data loaded from NALD
    */
   async load (data) {
-    data = nald.transformNull(data);
+    data = nald.transformNull(data)
 
     this.data = {
       licenceNumber: data.id,
@@ -31,9 +31,9 @@ class CSVTransformer extends BaseTransformer {
       uniquePurposeNames: this.uniquePurposeNamesFormatter(data.purposes),
       abstractionPeriods: this.periodsFormatter(data.purposes),
       contacts: this.contactsFormatter(data)
-    };
+    }
 
-    logger.info(JSON.stringify(this.data, null, 2));
+    logger.info(JSON.stringify(this.data, null, 2))
   }
 
   /**
@@ -42,8 +42,8 @@ class CSVTransformer extends BaseTransformer {
    * @return {Array} contacts
    */
   contactsFormatter (data) {
-    const { salutation, initials, forename, name } = data;
-    const { addressLine1, addressLine2, addressLine3, addressLine4, town, county, postCode, country } = data;
+    const { salutation, initials, forename, name } = data
+    const { addressLine1, addressLine2, addressLine3, addressLine4, town, county, postCode, country } = data
 
     return [{
       type: 'Licence Holder',
@@ -57,7 +57,7 @@ class CSVTransformer extends BaseTransformer {
       county,
       postcode: postCode,
       country
-    }];
+    }]
   }
 
   /**
@@ -69,8 +69,8 @@ class CSVTransformer extends BaseTransformer {
     const periods = purposes.map(item => ({
       periodStart: item.periodStart,
       periodEnd: item.periodEnd
-    }));
-    return uniqBy(periods, item => Object.values(item).join(','));
+    }))
+    return uniqBy(periods, item => Object.values(item).join(','))
   }
 
   /**
@@ -79,8 +79,8 @@ class CSVTransformer extends BaseTransformer {
    * @return {Array} of string names
    */
   uniquePurposeNamesFormatter (purposes) {
-    const purposeNames = purposes.map(item => item.description);
-    return uniqBy(purposeNames);
+    const purposeNames = purposes.map(item => item.description)
+    return uniqBy(purposeNames)
   }
 
   /**
@@ -98,10 +98,10 @@ class CSVTransformer extends BaseTransformer {
       dailyQty: purpose.dailyQuantity,
       hourlyQty: purpose.hourlyQuantity,
       instantaneousQty: purpose.instantQuantity
-    }));
+    }))
 
     // De-duplicate
-    return uniqBy(formatted, item => Object.values(item).join(','));
+    return uniqBy(formatted, item => Object.values(item).join(','))
   }
 
   /**
@@ -115,14 +115,14 @@ class CSVTransformer extends BaseTransformer {
    * @return {Array}
    */
   pointsFormatter (purposes) {
-    let points = [];
+    let points = []
 
     purposes.forEach(purpose => {
-      points = [...points, ...purpose.points];
-    });
+      points = [...points, ...purpose.points]
+    })
 
     // De-duplicate
-    return uniqBy(points, item => Object.values(item).join(','));
+    return uniqBy(points, item => Object.values(item).join(','))
   }
 
   /**
@@ -133,7 +133,7 @@ class CSVTransformer extends BaseTransformer {
    */
   async conditionFormatter (purposes) {
     // Read condition titles from CSV
-    const titleData = await licenceTitleLoader.load();
+    const titleData = await licenceTitleLoader.load()
 
     /**
      * Match a condition within the condition array
@@ -143,8 +143,8 @@ class CSVTransformer extends BaseTransformer {
      * @return {Function} returns a predicate that can be used in lodash/find
      */
     const conditionMatcher = (code, subCode, purpose) => {
-      return (item) => (code === item.code) && (subCode === item.subCode) && (purpose === item.purpose);
-    };
+      return (item) => (code === item.code) && (subCode === item.subCode) && (purpose === item.purpose)
+    }
 
     /**
      * Match a title within the display titles array
@@ -153,8 +153,8 @@ class CSVTransformer extends BaseTransformer {
      * @return {Function} returns a predicate that can be used in lodash/find
      */
     const titleMatcher = (code, subCode) => {
-      return (item) => (code === item.code) && (subCode === item.subCode);
-    };
+      return (item) => (code === item.code) && (subCode === item.subCode)
+    }
 
     /**
      * Match a point within the condition points array
@@ -162,35 +162,35 @@ class CSVTransformer extends BaseTransformer {
      * @return {Function} returns a predicate that can be used in lodash/find
      */
     const pointMatcher = (points) => {
-      return (item) => item.points.join(',') === points.join(',');
-    };
+      return (item) => item.points.join(',') === points.join(',')
+    }
 
-    const conditionsArr = [];
+    const conditionsArr = []
 
     purposes.forEach((purpose) => {
-      const points = purpose.points.map(nald.formatting.formatAbstractionPoint);
+      const points = purpose.points.map(nald.formatting.formatAbstractionPoint)
 
       purpose.conditions.forEach((condition) => {
-        const { code, subCode, parameter1, parameter2, text } = condition;
-        const { description: purposeText } = purpose;
+        const { code, subCode, parameter1, parameter2, text } = condition
+        const { description: purposeText } = purpose
 
         if (!code) {
-          return;
+          return
         }
 
         // Condition wrapper
-        let cWrapper = find(conditionsArr, conditionMatcher(code, subCode, purposeText));
+        let cWrapper = find(conditionsArr, conditionMatcher(code, subCode, purposeText))
         if (!cWrapper) {
-          const titles = find(titleData, titleMatcher(code, subCode));
-          cWrapper = { ...titles, code, subCode, points: [], purpose: purposeText };
-          conditionsArr.push(cWrapper);
+          const titles = find(titleData, titleMatcher(code, subCode))
+          cWrapper = { ...titles, code, subCode, points: [], purpose: purposeText }
+          conditionsArr.push(cWrapper)
         }
 
         // Points wrapper
-        let pWrapper = find(cWrapper.points, pointMatcher(points));
+        let pWrapper = find(cWrapper.points, pointMatcher(points))
         if (!pWrapper) {
-          pWrapper = { points, conditions: [] };
-          cWrapper.points.push(pWrapper);
+          pWrapper = { points, conditions: [] }
+          cWrapper.points.push(pWrapper)
         }
 
         // Add condition
@@ -198,16 +198,16 @@ class CSVTransformer extends BaseTransformer {
           parameter1,
           parameter2,
           text
-        });
+        })
 
         // De-dedupe
         // @TODO - remove duplication in original data
-        pWrapper.conditions = uniqBy(pWrapper.conditions, item => Object.values(item).join(','));
-      });
-    });
+        pWrapper.conditions = uniqBy(pWrapper.conditions, item => Object.values(item).join(','))
+      })
+    })
 
-    return conditionsArr;
+    return conditionsArr
   }
 }
 
-module.exports = CSVTransformer;
+module.exports = CSVTransformer

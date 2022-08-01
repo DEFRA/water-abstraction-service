@@ -1,9 +1,9 @@
-'use strict';
-const licenceGaugingStationsRepo = require('../connectors/repos/licence-gauging-stations');
+'use strict'
+const licenceGaugingStationsRepo = require('../connectors/repos/licence-gauging-stations')
 
-const findLicenceGaugingStationsByFilter = licenceGaugingStationsRepo.findLicenceGaugingStationsByFilter;
+const findLicenceGaugingStationsByFilter = licenceGaugingStationsRepo.findLicenceGaugingStationsByFilter
 
-const getLicenceGaugingStationById = async licenceGaugingStationId => licenceGaugingStationsRepo.findOneById(licenceGaugingStationId);
+const getLicenceGaugingStationById = async licenceGaugingStationId => licenceGaugingStationsRepo.findOneById(licenceGaugingStationId)
 
 const createNewLicenceLink = (gaugingStationId, licenceId, properties = {
   licenceVersionPurposeConditionId: null,
@@ -13,11 +13,11 @@ const createNewLicenceLink = (gaugingStationId, licenceId, properties = {
   restrictionType: 'flow',
   alertType: 'reduce',
   source: 'wrls'
-}) => licenceGaugingStationsRepo.create({ gaugingStationId, licenceId, ...properties });
+}) => licenceGaugingStationsRepo.create({ gaugingStationId, licenceId, ...properties })
 
-const deleteLicenceLink = licenceGaugingStationsRepo.deleteOne;
+const deleteLicenceLink = licenceGaugingStationsRepo.deleteOne
 
-exports.findLicenceGaugingStationsByFilter = findLicenceGaugingStationsByFilter;
-exports.getLicenceGaugingStationById = getLicenceGaugingStationById;
-exports.createNewLicenceLink = createNewLicenceLink;
-exports.deleteLicenceLink = deleteLicenceLink;
+exports.findLicenceGaugingStationsByFilter = findLicenceGaugingStationsByFilter
+exports.getLicenceGaugingStationById = getLicenceGaugingStationById
+exports.createNewLicenceLink = createNewLicenceLink
+exports.deleteLicenceLink = deleteLicenceLink

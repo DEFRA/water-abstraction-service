@@ -1,17 +1,17 @@
-'use strict';
+'use strict'
 
-const { isEmpty, omitBy } = require('lodash');
+const { isEmpty, omitBy } = require('lodash')
 
-const Company = require('../../../lib/models/company');
-const Address = require('../../../lib/models/address');
-const Pagination = require('../../../lib/models/pagination');
+const Company = require('../../../lib/models/company')
+const Address = require('../../../lib/models/address')
+const Pagination = require('../../../lib/models/pagination')
 
-const organisationTypeMap = new Map();
-organisationTypeMap.set('ltd', Company.ORGANISATION_TYPES.limitedCompany);
-organisationTypeMap.set('llp', Company.ORGANISATION_TYPES.limitedLiabilityPartnership);
-organisationTypeMap.set('plc', Company.ORGANISATION_TYPES.publicLimitedCompany);
+const organisationTypeMap = new Map()
+organisationTypeMap.set('ltd', Company.ORGANISATION_TYPES.limitedCompany)
+organisationTypeMap.set('llp', Company.ORGANISATION_TYPES.limitedLiabilityPartnership)
+organisationTypeMap.set('plc', Company.ORGANISATION_TYPES.publicLimitedCompany)
 
-const mapCompanyType = companyType => organisationTypeMap.get(companyType);
+const mapCompanyType = companyType => organisationTypeMap.get(companyType)
 
 /**
  * Maps a companies house address to an Address service model
@@ -19,7 +19,7 @@ const mapCompanyType = companyType => organisationTypeMap.get(companyType);
  * @return {Address}
  */
 const mapAddress = data => {
-  const address = new Address();
+  const address = new Address()
 
   const obj = {
     addressLine1: data.po_box,
@@ -31,10 +31,10 @@ const mapAddress = data => {
     postcode: data.postal_code,
     country: data.country || 'United Kingdom',
     source: Address.ADDRESS_SOURCE.companiesHouse
-  };
+  }
 
-  return address.fromHash(omitBy(obj, isEmpty));
-};
+  return address.fromHash(omitBy(obj, isEmpty))
+}
 
 /**
  * Maps companies house company to a Company instance
@@ -42,15 +42,15 @@ const mapAddress = data => {
  * @return {Company}
  */
 const mapCompany = item => {
-  const company = new Company();
-  const organisationType = mapCompanyType(item.company_type || item.type);
+  const company = new Company()
+  const organisationType = mapCompanyType(item.company_type || item.type)
   return company.fromHash({
     name: item.title || item.company_name,
     type: Company.COMPANY_TYPES.organisation,
     companyNumber: item.company_number,
     ...organisationType && { organisationType }
-  });
-};
+  })
+}
 
 /**
  * Maps companies house API response to a Pagination service model
@@ -58,14 +58,14 @@ const mapCompany = item => {
  * @return {Pagination}
  */
 const mapPagination = response => {
-  const pagination = new Pagination();
+  const pagination = new Pagination()
   return pagination.fromHash({
     page: response.page_number,
     perPage: response.items_per_page,
     totalRows: response.total_results,
     pageCount: Math.ceil(response.total_results / response.items_per_page)
-  });
-};
+  })
+}
 
 /**
  * Maps a search result item to a company/contact/address
@@ -75,10 +75,10 @@ const mapItem = item => {
   return {
     company: mapCompany(item),
     address: mapAddress(item.address)
-  };
-};
+  }
+}
 
-exports.mapPagination = mapPagination;
-exports.mapItem = mapItem;
-exports.mapCompany = mapCompany;
-exports.mapAddress = mapAddress;
+exports.mapPagination = mapPagination
+exports.mapItem = mapItem
+exports.mapCompany = mapCompany
+exports.mapAddress = mapAddress

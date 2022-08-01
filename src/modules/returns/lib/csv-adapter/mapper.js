@@ -1,38 +1,38 @@
-'use strict';
+'use strict'
 
-const waterHelpers = require('@envage/water-abstraction-helpers');
+const waterHelpers = require('@envage/water-abstraction-helpers')
 
-const { unzip } = require('lodash');
-const common = require('../common-mapping');
+const { unzip } = require('lodash')
+const common = require('../common-mapping')
 
-const moment = require('moment');
-const DATE_FORMAT = 'YYYY-MM-DD';
+const moment = require('moment')
+const DATE_FORMAT = 'YYYY-MM-DD'
 
-const csvParser = require('./csv-parser');
-const dateParser = require('./date-parser');
+const csvParser = require('./csv-parser')
+const dateParser = require('./date-parser')
 
 const ROW_INDEX = {
   nilReturn: 4,
   meterUsed: 5,
   meterMake: 6,
   meterSerial: 7
-};
+}
 
-const { parseReturnId } = waterHelpers.returns;
+const { parseReturnId } = waterHelpers.returns
 
 /**
  * Trims and lowercases value
  * @param  {String} value
  * @return {String}
  */
-const normalize = value => value.trim().toLowerCase();
+const normalize = value => value.trim().toLowerCase()
 
 /**
  * Checks whether value is an acceptable 'yes' value
  * @param {String} value
  * @return {Boolean}
  */
-const isYesValue = value => ['y', 'yes'].includes(normalize(value));
+const isYesValue = value => ['y', 'yes'].includes(normalize(value))
 
 /**
  * Creates a skeleton return line object
@@ -40,7 +40,7 @@ const isYesValue = value => ['y', 'yes'].includes(normalize(value));
  * @param {Number} numberOfDataLines - how many lines of data for this return?
  * @return {Object}           - return line object
  */
-const createReturnLine = (dateLabel) => dateParser.parse(dateLabel);
+const createReturnLine = (dateLabel) => dateParser.parse(dateLabel)
 
 /**
  * Maps an abstracted volume to a float
@@ -50,12 +50,12 @@ const createReturnLine = (dateLabel) => dateParser.parse(dateLabel);
  * @return {Number}
  */
 const mapQuantity = value => {
-  const val = normalize(value);
+  const val = normalize(value)
   if (val === '') {
-    return null;
+    return null
   }
-  return parseFloat(val.replace(/,/g, ''));
-};
+  return parseFloat(val.replace(/,/g, ''))
+}
 
 /**
  * Creates return lines array by combining CSV header and column data
@@ -65,13 +65,13 @@ const mapQuantity = value => {
  * @return {Array}              - return lines array
  */
 const mapLines = (headers, column, readingType) => {
-  const lineHeaders = headers.slice(8, -1);
-  const lineCells = column.slice(8, -1);
+  const lineHeaders = headers.slice(8, -1)
+  const lineCells = column.slice(8, -1)
 
   return lineHeaders.reduce((acc, dateLabel, index) => {
-    const value = normalize(lineCells[index]);
+    const value = normalize(lineCells[index])
     if (value === 'do not edit') {
-      return acc;
+      return acc
     }
     return [...acc, {
       unit: 'm³',
@@ -79,9 +79,9 @@ const mapLines = (headers, column, readingType) => {
       ...createReturnLine(dateLabel),
       quantity: mapQuantity(value),
       readingType
-    }];
-  }, []);
-};
+    }]
+  }, [])
+}
 
 /**
  * Maps reading object
@@ -93,7 +93,7 @@ const mapReading = column => ({
   method: 'abstractionVolumes',
   units: 'm³',
   totalFlag: false
-});
+})
 
 /**
  * Maps CSV column data and reading type to a meters array for the return
@@ -104,7 +104,7 @@ const mapReading = column => ({
  */
 const mapMeters = (column, readingType) => {
   if (readingType === 'estimated') {
-    return [];
+    return []
   }
 
   return [{
@@ -112,8 +112,8 @@ const mapMeters = (column, readingType) => {
     manufacturer: column[ROW_INDEX.meterMake].trim(),
     serialNumber: column[ROW_INDEX.meterSerial].trim(),
     multiplier: 1
-  }];
-};
+  }]
+}
 
 /**
  * Maps column and context data into a return object compatible with the
@@ -126,9 +126,9 @@ const mapMeters = (column, readingType) => {
  * @return {Object}         a single return object
  */
 const mapReturn = (column, context) => {
-  const isNil = isYesValue(column[ROW_INDEX.nilReturn]);
-  const returnId = column.slice(-1)[0];
-  const { startDate, endDate, licenceNumber } = parseReturnId(returnId);
+  const isNil = isYesValue(column[ROW_INDEX.nilReturn])
+  const returnId = column.slice(-1)[0]
+  const { startDate, endDate, licenceNumber } = parseReturnId(returnId)
 
   // Create return skeleton
   const ret = {
@@ -140,26 +140,26 @@ const mapReturn = (column, context) => {
     isNil,
     ...common.getReturnSkeleton(),
     user: common.mapUser(context.user)
-  };
+  }
 
   // Add lines/reading etc.
   if (!isNil) {
-    ret.reading = mapReading(column);
-    ret.lines = mapLines(context.headers, column, ret.reading.type);
-    ret.meters = mapMeters(column, ret.reading.type);
-    ret.frequency = ret.lines[0].timePeriod;
+    ret.reading = mapReading(column)
+    ret.lines = mapLines(context.headers, column, ret.reading.type)
+    ret.meters = mapMeters(column, ret.reading.type)
+    ret.frequency = ret.lines[0].timePeriod
   }
 
   // Return
-  return ret;
-};
+  return ret
+}
 
 /**
  * Checks whether a cell is not empty
  * @param  {String}  value - the cell value
  * @return {Boolean}         true if the cell is not empty
  */
-const isNotEmptyCell = value => !['', 'do not edit'].includes(normalize(value));
+const isNotEmptyCell = value => !['', 'do not edit'].includes(normalize(value))
 
 /**
  * Checks whether return column from the imported CSV is blank
@@ -170,9 +170,9 @@ const isNotEmptyCell = value => !['', 'do not edit'].includes(normalize(value));
  * @return {Boolean}          true if the return is empty
  */
 const isEmptyReturn = column => {
-  const cells = column.slice(4, -1);
-  return !cells.some(isNotEmptyCell);
-};
+  const cells = column.slice(4, -1)
+  return !cells.some(isNotEmptyCell)
+}
 
 /**
  * Maps a CSV file in string form to an array of return objects
@@ -182,28 +182,28 @@ const isEmptyReturn = column => {
  * @return {Promise<Array>} resolves with array of return objects
  */
 const mapCsv = async (csvStr, user, today) => {
-  const data = await csvParser.parseCsv(csvStr);
+  const data = await csvParser.parseCsv(csvStr)
 
-  const [headers, ...returns] = unzip(data);
+  const [headers, ...returns] = unzip(data)
 
   const context = {
     user,
     today: today || moment().format(DATE_FORMAT),
     headers
-  };
+  }
 
   return returns.reduce((acc, column) => {
-    return isEmptyReturn(column) ? acc : [...acc, mapReturn(column, context)];
-  }, []);
-};
+    return isEmptyReturn(column) ? acc : [...acc, mapReturn(column, context)]
+  }, [])
+}
 
-exports._normalize = normalize;
-exports._createReturnLine = createReturnLine;
-exports._mapLines = mapLines;
-exports._mapReading = mapReading;
-exports._mapMeters = mapMeters;
-exports._mapReturn = mapReturn;
-exports._mapQuantity = mapQuantity;
-exports._isEmptyReturn = isEmptyReturn;
+exports._normalize = normalize
+exports._createReturnLine = createReturnLine
+exports._mapLines = mapLines
+exports._mapReading = mapReading
+exports._mapMeters = mapMeters
+exports._mapReturn = mapReturn
+exports._mapQuantity = mapQuantity
+exports._isEmptyReturn = isEmptyReturn
 
-exports.mapCsv = mapCsv;
+exports.mapCsv = mapCsv

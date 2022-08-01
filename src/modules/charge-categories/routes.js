@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const controller = require('./controller');
-const Joi = require('joi');
+const controller = require('./controller')
+const Joi = require('joi')
 module.exports = {
 
   getChargeCategoryByProperties: {
@@ -15,9 +15,9 @@ module.exports = {
           loss: Joi.string().required().valid('low', 'medium', 'high'),
           isRestrictedSource: Joi.boolean().required(),
           waterModel: Joi.string().required().valid('no model', 'tier 1', 'tier 2'),
-          volume: Joi.number().min(0).required()
+          volume: Joi.number().greater(0).required()
         })
       }
     }
   }
-};
+}

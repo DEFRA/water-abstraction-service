@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const { bookshelf } = require('./bookshelf.js');
+const { bookshelf } = require('./bookshelf.js')
 
 module.exports = bookshelf.model('ReturnRequirementPurpose', {
 
@@ -11,6 +11,6 @@ module.exports = bookshelf.model('ReturnRequirementPurpose', {
   hasTimestamps: ['date_created', 'date_updated'],
 
   purposeUse () {
-    return this.hasOne('PurposeUse', 'purpose_use_id', 'purpose_use_id');
+    return this.hasOne('PurposeUse', 'purpose_use_id', 'purpose_use_id')
   }
-});
+})

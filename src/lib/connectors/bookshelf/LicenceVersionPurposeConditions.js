@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const { bookshelf } = require('./bookshelf.js');
+const { bookshelf } = require('./bookshelf.js')
 
 module.exports = bookshelf.model('LicenceVersionPurposeCondition', {
   tableName: 'water.licence_version_purpose_conditions',
@@ -10,10 +10,10 @@ module.exports = bookshelf.model('LicenceVersionPurposeCondition', {
   hasTimestamps: ['date_created', 'date_updated'],
 
   licenceVersionPurpose () {
-    return this.hasOne('LicenceVersionPurpose', 'licence_version_purpose_id', 'licence_version_purpose_id');
+    return this.hasOne('LicenceVersionPurpose', 'licence_version_purpose_id', 'licence_version_purpose_id')
   },
 
   licenceVersionPurposeConditionType () {
-    return this.hasOne('LicenceVersionPurposeConditionType', 'licence_version_purpose_condition_type_id', 'licence_version_purpose_condition_type_id');
+    return this.hasOne('LicenceVersionPurposeConditionType', 'licence_version_purpose_condition_type_id', 'licence_version_purpose_condition_type_id')
   }
-});
+})

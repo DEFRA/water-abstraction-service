@@ -1,11 +1,11 @@
-const Joi = require('joi');
+const Joi = require('joi')
 
-const { version } = require('../../../config');
-const controller = require('./controller');
+const { version } = require('../../../config')
+const controller = require('./controller')
 
 // Get a list of allowed message types from config
-const config = require('./config');
-const messageTypes = config.map(row => row.messageType);
+const config = require('./config')
+const messageTypes = config.map(row => row.messageType)
 
 module.exports = {
   getByEventId: {
@@ -55,4 +55,4 @@ module.exports = {
       }
     }
   }
-};
+}

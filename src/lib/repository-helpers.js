@@ -1,5 +1,5 @@
-const { isObject } = require('lodash');
-const Boom = require('@hapi/boom');
+const { isObject } = require('lodash')
+const Boom = require('@hapi/boom')
 
 /**
  * Loads exactly one record by ID or filter from specified repository
@@ -10,31 +10,31 @@ const Boom = require('@hapi/boom');
  * @return {Promise} resolves with single row of data
  */
 const findOne = async (repository, id) => {
-  const { primaryKey } = repository.config;
+  const { primaryKey } = repository.config
 
-  const filter = isObject(id) ? id : { [primaryKey]: id };
+  const filter = isObject(id) ? id : { [primaryKey]: id }
 
-  let response;
+  let response
 
   try {
-    response = await repository.find(filter);
+    response = await repository.find(filter)
   } catch (error) {
-    throw Boom.boomify(error);
+    throw Boom.boomify(error)
   }
 
-  const { error, rows } = response;
+  const { error, rows } = response
 
   if (error) {
-    throw Boom.badImplementation('findOne DB error', error);
+    throw Boom.badImplementation('findOne DB error', error)
   }
 
   if (rows.length !== 1) {
-    throw Boom.notFound(`Could not find exactly 1 record in for ${JSON.stringify(filter)}`);
+    throw Boom.notFound(`Could not find exactly 1 record in for ${JSON.stringify(filter)}`)
   }
 
-  return rows[0];
-};
+  return rows[0]
+}
 
 module.exports = {
   findOne
-};
+}

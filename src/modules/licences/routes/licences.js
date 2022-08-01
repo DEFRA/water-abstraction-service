@@ -1,13 +1,13 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
+const Joi = require('joi')
 
-const { version } = require('../../../../config');
+const { version } = require('../../../../config')
 
-const { ROLES } = require('../../../lib/roles');
+const { ROLES } = require('../../../lib/roles')
 
-const pathPrefix = `/water/${version}/licences/`;
-const controller = require('../controllers/licences');
+const pathPrefix = `/water/${version}/licences/`
+const controller = require('../controllers/licences')
 
 module.exports = {
   getLicence: {
@@ -168,4 +168,4 @@ module.exports = {
       }
     }
   }
-};
+}

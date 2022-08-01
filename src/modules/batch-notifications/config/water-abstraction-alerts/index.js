@@ -1,6 +1,6 @@
-const Joi = require('joi');
-const { getRecipients } = require('./lib/get-recipients');
-const eventHelpers = require('../../lib/event-helpers');
+const Joi = require('joi')
+const { getRecipients } = require('./lib/get-recipients')
+const eventHelpers = require('../../lib/event-helpers')
 
 const schema = Joi.object().keys({
   sendingAlertType: Joi.string().allow('reduce', 'resume', 'warning', 'stop'),
@@ -23,7 +23,7 @@ const schema = Joi.object().keys({
       })
     )
   )
-});
+})
 
 module.exports = [{
   schema,
@@ -32,4 +32,4 @@ module.exports = [{
   name: 'Water abstraction alert',
   messageType: 'waterAbstractionAlerts',
   createEvent: eventHelpers.createEvent
-}];
+}]

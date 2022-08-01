@@ -9,7 +9,7 @@ exports.deleteBillingTransactions = `delete from water.billing_transactions t
     and l.billing_invoice_id=i.billing_invoice_id
     and i.billing_batch_id=b.billing_batch_id
     and b.region_id=r.region_id 
-    and r.is_test=true`;
+    and r.is_test=true`
 
 exports.deleteBillingInvoiceLicences = `delete from water.billing_invoice_licences l 
   using 
@@ -20,7 +20,7 @@ exports.deleteBillingInvoiceLicences = `delete from water.billing_invoice_licenc
     l.billing_invoice_id=i.billing_invoice_id
     and i.billing_batch_id=b.billing_batch_id
     and b.region_id=r.region_id 
-    and r.is_test=true`;
+    and r.is_test=true`
 
 exports.deleteBillingInvoices = `delete from water.billing_invoices i 
   using 
@@ -29,7 +29,7 @@ exports.deleteBillingInvoices = `delete from water.billing_invoices i
   where
     i.billing_batch_id=b.billing_batch_id
     and b.region_id=r.region_id 
-    and r.is_test=true`;
+    and r.is_test=true`
 
 exports.deleteBillingBatchChargeVersionYears = `delete from water.billing_batch_charge_version_years y 
   using 
@@ -38,14 +38,14 @@ exports.deleteBillingBatchChargeVersionYears = `delete from water.billing_batch_
   where
     y.billing_batch_id=b.billing_batch_id
     and b.region_id=r.region_id 
-    and r.is_test=true`;
+    and r.is_test=true`
 
 exports.deleteBillingBatches = `delete from water.billing_batches b 
   using 
     water.regions r
   where
     b.region_id=r.region_id 
-    and r.is_test=true`;
+    and r.is_test=true`
 
 exports.deleteBillingVolumes = `delete from water.billing_volumes v
   using 
@@ -54,4 +54,4 @@ exports.deleteBillingVolumes = `delete from water.billing_volumes v
   where
     v.billing_batch_id=b.billing_batch_id
     and b.region_id=r.region_id 
-    and r.is_test=true`;
+    and r.is_test=true`

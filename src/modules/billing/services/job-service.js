@@ -1,17 +1,17 @@
-'use strict';
+'use strict'
 
-const { jobStatus } = require('../lib/event');
-const { BATCH_STATUS } = require('../../../lib/models/batch');
+const { jobStatus } = require('../lib/event')
+const { BATCH_STATUS } = require('../../../lib/models/batch')
 
-const eventService = require('../../../lib/services/events');
-const batchService = require('./batch-service');
+const eventService = require('../../../lib/services/events')
+const batchService = require('./batch-service')
 
 const setStatuses = (eventId, eventStatus, batchId, batchStatus) => {
   return Promise.all([
     eventService.updateStatus(eventId, eventStatus),
     batchService.setStatus(batchId, batchStatus)
-  ]);
-};
+  ])
+}
 
 /**
  * Sets the event/job to complete, and the batch to ready
@@ -19,7 +19,7 @@ const setStatuses = (eventId, eventStatus, batchId, batchStatus) => {
  * @param {String} batchId
  */
 const setReadyJob = (eventId, batchId) =>
-  setStatuses(eventId, jobStatus.complete, batchId, BATCH_STATUS.ready);
+  setStatuses(eventId, jobStatus.complete, batchId, BATCH_STATUS.ready)
 
 /**
  * Sets the event/job to error, and the batch to error
@@ -27,7 +27,7 @@ const setReadyJob = (eventId, batchId) =>
  * @param {String} batchId
  */
 const setFailedJob = (eventId, batchId) =>
-  setStatuses(eventId, jobStatus.error, batchId, BATCH_STATUS.error);
+  setStatuses(eventId, jobStatus.error, batchId, BATCH_STATUS.error)
 
 /**
 * Sets the event/job to error, and the batch to error
@@ -35,8 +35,8 @@ const setFailedJob = (eventId, batchId) =>
 * @param {String} batchId
 */
 const setReviewJob = (eventId, batchId) =>
-  setStatuses(eventId, jobStatus.review, batchId, BATCH_STATUS.review);
+  setStatuses(eventId, jobStatus.review, batchId, BATCH_STATUS.review)
 
-exports.setFailedJob = setFailedJob;
-exports.setReadyJob = setReadyJob;
-exports.setReviewJob = setReviewJob;
+exports.setFailedJob = setFailedJob
+exports.setReadyJob = setReadyJob
+exports.setReviewJob = setReviewJob

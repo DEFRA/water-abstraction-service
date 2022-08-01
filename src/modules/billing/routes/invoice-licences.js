@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const Joi = require('@hapi/joi');
+const Joi = require('@hapi/joi')
 
-const controller = require('../controllers/invoice-licences');
-const { ROLES: { billing } } = require('../../../lib/roles');
+const controller = require('../controllers/invoice-licences')
+const { ROLES: { billing } } = require('../../../lib/roles')
 
 exports.deleteInvoiceLicence = {
   method: 'DELETE',
@@ -19,4 +19,4 @@ exports.deleteInvoiceLicence = {
       scope: [billing]
     }
   }
-};
+}

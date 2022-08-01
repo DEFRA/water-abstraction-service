@@ -1,6 +1,6 @@
-const moment = require('moment');
-const { flatMap, compact } = require('lodash');
-const DATE_FORMAT = 'YYYY-MM-DD';
+const moment = require('moment')
+const { flatMap, compact } = require('lodash')
+const DATE_FORMAT = 'YYYY-MM-DD'
 
 // preferred format for dates is D MMMM YYYY, but some applications
 // may output the CSV in another format. This list attempts to deal
@@ -18,7 +18,7 @@ const GDS_DATE_FORMATS = flatMap([
   date.join(' '),
   date.join('/'),
   date.join('-')
-]));
+]))
 
 const GDS_MONTH_FORMATS = flatMap([
   ['MMMM', 'YYYY'],
@@ -28,14 +28,14 @@ const GDS_MONTH_FORMATS = flatMap([
 ], date => ([
   date.join(' '),
   date.join('-')
-]));
-const removeWeekEnding = string => string.replace(/week ending /i, '');
+]))
+const removeWeekEnding = string => string.replace(/week ending /i, '')
 
-const parseDailyDate = dateString => moment(dateString, GDS_DATE_FORMATS, true);
+const parseDailyDate = dateString => moment(dateString, GDS_DATE_FORMATS, true)
 
-const parseWeeklyDate = dateString => parseDailyDate(removeWeekEnding(dateString));
+const parseWeeklyDate = dateString => parseDailyDate(removeWeekEnding(dateString))
 
-const parseMonthlyDate = dateString => moment(dateString, GDS_MONTH_FORMATS, true);
+const parseMonthlyDate = dateString => moment(dateString, GDS_MONTH_FORMATS, true)
 /**
  * Finds the return frequency based on the format of the date string
  * @param {String} date trimmed and in lowercase
@@ -46,13 +46,13 @@ const getDateFrequency = date => {
     day: parseDailyDate,
     week: parseWeeklyDate,
     month: parseMonthlyDate
-  };
+  }
   const result = Object.keys(parsers).map(timePeriod => {
-    const m = parsers[timePeriod](date);
-    return m.isValid() ? { timePeriod, moment: m } : null;
-  });
-  return compact(result)[0];
-};
+    const m = parsers[timePeriod](date)
+    return m.isValid() ? { timePeriod, moment: m } : null
+  })
+  return compact(result)[0]
+}
 
 /**
  * Creates a day line skeleton for the return
@@ -64,8 +64,8 @@ const createDay = m => {
     startDate: moment(m).format(DATE_FORMAT),
     endDate: moment(m).format(DATE_FORMAT),
     timePeriod: 'day'
-  };
-};
+  }
+}
 
 /**
  * Creates a week line skeleton for the return
@@ -77,8 +77,8 @@ const createWeek = m => {
     startDate: moment(m).subtract(6, 'day').format(DATE_FORMAT),
     endDate: moment(m).format(DATE_FORMAT),
     timePeriod: 'week'
-  };
-};
+  }
+}
 
 /**
  * Creates a month line skeleton for the return
@@ -90,14 +90,14 @@ const createMonth = m => {
     startDate: moment(m).startOf('month').format(DATE_FORMAT),
     endDate: moment(m).endOf('month').format(DATE_FORMAT),
     timePeriod: 'month'
-  };
-};
+  }
+}
 
 const dateMethods = {
   day: createDay,
   week: createWeek,
   month: createMonth
-};
+}
 
 /**
  * Constructs a return line or returns null if one isn't able to be made
@@ -105,25 +105,25 @@ const dateMethods = {
  * @return {Object|null} return line { startDate, endDate, timePeriod }
  */
 const parse = (dateString) => {
-  const normalisedDateString = dateString.trim().toLowerCase();
-  const date = getDateFrequency(normalisedDateString);
-  return (date) ? dateMethods[date.timePeriod](date.moment) : null;
-};
+  const normalisedDateString = dateString.trim().toLowerCase()
+  const date = getDateFrequency(normalisedDateString)
+  return (date) ? dateMethods[date.timePeriod](date.moment) : null
+}
 
 /**
  * Checks whether or not the date string contains a valid date
  * @param {String} dateString date label as it appears in the csv
  * @return {Boolean} whether or not the date is valid
  */
-const validate = dateString => parse(dateString) !== null;
+const validate = dateString => parse(dateString) !== null
 
-exports.GDS_DATE_FORMATS = GDS_DATE_FORMATS;
-exports.GDS_MONTH_FORMATS = GDS_MONTH_FORMATS;
+exports.GDS_DATE_FORMATS = GDS_DATE_FORMATS
+exports.GDS_MONTH_FORMATS = GDS_MONTH_FORMATS
 
-exports.validate = validate;
-exports.parse = parse;
+exports.validate = validate
+exports.parse = parse
 
-exports._getDateFrequency = getDateFrequency;
-exports._createDay = createDay;
-exports._createWeek = createWeek;
-exports._createMonth = createMonth;
+exports._getDateFrequency = getDateFrequency
+exports._createDay = createDay
+exports._createWeek = createWeek
+exports._createMonth = createMonth

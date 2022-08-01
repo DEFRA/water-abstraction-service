@@ -1,15 +1,15 @@
-const uuid = require('uuid/v4');
-const scheduledNotifications = require('../../controllers/notifications');
+const uuid = require('uuid/v4')
+const scheduledNotifications = require('../../controllers/notifications')
 
 const createNotificationBody = (recipient, messageRef, type, personalisation) => ({
   id: uuid(),
   recipient,
   message_ref: messageRef,
   message_type: type,
-  personalisation: personalisation,
+  personalisation,
   send_after: new Date(),
   status: 'sending'
-});
+})
 
 /**
  * Adds a new scheduled notification to the water.scheduled_notification in the
@@ -22,10 +22,10 @@ const createNotificationBody = (recipient, messageRef, type, personalisation) =>
  * @param {Object} personalisation Any additional information to inject into the Notify template
  */
 const sendMessage = (type, recipient, messageRef, personalisation = {}) => {
-  const body = createNotificationBody(recipient, messageRef, type, personalisation);
-  const repo = scheduledNotifications.repository;
-  return repo.create(body);
-};
+  const body = createNotificationBody(recipient, messageRef, type, personalisation)
+  const repo = scheduledNotifications.repository
+  return repo.create(body)
+}
 
 /**
  * Sends an email message via Notifiy.
@@ -35,7 +35,7 @@ const sendMessage = (type, recipient, messageRef, personalisation = {}) => {
  * @param {Object} personalisation Any additional information to inject into the Notify template
  */
 const sendEmail = (recipient, messageRef, personalisation) =>
-  sendMessage('email', recipient, messageRef, personalisation);
+  sendMessage('email', recipient, messageRef, personalisation)
 
-exports.sendMessage = sendMessage;
-exports.sendEmail = sendEmail;
+exports.sendMessage = sendMessage
+exports.sendEmail = sendEmail

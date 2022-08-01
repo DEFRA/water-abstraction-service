@@ -2,7 +2,7 @@
   model: Region
   fields:
     chargeRegionId: A
-    naldRegionId: 1
+    naldRegionId: 9
     name: Test Region
     displayName: Test Region
     isTest: true
@@ -110,7 +110,6 @@
     purposeSecondaryId : $purposeSecondary.purposeSecondaryId
     purposeUseId : $purposeUse.purposeUseId
     description: CE5
-    factorsOverridden: false
     isTest: true
 
 - ref: $returnVersion
@@ -147,6 +146,3 @@
     purposeUseId: $purposeUse.purposeUseId
     purposeAlias: SPRAY IRRIGATION STORAGE
     externalId: 1:12345679:A:AGR:420
-
-
-

@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const { isArray } = require('lodash');
+const { isArray } = require('lodash')
 
-const makeArray = value => isArray(value) ? value : [value];
+const makeArray = value => isArray(value) ? value : [value]
 
-module.exports = makeArray;
+module.exports = makeArray

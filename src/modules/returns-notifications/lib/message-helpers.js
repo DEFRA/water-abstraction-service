@@ -1,4 +1,4 @@
-const { mapKeys, get, pick } = require('lodash');
+const { mapKeys, get, pick } = require('lodash')
 
 /**
  * Create job data for a returns notification message regarding a return to
@@ -7,15 +7,15 @@ const { mapKeys, get, pick } = require('lodash');
  * @param {Object} event - event
  */
 const getJobData = (ret, event, messageRef, config) => {
-  const { eventId } = event;
+  const { eventId } = event
   return {
     returnId: ret.return_id,
     licenceNumber: ret.licence_ref,
     eventId,
     messageRef,
     config
-  };
-};
+  }
+}
 
 /**
  * Converts keys with format address_<i> to address_line_<i> to match the
@@ -25,9 +25,9 @@ const getJobData = (ret, event, messageRef, config) => {
  */
 const formatAddressKeys = (contact) => {
   return mapKeys(contact, (value, key) => {
-    return key.replace(/^address_(?=[0-9])/, 'address_line_');
-  });
-};
+    return key.replace(/^address_(?=[0-9])/, 'address_line_')
+  })
+}
 
 /**
  * Formats personalisation object
@@ -43,13 +43,13 @@ const formatEnqueuePersonalisation = (ret, contact) => {
     return_id: returnId,
     licence_ref: licenceRef,
     due_date: dueDate
-  } = ret;
+  } = ret
 
-  const purposes = get(ret, 'metadata.purposes', []);
-  const purpose = purposes.map(purpose => purpose.tertiary.description).join(', ');
+  const purposes = get(ret, 'metadata.purposes', [])
+  const purpose = purposes.map(purpose => purpose.tertiary.description).join(', ')
 
-  const metadata = ret.metadata || {};
-  const nald = metadata.nald;
+  const metadata = ret.metadata || {}
+  const nald = metadata.nald
 
   return {
     ...formatAddressKeys(contact),
@@ -63,8 +63,8 @@ const formatEnqueuePersonalisation = (ret, contact) => {
     endDate,
     dueDate,
     returnsFrequency
-  };
-};
+  }
+}
 
 /**
  * Formats data for passing to the enqueue() method for sending by the Notify
@@ -80,12 +80,12 @@ const formatEnqueueOptions = (data, ret, contactData) => {
   const {
     return_id: returnId,
     licence_ref: licenceNumber
-  } = ret;
-  const { eventId, messageRef } = data;
+  } = ret
+  const { eventId, messageRef } = data
 
-  const { entity_id: entityId, ...contact } = contactData.contact;
+  const { entity_id: entityId, ...contact } = contactData.contact
 
-  const personalisation = formatEnqueuePersonalisation(ret, contact);
+  const personalisation = formatEnqueuePersonalisation(ret, contact)
 
   return {
     messageRef,
@@ -98,11 +98,11 @@ const formatEnqueueOptions = (data, ret, contactData) => {
     metadata: {
       returnId
     }
-  };
-};
+  }
+}
 
 module.exports = {
   getJobData,
   formatAddressKeys,
   formatEnqueueOptions
-};
+}

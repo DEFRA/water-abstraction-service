@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const db = require('./db');
+const db = require('./db')
 
 /**
  * Get returns lines
@@ -19,11 +19,11 @@ const getLines = (formatId, regionCode, dateFrom, dateTo) => {
     AND to_date("RET_DATE", 'YYYYMMDDHH24MISS')>=to_date($3, 'YYYY-MM-DD')
     AND to_date("RET_DATE", 'YYYYMMDDHH24MISS')<=to_date($4, 'YYYY-MM-DD')
     ORDER BY "RET_DATE";
-  `;
+  `
 
-  const params = [formatId, regionCode, dateFrom, dateTo];
-  return db.dbQuery(query, params);
-};
+  const params = [formatId, regionCode, dateFrom, dateTo]
+  return db.dbQuery(query, params)
+}
 
 /**
  * Checks for nil return over the specified time period
@@ -46,12 +46,12 @@ const isNilReturn = async (formatId, regionCode, dateFrom, dateTo) => {
     AND l."FGAC_REGION_CODE"=$2
     AND to_date("RET_DATE", 'YYYYMMDDHH24MISS')>=to_date($3, 'YYYY-MM-DD')
     AND to_date("RET_DATE", 'YYYYMMDDHH24MISS')<=to_date($4, 'YYYY-MM-DD');
-  `;
+  `
 
-  const params = [formatId, regionCode, dateFrom, dateTo];
-  const rows = await db.dbQuery(query, params);
-  return rows[0].total_qty === 0;
-};
+  const params = [formatId, regionCode, dateFrom, dateTo]
+  const rows = await db.dbQuery(query, params)
+  return rows[0].total_qty === 0
+}
 
-exports.getLines = getLines;
-exports.isNilReturn = isNilReturn;
+exports.getLines = getLines
+exports.isNilReturn = isNilReturn

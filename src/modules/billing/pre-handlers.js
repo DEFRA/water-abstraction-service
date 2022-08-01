@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const Boom = require('@hapi/boom');
-const batchService = require('./services/batch-service');
+const Boom = require('@hapi/boom')
+const batchService = require('./services/batch-service')
 
 /**
  * Pre handler for loading a batch. This function returns the
@@ -11,14 +11,14 @@ const batchService = require('./services/batch-service');
  * @param {Object} request Hapi request object
  */
 const loadBatch = async request => {
-  const { batchId } = request.params;
-  const batch = await batchService.getBatchById(batchId);
+  const { batchId } = request.params
+  const batch = await batchService.getBatchById(batchId)
 
   if (!batch) {
-    throw Boom.notFound(`No batch found with id: ${batchId}`);
+    throw Boom.notFound(`No batch found with id: ${batchId}`)
   }
 
-  return batch;
-};
+  return batch
+}
 
-exports.loadBatch = loadBatch;
+exports.loadBatch = loadBatch

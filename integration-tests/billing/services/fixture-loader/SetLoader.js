@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 /**
  * A class to help with loading YAML files from multiple
@@ -11,8 +11,8 @@ class SetLoader {
    * @param {Object} fixtureLoaders - key/value pairs of fixture loaders
    */
   constructor (fixtureLoaders = {}) {
-    this._fixtureLoaders = new Map(Object.entries(fixtureLoaders));
-    this._refs = new Map();
+    this._fixtureLoaders = new Map(Object.entries(fixtureLoaders))
+    this._refs = new Map()
   }
 
   /**
@@ -22,7 +22,7 @@ class SetLoader {
    * @returns {FixtureLoader}
    */
   get (name) {
-    return this._fixtureLoaders.get(name);
+    return this._fixtureLoaders.get(name)
   }
 
   /**
@@ -32,7 +32,7 @@ class SetLoader {
    * @returns {Mixed}
    */
   getRef (key) {
-    return this._refs.get(key);
+    return this._refs.get(key)
   }
 
   /**
@@ -44,17 +44,17 @@ class SetLoader {
    * @returns {Promise}
    */
   async load (name, yamlFile, config) {
-    const loader = this.get(name);
+    const loader = this.get(name)
 
     await loader
       .addRefs(this._refs)
-      .load(yamlFile, config);
+      .load(yamlFile, config)
 
     // Update refs
-    this._refs = loader.getRefs();
+    this._refs = loader.getRefs()
 
-    return this;
+    return this
   }
 }
 
-module.exports = SetLoader;
+module.exports = SetLoader

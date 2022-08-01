@@ -2,9 +2,9 @@
  * Session storage
  * Session data is a JSON encoded string
  */
-const HAPIRestAPI = require('@envage/hapi-pg-rest-api');
-const Joi = require('joi');
-const { pool } = require('../lib/connectors/db.js');
+const HAPIRestAPI = require('@envage/hapi-pg-rest-api')
+const Joi = require('joi')
+const { pool } = require('../lib/connectors/db.js')
 
 const SessionsApi = new HAPIRestAPI({
   table: 'water.sessions',
@@ -26,6 +26,6 @@ const SessionsApi = new HAPIRestAPI({
     fields: ['session_id'],
     set: ['session_data']
   }
-});
+})
 
-module.exports = SessionsApi.getRoutes();
+module.exports = SessionsApi.getRoutes()

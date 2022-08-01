@@ -1,14 +1,14 @@
-'use strict';
+'use strict'
 
-const helpers = require('./lib/helpers');
-const raw = require('./lib/raw');
-const ScheduledNotification = require('../bookshelf/ScheduledNotification');
-const envelope = require('./lib/envelope');
+const helpers = require('./lib/helpers')
+const raw = require('./lib/raw')
+const ScheduledNotification = require('../bookshelf/ScheduledNotification')
+const envelope = require('./lib/envelope')
 
 /**
  * Gets a scheduled notification by id
  */
-const findOne = id => helpers.findOne(ScheduledNotification, 'id', id);
+const findOne = id => helpers.findOne(ScheduledNotification, 'id', id)
 
 const findOneByNotifyId = async notifyId => {
   const model = await ScheduledNotification
@@ -16,17 +16,17 @@ const findOneByNotifyId = async notifyId => {
     .where({ notify_id: notifyId })
     .fetch({
       require: false
-    });
+    })
 
-  return model ? model.toJSON() : null;
-};
+  return model ? model.toJSON() : null
+}
 
-const create = data => helpers.create(ScheduledNotification, data);
+const create = data => helpers.create(ScheduledNotification, data)
 
-const update = (id, changes) => helpers.update(ScheduledNotification, 'id', id, changes);
+const update = (id, changes) => helpers.update(ScheduledNotification, 'id', id, changes)
 
 const findByEventId = eventId =>
-  helpers.findMany(ScheduledNotification, { event_id: eventId });
+  helpers.findMany(ScheduledNotification, { event_id: eventId })
 
 /**
  * Finds scheduled notifications by licence number
@@ -51,17 +51,17 @@ const findByLicenceNumber = async (licenceNumber, page, perPage) => {
       withRelated: [
         'event'
       ]
-    });
-  return envelope.paginatedEnvelope(collection);
-};
+    })
+  return envelope.paginatedEnvelope(collection)
+}
 
 const getScheduledNotificationCategories = () =>
-  raw.multiRow('SELECT * FROM water.scheduled_notification_categories where is_enabled is true');
+  raw.multiRow('SELECT * FROM water.scheduled_notification_categories where is_enabled is true')
 
-exports.create = create;
-exports.findOne = findOne;
-exports.findOneByNotifyId = findOneByNotifyId;
-exports.update = update;
-exports.findByEventId = findByEventId;
-exports.findByLicenceNumber = findByLicenceNumber;
-exports.getScheduledNotificationCategories = getScheduledNotificationCategories;
+exports.create = create
+exports.findOne = findOne
+exports.findOneByNotifyId = findOneByNotifyId
+exports.update = update
+exports.findByEventId = findByEventId
+exports.findByLicenceNumber = findByLicenceNumber
+exports.getScheduledNotificationCategories = getScheduledNotificationCategories

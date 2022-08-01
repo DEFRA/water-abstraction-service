@@ -1,13 +1,13 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
+const Joi = require('joi')
 
-const preHandlers = require('../pre-handlers');
-const controller = require('../controllers/batches');
-const config = require('../../../../config');
-const { ROLES: { billing } } = require('../../../lib/roles');
-const BASE_PATH = '/water/1.0/billing/batches';
-const { postApproveReviewBatch: postApproveReviewBatchController } = require('../controllers/two-part-tariff-review');
+const preHandlers = require('../pre-handlers')
+const controller = require('../controllers/batches')
+const config = require('../../../../config')
+const { ROLES: { billing } } = require('../../../lib/roles')
+const BASE_PATH = '/water/1.0/billing/batches'
+const { postApproveReviewBatch: postApproveReviewBatchController } = require('../controllers/two-part-tariff-review')
 
 const getBatches = {
   method: 'GET',
@@ -24,7 +24,7 @@ const getBatches = {
       scope: [billing]
     }
   }
-};
+}
 
 const postCreateBatch = {
   method: 'POST',
@@ -44,7 +44,7 @@ const postCreateBatch = {
       scope: [billing]
     }
   }
-};
+}
 
 const getBatch = {
   method: 'GET',
@@ -63,7 +63,7 @@ const getBatch = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const getBatchInvoices = {
   method: 'GET',
@@ -82,7 +82,7 @@ const getBatchInvoices = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const getBatchInvoicesDetails = {
   method: 'GET',
@@ -101,7 +101,7 @@ const getBatchInvoicesDetails = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const getBatchInvoiceDetail = {
   method: 'GET',
@@ -121,7 +121,7 @@ const getBatchInvoiceDetail = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const deleteBatchInvoice = {
   method: 'DELETE',
@@ -145,7 +145,7 @@ const deleteBatchInvoice = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const deleteBatch = {
   method: 'DELETE',
@@ -164,7 +164,7 @@ const deleteBatch = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const postApproveBatch = {
   method: 'POST',
@@ -183,7 +183,7 @@ const postApproveBatch = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const getInvoiceLicence = {
   method: 'GET',
@@ -199,7 +199,7 @@ const getInvoiceLicence = {
       scope: [billing]
     }
   }
-};
+}
 
 const postApproveReviewBatch = {
   method: 'POST',
@@ -218,7 +218,7 @@ const postApproveReviewBatch = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
 const getBatchDownloadData = {
   method: 'GET',
@@ -237,22 +237,18 @@ const getBatchDownloadData = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
-if (config.featureToggles.deleteAllBillingData) {
-  const deleteAllBillingData = {
-    method: 'DELETE',
-    path: BASE_PATH,
-    handler: controller.deleteAllBillingData,
-    config: {
-      description: 'Deletes all billing and charge version data (!)',
-      auth: {
-        scope: [billing]
-      }
+const deleteAllBillingData = {
+  method: 'DELETE',
+  path: BASE_PATH,
+  handler: controller.deleteAllBillingData,
+  config: {
+    description: 'Deletes all billing and charge version data (!)',
+    auth: {
+      scope: [billing]
     }
-  };
-
-  exports.deleteAllBillingData = deleteAllBillingData;
+  }
 }
 
 const postSetBatchStatusToCancel = {
@@ -272,19 +268,42 @@ const postSetBatchStatusToCancel = {
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
-};
+}
 
-exports.getBatch = getBatch;
-exports.getBatches = getBatches;
-exports.getBatchInvoices = getBatchInvoices;
-exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
-exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
-exports.getInvoiceLicence = getInvoiceLicence;
-exports.deleteBatchInvoice = deleteBatchInvoice;
-exports.deleteBatch = deleteBatch;
+const postBatchBillableYears = {
+  method: 'POST',
+  path: `${BASE_PATH}/billable-years`,
+  handler: controller.postBatchBillableYears,
+  config: {
+    validate: {
+      payload: Joi.object().keys({
+        userEmail: Joi.string().email().required(),
+        regionId: Joi.string().uuid().required(),
+        isSummer: Joi.boolean().default(false),
+        currentFinancialYear: Joi.number().required()
+      })
+    },
+    auth: {
+      scope: [billing]
+    }
+  }
+}
 
-exports.postApproveBatch = postApproveBatch;
-exports.postCreateBatch = postCreateBatch;
-exports.postApproveReviewBatch = postApproveReviewBatch;
-exports.getBatchDownloadData = getBatchDownloadData;
-exports.postSetBatchStatusToCancel = postSetBatchStatusToCancel;
+module.exports = {
+  getBatch,
+  getBatches,
+  getBatchInvoices,
+  getBatchInvoiceDetail,
+  getBatchInvoicesDetails,
+  getInvoiceLicence,
+  deleteBatchInvoice,
+  deleteBatch,
+  postApproveBatch,
+  postBatchBillableYears,
+  postCreateBatch,
+  postApproveReviewBatch,
+  getBatchDownloadData,
+  postSetBatchStatusToCancel,
+  // We only include delete all bill runs when running in non-prod environments
+  ...(config.featureToggles.deleteAllBillingData) && { deleteAllBillingData }
+}

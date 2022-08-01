@@ -1,4 +1,4 @@
-const { get } = require('lodash');
+const { get } = require('lodash')
 
 /**
  * Gets a basic shape for the return
@@ -9,7 +9,7 @@ const getReturnSkeleton = () => ({
   versionNumber: 1,
   isCurrent: true,
   status: 'completed'
-});
+})
 
 /**
  * Gets the user type from an IDM user row
@@ -17,9 +17,9 @@ const getReturnSkeleton = () => ({
  * @return {String} user type - internal|external
  */
 const getUserType = user => {
-  const scopes = get(user, 'role.scopes', []);
-  return scopes.includes('external') ? 'external' : 'internal';
-};
+  const scopes = get(user, 'role.scopes', [])
+  return scopes.includes('external') ? 'external' : 'internal'
+}
 
 /**
  * Maps IDM user to the shape in the water service return model
@@ -30,7 +30,7 @@ const mapUser = user => ({
   email: user.user_name,
   type: getUserType(user),
   entityId: user.external_id
-});
+})
 
-exports.getReturnSkeleton = getReturnSkeleton;
-exports.mapUser = mapUser;
+exports.getReturnSkeleton = getReturnSkeleton
+exports.mapUser = mapUser

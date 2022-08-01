@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
-const controller = require('../controllers/return-cycles');
-const preHandlers = require('../pre-handlers');
+const Joi = require('joi')
+const controller = require('../controllers/return-cycles')
+const preHandlers = require('../pre-handlers')
 
 module.exports = {
 
@@ -53,4 +53,4 @@ module.exports = {
       }]
     }
   }
-};
+}

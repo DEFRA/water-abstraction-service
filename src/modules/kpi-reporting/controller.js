@@ -1,8 +1,8 @@
-'use-strict';
+'use-strict'
 
-const dataService = require('./services/data-service');
+const dataService = require('./services/data-service')
 
-const mappers = require('./lib/mappers');
+const mappers = require('./lib/mappers')
 
 const collectKpiData = async () => {
   const [registrations, delegatedAccess, returnsMonthly, returnCycles, licenceNames] = await Promise.allSettled([
@@ -16,11 +16,11 @@ const collectKpiData = async () => {
     dataService.getReturnCycles(),
     dataService.getLicenceNamesData()
   ]).then(responses => {
-    return responses.map(response => response.status === 'fulfilled' ? response.value : null);
-  });
+    return responses.map(response => response.status === 'fulfilled' ? response.value : null)
+  })
 
-  return { returnCycles, registrations, delegatedAccess, returnsMonthly, licenceNames };
-};
+  return { returnCycles, registrations, delegatedAccess, returnsMonthly, licenceNames }
+}
 
 /**
  * This method requests all the KPI data sets, maps them and returns the data for the KPI UI
@@ -28,7 +28,7 @@ const collectKpiData = async () => {
  * @returns {Object} an object containing all the data sets required for the KPI UI
  */
 const getKpiData = async (request) => {
-  const kpiData = await collectKpiData();
+  const kpiData = await collectKpiData()
 
   return {
     data: {
@@ -38,15 +38,15 @@ const getKpiData = async (request) => {
       returnCycles: kpiData.returnCycles || [],
       licenceNames: dataOrEmpty(kpiData.licenceNames, mappers.mapLicenceNamesData)
     }
-  };
-};
+  }
+}
 
-const getEmptyResponse = () => ({ totals: { allTime: 0, ytd: 0 }, monthly: [] });
+const getEmptyResponse = () => ({ totals: { allTime: 0, ytd: 0 }, monthly: [] })
 
 const dataOrEmpty = (data, mapper, empty = getEmptyResponse()) => {
   return data
     ? mapper ? mapper(data) : data
-    : empty;
-};
+    : empty
+}
 
-module.exports.getKpiData = getKpiData;
+module.exports.getKpiData = getKpiData

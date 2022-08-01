@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-const { createMapper } = require('../object-mapper');
-const ScheduledNotification = require('../models/scheduled-notification');
-const eventMapper = require('./event');
-const helpers = require('./lib/helpers');
+const { createMapper } = require('../object-mapper')
+const ScheduledNotification = require('../models/scheduled-notification')
+const eventMapper = require('./event')
+const helpers = require('./lib/helpers')
 
 const dbToModelMapper = createMapper()
   .copy(
@@ -18,9 +18,9 @@ const dbToModelMapper = createMapper()
     'notifyId',
     'notifyStatus'
   )
-  .map('event').to('event', eventMapper.dbToModel);
+  .map('event').to('event', eventMapper.dbToModel)
 
-const dbToModel = data => helpers.createModel(ScheduledNotification, data, dbToModelMapper);
+const dbToModel = data => helpers.createModel(ScheduledNotification, data, dbToModelMapper)
 
 const modelToDb = scheduledNotification => {
   return scheduledNotification.pick([
@@ -34,8 +34,8 @@ const modelToDb = scheduledNotification => {
     'status',
     'notifyId',
     'notifyStatus'
-  ]);
-};
+  ])
+}
 
-exports.dbToModel = dbToModel;
-exports.modelToDb = modelToDb;
+exports.dbToModel = dbToModel
+exports.modelToDb = modelToDb

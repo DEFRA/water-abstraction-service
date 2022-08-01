@@ -1,19 +1,19 @@
-const apiClientFactory = require('./api-client-factory');
-const moment = require('moment');
-const helpers = require('@envage/water-abstraction-helpers');
-const urlJoin = require('url-join');
-const { URL } = require('url');
-const { chunk, flatMap } = require('lodash');
+const apiClientFactory = require('./api-client-factory')
+const moment = require('moment')
+const helpers = require('@envage/water-abstraction-helpers')
+const urlJoin = require('url-join')
+const { URL } = require('url')
+const { chunk, flatMap } = require('lodash')
 
-const DATE_FORMAT = 'YYYY-MM-DD';
+const DATE_FORMAT = 'YYYY-MM-DD'
 
-const config = require('../../../config');
+const config = require('../../../config')
 
-const returnsClient = apiClientFactory.create(`${config.services.returns}/returns`);
+const returnsClient = apiClientFactory.create(`${config.services.returns}/returns`)
 
-const versionsClient = apiClientFactory.create(`${config.services.returns}/versions`);
+const versionsClient = apiClientFactory.create(`${config.services.returns}/versions`)
 
-const linesClient = apiClientFactory.create(`${config.services.returns}/lines`);
+const linesClient = apiClientFactory.create(`${config.services.returns}/lines`)
 
 /**
  * Get a single chunk of active returns with the return IDs
@@ -34,12 +34,12 @@ const getActiveReturnsChunk = (returnIds) => {
       $lte: moment().format(DATE_FORMAT)
     },
     'metadata->>isCurrent': 'true'
-  };
+  }
 
-  const columns = ['return_id', 'status', 'due_date', 'start_date', 'end_date', 'returns_frequency'];
+  const columns = ['return_id', 'status', 'due_date', 'start_date', 'end_date', 'returns_frequency']
 
-  return returnsClient.findAll(filter, null, columns);
-};
+  return returnsClient.findAll(filter, null, columns)
+}
 
 /**
  * Gets an array of returns in the return service matching the
@@ -50,12 +50,12 @@ const getActiveReturnsChunk = (returnIds) => {
  * @return {Promise<Array>} active returns found in returns service
  */
 const getActiveReturns = async returnIds => {
-  const returnIdBatches = chunk(returnIds, 20);
+  const returnIdBatches = chunk(returnIds, 20)
   const returnsBatches = await Promise.all(
     returnIdBatches.map(getActiveReturnsChunk)
-  );
-  return flatMap(returnsBatches);
-};
+  )
+  return flatMap(returnsBatches)
+}
 
 /**
  * Gets due returns in the current cycle that relate to the current version
@@ -65,7 +65,7 @@ const getActiveReturns = async returnIds => {
  * @return {Promise<Array>}        - all returns matching criteria
  */
 const getCurrentDueReturns = async (excludeLicences, returnCycle) => {
-  const { startDate, endDate, isSummer, dueDate } = returnCycle;
+  const { startDate, endDate, isSummer, dueDate } = returnCycle
 
   const filter = {
     start_date: { $gte: startDate },
@@ -76,24 +76,24 @@ const getCurrentDueReturns = async (excludeLicences, returnCycle) => {
     'metadata->>isCurrent': 'true',
     'metadata->>isSummer': isSummer ? 'true' : 'false',
     ...dueDate && { due_date: dueDate }
-  };
+  }
 
-  const results = await returnsClient.findAll(filter);
+  const results = await returnsClient.findAll(filter)
 
-  return results.filter(ret => !excludeLicences.includes(ret.licence_ref));
-};
+  return results.filter(ret => !excludeLicences.includes(ret.licence_ref))
+}
 
 const getServiceVersion = async () => {
-  const urlParts = new URL(config.services.returns);
-  const url = urlJoin(urlParts.protocol, urlParts.host, 'status');
-  const response = await helpers.serviceRequest.get(url);
-  return response.version;
-};
+  const urlParts = new URL(config.services.returns)
+  const url = urlJoin(urlParts.protocol, urlParts.host, 'status')
+  const response = await helpers.serviceRequest.get(url)
+  return response.version
+}
 
 const deleteAcceptanceTestData = () => {
-  const url = urlJoin(config.services.returns, 'acceptance-tests');
-  return helpers.serviceRequest.delete(url);
-};
+  const url = urlJoin(config.services.returns, 'acceptance-tests')
+  return helpers.serviceRequest.delete(url)
+}
 
 const getReturnsForLicence = async (licenceNumber, startDate, endDate) => {
   const filter = {
@@ -103,26 +103,26 @@ const getReturnsForLicence = async (licenceNumber, startDate, endDate) => {
     },
     start_date: { $gte: startDate },
     end_date: { $lte: endDate }
-  };
-  return returnsClient.findAll(filter);
-};
+  }
+  return returnsClient.findAll(filter)
+}
 
 const getVersion = async ret => {
   const filter = {
     return_id: ret.return_id,
     current: true
-  };
-  const sort = { version_number: -1 };
-  const versions = await versionsClient.findAll(filter, sort);
-  return versions[0];
-};
+  }
+  const sort = { version_number: -1 }
+  const versions = await versionsClient.findAll(filter, sort)
+  return versions[0]
+}
 
 const getLinesForReturn = async ret => {
-  const version = await getVersion(ret);
-  if (!version) return null;
-  const linesFilter = { version_id: version.version_id };
-  return linesClient.findAll(linesFilter);
-};
+  const version = await getVersion(ret)
+  if (!version) return null
+  const linesFilter = { version_id: version.version_id }
+  return linesClient.findAll(linesFilter)
+}
 
 /**
  * Gets a report of return cycles with data on number of returns in each status
@@ -130,14 +130,14 @@ const getLinesForReturn = async ret => {
  * @return {Promise<Object>}
  */
 const getReturnsCyclesReport = async startDate => {
-  const url = urlJoin(config.services.returns, 'return-cycles/report');
+  const url = urlJoin(config.services.returns, 'return-cycles/report')
   const options = {
     qs: {
       startDate
     }
-  };
-  return helpers.serviceRequest.get(url, options);
-};
+  }
+  return helpers.serviceRequest.get(url, options)
+}
 
 /**
  * Gets a single return cycle by ID
@@ -146,9 +146,9 @@ const getReturnsCyclesReport = async startDate => {
  * @return {Promise<Object>}
  */
 const getReturnCycleById = async returnCycleId => {
-  const url = urlJoin(config.services.returns, 'return-cycles', returnCycleId);
-  return helpers.serviceRequest.get(url);
-};
+  const url = urlJoin(config.services.returns, 'return-cycles', returnCycleId)
+  return helpers.serviceRequest.get(url)
+}
 
 /**
  * Gets returns for the specified return cycle by ID
@@ -157,23 +157,23 @@ const getReturnCycleById = async returnCycleId => {
  * @return {Promise<Object>}
  */
 const getReturnCycleReturns = async returnCycleId => {
-  const url = urlJoin(config.services.returns, 'return-cycles', returnCycleId, 'returns');
-  return helpers.serviceRequest.get(url);
-};
-
-exports.returns = returnsClient;
-exports.versions = versionsClient;
-exports.lines = linesClient;
-exports.getActiveReturns = getActiveReturns;
-exports.getCurrentDueReturns = getCurrentDueReturns;
-exports.getServiceVersion = getServiceVersion;
-exports.getReturnsForLicence = getReturnsForLicence;
-exports.getLinesForReturn = getLinesForReturn;
-
-if (config.isAcceptanceTestTarget) {
-  exports.deleteAcceptanceTestData = deleteAcceptanceTestData;
+  const url = urlJoin(config.services.returns, 'return-cycles', returnCycleId, 'returns')
+  return helpers.serviceRequest.get(url)
 }
 
-exports.getReturnsCyclesReport = getReturnsCyclesReport;
-exports.getReturnCycleById = getReturnCycleById;
-exports.getReturnCycleReturns = getReturnCycleReturns;
+exports.returns = returnsClient
+exports.versions = versionsClient
+exports.lines = linesClient
+exports.getActiveReturns = getActiveReturns
+exports.getCurrentDueReturns = getCurrentDueReturns
+exports.getServiceVersion = getServiceVersion
+exports.getReturnsForLicence = getReturnsForLicence
+exports.getLinesForReturn = getLinesForReturn
+
+if (config.isAcceptanceTestTarget) {
+  exports.deleteAcceptanceTestData = deleteAcceptanceTestData
+}
+
+exports.getReturnsCyclesReport = getReturnsCyclesReport
+exports.getReturnCycleById = getReturnCycleById
+exports.getReturnCycleReturns = getReturnCycleReturns

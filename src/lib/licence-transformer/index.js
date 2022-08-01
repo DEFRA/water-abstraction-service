@@ -4,15 +4,15 @@
  * This layer can transform licence data to different formats
  * @module lib/licence-transformer/index
  */
-const NALDTransformer = require('./nald-transformer');
-const CSVTransformer = require('./csv-transformer');
-const FORMAT_NALD = 'NALD';
-const FORMAT_CSV = 'CSV';
+const NALDTransformer = require('./nald-transformer')
+const CSVTransformer = require('./csv-transformer')
+const FORMAT_NALD = 'NALD'
+const FORMAT_CSV = 'CSV'
 
 class UnsupportedLicenceFormatError extends Error {
   constructor (message) {
-    super(message);
-    this.name = 'UnsupportedLicenceFormatError';
+    super(message)
+    this.name = 'UnsupportedLicenceFormatError'
   }
 };
 
@@ -22,22 +22,22 @@ class LicenceTransformer {
    * @param {Object} data - licence data
    */
   async load (data) {
-    const format = this.guessFormat(data);
+    const format = this.guessFormat(data)
 
     switch (format) {
       case FORMAT_NALD:
-        this.transformer = new NALDTransformer();
-        break;
+        this.transformer = new NALDTransformer()
+        break
 
       case FORMAT_CSV:
-        this.transformer = new CSVTransformer();
-        break;
+        this.transformer = new CSVTransformer()
+        break
 
       default:
-        throw new UnsupportedLicenceFormatError();
+        throw new UnsupportedLicenceFormatError()
     }
 
-    await this.transformer.load(data);
+    await this.transformer.load(data)
   }
 
   /**
@@ -45,7 +45,7 @@ class LicenceTransformer {
    * @return {Object}
    */
   export () {
-    return this.transformer.export();
+    return this.transformer.export()
   }
 
   /**
@@ -55,10 +55,10 @@ class LicenceTransformer {
    */
   guessFormat (data) {
     if ('vmlVersion' in data && data.vmlVersion === 2) {
-      return FORMAT_NALD;
+      return FORMAT_NALD
     }
-    return FORMAT_CSV;
+    return FORMAT_CSV
   }
 }
 
-module.exports = LicenceTransformer;
+module.exports = LicenceTransformer

@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const ReturnVersion = require('../models/return-version');
-const returnLineMapper = require('./return-line');
+const ReturnVersion = require('../models/return-version')
+const returnLineMapper = require('./return-line')
 
 /**
  * Maps a return version from the returns service to a water service model
@@ -10,16 +10,16 @@ const returnLineMapper = require('./return-line');
  * @return {ReturnVersion} service model
  */
 const returnsServiceToModel = (row, lines) => {
-  const version = new ReturnVersion();
+  const version = new ReturnVersion()
   version.fromHash({
     id: row.version_id,
     isNilReturn: row.nil_return,
     isCurrentVersion: row.current
-  });
+  })
   if (lines) {
-    version.returnLines = lines.map(returnLineMapper.returnsServiceToModel);
+    version.returnLines = lines.map(returnLineMapper.returnsServiceToModel)
   }
-  return version;
-};
+  return version
+}
 
-exports.returnsServiceToModel = returnsServiceToModel;
+exports.returnsServiceToModel = returnsServiceToModel

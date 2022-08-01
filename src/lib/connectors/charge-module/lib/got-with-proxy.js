@@ -1,14 +1,14 @@
-'use strict';
+'use strict'
 
-const got = require('got');
-const tunnel = require('tunnel');
-const { URL } = require('url');
+const got = require('got')
+const tunnel = require('tunnel')
+const { URL } = require('url')
 
-const config = require('../../../../../config.js');
+const config = require('../../../../../config.js')
 
 const beforeRequestHook = options => {
   if (config.proxy) {
-    const url = new URL(config.proxy);
+    const url = new URL(config.proxy)
 
     options.agent = {
       https: tunnel.httpsOverHttp({
@@ -17,9 +17,9 @@ const beforeRequestHook = options => {
           port: parseInt(url.port)
         }
       })
-    };
+    }
   }
-};
+}
 
 /**
  * Creates a got instance which is extended to include:
@@ -35,7 +35,7 @@ const gotWithProxy = got.extend({
   hooks: {
     beforeRequest: [beforeRequestHook]
   }
-});
+})
 
-module.exports = gotWithProxy;
-module.exports._beforeRequestHook = beforeRequestHook;
+module.exports = gotWithProxy
+module.exports._beforeRequestHook = beforeRequestHook

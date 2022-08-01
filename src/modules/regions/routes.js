@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const controller = require('./controller');
+const controller = require('./controller')
 
 const getRegions = {
   method: 'GET',
@@ -9,6 +9,6 @@ const getRegions = {
   config: {
     description: 'Gets the regions that the system contains'
   }
-};
+}
 
-exports.getRegions = getRegions;
+exports.getRegions = getRegions
