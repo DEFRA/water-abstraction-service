@@ -120,8 +120,8 @@ const testBlankWhen = (fieldName, fieldValue, fieldTitle) => async (field, val, 
 }
 
 const testDateRange = async (field, dateRange) => {
-  const daysInMonth = [31, 29, 31, 30, 31, 30, 30, 31, 30, 31, 30, 31]
-  const validDate = (dd, mm) => (mm > 0 && mm <= 12 && dd > 0 && dd <= daysInMonth[mm - 1])
+  const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+  const validDate = (dd, mm) => (mm >= 1 && mm <= 12 && dd >= 1 && dd <= daysInMonth[mm - 1])
   let valid
   try {
     const [startDate, endDate] = dateRange.split('-')
