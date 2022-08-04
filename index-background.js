@@ -14,6 +14,7 @@ const { validate } = require('./src/lib/validate')
 
 // Initialise logger
 const { logger } = require('./src/logger')
+const { _start } = require('.')
 const goodWinstonStream = new GoodWinston({ winston: logger })
 
 // Define server
@@ -67,13 +68,6 @@ const start = async function () {
   }
 }
 
-const stop = () => {
-  server.stop({ timeout: 5000 }).then(function (err) {
-    console.log('hapi server stopped')
-    process.exit((err) ? 1 : 0)
-  })
-}
-
 const processError = message => err => {
   logger.error(message, err)
   process.exit(1)
@@ -100,6 +94,7 @@ if (!module.parent) {
   start()
 }
 
-module.exports = server
-module.exports._start = start
-module.exports._stop = stop
+module.exports = {
+  server,
+  start
+}
