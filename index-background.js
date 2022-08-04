@@ -14,7 +14,6 @@ const { validate } = require('./src/lib/validate')
 
 // Initialise logger
 const { logger } = require('./src/logger')
-const { _start } = require('.')
 const goodWinstonStream = new GoodWinston({ winston: logger })
 
 // Define server
