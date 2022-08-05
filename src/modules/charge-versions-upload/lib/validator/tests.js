@@ -1,10 +1,10 @@
 const { billing } = require('../../../../../config')
 const helpers = require('../helpers')
-const { get, snakeCase } = require('lodash')
+const { get } = require('lodash')
 const moment = require('moment')
 const { assertNullableNumeric } = require('../../../../lib/models/validators')
 
-const getColumnValue = (headings, columns, fieldName) => columns[headings.indexOf(snakeCase(fieldName))]
+const getColumnValue = (headings, columns, fieldName) => columns[headings.indexOf(fieldName)]
 
 const testNotBlank = async (field, val) => val === '' ? `${field} is blank` : ''
 
@@ -26,7 +26,7 @@ const testValidLicence = async (field, _licenceNumber, licence) => {
 }
 
 const testLicenceHasInvoiceAccount = async (field, _licenceNumber, licence, headings, columns) => {
-  const invoiceAccountNumber = getColumnValue(headings, columns, 'chargeInformationBillingAccount')
+  const invoiceAccountNumber = getColumnValue(headings, columns, 'charge_information_billing_account')
   const invoiceAccount = await helpers.getInvoiceAccount(licence, invoiceAccountNumber)
   if (invoiceAccount) {
     return ''
@@ -170,7 +170,7 @@ const testDateBefore = (fieldName, fieldTitle) => async (field, date, _licence, 
 
 const testMatchTPTPurpose = async (field, term, _licence, headings, columns) => {
   if (term === 'Y') {
-    const description = getColumnValue(headings, columns, 'chargeElementPurpose')
+    const description = getColumnValue(headings, columns, 'charge_element_purpose')
     const purposeUses = await helpers.getPurposeUses()
     const purpose = purposeUses.find(purposeUse => purposeUse.description === description)
     return purpose && purpose.isTwoPartTariff ? '' : `${field} does not match the purpose`

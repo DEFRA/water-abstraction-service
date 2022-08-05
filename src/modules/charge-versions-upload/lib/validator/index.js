@@ -1,4 +1,4 @@
-const { snakeCase, camelCase, sortBy, isEqual } = require('lodash')
+const { snakeCase, sortBy, isEqual } = require('lodash')
 const csvParser = require('../csv-adapter/csv-parser')
 const { csvFields } = require('./csvFields')
 const helpers = require('../helpers')
@@ -48,7 +48,7 @@ const validateRows = async (rows, headings, jobName) => {
     const errors = []
 
     for (const { heading, val } of fields) {
-      const { skip = [], validate: validator, allow = [] } = csvFields[camelCase(heading)] || {}
+      const { skip = [], validate: validator, allow = [] } = csvFields[heading] || {}
 
       // TODO: possibly refactor to a `allowEmpty` flag
       if (allow.includes(val)) {
