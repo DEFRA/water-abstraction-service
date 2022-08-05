@@ -41,8 +41,12 @@ const testLicenceHasInvoiceAccount = async (field, _licenceNumber, licence, head
 const testValidDate = async (field, date = '') => helpers.formatDate(date) ? '' : `"${field} has an incorrect format, expected DD/MM/YYYY"`
 
 const testDateBeforeLicenceStartDate = async (field, date, licence) => {
+  if (!licence) {
+    return ''
+  }
+
   try {
-    const licenceDate = licence?.startDate
+    const licenceDate = licence.startDate
     if (!licenceDate) {
       return ''
     }
@@ -58,8 +62,12 @@ const testDateBeforeLicenceStartDate = async (field, date, licence) => {
 }
 
 const testDateAfterLicenceExpiredDate = async (field, date, licence) => {
+  if (!licence) {
+    return ''
+  }
+
   try {
-    const licenceDate = licence?.expiredDate
+    const licenceDate = licence.expiredDate
     if (!licenceDate) {
       return ''
     }
