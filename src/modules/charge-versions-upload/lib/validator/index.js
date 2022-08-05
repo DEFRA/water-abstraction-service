@@ -40,8 +40,8 @@ const validateRows = async (rows, headings, jobName) => {
   const validateRow = async (columns, rowIndex) => {
     logger.info(`${jobName}: validating row ${rowIndex} of ${rows.length}`)
 
-    // TODO: get column number of `licence_number` and change to `(columns[3])` (or whatever)
-    const licence = await helpers.getLicence(columns[headings.indexOf('licence_number')])
+    // licence_number is the first column in the file
+    const licence = await helpers.getLicence(columns[0])
 
     const fields = headings.map((heading, colIndex) => ({ heading, val: columns[colIndex] }))
 
