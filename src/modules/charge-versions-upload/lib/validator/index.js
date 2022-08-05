@@ -27,29 +27,35 @@ const validateHeadings = headings => {
 
 const validateRows = async (rows, headings, jobName) => {
   const validateField = async (heading, val, licence, columns, validator = []) => {
-    const [...tests] = validator // get a copy of the validator tests
-    let message = ''
-    do {
-      const test = tests.shift()
-      if (test) {
-        // When the message is populated, no other tests will be performed for that field
-        message = await test(heading, val, licence, headings, columns)
+    for (const test of validator) {
+      const message = await test(heading, val, licence, headings, columns)
+
+      // We return the first error we encounter
+      if (message) {
+        return message
       }
-    } while (tests.length && !message)
-    return message
+    }
   }
 
   const validateRow = async (columns, rowIndex) => {
-    const licence = await helpers.getLicence(columns[headings.indexOf('licence_number')])
     logger.info(`${jobName}: validating row ${rowIndex} of ${rows.length}`)
+
+    // TODO: get column number of `licence_number` and change to `(columns[3])` (or whatever)
+    const licence = await helpers.getLicence(columns[headings.indexOf('licence_number')])
+
     const fields = headings.map((heading, colIndex) => ({ heading, val: columns[colIndex] }))
+
     const errors = []
-    while (fields.length) {
-      const { heading, val } = fields.shift()
+
+    for (const { heading, val } of fields) {
       const { skip = [], validate: validator, allow = [] } = csvFields[camelCase(heading)] || {}
+
+      // TODO: possibly refactor to a `allowEmpty` flag
       if (allow.includes(val)) {
         continue
       }
+
+      // TODO: refactor to make more specific? for chargeElementTimeLimitStart/...End
       if (skip.length) {
         // In this case when a message is returned the validator will be skipped
         const validationSkipped = await validateField(heading, val, licence, columns, skip)
@@ -57,6 +63,7 @@ const validateRows = async (rows, headings, jobName) => {
           continue
         }
       }
+
       if (validator) {
         const error = await validateField(heading, val, licence, columns, validator)
         if (error) {
@@ -64,23 +71,21 @@ const validateRows = async (rows, headings, jobName) => {
         }
       }
     }
+
     return errors
   }
 
-  const rowsToProcess = [...rows]
+  const invalidRows = []
 
-  const validRows = []
+  // Generate array of index/value outside the loop so we don't do this each time
+  const rowsToProcess = rows.entries()
 
-  while (rowsToProcess.length) {
-    const index = rows.length - rowsToProcess.length
-    const row = rowsToProcess.shift()
+  for (const [index, row] of rowsToProcess) {
     const rowErrors = await validateRow(row, index)
-    rowErrors.forEach(rowError => {
-      validRows.push(rowError)
-    })
+    invalidRows.push(...rowErrors)
   }
 
-  return validRows
+  return invalidRows
 }
 
 const validateGroups = async (rows, headings, jobName) => {
