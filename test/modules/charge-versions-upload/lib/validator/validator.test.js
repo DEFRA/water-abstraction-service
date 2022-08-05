@@ -248,7 +248,7 @@ experiment('validator', () => {
       experiment('when the charge reference details charge element group', () => {
         test('is blank', async () => {
           const row = { ...testRow, chargeReferenceDetailsChargeElementGroup: '' }
-          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_charge_element_group is blank']))
+          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_charge_element_group is not an accepted term']))
         })
 
         test('is not an accepted term', async () => {
@@ -260,7 +260,7 @@ experiment('validator', () => {
       experiment('when the charge reference details source', () => {
         test('is blank', async () => {
           const row = { ...testRow, chargeReferenceDetailsSource: '' }
-          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_source is blank']))
+          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_source is not an accepted term']))
         })
 
         test('is not an accepted term', async () => {
@@ -272,7 +272,7 @@ experiment('validator', () => {
       experiment('when the charge reference details loss', () => {
         test('is blank', async () => {
           const row = { ...testRow, chargeReferenceDetailsLoss: '' }
-          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_loss is blank']))
+          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_loss is not an accepted term']))
         })
 
         test('is not an accepted term', async () => {
@@ -333,7 +333,7 @@ experiment('validator', () => {
       experiment('when the charge reference details modelling', () => {
         test('is blank', async () => {
           const row = { ...testRow, chargeReferenceDetailsModelling: '' }
-          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_modelling is blank']))
+          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_modelling is not an accepted term']))
         })
 
         test('is not an accepted term', async () => {
@@ -362,7 +362,7 @@ experiment('validator', () => {
       experiment('when the charge reference details supported source charge', () => {
         test('is blank', async () => {
           const row = { ...testRow, chargeReferenceDetailsSupportedSourceCharge: '' }
-          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_supported_source_charge is blank']))
+          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_supported_source_charge is not an accepted term']))
         })
 
         test('is not an accepted term', async () => {
@@ -402,7 +402,7 @@ experiment('validator', () => {
       experiment('when the charge reference details public water supply', () => {
         test('is blank', async () => {
           const row = { ...testRow, chargeReferenceDetailsPublicWaterSupply: '' }
-          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_public_water_supply is blank']))
+          expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_public_water_supply is not an accepted term']))
         })
 
         test('is not an accepted term', async () => {
@@ -495,7 +495,7 @@ experiment('validator', () => {
         experiment('when the charge reference details winter discount', () => {
           test('is blank', async () => {
             const row = { ...testRow, chargeReferenceDetailsWinterDiscount: '' }
-            expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_winter_discount is blank']))
+            expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_winter_discount is not an accepted term']))
           })
 
           test('is not an accepted term', async () => {
@@ -507,7 +507,7 @@ experiment('validator', () => {
         experiment('when the charge reference details two part tariff agreement applies', () => {
           test('is blank', async () => {
             const row = { ...testRow, chargeReferenceDetailsTwoPartTariffAgreementApplies: '' }
-            expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_two_part_tariff_agreement_applies is blank']))
+            expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_two_part_tariff_agreement_applies is not an accepted term']))
           })
 
           test('is not an accepted term', async () => {
@@ -519,7 +519,7 @@ experiment('validator', () => {
         experiment('when the charge reference details canal and river trust agreement applies', () => {
           test('is blank', async () => {
             const row = { ...testRow, chargeReferenceDetailsCanalAndRiverTrustAgreementApplies: '' }
-            expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_canal_and_river_trust_agreement_applies is blank']))
+            expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_reference_details_canal_and_river_trust_agreement_applies is not an accepted term']))
           })
 
           test('is not an accepted term', async () => {

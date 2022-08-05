@@ -84,19 +84,16 @@ const csvFields = {
   },
   charge_reference_details_charge_element_group: {
     validate: [
-      testNotBlank,
       testAcceptedTerm('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''))
     ]
   },
   charge_reference_details_source: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['Y', 'N'])
     ]
   },
   charge_reference_details_loss: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['high', 'medium', 'low'])
     ]
   },
@@ -118,7 +115,6 @@ const csvFields = {
   },
   charge_reference_details_modelling: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(Object.values(WATER_MODEL))
     ]
   },
@@ -131,7 +127,6 @@ const csvFields = {
   },
   charge_reference_details_supported_source_charge: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['Y', 'N'])
     ]
   },
@@ -144,7 +139,6 @@ const csvFields = {
   },
   charge_reference_details_public_water_supply: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['Y', 'N']),
       testNotWaterUndertaker
     ]
@@ -176,19 +170,16 @@ const csvFields = {
   },
   charge_reference_details_winter_discount: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['Y', 'N'])
     ]
   },
   charge_reference_details_two_part_tariff_agreement_applies: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['Y', 'N'])
     ]
   },
   charge_reference_details_canal_and_river_trust_agreement_applies: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['Y', 'N'])
     ]
   },
