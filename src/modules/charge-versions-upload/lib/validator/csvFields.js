@@ -2,8 +2,8 @@ const { WATER_MODEL } = require('../../../../lib/models/constants')
 const {
   testAcceptedTerm, testNotBlank, testMaxLength, testNumberLessThanOne, testNumberGreaterThanZero, testNumber,
   testMaxDecimalPlaces, testBlankWhen, testPopulatedWhen, testSupportedSourceOrBlank, testValidReferenceLineDescription,
-  testMaxValue, testMaxDigits, testMatchTPTPurpose, testDateAfterLicenceDate, testDateBefore, testValidDate,
-  testDateRange, testPurpose, testDateBeforeSrocStartDate, testDateBeforeLicenceDate, testValidLicence,
+  testMaxValue, testMaxDigits, testMatchTPTPurpose, testDateAfterLicenceExpiredDate, testDateBefore, testValidDate,
+  testDateRange, testPurpose, testDateBeforeSrocStartDate, testDateBeforeLicenceStartDate, testValidLicence,
   testLicenceHasInvoiceAccount, testNotWaterUndertaker
 } = require('./tests')
 
@@ -19,7 +19,7 @@ const csvFields = {
     validate: [
       testNotBlank,
       testValidDate,
-      testDateBeforeLicenceDate('startDate', 'start date'),
+      testDateBeforeLicenceStartDate,
       testDateBeforeSrocStartDate
     ]
   },
@@ -66,8 +66,7 @@ const csvFields = {
       testNotBlank,
       testValidDate,
       testDateBefore('charge_element_time_limit_start', 'time limit start'),
-      // Note that this field is camel case as we are getting `expiredDate` from a licence object
-      testDateAfterLicenceDate('expiredDate', 'expiry date')
+      testDateAfterLicenceExpiredDate
     ]
   },
   charge_element_loss: {

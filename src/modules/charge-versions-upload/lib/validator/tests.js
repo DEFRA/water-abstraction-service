@@ -1,6 +1,5 @@
 const { billing } = require('../../../../../config')
 const helpers = require('../helpers')
-const { get } = require('lodash')
 const moment = require('moment')
 const { assertNullableNumeric } = require('../../../../lib/models/validators')
 
@@ -41,38 +40,38 @@ const testLicenceHasInvoiceAccount = async (field, _licenceNumber, licence, head
 
 const testValidDate = async (field, date = '') => helpers.formatDate(date) ? '' : `"${field} has an incorrect format, expected DD/MM/YYYY"`
 
-const testDateBeforeLicenceDate = (fieldName, fieldTitle) => async (field, date, licence) => {
-  let valid
+const testDateBeforeLicenceStartDate = async (field, date, licence) => {
   try {
-    const licenceDate = get(licence, fieldName)
-    if (licenceDate) {
-      const comparisonDate = new Date(licence[fieldName])
-      const formattedDate = helpers.formatDate(date)
-      if (formattedDate >= comparisonDate) {
-        valid = true
-      }
-    } else {
-      valid = true
+    const licenceDate = licence?.startDate
+    if (!licenceDate) {
+      return ''
+    }
+
+    const comparisonDate = new Date(licenceDate)
+    const formattedDate = helpers.formatDate(date)
+    if (formattedDate >= comparisonDate) {
+      return ''
     }
   } catch (_e) {}
-  return valid ? '' : `${field} is before the licence ${fieldTitle}`
+
+  return `${field} is before the licence start date`
 }
 
-const testDateAfterLicenceDate = (fieldName, fieldTitle) => async (field, date, licence) => {
-  let valid
+const testDateAfterLicenceExpiredDate = async (field, date, licence) => {
   try {
-    const licenceDate = get(licence, fieldName)
-    if (licenceDate) {
-      const comparisonDate = new Date(licence[fieldName])
-      const formattedDate = helpers.formatDate(date)
-      if (formattedDate <= comparisonDate) {
-        valid = true
-      }
-    } else {
-      valid = true
+    const licenceDate = licence?.expiredDate
+    if (!licenceDate) {
+      return ''
+    }
+
+    const comparisonDate = new Date(licenceDate)
+    const formattedDate = helpers.formatDate(date)
+    if (formattedDate <= comparisonDate) {
+      return ''
     }
   } catch (_e) {}
-  return valid ? '' : `${field} is after the licence ${fieldTitle}`
+
+  return `${field} is after the licence expiry date`
 }
 
 const testDateBeforeSrocStartDate = async (field, date = '') => {
@@ -203,8 +202,8 @@ module.exports = {
   testValidLicence,
   testLicenceHasInvoiceAccount,
   testValidDate,
-  testDateAfterLicenceDate,
-  testDateBeforeLicenceDate,
+  testDateAfterLicenceExpiredDate,
+  testDateBeforeLicenceStartDate,
   testDateBeforeSrocStartDate,
   testPurpose,
   testSupportedSourceOrBlank,
