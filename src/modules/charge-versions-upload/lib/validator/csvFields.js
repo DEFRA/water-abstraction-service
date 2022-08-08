@@ -49,7 +49,6 @@ const csvFields = {
     ]
   },
   charge_element_time_limit_start: {
-
     validate: [
       testNotBlank,
       testValidDate,
@@ -57,7 +56,6 @@ const csvFields = {
     ]
   },
   charge_element_time_limit_end: {
-
     validate: [
       testNotBlank,
       testValidDate,
