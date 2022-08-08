@@ -40,15 +40,6 @@ const validateRows = async (rows, headings, jobName) => {
     // We only want to return the first error as returning multiple errors may not be desired
     // eg. if a field is empty then we only need that error and not any subsequent errors for eg. date comparison
     return filteredErrors[0]
-
-    // for (const test of validators) {
-    //   const message = await test(heading, val, licence, headings, columns)
-
-    //   // We return the first error we encounter
-    //   if (message) {
-    //     return message
-    //   }
-    // }
   }
 
   const validateRow = async (columns, rowIndex) => {
