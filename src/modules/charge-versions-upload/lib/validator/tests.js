@@ -1,7 +1,6 @@
 const { billing } = require('../../../../../config')
 const helpers = require('../helpers')
 const moment = require('moment')
-const { assertNullableNumeric } = require('../../../../lib/models/validators')
 
 const getColumnValue = (headings, columns, fieldName) => columns[headings.indexOf(fieldName)]
 
@@ -140,12 +139,15 @@ const testDateRange = async (field, dateRange) => {
 }
 
 const testNumber = async (field, number) => {
-  let valid
-  try {
-    assertNullableNumeric(number)
-    valid = true
-  } catch (_e) {}
-  return valid ? '' : `${field} is not a number`
+  if (number === null) {
+    return
+  }
+
+  if (!isNaN(parseInt(number))) {
+    return
+  }
+
+  return `${field} is not a number`
 }
 
 const testNumberGreaterThanZero = async (field, number) => parseFloat(number) > 0 ? '' : `${field} is less than or equal to 0`
