@@ -1,4 +1,4 @@
-const { snakeCase, sortBy, isEqual } = require('lodash')
+const { sortBy, isEqual } = require('lodash')
 const csvParser = require('../csv-adapter/csv-parser')
 const { csvFields } = require('./csvFields')
 const helpers = require('../helpers')
@@ -8,7 +8,7 @@ const ROW_OFFSET = 2 // Takes into account the header row and the row index star
 const CHARGE_ELEMENT_TIME_LIMIT_START_COLUMN = 7
 const CHARGE_ELEMENT_TIME_LIMIT_END_COLUMN = 8
 
-const expectedHeadings = Object.keys(csvFields).map(heading => snakeCase(heading))
+const expectedHeadings = Object.keys(csvFields)
 
 /**
  * Validates that all the headings (the first column) are
