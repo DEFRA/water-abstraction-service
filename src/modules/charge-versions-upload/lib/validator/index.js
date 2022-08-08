@@ -28,15 +28,27 @@ const validateHeadings = headings => {
 }
 
 const validateRows = async (rows, headings, jobName) => {
-  const validateField = async (heading, val, licence, columns, validator = []) => {
-    for (const test of validator) {
-      const message = await test(heading, val, licence, headings, columns)
+  const validateField = async (heading, val, licence, columns, validators = []) => {
+    // We use map to create an array of all the validation to be done, then Promise.all to validate concurrently
+    const errors = await Promise.all(
+      validators.map(async (validator) => validator(heading, val, licence, headings, columns))
+    )
 
-      // We return the first error we encounter
-      if (message) {
-        return message
-      }
-    }
+    // Remove any empty results to just leave the errors
+    const filteredErrors = errors.filter(e => e)
+
+    // We only want to return the first error as returning multiple errors may not be desired
+    // eg. if a field is empty then we only need that error and not any subsequent errors for eg. date comparison
+    return filteredErrors[0]
+
+    // for (const test of validators) {
+    //   const message = await test(heading, val, licence, headings, columns)
+
+    //   // We return the first error we encounter
+    //   if (message) {
+    //     return message
+    //   }
+    // }
   }
 
   const validateRow = async (columns, rowIndex) => {
@@ -47,15 +59,18 @@ const validateRows = async (rows, headings, jobName) => {
 
     const fields = headings.map((heading, colIndex) => ({ heading, val: columns[colIndex] }))
 
+    const errorsToReturn = await Promise.all(
+      fields.map(async (field) => {
+        const { heading, val } = field
         const { validate: validator, allowEmpty = false } = csvFields[heading] || {}
 
-    const errors = []
+        const errors = []
         let skip
 
         // Some fields can be left empty so we don't need to validate if this is the case
         if (allowEmpty && val === '') {
           skip = true
-      }
+        }
 
         // We don't need to validate the charge element time limit start field if the end field is empty, and vice-versa
         if (
@@ -63,16 +78,21 @@ const validateRows = async (rows, headings, jobName) => {
             (heading === 'charge_element_time_limit_end' && columns[CHARGE_ELEMENT_TIME_LIMIT_START_COLUMN] === '')
         ) {
           skip = true
-      }
+        }
 
         if (!skip && validator) {
-        const error = await validateField(heading, val, licence, columns, validator)
-        if (error) {
+          const error = await validateField(heading, val, licence, columns, validator)
+          if (error) {
             errors.push(`Row ${rowIndex + ROW_OFFSET}, ${error}`)
-      }
-    }
+          }
+        }
 
-    return errors
+        // Remove any empty results to just leave the errors
+        return errors.filter(e => e.length)
+      })
+    )
+
+    return errorsToReturn.flat(Infinity)
   }
 
   const invalidRows = []
@@ -106,7 +126,7 @@ const validateGroups = async (rows, headings, jobName) => {
   const sortedRows = sortBy(rows.map((row, index) => {
     const licenceNumber = row[headings.indexOf('licence_number')]
     const chargeReferenceDetailsChargeElementGroup = row[headings.indexOf('charge_reference_details_charge_element_group')]
-    const rowNumber = index + rowOffset
+    const rowNumber = index + ROW_OFFSET
     return { licenceNumber, chargeReferenceDetailsChargeElementGroup, rowNumber, row }
   }), ['licenceNumber', 'chargeReferenceDetailsChargeElementGroup'])
   return sortedRows.reduce((errors, current, rowIndex) => {
