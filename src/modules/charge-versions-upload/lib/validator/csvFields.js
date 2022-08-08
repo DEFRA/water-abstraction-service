@@ -49,9 +49,7 @@ const csvFields = {
     ]
   },
   charge_element_time_limit_start: {
-    skip: [
-      testPopulatedWhen('charge_element_time_limit_end', '')
-    ],
+
     validate: [
       testNotBlank,
       testValidDate,
@@ -59,9 +57,7 @@ const csvFields = {
     ]
   },
   charge_element_time_limit_end: {
-    skip: [
-      testPopulatedWhen('charge_element_time_limit_start', '')
-    ],
+
     validate: [
       testNotBlank,
       testValidDate,
@@ -75,7 +71,7 @@ const csvFields = {
     ]
   },
   charge_element_agreement_apply: {
-    allow: [''],
+    allowEmpty: true,
     validate: [
       testAcceptedTerm(['Y', 'N']),
       testMatchTPTPurpose
@@ -159,7 +155,7 @@ const csvFields = {
     ]
   },
   charge_reference_details_abatement_factor: {
-    allow: [''],
+    allowEmpty: true,
     validate: [
       testMaxDecimalPlaces(15),
       testNumber,

@@ -4,7 +4,9 @@ const { csvFields } = require('./csvFields')
 const helpers = require('../helpers')
 const { logger } = require('../../../../logger')
 
-const rowOffset = 2 // Takes into account the header row and the row index starting from 0
+const ROW_OFFSET = 2 // Takes into account the header row and the row index starting from 0
+const CHARGE_ELEMENT_TIME_LIMIT_START_COLUMN = 7
+const CHARGE_ELEMENT_TIME_LIMIT_END_COLUMN = 8
 
 const expectedHeadings = Object.keys(csvFields).map(heading => snakeCase(heading))
 
@@ -45,30 +47,28 @@ const validateRows = async (rows, headings, jobName) => {
 
     const fields = headings.map((heading, colIndex) => ({ heading, val: columns[colIndex] }))
 
+        const { validate: validator, allowEmpty = false } = csvFields[heading] || {}
+
     const errors = []
+        let skip
 
-    for (const { heading, val } of fields) {
-      const { skip = [], validate: validator, allow = [] } = csvFields[heading] || {}
-
-      // TODO: possibly refactor to a `allowEmpty` flag
-      if (allow.includes(val)) {
-        continue
+        // Some fields can be left empty so we don't need to validate if this is the case
+        if (allowEmpty && val === '') {
+          skip = true
       }
 
-      // TODO: refactor to make more specific? for chargeElementTimeLimitStart/...End
-      if (skip.length) {
-        // In this case when a message is returned the validator will be skipped
-        const validationSkipped = await validateField(heading, val, licence, columns, skip)
-        if (validationSkipped) {
-          continue
-        }
+        // We don't need to validate the charge element time limit start field if the end field is empty, and vice-versa
+        if (
+          (heading === 'charge_element_time_limit_start' && columns[CHARGE_ELEMENT_TIME_LIMIT_END_COLUMN] === '') ||
+            (heading === 'charge_element_time_limit_end' && columns[CHARGE_ELEMENT_TIME_LIMIT_START_COLUMN] === '')
+        ) {
+          skip = true
       }
 
-      if (validator) {
+        if (!skip && validator) {
         const error = await validateField(heading, val, licence, columns, validator)
         if (error) {
-          errors.push(`Row ${rowIndex + rowOffset}, ${error}`)
-        }
+            errors.push(`Row ${rowIndex + ROW_OFFSET}, ${error}`)
       }
     }
 
