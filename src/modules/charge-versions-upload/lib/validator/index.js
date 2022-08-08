@@ -1,12 +1,14 @@
-const { snakeCase, camelCase, sortBy, isEqual } = require('lodash')
+const { sortBy, isEqual } = require('lodash')
 const csvParser = require('../csv-adapter/csv-parser')
 const { csvFields } = require('./csvFields')
 const helpers = require('../helpers')
 const { logger } = require('../../../../logger')
 
-const rowOffset = 2 // Takes into account the header row and the row index starting from 0
+const ROW_OFFSET = 2 // Takes into account the header row and the row index starting from 0
+const CHARGE_ELEMENT_TIME_LIMIT_START_COLUMN = 7
+const CHARGE_ELEMENT_TIME_LIMIT_END_COLUMN = 8
 
-const expectedHeadings = Object.keys(csvFields).map(heading => snakeCase(heading))
+const expectedHeadings = Object.keys(csvFields)
 
 /**
  * Validates that all the headings (the first column) are
@@ -26,53 +28,62 @@ const validateHeadings = headings => {
 }
 
 const validateRows = async (rows, headings, jobName) => {
-  const validateField = async (heading, val, licence, columns, validator = []) => {
-    for (const test of validator) {
-      const message = await test(heading, val, licence, headings, columns)
+  const validateField = async (heading, val, licence, columns, validators = []) => {
+    // We use map to create an array of all the validation to be done, then Promise.all to validate concurrently
+    const errors = await Promise.all(
+      validators.map(async (validator) => validator(heading, val, licence, headings, columns))
+    )
 
-      // We return the first error we encounter
-      if (message) {
-        return message
-      }
-    }
+    // Remove any empty results to just leave the errors
+    const filteredErrors = errors.filter(e => e)
+
+    // We only want to return the first error as returning multiple errors may not be desired
+    // eg. if a field is empty then we only need that error and not any subsequent errors for eg. date comparison
+    return filteredErrors[0]
   }
 
   const validateRow = async (columns, rowIndex) => {
     logger.info(`${jobName}: validating row ${rowIndex} of ${rows.length}`)
 
-    // TODO: get column number of `licence_number` and change to `(columns[3])` (or whatever)
-    const licence = await helpers.getLicence(columns[headings.indexOf('licence_number')])
+    // licence_number is the first column in the file
+    const licence = await helpers.getLicence(columns[0])
 
     const fields = headings.map((heading, colIndex) => ({ heading, val: columns[colIndex] }))
 
-    const errors = []
+    const errorsToReturn = await Promise.all(
+      fields.map(async (field) => {
+        const { heading, val } = field
+        const { validate: validator, allowEmpty = false } = csvFields[heading] || {}
 
-    for (const { heading, val } of fields) {
-      const { skip = [], validate: validator, allow = [] } = csvFields[camelCase(heading)] || {}
+        const errors = []
+        let skip
 
-      // TODO: possibly refactor to a `allowEmpty` flag
-      if (allow.includes(val)) {
-        continue
-      }
-
-      // TODO: refactor to make more specific? for chargeElementTimeLimitStart/...End
-      if (skip.length) {
-        // In this case when a message is returned the validator will be skipped
-        const validationSkipped = await validateField(heading, val, licence, columns, skip)
-        if (validationSkipped) {
-          continue
+        // Some fields can be left empty so we don't need to validate if this is the case
+        if (allowEmpty && val === '') {
+          skip = true
         }
-      }
 
-      if (validator) {
-        const error = await validateField(heading, val, licence, columns, validator)
-        if (error) {
-          errors.push(`Row ${rowIndex + rowOffset}, ${error}`)
+        // We don't need to validate the charge element time limit start field if the end field is empty, and vice-versa
+        if (
+          (heading === 'charge_element_time_limit_start' && columns[CHARGE_ELEMENT_TIME_LIMIT_END_COLUMN] === '') ||
+            (heading === 'charge_element_time_limit_end' && columns[CHARGE_ELEMENT_TIME_LIMIT_START_COLUMN] === '')
+        ) {
+          skip = true
         }
-      }
-    }
 
-    return errors
+        if (!skip && validator) {
+          const error = await validateField(heading, val, licence, columns, validator)
+          if (error) {
+            errors.push(`Row ${rowIndex + ROW_OFFSET}, ${error}`)
+          }
+        }
+
+        // Remove any empty results to just leave the errors
+        return errors.filter(e => e.length)
+      })
+    )
+
+    return errorsToReturn.flat(Infinity)
   }
 
   const invalidRows = []
@@ -106,7 +117,7 @@ const validateGroups = async (rows, headings, jobName) => {
   const sortedRows = sortBy(rows.map((row, index) => {
     const licenceNumber = row[headings.indexOf('licence_number')]
     const chargeReferenceDetailsChargeElementGroup = row[headings.indexOf('charge_reference_details_charge_element_group')]
-    const rowNumber = index + rowOffset
+    const rowNumber = index + ROW_OFFSET
     return { licenceNumber, chargeReferenceDetailsChargeElementGroup, rowNumber, row }
   }), ['licenceNumber', 'chargeReferenceDetailsChargeElementGroup'])
   return sortedRows.reduce((errors, current, rowIndex) => {

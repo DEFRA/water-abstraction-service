@@ -2,104 +2,95 @@ const { WATER_MODEL } = require('../../../../lib/models/constants')
 const {
   testAcceptedTerm, testNotBlank, testMaxLength, testNumberLessThanOne, testNumberGreaterThanZero, testNumber,
   testMaxDecimalPlaces, testBlankWhen, testPopulatedWhen, testSupportedSourceOrBlank, testValidReferenceLineDescription,
-  testMaxValue, testMaxDigits, testMatchTPTPurpose, testDateAfterLicenceDate, testDateBefore, testValidDate,
-  testDateRange, testPurpose, testDateBeforeSrocStartDate, testDateBeforeLicenceDate, testValidLicence,
+  testMaxValue, testMaxDigits, testMatchTPTPurpose, testDateAfterLicenceExpiredDate, testDateBefore, testValidDate,
+  testDateRange, testPurpose, testDateBeforeSrocStartDate, testDateBeforeLicenceStartDate, testValidLicence,
   testLicenceHasInvoiceAccount, testNotWaterUndertaker
 } = require('./tests')
 
 const csvFields = {
-  licenceNumber: {
+  licence_number: {
     validate: [
       testNotBlank,
       testValidLicence,
       testLicenceHasInvoiceAccount
     ]
   },
-  chargeInformationStartDate: {
+  charge_information_start_date: {
     validate: [
       testNotBlank,
       testValidDate,
-      testDateBeforeLicenceDate('startDate', 'start date'),
+      testDateBeforeLicenceStartDate,
       testDateBeforeSrocStartDate
     ]
   },
-  chargeInformationBillingAccount: {
+  charge_information_billing_account: {
     // see validation above in licenceNumber when entered: "testLicenceHasInvoiceAccount"
   },
-  chargeElementPurpose: {
+  charge_element_purpose: {
     validate: [
       testNotBlank,
       testPurpose
     ]
   },
-  chargeElementDescription: {
+  charge_element_description: {
     validate: [
       testNotBlank
     ]
   },
-  chargeElementAbstractionPeriod: {
+  charge_element_abstraction_period: {
     validate: [
       testDateRange
     ]
   },
-  chargeElementAuthorisedQuantity: {
+  charge_element_authorised_quantity: {
     validate: [
       testNumber,
       testMaxDecimalPlaces(6)
     ]
   },
-  chargeElementTimeLimitStart: {
-    skip: [
-      testPopulatedWhen('chargeElementTimeLimitEnd', '')
-    ],
+  charge_element_time_limit_start: {
     validate: [
       testNotBlank,
       testValidDate,
-      testDateBefore('chargeInformationStartDate', 'charge information start date')
+      testDateBefore('charge_information_start_date', 'charge information start date')
     ]
   },
-  chargeElementTimeLimitEnd: {
-    skip: [
-      testPopulatedWhen('chargeElementTimeLimitStart', '')
-    ],
+  charge_element_time_limit_end: {
     validate: [
       testNotBlank,
       testValidDate,
-      testDateBefore('chargeElementTimeLimitStart', 'time limit start'),
-      testDateAfterLicenceDate('expiredDate', 'expiry date')
+      testDateBefore('charge_element_time_limit_start', 'time limit start'),
+      testDateAfterLicenceExpiredDate
     ]
   },
-  chargeElementLoss: {
+  charge_element_loss: {
     validate: [
       testAcceptedTerm(['high', 'medium', 'low'])
     ]
   },
-  chargeElementAgreementApply: {
-    allow: [''],
+  charge_element_agreement_apply: {
+    allowEmpty: true,
     validate: [
       testAcceptedTerm(['Y', 'N']),
       testMatchTPTPurpose
     ]
   },
-  chargeReferenceDetailsChargeElementGroup: {
+  charge_reference_details_charge_element_group: {
     validate: [
-      testNotBlank,
       testAcceptedTerm('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''))
     ]
   },
-  chargeReferenceDetailsSource: {
+  charge_reference_details_source: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['Y', 'N'])
     ]
   },
-  chargeReferenceDetailsLoss: {
+  charge_reference_details_loss: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['high', 'medium', 'low'])
     ]
   },
-  chargeReferenceDetailsVolume: {
+  charge_reference_details_volume: {
     validate: [
       testNotBlank,
       testMaxDigits(17),
@@ -109,46 +100,43 @@ const csvFields = {
       testMaxValue(1000000000000000)
     ]
   },
-  chargeReferenceDetailsWaterAvailability: {
+  charge_reference_details_water_availability: {
     validate: [
       testNotBlank,
       testAcceptedTerm(['Y', 'N'])
     ]
   },
-  chargeReferenceDetailsModelling: {
+  charge_reference_details_modelling: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(Object.values(WATER_MODEL))
     ]
   },
-  chargeReferenceLineDescription: {
+  charge_reference_line_description: {
     validate: [
       testNotBlank,
       testMaxLength(180),
       testValidReferenceLineDescription
     ]
   },
-  chargeReferenceDetailsSupportedSourceCharge: {
+  charge_reference_details_supported_source_charge: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['Y', 'N'])
     ]
   },
-  chargeReferenceDetailsSupportedSourceName: {
+  charge_reference_details_supported_source_name: {
     validate: [
       testSupportedSourceOrBlank,
-      testPopulatedWhen('chargeReferenceDetailsSupportedSourceCharge', 'Y', 'supported source charge'),
-      testBlankWhen('chargeReferenceDetailsSupportedSourceCharge', 'N', 'supported source charge')
+      testPopulatedWhen('charge_reference_details_supported_source_charge', 'Y', 'supported source charge'),
+      testBlankWhen('charge_reference_details_supported_source_charge', 'N', 'supported source charge')
     ]
   },
-  chargeReferenceDetailsPublicWaterSupply: {
+  charge_reference_details_public_water_supply: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['Y', 'N']),
       testNotWaterUndertaker
     ]
   },
-  chargeReferenceDetailsAggregateFactor: {
+  charge_reference_details_aggregate_factor: {
     validate: [
       testNotBlank,
       testMaxDecimalPlaces(15),
@@ -156,7 +144,7 @@ const csvFields = {
       testNumberGreaterThanZero
     ]
   },
-  chargeReferenceDetailsAdjustmentFactor: {
+  charge_reference_details_adjustment_factor: {
     validate: [
       testNotBlank,
       testMaxDecimalPlaces(15),
@@ -164,8 +152,8 @@ const csvFields = {
       testNumberGreaterThanZero
     ]
   },
-  chargeReferenceDetailsAbatementFactor: {
-    allow: [''],
+  charge_reference_details_abatement_factor: {
+    allowEmpty: true,
     validate: [
       testMaxDecimalPlaces(15),
       testNumber,
@@ -173,25 +161,22 @@ const csvFields = {
       testNumberLessThanOne
     ]
   },
-  chargeReferenceDetailsWinterDiscount: {
+  charge_reference_details_winter_discount: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['Y', 'N'])
     ]
   },
-  chargeReferenceDetailsTwoPartTariffAgreementApplies: {
+  charge_reference_details_two_part_tariff_agreement_applies: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['Y', 'N'])
     ]
   },
-  chargeReferenceDetailsCanalAndRiverTrustAgreementApplies: {
+  charge_reference_details_canal_and_river_trust_agreement_applies: {
     validate: [
-      testNotBlank,
       testAcceptedTerm(['Y', 'N'])
     ]
   },
-  chargeInformationNotes: {
+  charge_information_notes: {
     validate: [
       testMaxLength(500)
     ]

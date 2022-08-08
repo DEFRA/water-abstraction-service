@@ -1,10 +1,8 @@
 const { billing } = require('../../../../../config')
 const helpers = require('../helpers')
-const { get, snakeCase } = require('lodash')
 const moment = require('moment')
-const { assertNullableNumeric } = require('../../../../lib/models/validators')
 
-const getColumnValue = (headings, columns, fieldName) => columns[headings.indexOf(snakeCase(fieldName))]
+const getColumnValue = (headings, columns, fieldName) => columns[headings.indexOf(fieldName)]
 
 const testNotBlank = async (field, val) => val === '' ? `${field} is blank` : ''
 
@@ -26,7 +24,7 @@ const testValidLicence = async (field, _licenceNumber, licence) => {
 }
 
 const testLicenceHasInvoiceAccount = async (field, _licenceNumber, licence, headings, columns) => {
-  const invoiceAccountNumber = getColumnValue(headings, columns, 'chargeInformationBillingAccount')
+  const invoiceAccountNumber = getColumnValue(headings, columns, 'charge_information_billing_account')
   const invoiceAccount = await helpers.getInvoiceAccount(licence, invoiceAccountNumber)
   if (invoiceAccount) {
     return ''
@@ -41,38 +39,46 @@ const testLicenceHasInvoiceAccount = async (field, _licenceNumber, licence, head
 
 const testValidDate = async (field, date = '') => helpers.formatDate(date) ? '' : `"${field} has an incorrect format, expected DD/MM/YYYY"`
 
-const testDateBeforeLicenceDate = (fieldName, fieldTitle) => async (field, date, licence) => {
-  let valid
+const testDateBeforeLicenceStartDate = async (field, date, licence) => {
+  if (!licence) {
+    return ''
+  }
+
   try {
-    const licenceDate = get(licence, fieldName)
-    if (licenceDate) {
-      const comparisonDate = new Date(licence[fieldName])
-      const formattedDate = helpers.formatDate(date)
-      if (formattedDate >= comparisonDate) {
-        valid = true
-      }
-    } else {
-      valid = true
+    const licenceDate = licence.startDate
+    if (!licenceDate) {
+      return ''
+    }
+
+    const comparisonDate = new Date(licenceDate)
+    const formattedDate = helpers.formatDate(date)
+    if (formattedDate >= comparisonDate) {
+      return ''
     }
   } catch (_e) {}
-  return valid ? '' : `${field} is before the licence ${fieldTitle}`
+
+  return `${field} is before the licence start date`
 }
 
-const testDateAfterLicenceDate = (fieldName, fieldTitle) => async (field, date, licence) => {
-  let valid
+const testDateAfterLicenceExpiredDate = async (field, date, licence) => {
+  if (!licence) {
+    return ''
+  }
+
   try {
-    const licenceDate = get(licence, fieldName)
-    if (licenceDate) {
-      const comparisonDate = new Date(licence[fieldName])
-      const formattedDate = helpers.formatDate(date)
-      if (formattedDate <= comparisonDate) {
-        valid = true
-      }
-    } else {
-      valid = true
+    const licenceDate = licence.expiredDate
+    if (!licenceDate) {
+      return ''
+    }
+
+    const comparisonDate = new Date(licenceDate)
+    const formattedDate = helpers.formatDate(date)
+    if (formattedDate <= comparisonDate) {
+      return ''
     }
   } catch (_e) {}
-  return valid ? '' : `${field} is after the licence ${fieldTitle}`
+
+  return `${field} is after the licence expiry date`
 }
 
 const testDateBeforeSrocStartDate = async (field, date = '') => {
@@ -133,12 +139,15 @@ const testDateRange = async (field, dateRange) => {
 }
 
 const testNumber = async (field, number) => {
-  let valid
-  try {
-    assertNullableNumeric(number)
-    valid = true
-  } catch (_e) {}
-  return valid ? '' : `${field} is not a number`
+  if (number === null) {
+    return
+  }
+
+  if (!isNaN(parseInt(number))) {
+    return
+  }
+
+  return `${field} is not a number`
 }
 
 const testNumberGreaterThanZero = async (field, number) => parseFloat(number) > 0 ? '' : `${field} is less than or equal to 0`
@@ -170,7 +179,7 @@ const testDateBefore = (fieldName, fieldTitle) => async (field, date, _licence, 
 
 const testMatchTPTPurpose = async (field, term, _licence, headings, columns) => {
   if (term === 'Y') {
-    const description = getColumnValue(headings, columns, 'chargeElementPurpose')
+    const description = getColumnValue(headings, columns, 'charge_element_purpose')
     const purposeUses = await helpers.getPurposeUses()
     const purpose = purposeUses.find(purposeUse => purposeUse.description === description)
     return purpose && purpose.isTwoPartTariff ? '' : `${field} does not match the purpose`
@@ -203,8 +212,8 @@ module.exports = {
   testValidLicence,
   testLicenceHasInvoiceAccount,
   testValidDate,
-  testDateAfterLicenceDate,
-  testDateBeforeLicenceDate,
+  testDateAfterLicenceExpiredDate,
+  testDateBeforeLicenceStartDate,
   testDateBeforeSrocStartDate,
   testPurpose,
   testSupportedSourceOrBlank,
