@@ -8,7 +8,7 @@ module.exports = {
     handler: controller.postUpload,
     config: {
       payload: {
-        maxBytes: 1000 * 1000 * 50
+        maxBytes: 1000 * 1000 * 20
       },
       validate: {
         params: Joi.object().keys({
