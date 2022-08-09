@@ -93,6 +93,12 @@ module.exports = {
       stripTrailingSlash: true
     }
   },
+  serverBackground: {
+    port: 8012,
+    router: {
+      stripTrailingSlash: true
+    }
+  },
 
   testMode,
 
