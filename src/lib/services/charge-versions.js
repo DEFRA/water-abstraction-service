@@ -183,11 +183,19 @@ const create = async chargeVersion => {
   chargeVersion.fromHash({
     source: ChargeVersion.SOURCE.wrls,
     status: ChargeVersion.STATUS.current,
+    // TODO: Refactor to query db direct -- get largest chargeVersion value for this licence ref and add 1
     versionNumber: getNextVersionNumber(existingChargeVersions)
   })
 
   // Refresh statuses and end dates
+
+  // TODO: Refactor to query db direct -- get charge version for this licence with isCurrent, and if start date is the
+  // same then mark as superseded [double-check this logic in `refreshStatus`]
   refreshStatus(chargeVersion, existingChargeVersions)
+
+  // TODO: Refactor to query db direct. Get all charge versions for this licence with isCurrent. In order of start date,
+  // update the end date of each one to be 1 day before the start date of the next one. And update the end date of the
+  // last one to be `null`
   refreshEndDates([chargeVersion, ...existingChargeVersions])
 
   const [{ id }] = await Promise.all([
@@ -196,6 +204,7 @@ const create = async chargeVersion => {
     persist(chargeVersion),
 
     // Update end date/status on existing charge versions for licence
+    // TODO: We can remove this once we've got rid of `existingChargeVersions`
     updateExistingChargeVersions(existingChargeVersions)
   ])
 
