@@ -76,14 +76,15 @@ const handleUpdateChargeInformation = async job => {
     // Save the json file in a temporary folder for development purposes
     saveJsonHelper.saveJson(event, jsonData)
 
+    let dataLeftToSave = jsonData.length
+
     // Process each charge version one at a time to prevent overloading
-    do {
-      const data = jsonData.shift()
+    for (const data of jsonData) {
       logger.info(`${JOB_NAME}: Saving charge version for ${data.licenceRef}`)
       await saveChargeVersion(data)
-      const statusMessage = `${jsonData.length} charge versions remaining to save`
+      const statusMessage = `${--dataLeftToSave} charge versions remaining to save`
       await helpers.updateEventStatus(event, statusMessage, JOB_NAME)
-    } while (jsonData.length)
+    }
 
     set(event, 'status', chargeInformationUpload.uploadStatus.READY)
     return await eventsService.update(event)
