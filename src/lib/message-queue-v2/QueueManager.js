@@ -2,6 +2,7 @@
 
 const bull = require('bullmq')
 const { logger } = require('../../logger')
+const backgoundConnector = require('../connectors/background')
 
 const STATUS_COMPLETED = 'completed'
 const STATUS_FAILED = 'failed'
@@ -66,6 +67,7 @@ class QueueManager {
 
     logger.info(`Registering job: ${jobContainer.jobName}`)
 
+    backgoundConnector.registerWorker(jobContainer.jobName)
     const worker = new bull.Worker(jobContainer.jobName, jobContainer.handler, workerOpts)
 
     // Create scheduler - this is only set up if the hasScheduler flag is set.
