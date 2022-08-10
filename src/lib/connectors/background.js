@@ -8,7 +8,7 @@ const { serviceRequest } = require('@envage/water-abstraction-helpers')
  * @return {Promise}
  */
 const registerWorker = (jobName) => {
-  const url = new URL('worker/register_X', config.services.background)
+  const url = new URL('worker/register', config.services.background)
   return serviceRequest.post(url.href, { body: { jobName } })
 }
 
