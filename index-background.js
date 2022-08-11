@@ -12,6 +12,8 @@ const routes = require('./src/routes/background.js')
 const db = require('./src/lib/connectors/db')
 const { validate } = require('./src/lib/validate')
 
+const { RegisterWorkersService } = require('./src/lib/worker-manager/register-workers-service')
+
 // Initialise logger
 const { logger } = require('./src/logger')
 const goodWinstonStream = new GoodWinston({ winston: logger })
@@ -22,7 +24,7 @@ const server = Hapi.server({
 })
 
 const plugins = [
-  require('./src/lib/worker_manager').plugin
+  require('./src/lib/worker-manager').plugin
 ]
 
 // Register plugins
@@ -64,6 +66,7 @@ const start = async function () {
     server.route(routes)
 
     if (!module.parent) {
+      RegisterWorkersService.go(server.workerManager)
       await server.start()
       const name = `${process.env.SERVICE_NAME}-background`
       const uri = server.info.uri

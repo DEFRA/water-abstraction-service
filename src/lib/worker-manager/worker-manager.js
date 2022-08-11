@@ -1,6 +1,6 @@
 'use strict'
 
-const bull = require('bullmq')
+const { MetricsTime, Worker } = require('bullmq')
 const { logger } = require('../../logger')
 
 const closeWorker = async (jobName, worker) => {
@@ -22,11 +22,12 @@ class WorkerManager {
 
     // Create worker with handler
     const workerOpts = {
+      metrics: { maxDataPoints: MetricsTime.ONE_WEEK * 2 },
       ...(jobContainer.workerOptions || {}),
       connection
     }
 
-    const worker = new bull.Worker(jobContainer.jobName, jobContainer.handler, workerOpts)
+    const worker = new Worker(jobContainer.jobName, jobContainer.handler, workerOpts)
 
     // Register onComplete handler if defined
     if (jobContainer.onComplete) {
