@@ -172,16 +172,13 @@ process
     logger.info('Stopping water service')
 
     await server.stop()
-    logger.info('1/3: Hapi server stopped')
-
-    await server.queueManager.stop()
-    logger.info('2/3: Bull MQ stopped')
+    logger.info('1/2: Hapi server stopped')
 
     logger.info('Waiting 10 secs to allow jobs to finish')
 
     setTimeout(async () => {
       await db.pool.end()
-      logger.info('3/3: Connection pool closed')
+      logger.info('2/2: Connection pool closed')
 
       return process.exit(0)
     }, 10000)

@@ -21,8 +21,15 @@ const server = Hapi.server({
   ...config.serverBackground
 })
 
+const plugins = [
+  require('./src/lib/worker_manager').plugin
+]
+
 // Register plugins
 const registerServerPlugins = async (server) => {
+  // Service plugins
+  await server.register(plugins)
+
   // Third-party plugins
   await server.register({
     plugin: Good,
@@ -68,7 +75,7 @@ const start = async function () {
 }
 
 const processError = message => err => {
-  logger.error(message, err)
+  logger.error(message, err.stack)
   process.exit(1)
 }
 
@@ -79,11 +86,16 @@ process
     logger.info('Stopping water background service')
 
     await server.stop()
-    logger.info('1/2: Hapi server stopped')
+    logger.info('1/3: Hapi server stopped')
+
+    await server.workerManager.stop()
+    logger.info('2/3: Bull MQ stopped')
+
+    logger.info('Waiting 10 secs to allow jobs to finish')
 
     setTimeout(async () => {
       await db.pool.end()
-      logger.info('2/2: Connection pool closed')
+      logger.info('3/3: Connection pool closed')
 
       return process.exit(0)
     }, 10000)

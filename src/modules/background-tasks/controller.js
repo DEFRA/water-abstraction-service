@@ -1,12 +1,12 @@
 'use strict'
 
-const postRegisterWorker = async (request, h) => {
-  const { jobName } = request.payload
-  console.log(`🔨 Worker registered: ${jobName}`)
+const pkg = require('../../../package.json')
+const { version } = pkg
 
-  return h.response().code(201)
+const getStatus = async (_request, h) => {
+  return h.response({ version }).code(200)
 }
 
 module.exports = {
-  postRegisterWorker
+  getStatus
 }

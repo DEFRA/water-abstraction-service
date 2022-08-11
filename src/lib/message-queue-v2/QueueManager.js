@@ -2,22 +2,10 @@
 
 const bull = require('bullmq')
 const { logger } = require('../../logger')
-const backgoundConnector = require('../connectors/background')
-
-const STATUS_COMPLETED = 'completed'
-const STATUS_FAILED = 'failed'
 
 const jobDefaults = {
   removeOnComplete: true,
   removeOnFail: 500
-}
-
-const closeWorker = async (jobName, worker) => {
-  try {
-    await worker.close()
-  } catch (err) {
-    logger.error(`Error shutting down worker ${jobName}`, err)
-  }
 }
 
 class QueueManager {
@@ -59,16 +47,7 @@ class QueueManager {
     // Create queue
     const queue = new bull.Queue(jobContainer.jobName, { connection })
 
-    // Create worker with handler
-    const workerOpts = {
-      ...(jobContainer.workerOptions || {}),
-      connection
-    }
-
     logger.info(`Registering job: ${jobContainer.jobName}`)
-
-    backgoundConnector.registerWorker(jobContainer.jobName)
-    const worker = new bull.Worker(jobContainer.jobName, jobContainer.handler, workerOpts)
 
     // Create scheduler - this is only set up if the hasScheduler flag is set.
     // This is needed if the job makes use of Bull features such as retry/cron
@@ -76,18 +55,10 @@ class QueueManager {
       ? new bull.QueueScheduler(jobContainer.jobName, { connection })
       : null
 
-    // Register onComplete handler if defined
-    if (jobContainer.onComplete) {
-      worker.on(STATUS_COMPLETED, job => jobContainer.onComplete(job, this))
-    }
-    // An onFailed handler must always be defined
-    worker.on(STATUS_FAILED, jobContainer.onFailed)
-
     // Register all the details in the map
     this._queues.set(jobContainer.jobName, {
       jobContainer,
       queue,
-      worker,
       scheduler
     })
 
@@ -118,17 +89,6 @@ class QueueManager {
       })
     })
   }
-
-  /**
-   * Shuts down all registered workers
-   */
-  async stop () {
-    for (const [jobName, { worker }] of this._queues) {
-      await closeWorker(jobName, worker)
-    }
-  }
 }
 
 module.exports = QueueManager
-module.exports.STATUS_COMPLETED = STATUS_COMPLETED
-module.exports.STATUS_FAILED = STATUS_FAILED
