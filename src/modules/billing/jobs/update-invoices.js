@@ -10,9 +10,13 @@ const { jobNames } = require('../../../lib/constants')
 
 const JOB_NAME = jobNames.updateInvoices
 const fork = require('child_process').fork
-const child = fork('./src/modules/billing/jobs/lib/update-invoices-worker.js')
 
 const { logger } = require('../../../logger')
+
+let child
+if (process.env.name === 'service-background') {
+  child = fork('./src/modules/billing/jobs/lib/update-invoices-worker.js')
+}
 
 const createMessage = data => ([
   JOB_NAME,
