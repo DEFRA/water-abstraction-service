@@ -49,17 +49,10 @@ class QueueManager {
 
     logger.info(`Registering job: ${jobContainer.jobName}`)
 
-    // Create scheduler - this is only set up if the hasScheduler flag is set.
-    // This is needed if the job makes use of Bull features such as retry/cron
-    const scheduler = jobContainer.hasScheduler
-      ? new bull.QueueScheduler(jobContainer.jobName, { connection })
-      : null
-
     // Register all the details in the map
     this._queues.set(jobContainer.jobName, {
       jobContainer,
-      queue,
-      scheduler
+      queue
     })
 
     return this

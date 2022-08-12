@@ -15,7 +15,7 @@ function getWorkerManager () {
   return getWorkerManager.instance
 }
 
-module.exports.plugin = {
+module.exports = {
   register: async server => {
     const workerManager = getWorkerManager()
     server.decorate('server', 'workerManager', workerManager)
@@ -25,5 +25,3 @@ module.exports.plugin = {
     name: 'hapi-bull-worker'
   }
 }
-
-module.exports.getWorkerManager = getWorkerManager

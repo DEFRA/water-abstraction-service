@@ -1,15 +1,7 @@
 'use strict'
 
-const { MetricsTime, Worker } = require('bullmq')
+const { QueueScheduler, Worker } = require('bullmq')
 const { logger } = require('../../logger')
-
-const closeWorker = async (jobName, worker) => {
-  try {
-    await worker.close()
-  } catch (err) {
-    logger.error(`Error shutting down worker ${jobName}`, err)
-  }
-}
 
 class WorkerManager {
   constructor (connection) {
@@ -21,13 +13,15 @@ class WorkerManager {
     const { _connection: connection } = this
 
     // Create worker with handler
-    const workerOpts = {
-      metrics: { maxDataPoints: MetricsTime.ONE_WEEK * 2 },
+    // TODO: Implement metrics so we can see how workers are doing. Add the following line to workerOpts and require
+    // `MetricsTime` from bullmq
+    // metrics: { maxDataPoints: MetricsTime.ONE_WEEK * 2 },
+    const workerOptions = {
       ...(jobContainer.workerOptions || {}),
       connection
     }
 
-    const worker = new Worker(jobContainer.jobName, jobContainer.handler, workerOpts)
+    const worker = new Worker(jobContainer.jobName, jobContainer.handler, workerOptions)
 
     // Register onComplete handler if defined
     if (jobContainer.onComplete) {
@@ -37,16 +31,31 @@ class WorkerManager {
     // An onFailed handler must always be defined
     worker.on('failed', jobContainer.onFailed)
 
+    // Create scheduler - this is only set up if the hasScheduler flag is set.
+    // This is needed if the job makes use of Bull features such as retry/cron
+    const queueScheduler = jobContainer.hasScheduler
+      ? new QueueScheduler(jobContainer.jobName, { connection })
+      : null
+
     // Register all the details in the map
     this._queues.set(jobContainer.jobName, {
       jobContainer,
-      worker
+      worker,
+      queueScheduler
     })
   }
 
   async stop () {
     for (const [jobName, { worker }] of this._queues) {
-      await closeWorker(jobName, worker)
+      await this._closeWorker(jobName, worker)
+    }
+  }
+
+  async _closeWorker (jobName, worker) {
+    try {
+      await worker.close()
+    } catch (err) {
+      logger.error(`Error shutting down worker ${jobName}`, err.stack)
     }
   }
 }

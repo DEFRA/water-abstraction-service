@@ -24,7 +24,7 @@ const server = Hapi.server({
 })
 
 const plugins = [
-  require('./src/lib/worker-manager').plugin
+  require('./src/lib/worker-manager/plugin')
 ]
 
 // Register plugins
@@ -86,22 +86,17 @@ process
   .on('unhandledRejection', processError('unhandledRejection'))
   .on('uncaughtException', processError('uncaughtException'))
   .on('SIGINT', async () => {
-    logger.info('Stopping water background service')
+    logger.info('Stopping hapi server: existing requests have 25 seconds to complete')
+    await server.stop({ timeout: 25 * 1000 })
 
-    await server.stop()
-    logger.info('1/3: Hapi server stopped')
-
+    logger.info('Stopping BullMQ workers')
     await server.workerManager.stop()
-    logger.info('2/3: Bull MQ stopped')
 
-    logger.info('Waiting 10 secs to allow jobs to finish')
+    logger.info('Closing connection pool')
+    await db.pool.end()
 
-    setTimeout(async () => {
-      await db.pool.end()
-      logger.info('3/3: Connection pool closed')
-
-      return process.exit(0)
-    }, 10000)
+    logger.info("That's all folks!")
+    return process.exit(0)
   })
 
 if (!module.parent) {

@@ -153,13 +153,6 @@ const start = async function () {
   }
 }
 
-const stop = () => {
-  server.stop({ timeout: 5000 }).then(function (err) {
-    console.log('hapi server stopped')
-    process.exit((err) ? 1 : 0)
-  })
-}
-
 const processError = message => err => {
   logger.error(message, err.stack)
   process.exit(1)
@@ -169,25 +162,21 @@ process
   .on('unhandledRejection', processError('unhandledRejection'))
   .on('uncaughtException', processError('uncaughtException'))
   .on('SIGINT', async () => {
-    logger.info('Stopping water service')
+    logger.info('Stopping hapi server: existing requests have 25 seconds to complete')
+    await server.stop({ timeout: 25 * 1000 })
 
-    await server.stop()
-    logger.info('1/2: Hapi server stopped')
+    logger.info('Closing connection pool')
+    await db.pool.end()
 
-    logger.info('Waiting 10 secs to allow jobs to finish')
-
-    setTimeout(async () => {
-      await db.pool.end()
-      logger.info('2/2: Connection pool closed')
-
-      return process.exit(0)
-    }, 10000)
+    logger.info("That's all folks!")
+    return process.exit(0)
   })
 
 if (!module.parent) {
   start()
 }
 
-module.exports = server
-module.exports._start = start
-module.exports._stop = stop
+module.exports = {
+  server,
+  start
+}
