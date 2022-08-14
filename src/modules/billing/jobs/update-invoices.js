@@ -1,3 +1,6 @@
+'use strict'
+
+const { fork } = require('child_process')
 const uuid = require('uuid/v4')
 
 // Models
@@ -9,7 +12,6 @@ const helpers = require('./lib/helpers')
 const { jobNames } = require('../../../lib/constants')
 
 const JOB_NAME = jobNames.updateInvoices
-const fork = require('child_process').fork
 
 const { logger } = require('../../../logger')
 
@@ -50,14 +52,16 @@ const handler = async job => {
 
 const onComplete = async job => batchJob.logOnComplete(job)
 
-exports.jobName = JOB_NAME
-exports.handler = handler
-exports.createMessage = createMessage
-exports.onComplete = onComplete
-exports.onFailed = helpers.onFailedHandler
-exports.workerOptions = {
-  maxStalledCount: 3,
-  stalledInterval: 120000,
-  lockDuration: 120000,
-  lockRenewTime: 120000 / 2
+module.exports = {
+  jobName: JOB_NAME,
+  handler,
+  createMessage,
+  onComplete,
+  onFailed: helpers.onFailedHandler,
+  workerOptions: {
+    maxStalledCount: 3,
+    stalledInterval: 120000,
+    lockDuration: 120000,
+    lockRenewTime: 120000 / 2
+  }
 }

@@ -1,5 +1,6 @@
 'use strict'
 
+const { fork } = require('child_process')
 const { get } = require('lodash')
 
 const JOB_NAME = 'billing.process-charge-version-year'
@@ -14,8 +15,6 @@ const chargeVersionYearService = require('../services/charge-version-year')
 
 const config = require('../../../../config')
 const helpers = require('./lib/helpers')
-
-const fork = require('child_process').fork
 
 let child
 if (process.env.name === 'service-background') {
@@ -62,13 +61,15 @@ const handler = async job => {
 
 const onComplete = async job => batchJob.logOnComplete(job)
 
-exports.jobName = JOB_NAME
-exports.createMessage = createMessage
-exports.handler = handler
-exports.onFailed = helpers.onFailedHandler
-exports.onComplete = onComplete
-exports.workerOptions = {
-  concurrency: config.billing.processChargeVersionYearsJobConcurrency,
-  lockDuration: 3600000,
-  lockRenewTime: 3600000 / 2
+module.exports = {
+  jobName: JOB_NAME,
+  createMessage,
+  handler,
+  onFailed: helpers.onFailedHandler,
+  onComplete,
+  workerOptions: {
+    concurrency: config.billing.processChargeVersionYearsJobConcurrency,
+    lockDuration: 3600000,
+    lockRenewTime: 3600000 / 2
+  }
 }
