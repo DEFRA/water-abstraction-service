@@ -6,8 +6,6 @@ const testMode = parseInt(process.env.TEST_MODE) === 1
 const environment = process.env.ENVIRONMENT
 const isProduction = environment === 'prd'
 
-const isTest = process.env.NODE_ENV === 'test'
-
 const srocStartDate = new Date('2022-04-01')
 const isSrocLive = !isProduction && new Date() >= srocStartDate
 
@@ -28,7 +26,7 @@ module.exports = {
   },
 
   billing: {
-    supplementaryYears: isTest ? 1 : 5,
+    supplementaryYears: 5,
     createChargeJobConcurrency: 1,
     processChargeVersionYearsJobConcurrency: 2,
     prepareTransactionsJobConcurrency: 1,
