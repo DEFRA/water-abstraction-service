@@ -1,3 +1,5 @@
+'use strict'
+
 // provides all API services consumed by VML and VML Admin front ends
 require('dotenv').config()
 
