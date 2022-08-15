@@ -5,7 +5,6 @@ const testMode = parseInt(process.env.TEST_MODE) === 1
 
 const environment = process.env.ENVIRONMENT
 const isProduction = environment === 'prd'
-const isLocal = environment === 'local'
 
 const isTest = process.env.NODE_ENV === 'test'
 
@@ -30,9 +29,8 @@ module.exports = {
 
   billing: {
     supplementaryYears: isTest ? 1 : 5,
-    // There are 4 processes on the environments but only 1 locally
-    createChargeJobConcurrency: isLocal ? 16 : 1,
-    processChargeVersionYearsJobConcurrency: isLocal ? 4 : 2,
+    createChargeJobConcurrency: 1,
+    processChargeVersionYearsJobConcurrency: 2,
     prepareTransactionsJobConcurrency: 1,
     // Some billing logic is handled differently depending on whether the
     // transaction is pre/post NALD switchover date
