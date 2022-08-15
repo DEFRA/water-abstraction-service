@@ -55,24 +55,14 @@ experiment('src/lib/notify/index', () => {
       }
     })
 
-    test('returns the test key for the local environment', async () => {
-      const localEnv = { ...env, NODE_ENV: 'local' }
-      expect(notify.getPdfNotifyKey(localEnv)).to.equal('test-key')
-    })
-
-    test('returns the test key for the test environment', async () => {
-      const testEnv = { ...env, NODE_ENV: 'test' }
-      expect(notify.getPdfNotifyKey(testEnv)).to.equal('test-key')
-    })
-
-    test('returns the test key for the preprod environment', async () => {
-      const preprodEnv = { ...env, NODE_ENV: 'preprod' }
-      expect(notify.getPdfNotifyKey(preprodEnv)).to.equal('test-key')
-    })
-
-    test('returns the live key for production only', async () => {
-      const productionEnv = { ...env, NODE_ENV: 'production' }
+    test('returns the live key in production environment', async () => {
+      const productionEnv = { ...env, ENVIRONMENT: 'prd' }
       expect(notify.getPdfNotifyKey(productionEnv)).to.equal('live-key')
+    })
+
+    test('returns the test key in non-production environment', async () => {
+      const nonProdEnv = { ...env, ENVIRONMENT: 'not_prd' }
+      expect(notify.getPdfNotifyKey(nonProdEnv)).to.equal('test-key')
     })
   })
 
