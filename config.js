@@ -2,19 +2,20 @@
 
 require('dotenv').config()
 const testMode = parseInt(process.env.TEST_MODE) === 1
-const isAcceptanceTestTarget = ['local', 'dev', 'development', 'test', 'qa', 'preprod'].includes(process.env.NODE_ENV)
-const isProduction = ['production'].includes(process.env.NODE_ENV)
-const isProductionLike = ['production', 'preprod'].includes(process.env.NODE_ENV)
+
+const environment = process.env.ENVIRONMENT
+const isProduction = environment === 'prd'
+const isLocal = environment === 'local'
+
+const isTest = process.env.NODE_ENV === 'test'
+
+const srocStartDate = new Date('2022-04-01')
+const isSrocLive = !isProduction && new Date() >= srocStartDate
+
 const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0'
-const isLocal = process.env.NODE_ENV === 'local'
 const isTlsConnection = (process.env.REDIS_HOST || '').includes('aws')
 const isRedisLazy = !!process.env.LAZY_REDIS
 const isPermitsTestDatabase = process.env.DATABASE_URL.includes('permits-test')
-const isTest = process.env.NODE_ENV === 'test'
-const srocStartDate = new Date('2022-04-01')
-
-const isSrocLive = new Date() >= srocStartDate &&
-  ['local', 'dev', 'development', 'qa', 'test', 'preprod'].includes(process.env.NODE_ENV)
 
 module.exports = {
 
@@ -101,6 +102,8 @@ module.exports = {
   },
 
   testMode,
+  environment,
+  isProduction,
 
   licence: {
     regimeId: 1,
@@ -222,10 +225,6 @@ module.exports = {
     reporting: process.env.REPORTING_URI || 'http://127.0.0.1:8011/reporting/1.0'
   },
 
-  isAcceptanceTestTarget,
-
-  isProduction,
-
   chargeModule: {
     host: process.env.CHARGE_MODULE_ORIGIN,
     cognito: {
@@ -262,6 +261,9 @@ module.exports = {
 
   featureToggles: {
     deleteAllBillingData: process.env.ENABLE_DELETE_ALL_BILLING_DATA_FEATURE === 'true' && !isProduction,
-    swagger: !isProductionLike
-  }
+    // TODO: Remove Swagger completely
+    swagger: false
+  },
+
+  slackHook: process.env.SLACK_HOOK
 }

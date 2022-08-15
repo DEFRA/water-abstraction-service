@@ -2,24 +2,26 @@ const os = require('os')
 const hostname = os.hostname()
 const { logger } = require('../logger')
 
+const { environment, slackHook } = require('../../config')
+
 // contains generic functions unrelated to a specific component
 const rp = require('request-promise-native').defaults({
   strictSSL: false
 })
 
 function post (message) {
-  if (!process.env.SLACK_HOOK) {
+  if (!slackHook) {
     return
   }
 
-  const msg = message + ' - ' + hostname + ' - ' + process.env.NODE_ENV
+  const msg = `${message} - ${hostname} - ${environment}`
   logger.info(`Slack: ${msg}`)
-  const uri = 'https://hooks.slack.com/services/' + process.env.SLACK_HOOK
+  const uri = `https://hooks.slack.com/services/${slackHook}`
   const options = {
     method: 'POST',
     url: uri,
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    form: { payload: '{"channel": "#beta-activity", "username": "Gerald The Water Buffalo", "text": "' + msg + '", "icon_emoji": ":water_buffalo:"}' }
+    form: { payload: `{"channel": "#beta-activity", "username": "Gerald The Water Buffalo", "text": "${msg}", "icon_emoji": ":water_buffalo:"}` }
   }
 
   return rp(options)

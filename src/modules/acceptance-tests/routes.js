@@ -2,9 +2,9 @@
 const Joi = require('joi')
 
 const controller = require('./controller')
-const { isAcceptanceTestTarget } = require('../../../config')
+const { isProduction } = require('../../../config')
 
-if (isAcceptanceTestTarget) {
+if (!isProduction) {
   exports.postSetupFromYaml = {
     method: 'POST',
     path: '/water/1.0/acceptance-tests/set-up-from-yaml/{key}',

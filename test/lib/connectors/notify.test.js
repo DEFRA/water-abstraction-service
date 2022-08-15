@@ -7,11 +7,11 @@ const {
 const notifyConnector =
   require('../../../src/lib/connectors/notify')
 
-const createEnv = nodeEnv => ({
+const createEnv = environment => ({
   LIVE_NOTIFY_KEY: 'live-key',
   WHITELIST_NOTIFY_KEY: 'whitelist-key',
   TEST_NOTIFY_KEY: 'test-key',
-  NODE_ENV: nodeEnv
+  ENVIRONMENT: environment
 })
 
 experiment('lib/connectors/notify', () => {
@@ -28,7 +28,7 @@ experiment('lib/connectors/notify', () => {
   experiment('.getKey', () => {
     experiment('when the environment is production', () => {
       beforeEach(async () => {
-        env = createEnv('production')
+        env = createEnv('prd')
       })
 
       test('email is sent with live key', async () => {
@@ -52,7 +52,7 @@ experiment('lib/connectors/notify', () => {
 
     experiment('when the environment is not production', () => {
       beforeEach(async () => {
-        env = createEnv('test')
+        env = createEnv('not_prd')
       })
 
       test('email is sent with whitelist key', async () => {
