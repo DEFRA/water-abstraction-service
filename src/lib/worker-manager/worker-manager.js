@@ -12,6 +12,8 @@ class WorkerManager {
   register (jobContainer, queueManager) {
     const { _connection: connection } = this
 
+    queueManager.register(jobContainer)
+
     // Create worker with handler
     // TODO: Implement metrics so we can see how workers are doing. Add the following line to workerOpts and require
     // `MetricsTime` from bullmq
