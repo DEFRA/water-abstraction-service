@@ -36,9 +36,9 @@ const updateChargeInformationSave = require('../../modules/charge-versions-uploa
 const valudateUploadedReturnsData = require('../../modules/returns/lib/jobs/validate-returns')
 
 class RegisterWorkersService {
-  static go (workerManager) {
+  static go (workerManager, queueManager) {
     this._jobs().forEach(job => {
-      workerManager.register(job)
+      workerManager.register(job, queueManager)
     })
   }
 

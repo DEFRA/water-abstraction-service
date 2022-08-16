@@ -26,6 +26,7 @@ const server = Hapi.server({
 })
 
 const plugins = [
+  require('./src/lib/message-queue-v2').plugin,
   require('./src/lib/worker-manager/plugin')
 ]
 
@@ -68,7 +69,7 @@ const start = async function () {
     server.route(routes)
 
     if (!module.parent) {
-      RegisterWorkersService.go(server.workerManager)
+      RegisterWorkersService.go(server.workerManager, server.queueManager)
       await server.start()
       const name = `${process.env.SERVICE_NAME}-background`
       const uri = server.info.uri

@@ -9,7 +9,7 @@ class WorkerManager {
     this._queues = new Map()
   }
 
-  register (jobContainer) {
+  register (jobContainer, queueManager) {
     const { _connection: connection } = this
 
     // Create worker with handler
@@ -25,7 +25,7 @@ class WorkerManager {
 
     // Register onComplete handler if defined
     if (jobContainer.onComplete) {
-      worker.on('completed', job => jobContainer.onComplete(job, this))
+      worker.on('completed', job => jobContainer.onComplete(job, queueManager))
     }
 
     // An onFailed handler must always be defined
