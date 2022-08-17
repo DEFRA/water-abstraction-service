@@ -33,12 +33,12 @@ const returnsNotificationSend = require('../../modules/returns-notifications/lib
 const returnsUpload = require('../../modules/returns/lib/jobs/start-upload')
 const returnsUploadToJson = require('../../modules/returns/lib/jobs/map-to-json')
 const updateChargeInformationSave = require('../../modules/charge-versions-upload/jobs/update-charge-information-save')
-const valudateUploadedReturnsData = require('../../modules/returns/lib/jobs/validate-returns')
+const validateUploadedReturnsData = require('../../modules/returns/lib/jobs/validate-returns')
 
-class RegisterWorkersService {
-  static go (workerManager, queueManager) {
+class JobRegistrationService {
+  static go (queueManager) {
     this._jobs().forEach(job => {
-      workerManager.register(job, queueManager)
+      queueManager.register(job)
     })
   }
 
@@ -77,11 +77,11 @@ class RegisterWorkersService {
       returnsUpload,
       returnsUploadToJson,
       updateChargeInformationSave,
-      valudateUploadedReturnsData
+      validateUploadedReturnsData
     ]
   }
 }
 
 module.exports = {
-  RegisterWorkersService
+  JobRegistrationService
 }

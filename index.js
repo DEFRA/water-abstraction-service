@@ -17,11 +17,11 @@ moment.locale('en-gb')
 // -------------- Require project code -----------------
 const config = require('./config')
 const routes = require('./src/routes/water.js')
-const notify = require('./src/modules/notify')
-const returnsNotifications = require('./src/modules/returns-notifications')
 const db = require('./src/lib/connectors/db')
 const CatboxRedis = require('@hapi/catbox-redis')
 const { validate } = require('./src/lib/validate')
+const { JobRegistrationService } = require('./src/lib/message-queue-v2/job-registration-service')
+const { StartUpJobsService } = require('./src/lib/message-queue-v2/start-up-jobs-service')
 
 // Initialise logger
 const { logger } = require('./src/logger')
@@ -41,14 +41,7 @@ const server = Hapi.server({
 })
 
 const plugins = [
-  require('./src/lib/message-queue-v2').plugin,
-  require('./src/modules/returns/register-subscribers'),
-  require('./src/modules/address-search/plugin'),
-  require('./src/modules/billing/register-subscribers'),
-  require('./src/modules/batch-notifications/register-subscribers'),
-  require('./src/modules/gauging-stations/register-subscribers'),
-  require('./src/modules/charge-versions-upload/register-subscribers'),
-  require('./src/modules/charge-versions/plugin').plugin
+  require('./src/lib/message-queue-v2').plugin
 ]
 
 const registerServerPlugins = async (server) => {
@@ -106,12 +99,6 @@ const configureServerAuthStrategy = (server) => {
   server.auth.default('jwt')
 }
 
-const configureMessageQueue = async (server) => {
-  notify.registerSubscribers(server.queueManager)
-  returnsNotifications.registerSubscribers(server.queueManager)
-  server.log('info', 'Message queue started')
-}
-
 const configureNunjucks = async (server) => {
   server.views({
     engines: {
@@ -141,12 +128,14 @@ const start = async function () {
     await registerServerPlugins(server)
     configureServerAuthStrategy(server)
     server.route(routes)
-    await configureMessageQueue(server)
     await configureNunjucks(server)
 
     if (!module.parent) {
+      JobRegistrationService.go(server.queueManager)
+      StartUpJobsService.go(server.queueManager)
+
       await server.start()
-      const name = process.env.SERVICE_NAME
+      const name = process.env.name || process.env.SERVICE_NAME
       const uri = server.info.uri
       server.log('info', `Service ${name} running at: ${uri}`)
     }

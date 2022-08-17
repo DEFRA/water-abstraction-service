@@ -8,13 +8,14 @@ const Good = require('@hapi/good')
 const GoodWinston = require('good-winston')
 const Hapi = require('@hapi/hapi')
 const HapiAuthJwt2 = require('hapi-auth-jwt2')
+const moment = require('moment')
+moment.locale('en-gb')
 
 const config = require('./config')
 const routes = require('./src/routes/background.js')
 const db = require('./src/lib/connectors/db')
 const { validate } = require('./src/lib/validate')
-
-const { RegisterWorkersService } = require('./src/lib/worker-manager/register-workers-service')
+const { JobRegistrationService } = require('./src/lib/message-queue-v2/job-registration-service')
 
 // Initialise logger
 const { logger } = require('./src/logger')
@@ -26,8 +27,7 @@ const server = Hapi.server({
 })
 
 const plugins = [
-  require('./src/lib/message-queue-v2').plugin,
-  require('./src/lib/worker-manager/plugin')
+  require('./src/lib/message-queue-v2').plugin
 ]
 
 // Register plugins
@@ -69,9 +69,9 @@ const start = async function () {
     server.route(routes)
 
     if (!module.parent) {
-      RegisterWorkersService.go(server.workerManager, server.queueManager)
+      JobRegistrationService.go(server.queueManager)
       await server.start()
-      const name = `${process.env.SERVICE_NAME}-background`
+      const name = process.env.name || `${process.env.SERVICE_NAME}-background`
       const uri = server.info.uri
       server.log('info', `Service ${name} running at: ${uri}`)
     }
@@ -93,7 +93,7 @@ process
     await server.stop({ timeout: 25 * 1000 })
 
     logger.info('Stopping BullMQ workers')
-    await server.workerManager.stop()
+    await server.queueManager.stop()
 
     logger.info('Closing connection pool')
     await db.pool.end()

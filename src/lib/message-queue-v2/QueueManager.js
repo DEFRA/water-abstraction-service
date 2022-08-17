@@ -1,6 +1,6 @@
 'use strict'
 
-const bull = require('bullmq')
+const { Queue, QueueScheduler, Worker } = require('bullmq')
 const { logger } = require('../../logger')
 
 const jobDefaults = {
@@ -44,15 +44,18 @@ class QueueManager {
   register (jobContainer) {
     const { _connection: connection } = this
 
-    // Create queue
-    const queue = new bull.Queue(jobContainer.jobName, { connection })
-
     logger.info(`Registering job: ${jobContainer.jobName}`)
+
+    // Create queue
+    const queue = new Queue(jobContainer.jobName, { connection })
+
+    const workerAndQueueScheduler = this._createWorkerAndQueueScheduler(jobContainer, connection)
 
     // Register all the details in the map
     this._queues.set(jobContainer.jobName, {
       jobContainer,
-      queue
+      queue,
+      ...workerAndQueueScheduler
     })
 
     return this
@@ -81,6 +84,57 @@ class QueueManager {
         reject(e)
       })
     })
+  }
+
+  /**
+   * Shuts down all registered workers
+   */
+  async stop () {
+    for (const [jobName, { worker }] of this._queues) {
+      if (!worker) {
+        continue
+      }
+
+      try {
+        await worker.close()
+      } catch (err) {
+        logger.error(`Error shutting down worker ${jobName}`, err.stack)
+      }
+    }
+  }
+
+  _createWorkerAndQueueScheduler (jobContainer, connection) {
+    const result = {}
+
+    if (process.env.name !== 'service-background') {
+      return result
+    }
+    // Create worker with handler
+    // TODO: Implement metrics so we can see how workers are doing. Add the following line to workerOpts and require
+    // `MetricsTime` from bullmq
+    // metrics: { maxDataPoints: MetricsTime.ONE_WEEK * 2 },
+    const workerOptions = {
+      ...(jobContainer.workerOptions || {}),
+      connection
+    }
+
+    result.worker = new Worker(jobContainer.jobName, jobContainer.handler, workerOptions)
+
+    // Register onComplete handler if defined
+    if (jobContainer.onComplete) {
+      result.worker.on('completed', job => jobContainer.onComplete(job, this))
+    }
+
+    // An onFailed handler must always be defined
+    result.worker.on('failed', jobContainer.onFailed)
+
+    // Create scheduler - this is only set up if the hasScheduler flag is set.
+    // This is needed if the job makes use of Bull features such as retry/cron
+    result.scheduler = jobContainer.hasScheduler
+      ? new QueueScheduler(jobContainer.jobName, { connection })
+      : null
+
+    return result
   }
 }
 
