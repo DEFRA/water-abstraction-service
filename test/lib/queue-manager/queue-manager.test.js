@@ -18,7 +18,8 @@ experiment('lib/queue-manager/queue-manager', () => {
       close: sandbox.stub()
     }
     queueStub = {
-      add: sandbox.stub()
+      add: sandbox.stub(),
+      close: sandbox.stub()
     }
     pipelineStub = {
       del: sandbox.stub(),
@@ -160,18 +161,22 @@ experiment('lib/queue-manager/queue-manager', () => {
     })
   })
 
-  experiment('.stopAllWorkers', () => {
+  experiment('.closeAll', () => {
     beforeEach(async () => {
       queueManager.register(job)
     })
 
     experiment('when there are no errors', () => {
       beforeEach(async () => {
-        await queueManager.stopAllWorkers()
+        await queueManager.closeAll()
       })
 
       test('calls close() on each worker', async () => {
         expect(workerStub.close.callCount).to.equal(1)
+      })
+
+      test('calls close() on each queue', async () => {
+        expect(queueStub.close.callCount).to.equal(1)
       })
 
       test('no error is logged', async () => {
@@ -179,20 +184,29 @@ experiment('lib/queue-manager/queue-manager', () => {
       })
     })
 
-    experiment('when is an error', () => {
+    experiment('when there is an error', () => {
       const err = new Error('Oops!')
 
-      beforeEach(async () => {
-        workerStub.close.rejects(err)
-        await queueManager.stopAllWorkers()
+      experiment('whilst closing the queue', () => {
+        beforeEach(async () => {
+          queueStub.close.rejects(err)
+          await queueManager.closeAll()
+        })
+
+        test('an error is logged', async () => {
+          expect(logger.error.calledWith(`Error closing queue ${job.jobName}`, err)).to.be.true()
+        })
       })
 
-      test('calls close() on each worker', async () => {
-        expect(workerStub.close.callCount).to.equal(1)
-      })
+      experiment('whilst closing the worker', () => {
+        beforeEach(async () => {
+          workerStub.close.rejects(err)
+          await queueManager.closeAll()
+        })
 
-      test('an error is logged', async () => {
-        expect(logger.error.calledWith(`Error shutting down worker ${job.jobName}`, err)).to.be.true()
+        test('an error is logged', async () => {
+          expect(logger.error.calledWith(`Error closing worker ${job.jobName}`, err)).to.be.true()
+        })
       })
     })
   })

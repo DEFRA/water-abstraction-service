@@ -140,19 +140,43 @@ class QueueManager {
   }
 
   /**
-   * Stop all BullMQ workers
+   * Close all BullMQ queuse and workers
    *
    * Called during the shutdown process for the app, when `SIGINT` is triggered or an untrapped error manages to bubble
    * to the surface.
+   *
+   * The BullMQ docs highlight using calling `worker.close() for a
+   * {@link https://docs.bullmq.io/guide/workers/graceful-shutdown|graceful shutdown}. But we also found
+   * {@link https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#queueclose|Queue.close()} in their reference
+   * with the comment
+   *
+   * > Closes the underlying Redis client. Use this to perform a graceful shutdown.
+   *
+   * So, we do both! Also note, if closing the queue fails we still attempt to close the worker. We're concious that in
+   * production environments running under pm2 if the app fails it will automatically be restarted. By closing what we
+   * can gracefully we give the restart a better chance of succeeding.
    */
-  async stopAllWorkers () {
-    for (const [jobName, { worker }] of this._queues) {
-      try {
-        logger.info(`Closing worker ${jobName}`)
-        await worker.close()
-      } catch (err) {
-        logger.error(`Error shutting down worker ${jobName}`, err)
-      }
+  async closeAll () {
+    for (const [jobName, { worker, queue }] of this._queues) {
+      logger.info(`Closing queue and worker ${jobName}`)
+      await this._closeQueue(jobName, queue)
+      await this._closeWorker(jobName, worker)
+    }
+  }
+
+  async _closeQueue (name, queue) {
+    try {
+      await queue.close()
+    } catch (err) {
+      logger.error(`Error closing queue ${name}`, err)
+    }
+  }
+
+  async _closeWorker (name, worker) {
+    try {
+      await worker.close()
+    } catch (err) {
+      logger.error(`Error closing worker ${name}`, err)
     }
   }
 
