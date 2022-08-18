@@ -12,7 +12,6 @@ const isSrocLive = !isProduction && new Date() >= srocStartDate
 const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0'
 const isTlsConnection = (process.env.REDIS_HOST || '').includes('aws')
 const isRedisLazy = !!process.env.LAZY_REDIS
-const isPermitsTestDatabase = process.env.DATABASE_URL.includes('permits-test')
 
 module.exports = {
 
@@ -248,7 +247,7 @@ module.exports = {
       port: process.env.REDIS_PORT || 6379,
       password: process.env.REDIS_PASSWORD || '',
       ...(isTlsConnection) && { tls: {} },
-      db: isPermitsTestDatabase ? 4 : 2,
+      db: process.env.NODE_ENV === 'test' ? 4 : 2,
       lazyConnect: isRedisLazy,
       maxRetriesPerRequest: null,
       enableReadyCheck: false
