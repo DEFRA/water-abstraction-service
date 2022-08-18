@@ -11,7 +11,7 @@ const sandbox = require('sinon').createSandbox()
 
 const { plugin } = require('../../../src/lib/queue-manager/index.js')
 const ioRedis = require('../../../src/lib/connectors/io-redis')
-const QueueManager = require('../../../src/lib/queue-manager/QueueManager')
+const QueueManager = require('../../../src/lib/queue-manager/queue-manager')
 
 experiment('lib/queue-manager/index.js', () => {
   let server, connection

@@ -3,13 +3,13 @@
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
 
-const QueueManager = require('../../../src/lib/queue-manager/QueueManager')
+const QueueManager = require('../../../src/lib/queue-manager/queue-manager')
 const bull = require('bullmq')
 const sandbox = require('sinon').createSandbox()
 const EventEmitter = require('events')
 const { logger } = require('../../../src/logger')
 
-experiment('lib/queue-manager/QueueManager', () => {
+experiment('lib/queue-manager/queue-manager', () => {
   let queueManager, connection, jobContainer, workerStub, queueStub, pipelineStub
 
   beforeEach(async () => {
