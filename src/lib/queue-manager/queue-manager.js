@@ -68,6 +68,7 @@ class QueueManager {
    *
    * They may also have these optional properties
    *
+   * - `startClean` when set to `true` we tell Redis to remove the existing queue before registering the new one
    * - `onComplete` the function to call when the worker fires this event
    * - `workerOptions` any additional options to pass to the worker when instantiated. Often these will be extensions
    *    to the lock timings i.e. how long a worker has to complete a job.
@@ -84,6 +85,10 @@ class QueueManager {
 
     logger.info(`Registering job: ${wrlsJob.jobName}`)
 
+    if (wrlsJob.startClean) {
+      this._cleanQueue(wrlsJob.jobName)
+    }
+
     const queue = new BullMQ.Queue(wrlsJob.jobName, { connection })
 
     const workerAndQueueScheduler = this._createWorkerAndQueueScheduler(wrlsJob, connection)
@@ -96,6 +101,15 @@ class QueueManager {
     })
 
     return this
+  }
+
+  async _cleanQueue (name) {
+    try {
+      logger.info(`Cleaning queue ${name}`)
+      await this.deleteKeysByPattern(`*${name}*`)
+    } catch (err) {
+
+    }
   }
 
   /**

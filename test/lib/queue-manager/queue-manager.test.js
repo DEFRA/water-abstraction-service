@@ -106,6 +106,19 @@ experiment('lib/queue-manager/queue-manager', () => {
     })
   })
 
+  experiment('for a job that wishes to start clean', () => {
+    beforeEach(async () => {
+      job.startClean = true
+      queueManager.register(job)
+    })
+
+    test('the existing queue is deleted', async () => {
+      expect(connection.scanStream.calledWith({
+        match: '*test-job*'
+      })).to.be.true()
+    })
+  })
+
   experiment('.deleteKeysByPattern', () => {
     let ev, result
     const pattern = 'foo*'

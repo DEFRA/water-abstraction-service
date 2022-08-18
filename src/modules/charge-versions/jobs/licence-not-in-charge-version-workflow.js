@@ -49,3 +49,4 @@ exports.handler = handler
 exports.onComplete = onComplete
 exports.onFailed = onFailed
 exports.hasScheduler = true
+exports.startClean = true

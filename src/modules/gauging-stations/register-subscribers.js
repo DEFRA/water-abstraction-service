@@ -8,10 +8,6 @@ module.exports = {
   name: 'gauging-station-jobs',
   dependencies: ['hapiBull'],
   register: async server => {
-    await server.queueManager.deleteKeysByPattern(`*${syncGaugingStationsFromSourceCsv.jobName}*`)
-    await server.queueManager.deleteKeysByPattern(`*${syncGaugingStationsLinkagesFromDigitise.jobName}*`)
-    await server.queueManager.deleteKeysByPattern(`*${syncLVPCFromDigitise.jobName}*`)
-
     server.queueManager
       .register(syncGaugingStationsFromSourceCsv)
       .register(syncGaugingStationsLinkagesFromDigitise)

@@ -44,7 +44,6 @@ module.exports = {
     server.queueManager.add(checkForUpdatedInvoiceAccounts.jobName)
     server.queueManager.add(syncChargeCategories.jobName)
     server.queueManager.add(syncSupportedSources.jobName)
-    await server.queueManager.deleteKeysByPattern('*billing.customer-file-refresh*')
     server.queueManager.add(customerFileRefresh.jobName)
   }
 }
