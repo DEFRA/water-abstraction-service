@@ -44,7 +44,7 @@ const server = Hapi.server({
 })
 
 const plugins = [
-  require('./src/lib/message-queue-v2').plugin,
+  require('./src/lib/queue-manager').plugin,
   require('./src/modules/returns/register-subscribers'),
   require('./src/modules/address-search/plugin'),
   require('./src/modules/billing/register-subscribers'),

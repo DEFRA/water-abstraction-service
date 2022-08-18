@@ -9,11 +9,11 @@ const {
 } = exports.lab = require('@hapi/lab').script()
 const sandbox = require('sinon').createSandbox()
 
-const { plugin } = require('../../../src/lib/message-queue-v2/index.js')
+const { plugin } = require('../../../src/lib/queue-manager/index.js')
 const ioRedis = require('../../../src/lib/connectors/io-redis')
-const QueueManager = require('../../../src/lib/message-queue-v2/QueueManager')
+const QueueManager = require('../../../src/lib/queue-manager/QueueManager')
 
-experiment('lib/message-queue-v2/index.js', () => {
+experiment('lib/queue-manager/index.js', () => {
   let server, connection
 
   beforeEach(async () => {

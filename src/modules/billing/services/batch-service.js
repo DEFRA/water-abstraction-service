@@ -6,7 +6,7 @@ const bluebird = require('bluebird')
 
 const mappers = require('../mappers')
 const { logger } = require('../../../logger')
-const messageQueue = require('../../../lib/message-queue-v2')
+const queueManager = require('../../../lib/queue-manager')
 
 // Constants
 const { BatchStatusError } = require('../lib/errors')
@@ -172,7 +172,7 @@ const setErrorStatus = async (batchId, errorCode) => {
   // Mark local batch as errored and delete CM batch
   await newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error, errorCode })
   if (errorCode !== Batch.BATCH_ERROR_CODE.failedToCreateBillRun) {
-    await messageQueue.getQueueManager().add(deleteErroredBatchName, batchId)
+    await queueManager.getQueueManager().add(deleteErroredBatchName, batchId)
   }
 }
 
