@@ -64,8 +64,11 @@ class QueueManager {
    * - `handler` the function the worker will call when it takes a 'job' off the queue
    * - `hasScheduler` whether the job needs a `QueueScheduler`. These are needed where a job is repeatable, scheduled
    *    with cron, or can be retried
-   * - `onComplete` the function to call when the worker fires this event
    * - `onFailed` the function to call when the worker fires this event
+   *
+   * They may also have these optional properties
+   *
+   * - `onComplete` the function to call when the worker fires this event
    * - `workerOptions` any additional options to pass to the worker when instantiated. Often these will be extensions
    *    to the lock timings i.e. how long a worker has to complete a job.
    *
