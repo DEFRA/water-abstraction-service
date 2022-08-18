@@ -1,6 +1,6 @@
 'use strict'
 
-const QueueManager = require('./queue-manager')
+const { QueueManager } = require('./queue-manager')
 const ioRedis = require('../connectors/io-redis')
 
 /**

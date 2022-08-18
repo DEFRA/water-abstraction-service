@@ -3,14 +3,14 @@
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
 
-const QueueManager = require('../../../src/lib/queue-manager/queue-manager')
+const { QueueManager } = require('../../../src/lib/queue-manager/queue-manager')
 const bull = require('bullmq')
 const sandbox = require('sinon').createSandbox()
 const EventEmitter = require('events')
 const { logger } = require('../../../src/logger')
 
 experiment('lib/queue-manager/queue-manager', () => {
-  let queueManager, connection, jobContainer, workerStub, queueStub, pipelineStub
+  let queueManager, connection, job, workerStub, queueStub, pipelineStub
 
   beforeEach(async () => {
     workerStub = {
@@ -32,7 +32,7 @@ experiment('lib/queue-manager/queue-manager', () => {
     sandbox.stub(bull, 'Queue').returns(queueStub)
     sandbox.stub(bull, 'Worker').returns(workerStub)
     sandbox.stub(bull, 'QueueScheduler')
-    jobContainer = {
+    job = {
       jobName: 'test-job',
       handler: () => {},
       onFailed: () => {},
@@ -48,12 +48,12 @@ experiment('lib/queue-manager/queue-manager', () => {
 
   experiment('for a simple job', () => {
     beforeEach(async () => {
-      queueManager.register(jobContainer)
+      queueManager.register(job)
     })
 
     test('a new Bull queue is created', async () => {
       expect(bull.Queue.calledWith(
-        jobContainer.jobName, { connection }
+        job.jobName, { connection }
       )).to.be.true()
     })
 
@@ -63,44 +63,44 @@ experiment('lib/queue-manager/queue-manager', () => {
 
     test('an onComplete handler is registered', async () => {
       expect(workerStub.on.calledWith(
-        QueueManager.STATUS_COMPLETED
+        'completed'
       )).to.be.false()
     })
 
     test('an on failed handler is registered', async () => {
       expect(workerStub.on.calledWith(
-        QueueManager.STATUS_FAILED, jobContainer.onFailed
+        'failed', job.onFailed
       )).to.be.true()
     })
 
     test('a job can be added', async () => {
-      queueManager.add(jobContainer.jobName, 'foo', 'bar')
+      queueManager.add(job.jobName, 'foo', 'bar')
       expect(queueStub.add.calledWith('foo', 'bar')).to.be.true()
     })
   })
 
   experiment('for a job requiring a scheduler', () => {
     beforeEach(async () => {
-      jobContainer.hasScheduler = true
-      queueManager.register(jobContainer)
+      job.hasScheduler = true
+      queueManager.register(job)
     })
 
     test('a scheduler is created', async () => {
       expect(bull.QueueScheduler.calledWith(
-        jobContainer.jobName, { connection }
+        job.jobName, { connection }
       )).to.be.true()
     })
   })
 
   experiment('for a job with an onComplete handler', () => {
     beforeEach(async () => {
-      jobContainer.onComplete = () => 'foo'
-      queueManager.register(jobContainer)
+      job.onComplete = () => 'foo'
+      queueManager.register(job)
     })
 
     test('the onComplete handler is registered', async () => {
       expect(workerStub.on.calledWith(
-        QueueManager.STATUS_COMPLETED
+        'completed'
       )).to.be.true()
     })
   })
@@ -160,14 +160,14 @@ experiment('lib/queue-manager/queue-manager', () => {
     })
   })
 
-  experiment('.stop', () => {
+  experiment('.stopAllWorkers', () => {
     beforeEach(async () => {
-      queueManager.register(jobContainer)
+      queueManager.register(job)
     })
 
     experiment('when there are no errors', () => {
       beforeEach(async () => {
-        await queueManager.stop()
+        await queueManager.stopAllWorkers()
       })
 
       test('calls close() on each worker', async () => {
@@ -184,7 +184,7 @@ experiment('lib/queue-manager/queue-manager', () => {
 
       beforeEach(async () => {
         workerStub.close.rejects(err)
-        await queueManager.stop()
+        await queueManager.stopAllWorkers()
       })
 
       test('calls close() on each worker', async () => {
@@ -192,7 +192,7 @@ experiment('lib/queue-manager/queue-manager', () => {
       })
 
       test('an error is logged', async () => {
-        expect(logger.error.calledWith(`Error shutting down worker ${jobContainer.jobName}`, err)).to.be.true()
+        expect(logger.error.calledWith(`Error shutting down worker ${job.jobName}`, err)).to.be.true()
       })
     })
   })

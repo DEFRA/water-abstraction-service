@@ -171,7 +171,7 @@ process
     await server.stop({ timeout: 25 * 1000 })
 
     logger.info('Stopping BullMQ workers')
-    await server.queueManager.stop()
+    await server.queueManager.stopAllWorkers()
 
     logger.info('Closing connection pool')
     await db.pool.end()

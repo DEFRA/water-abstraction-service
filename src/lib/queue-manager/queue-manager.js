@@ -1,24 +1,20 @@
 'use strict'
 
-const bull = require('bullmq')
+const BullMQ = require('bullmq')
 const { logger } = require('../../logger')
 
-const STATUS_COMPLETED = 'completed'
-const STATUS_FAILED = 'failed'
-
-const jobDefaults = {
-  removeOnComplete: true,
-  removeOnFail: 500
-}
-
-const closeWorker = async (jobName, worker) => {
-  try {
-    await worker.close()
-  } catch (err) {
-    logger.error(`Error shutting down worker ${jobName}`, err)
-  }
-}
-
+/**
+ * Stores and manages everything to do with BullMQ queues
+ *
+ * A service class that is decorated as a singleton instance on the Hapi server and request objects. At start up various
+ * modules 'register as subscribers' by passing through 'jobs' to the `register()` function. Using the information in
+ * those jobs this class instantiates corresponding BullMQ {@link https://docs.bullmq.io/guide/queues|Queue},
+ * {@link https://docs.bullmq.io/guide/workers|Worker}, and in some cases,
+ * {@link https://docs.bullmq.io/guide/queuescheduler|QueueScheduler} instances.
+ *
+ * Modules can then use the `QueueManager` to add new jobs or delete queues. During shutdown it is used to tell all
+ * workers to close in an effort to exit gracefully.
+ */
 class QueueManager {
   constructor (connection) {
     this._connection = connection
@@ -26,72 +22,98 @@ class QueueManager {
   }
 
   /**
-   * Adds a job to the queue with the requested name
-   * @param {String} jobName
-   * @param  {...any} args
+   * Adds a BullMQ job to the matching queue
+   *
+   * @param {string} jobName The WRLS job name. This will have been used as the name for the queue
+   * @param {...*} args Any additional arguments to pass through to the WRLS job's `createMessage()` method. These will
+   * be used to generate the arguments for BullMQ's `Queue.add()` methodwhich adds a job to a queue
+   *
+   * @returns {Promise} With a Promise being returns those that call `add()` can choose whether to `await` the call or
+   * continue
    */
   add (jobName, ...args) {
     logger.info(`Attempting to queue a BullMQ job: ${jobName}`)
-    const queueContainer = this._queues.get(jobName)
-    const { createMessage } = queueContainer.jobContainer
+    const jobContainer = this._queues.get(jobName)
+    const { createMessage } = jobContainer.job
     const [name, data, options] = createMessage(...args)
 
-    return queueContainer.queue.add(name, data, {
-      ...jobDefaults,
+    return jobContainer.queue.add(name, data, {
+      removeOnComplete: true,
+      removeOnFail: 500,
       ...options
     })
   }
 
   /**
-   * Registers a job container
-   * @param {Object} jobContainer
-   * @param {String} jobContainer.jobName - the job/queue name
-   * @param {Function} jobContainer.handler - the handler for the job
-   * @param {Boolean} jobContainer.hasScheduler - whether a scheduler is needed - for jobs with retry etc
-   * @param {Function} jobContainer.onComplete - on complete handler, called with (job, queueManager)
-   * @param {Function} jobContainer.onFailed - on failed handler
-   * @param {Object} [jobContainer.workerOptions] - options to pass to the worker constructor
+   * Registers a job
+   *
+   * This involves instantiating a BullMQ {@link https://docs.bullmq.io/guide/queues|Queue},
+   * {@link https://docs.bullmq.io/guide/workers|Worker}, and where requested, a
+   * {@link https://docs.bullmq.io/guide/queuescheduler|QueueScheduler} for each 'job' passed in.
+   *
+   * A job in BullMQ is simply JSON object added to a queue. The worker for that queue will see the job, grab the data
+   * and then call a 'handler' (a function you've provided) to do something with it.
+   *
+   * A job in WRLS terms is everything related to this. So, the job name, the handler, whether a queue scheduler is
+   * needed, any options to pass to the worker, and the handlers to call when the worker fires its `onComplete()` and
+   * `onFailed()` {@link https://docs.bullmq.io/guide/events|events}.
+   *
+   * All jobs are expected to have the following properties
+   *
+   * - `jobName` the name to use when referencing this job. Will be used to name the Queue
+   * - `handler` the function the worker will call when it takes a 'job' off the queue
+   * - `hasScheduler` whether the job needs a `QueueScheduler`. These are needed where a job is repeatable, scheduled
+   *    with cron, or can be retried
+   * - `onComplete` the function to call when the worker fires this event
+   * - `onFailed` the function to call when the worker fires this event
+   * - `workerOptions` any additional options to pass to the worker when instantiated. Often these will be extensions
+   *    to the lock timings i.e. how long a worker has to complete a job.
+   *
+   * They must also have a `createMessage()` method which is used when adding BullMQ jobs to a queue.
+   *
+   * @param {Object} wrlsJob A WRLS job as defined in our modules that has the properties required for QueueManager to
+   * set up the appropriate queue and worker
+   *
+   * @returns {Object} `this` instance of QueueManager. It enables chaining calls to `register()`
    */
-  register (jobContainer) {
+  register (wrlsJob) {
     const { _connection: connection } = this
 
-    // Create queue
-    const queue = new bull.Queue(jobContainer.jobName, { connection })
+    logger.info(`Registering job: ${wrlsJob.jobName}`)
 
-    // Create worker with handler
-    const workerOpts = {
-      ...(jobContainer.workerOptions || {}),
-      connection
-    }
+    const queue = new BullMQ.Queue(wrlsJob.jobName, { connection })
 
-    logger.info(`Registering job: ${jobContainer.jobName}`)
-
-    const worker = new bull.Worker(jobContainer.jobName, jobContainer.handler, workerOpts)
-
-    // Create scheduler - this is only set up if the hasScheduler flag is set.
-    // This is needed if the job makes use of Bull features such as retry/cron
-    const scheduler = jobContainer.hasScheduler
-      ? new bull.QueueScheduler(jobContainer.jobName, { connection })
-      : null
-
-    // Register onComplete handler if defined
-    if (jobContainer.onComplete) {
-      worker.on(STATUS_COMPLETED, job => jobContainer.onComplete(job, this))
-    }
-    // An onFailed handler must always be defined
-    worker.on(STATUS_FAILED, jobContainer.onFailed)
+    const workerAndQueueScheduler = this._createWorkerAndQueueScheduler(wrlsJob, connection)
 
     // Register all the details in the map
-    this._queues.set(jobContainer.jobName, {
-      jobContainer,
+    this._queues.set(wrlsJob.jobName, {
+      job: wrlsJob,
       queue,
-      worker,
-      scheduler
+      ...workerAndQueueScheduler
     })
 
     return this
   }
 
+  /**
+   * Delete keys in Redis
+   *
+   * Each queue is a {@link https://redis.io/docs/data-types/hashes/|redis collection of hashes}. Back when this was
+   * implemented there was no feature in BullMQ for clearing a queue. You had to resort to ioredis to do it.
+   *
+   * Now BullMQ has various features such as
+   *
+   * - {@link https://api.docs.bullmq.io/classes/Queue.html#clean|clean()}
+   * - {@link https://api.docs.bullmq.io/classes/Queue.html#drain|drain()}
+   * - {@link https://api.docs.bullmq.io/classes/Queue.html#obliterate|obliterate}
+   *
+   * The last of these replicates how the service uses `deleteKeysByPattern()` based on the uses we can find. Some jobs
+   * prior to registering themselves with `QueueManager` call `deleteKeysByPattern()` to remove the existing queue and
+   * start afresh.
+   *
+   * @param {String} pattern A {@link https://redis.io/commands/keys/|redis compatible glob pattern} to match keys to
+   * be deleted
+   */
   deleteKeysByPattern (pattern) {
     const { _connection: connection } = this
 
@@ -118,15 +140,48 @@ class QueueManager {
   }
 
   /**
-   * Shuts down all registered workers
+   * Stop all BullMQ workers
+   *
+   * Called during the shutdown process for the app, when `SIGINT` is triggered or an untrapped error manages to bubble
+   * to the surface.
    */
-  async stop () {
+  async stopAllWorkers () {
     for (const [jobName, { worker }] of this._queues) {
-      await closeWorker(jobName, worker)
+      try {
+        logger.info(`Closing worker ${jobName}`)
+        await worker.close()
+      } catch (err) {
+        logger.error(`Error shutting down worker ${jobName}`, err)
+      }
     }
+  }
+
+  _createWorkerAndQueueScheduler (wrlsJob, connection) {
+    const result = {}
+
+    // TODO: Implement metrics so we can see how workers are doing. Add the following line to workerOpts and require
+    // `MetricsTime` from bullmq https://docs.bullmq.io/guide/metrics
+    // metrics: { maxDataPoints: MetricsTime.ONE_WEEK * 2 },
+    const workerOptions = {
+      ...(wrlsJob.workerOptions || {}),
+      connection
+    }
+
+    result.worker = new BullMQ.Worker(wrlsJob.jobName, wrlsJob.handler, workerOptions)
+
+    if (wrlsJob.onComplete) {
+      result.worker.on('completed', job => wrlsJob.onComplete(job, this))
+    }
+
+    result.worker.on('failed', wrlsJob.onFailed)
+
+    // This is needed if the job makes use of Bull features such as retry/repeat/cron
+    result.scheduler = wrlsJob.hasScheduler
+      ? new BullMQ.QueueScheduler(wrlsJob.jobName, { connection })
+      : null
+
+    return result
   }
 }
 
-module.exports = QueueManager
-module.exports.STATUS_COMPLETED = STATUS_COMPLETED
-module.exports.STATUS_FAILED = STATUS_FAILED
+module.exports = { QueueManager }
