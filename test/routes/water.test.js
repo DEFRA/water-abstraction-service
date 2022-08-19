@@ -1,4 +1,4 @@
-const server = require('../../index')
+const { server } = require('../../index')
 
 const { experiment, test, beforeEach, before } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
@@ -7,7 +7,7 @@ experiment('/status', () => {
   let response
 
   before(async () => {
-    await server._start()
+    await server.start()
   })
 
   beforeEach(async () => {

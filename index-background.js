@@ -1,4 +1,5 @@
-// provides all API services consumed by VML and VML Admin front ends
+'use strict'
+
 require('dotenv').config()
 
 const Blipp = require('blipp')
@@ -6,15 +7,22 @@ const Good = require('@hapi/good')
 const GoodWinston = require('good-winston')
 const Hapi = require('@hapi/hapi')
 const HapiAuthJwt2 = require('hapi-auth-jwt2')
+const moment = require('moment')
 
 const config = require('./config')
-const routes = require('./src/routes/background.js')
 const db = require('./src/lib/connectors/db')
+const { logger } = require('./src/logger')
+const routes = require('./src/routes/background.js')
 const { validate } = require('./src/lib/validate')
 
-// Initialise logger
-const { logger } = require('./src/logger')
+// Hapi/good is used to log ops statistics, request responses and server log events. It's the reason you'll see
+// 2022-08-18T22:42:39.697Z - info: 220818/224239.697, [ops] memory: 108Mb, uptime (seconds): 63.480054702, load: [0.09,0.11,0.09]
+// throughout our logs. This call initialises it
 const goodWinstonStream = new GoodWinston({ winston: logger })
+
+// This changes the locale for moment globally to English (United Kingdom). Any new instances of moment will use this
+// rather than the default 'en-US'
+moment.locale('en-gb')
 
 // Define server
 const server = Hapi.server({
@@ -22,7 +30,7 @@ const server = Hapi.server({
 })
 
 // Register plugins
-const registerServerPlugins = async (server) => {
+const _registerServerPlugins = async (server) => {
   // Third-party plugins
   await server.register({
     plugin: Good,
@@ -42,7 +50,7 @@ const registerServerPlugins = async (server) => {
   await server.register(HapiAuthJwt2)
 }
 
-const configureServerAuthStrategy = (server) => {
+const _configureServerAuthStrategy = (server) => {
   server.auth.strategy('jwt', 'jwt', {
     ...config.jwt,
     validate
@@ -52,8 +60,8 @@ const configureServerAuthStrategy = (server) => {
 
 const start = async function () {
   try {
-    await registerServerPlugins(server)
-    configureServerAuthStrategy(server)
+    await _registerServerPlugins(server)
+    _configureServerAuthStrategy(server)
     server.route(routes)
 
     if (!module.parent) {
@@ -67,26 +75,23 @@ const start = async function () {
   }
 }
 
-const processError = message => err => {
+const _processError = message => err => {
   logger.error(message, err)
   process.exit(1)
 }
 
 process
-  .on('unhandledRejection', processError('unhandledRejection'))
-  .on('uncaughtException', processError('uncaughtException'))
+  .on('unhandledRejection', _processError('unhandledRejection'))
+  .on('uncaughtException', _processError('uncaughtException'))
   .on('SIGINT', async () => {
-    logger.info('Stopping water background service')
+    logger.info('Stopping hapi server: existing requests have 25 seconds to complete')
+    await server.stop({ timeout: 25 * 1000 })
 
-    await server.stop()
-    logger.info('1/2: Hapi server stopped')
+    logger.info('Closing connection pool')
+    await db.pool.end()
 
-    setTimeout(async () => {
-      await db.pool.end()
-      logger.info('2/2: Connection pool closed')
-
-      return process.exit(0)
-    }, 10000)
+    logger.info("That's all folks!")
+    return process.exit(0)
   })
 
 if (!module.parent) {
