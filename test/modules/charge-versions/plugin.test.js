@@ -38,14 +38,6 @@ experiment('modules/charge-versions/plugin.js', () => {
   })
 
   experiment('register', () => {
-    test('empties the queue of licence not in charge version workflow jobs', async () => {
-      await chargeVersionWorkflowPlugin.plugin.register(server)
-
-      expect(server.queueManager.deleteKeysByPattern.calledWith(
-        `*${licenceNotInChargeVersionWorkflow.jobName}*`
-      )).to.be.true()
-    })
-
     test('adds subscriber for the licence not in charge version workflow job', async () => {
       await chargeVersionWorkflowPlugin.plugin.register(server)
 
