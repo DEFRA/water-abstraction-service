@@ -9,7 +9,7 @@ const {
 
 const { expect } = require('@hapi/code')
 
-const server = require('../../index.js')
+const { server, start } = require('../../index.js')
 const { logger } = require('../../src/logger')
 
 const sinon = require('sinon')
@@ -19,7 +19,7 @@ experiment('Test sending a email notification', () => {
   before(async () => {
     sandbox.stub(logger, 'error').returns()
     sandbox.stub(logger, 'info').returns()
-    await server._start()
+    await start()
   })
 
   after(async () => {
