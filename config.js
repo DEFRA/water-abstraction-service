@@ -50,7 +50,8 @@ module.exports = {
       requestEvent: 60000, // 1 minute
       checkStatus: 15000, // 15 seconds
       sendMessages: 15000 // 15 seconds
-    }
+    },
+    chargeVersionWorkflow: process.env.WRLS_CRON_CHARGE_VERSION_WORKFLOW || '0 */6 * * *'
   },
 
   jwt: {
