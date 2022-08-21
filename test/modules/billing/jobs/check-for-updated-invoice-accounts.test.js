@@ -1,37 +1,35 @@
 'use strict'
 
-const {
-  experiment,
-  test,
-  beforeEach,
-  afterEach
-} = exports.lab = require('@hapi/lab').script()
-
-const moment = require('moment')
+// Test framework dependencies
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
-const uuid = require('uuid/v4')
 
+// Test helpers
+const uuid = require('uuid/v4')
+const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts')
+const { logger } = require('../../../../src/logger')
+const notifyService = require('../../../../src/lib/notify')
+
+// Thing under test
 const checkForUpdatedInvoiceAccountsJob = require('../../../../src/modules/billing/jobs/check-for-updated-invoice-accounts')
 
-const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts')
-const messageQueue = require('../../../../src/lib/message-queue-v2')
-const notifyService = require('../../../../src/lib/notify')
-const { logger } = require('../../../../src/logger')
-
 experiment('modules/billing/jobs/update-customers', () => {
+  const job = {
+    id: uuid(),
+    name: checkForUpdatedInvoiceAccountsJob.jobName,
+    data: {}
+  }
   const invoiceAccountsReturned = [{
     invoiceAccountId: uuid()
   }]
 
   beforeEach(async () => {
+    // We stub the logger just to silence it's output during the tests
     sandbox.stub(logger, 'info')
-    sandbox.stub(logger, 'error')
+
     sandbox.stub(notifyService, 'sendEmail')
     sandbox.stub(invoiceAccountsConnector, 'fetchInvoiceAccountsWithUpdatedEntities').resolves(invoiceAccountsReturned)
-    sandbox.stub(messageQueue, 'getQueueManager').returns({
-      add: sandbox.spy()
-    })
   })
 
   afterEach(async () => {
@@ -45,35 +43,46 @@ experiment('modules/billing/jobs/update-customers', () => {
   experiment('.createMessage', () => {
     test('creates the expected message array', async () => {
       const message = checkForUpdatedInvoiceAccountsJob.createMessage()
-      expect(message[0]).to.equal('billing.find-update-invoice-accounts')
-      expect(message[1]).to.equal({})
-      expect(message[2]).to.equal({
-        jobId: `billing.find-update-invoice-accounts.${moment().format('YYYYMMDDA')}`
-      })
+      expect(message).to.equal([
+        'billing.find-update-invoice-accounts',
+        {},
+        {
+          repeat: {
+            cron: '0 */12 * * *'
+          }
+        }
+      ])
     })
   })
 
   experiment('.handler', () => {
-    beforeEach(async () => {
-      await checkForUpdatedInvoiceAccountsJob.handler()
-    })
-
     test('Calls the CRM to fetch relevant invoice accounts', async () => {
+      await checkForUpdatedInvoiceAccountsJob.handler(job)
+
       expect(invoiceAccountsConnector.fetchInvoiceAccountsWithUpdatedEntities.called).to.be.true()
     })
 
     test('Calls the notify web service', async () => {
+      await checkForUpdatedInvoiceAccountsJob.handler(job)
+
       expect(notifyService.sendEmail.called).to.be.true()
     })
   })
 
   experiment('.onFailed', () => {
+    const err = new Error('something went wrong')
+
     beforeEach(async () => {
-      await checkForUpdatedInvoiceAccountsJob.onFailed({ name: 'Some job', id: 123 }, new Error({ message: 'Some error' }))
+      sandbox.stub(logger, 'error')
     })
 
-    test('an error message is logged', async () => {
-      expect(logger.error.called).to.be.true()
+    test('logs the reason for failure', async () => {
+      await checkForUpdatedInvoiceAccountsJob.onFailed(job, err)
+
+      expect(logger.error.calledWith(
+        `Job ${job.name} ${job.id} failed`,
+        err
+      )).to.be.true()
     })
   })
 })

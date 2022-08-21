@@ -51,7 +51,8 @@ module.exports = {
       checkStatus: 15000, // 15 seconds
       sendMessages: 15000 // 15 seconds
     },
-    chargeVersionWorkflow: process.env.WRLS_CRON_CHARGE_VERSION_WORKFLOW || '0 */6 * * *'
+    chargeVersionWorkflow: process.env.WRLS_CRON_CHARGE_VERSION_WORKFLOW || '0 */6 * * *',
+    checkForUpdatedInvoiceAccounts: process.env.WRLS_CRON_CHECK_FOR_UPDATED_INVOICE_ACCOUNTS || '0 */12 * * *'
   },
 
   jwt: {
