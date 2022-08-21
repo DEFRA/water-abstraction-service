@@ -99,7 +99,6 @@ experiment('modules/charge-versions/jobs/licence-not-in-charge-version-workflow'
     test('logs the reason for failure', async () => {
       await licenceNotInChargeVersionWorkflow.onFailed(job, err)
 
-      expect(logger.error.called).to.be.true()
       expect(logger.error.calledWith(
         `Job ${job.name} ${job.id} failed`,
         err
