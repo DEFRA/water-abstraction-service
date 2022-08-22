@@ -177,7 +177,10 @@ class QueueManager {
     for (const [jobName, { worker, queue }] of this._queues) {
       logger.info(`Closing queue and worker ${jobName}`)
       await this._closeQueue(jobName, queue)
-      await this._closeWorker(jobName, worker)
+
+      if (worker) {
+        await this._closeWorker(jobName, worker)
+      }
     }
   }
 
@@ -199,6 +202,10 @@ class QueueManager {
 
   _createWorkerAndQueueScheduler (wrlsJob, connection) {
     const result = {}
+
+    if (process.env.name !== 'service-background') {
+      return result
+    }
 
     // TODO: Implement metrics so we can see how workers are doing. Add the following line to workerOpts and require
     // `MetricsTime` from bullmq https://docs.bullmq.io/guide/metrics

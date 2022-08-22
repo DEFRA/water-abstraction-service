@@ -47,75 +47,97 @@ experiment('lib/queue-manager/queue-manager', () => {
     sandbox.restore()
   })
 
-  experiment('for a simple job', () => {
-    beforeEach(async () => {
-      queueManager.register(job)
-    })
-
+  experiment('.register', () => {
     test('a new Bull queue is created', async () => {
+      queueManager.register(job)
+
       expect(bull.Queue.calledWith(
         job.jobName, { connection }
       )).to.be.true()
     })
 
-    test('a scheduler is not created', async () => {
-      expect(bull.QueueScheduler.called).to.be.false()
-    })
-
-    test('an onComplete handler is registered', async () => {
-      expect(workerStub.on.calledWith(
-        'completed'
-      )).to.be.false()
-    })
-
-    test('an on failed handler is registered', async () => {
-      expect(workerStub.on.calledWith(
-        'failed', job.onFailed
-      )).to.be.true()
-    })
-
     test('a job can be added', async () => {
+      queueManager.register(job)
+
       queueManager.add(job.jobName, 'foo', 'bar')
       expect(queueStub.add.calledWith('foo', 'bar')).to.be.true()
     })
-  })
 
-  experiment('for a job requiring a scheduler', () => {
-    beforeEach(async () => {
-      job.hasScheduler = true
-      queueManager.register(job)
+    experiment('for a job that wishes to start clean', () => {
+      beforeEach(async () => {
+        job.startClean = true
+        queueManager.register(job)
+      })
+
+      test('the existing queue is deleted', async () => {
+        expect(connection.scanStream.calledWith({
+          match: '*test-job*'
+        })).to.be.true()
+      })
     })
 
-    test('a scheduler is created', async () => {
-      expect(bull.QueueScheduler.calledWith(
-        job.jobName, { connection }
-      )).to.be.true()
-    })
-  })
+    experiment('when we are the foreground (index.js) instance', () => {
+      test('a Worker is not instantiated', () => {
+        queueManager.register(job)
 
-  experiment('for a job with an onComplete handler', () => {
-    beforeEach(async () => {
-      job.onComplete = () => 'foo'
-      queueManager.register(job)
-    })
+        expect(bull.Worker.called).to.be.false()
+      })
 
-    test('the onComplete handler is registered', async () => {
-      expect(workerStub.on.calledWith(
-        'completed'
-      )).to.be.true()
-    })
-  })
+      experiment('for a job requiring a scheduler', () => {
+        beforeEach(async () => {
+          job.hasScheduler = true
+        })
 
-  experiment('for a job that wishes to start clean', () => {
-    beforeEach(async () => {
-      job.startClean = true
-      queueManager.register(job)
+        test('a QueueScheduler is not instantiated', () => {
+          queueManager.register(job)
+
+          expect(bull.QueueScheduler.called).to.be.false()
+        })
+      })
     })
 
-    test('the existing queue is deleted', async () => {
-      expect(connection.scanStream.calledWith({
-        match: '*test-job*'
-      })).to.be.true()
+    experiment('when we are the background (index-background.js) instance', () => {
+      beforeEach(async () => {
+        sandbox.stub(process, 'env').value({ name: 'service-background' })
+      })
+
+      test('a Worker is instantiated', () => {
+        queueManager.register(job)
+
+        expect(bull.Worker.called).to.be.true()
+      })
+
+      test("the Worker's onFailed handler is registered", async () => {
+        queueManager.register(job)
+
+        expect(workerStub.on.calledWith(
+          'failed', job.onFailed
+        )).to.be.true()
+      })
+
+      experiment('for a job with an onComplete handler', () => {
+        beforeEach(async () => {
+          job.onComplete = sandbox.stub()
+        })
+
+        test("the Worker's onComplete handler is registered", async () => {
+          queueManager.register(job)
+
+          expect(workerStub.on.calledWith('completed')).to.be.true()
+        })
+      })
+
+      experiment('for a job requiring a scheduler', () => {
+        beforeEach(async () => {
+          job.hasScheduler = true
+        })
+
+        test('a QueueScheduler is instantiated', () => {
+          queueManager.register(job)
+
+          expect(bull.QueueScheduler.called).to.be.true()
+        })
+      })
     })
   })
 
@@ -175,50 +197,82 @@ experiment('lib/queue-manager/queue-manager', () => {
   })
 
   experiment('.closeAll', () => {
-    beforeEach(async () => {
-      queueManager.register(job)
-    })
-
-    experiment('when there are no errors', () => {
+    experiment('when we are the foreground (index.js) instance', () => {
       beforeEach(async () => {
+        queueManager.register(job)
+      })
+
+      test('does not call close() on a worker', async () => {
         await queueManager.closeAll()
+
+        expect(workerStub.close.callCount).to.equal(0)
       })
 
-      test('calls close() on each worker', async () => {
-        expect(workerStub.close.callCount).to.equal(1)
-      })
+      test('does call close() on each queue', async () => {
+        await queueManager.closeAll()
 
-      test('calls close() on each queue', async () => {
         expect(queueStub.close.callCount).to.equal(1)
       })
 
-      test('no error is logged', async () => {
-        expect(logger.error.called).to.be.false()
+      experiment('and there is an error', () => {
+        const err = new Error('Oops!')
+
+        experiment('whilst closing the queue', () => {
+          beforeEach(async () => {
+            queueStub.close.rejects(err)
+            await queueManager.closeAll()
+          })
+
+          test('an error is logged', async () => {
+            expect(logger.error.calledWith(`Error closing queue ${job.jobName}`, err)).to.be.true()
+          })
+        })
       })
     })
 
-    experiment('when there is an error', () => {
-      const err = new Error('Oops!')
-
-      experiment('whilst closing the queue', () => {
-        beforeEach(async () => {
-          queueStub.close.rejects(err)
-          await queueManager.closeAll()
-        })
-
-        test('an error is logged', async () => {
-          expect(logger.error.calledWith(`Error closing queue ${job.jobName}`, err)).to.be.true()
-        })
+    experiment('when we are the background (index-background.js) instance', () => {
+      beforeEach(async () => {
+        sandbox.stub(process, 'env').value({ name: 'service-background' })
+        queueManager.register(job)
       })
 
-      experiment('whilst closing the worker', () => {
-        beforeEach(async () => {
-          workerStub.close.rejects(err)
-          await queueManager.closeAll()
+      test('does call close() on each worker', async () => {
+        await queueManager.closeAll()
+
+        expect(workerStub.close.callCount).to.equal(1)
+      })
+
+      test('does call close() on each queue', async () => {
+        await queueManager.closeAll()
+
+        expect(queueStub.close.callCount).to.equal(1)
+      })
+
+      experiment('and there is an error', () => {
+        const err = new Error('Oops!')
+
+        experiment('whilst closing the queue', () => {
+          beforeEach(async () => {
+            queueStub.close.rejects(err)
+          })
+
+          test('an error is logged', async () => {
+            await queueManager.closeAll()
+
+            expect(logger.error.calledWith(`Error closing queue ${job.jobName}`, err)).to.be.true()
+          })
         })
 
-        test('an error is logged', async () => {
-          expect(logger.error.calledWith(`Error closing worker ${job.jobName}`, err)).to.be.true()
+        experiment('whilst closing the worker', () => {
+          beforeEach(async () => {
+            workerStub.close.rejects(err)
+          })
+
+          test('an error is logged', async () => {
+            await queueManager.closeAll()
+
+            expect(logger.error.calledWith(`Error closing worker ${job.jobName}`, err)).to.be.true()
+          })
         })
       })
     })
