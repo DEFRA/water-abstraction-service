@@ -35,7 +35,8 @@
         "watch": true
       },
       "env_production": {
-        "watch": false
+        "watch": false,
+        "node_args": ["--max-old-space-size=4000"]
       }
     }
   ]
