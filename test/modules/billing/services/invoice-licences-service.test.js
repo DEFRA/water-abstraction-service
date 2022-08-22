@@ -15,7 +15,7 @@ const batchService = require('../../../../src/modules/billing/services/batch-ser
 const licencesService = require('../../../../src/lib/services/licences')
 const { logger } = require('../../../../src/logger')
 
-const messageQueue = require('../../../../src/lib/message-queue-v2')
+const queueManager = require('../../../../src/lib/queue-manager')
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs')
 
 const Batch = require('../../../../src/lib/models/batch')
@@ -28,7 +28,7 @@ const mappers = require('../../../../src/modules/billing/mappers')
 const errors = require('../../../../src/lib/errors')
 
 experiment('modules/billing/services/invoice-licences-service', () => {
-  let messageQueueStub
+  let queueManagerStub
 
   beforeEach(async () => {
     sandbox.stub(newRepos.billingInvoiceLicences, 'findOne')
@@ -47,10 +47,10 @@ experiment('modules/billing/services/invoice-licences-service', () => {
 
     sandbox.stub(newRepos.licences, 'updateIncludeLicenceInSupplementaryBilling')
 
-    messageQueueStub = {
+    queueManagerStub = {
       add: sandbox.stub()
     }
-    sandbox.stub(messageQueue, 'getQueueManager').returns(messageQueueStub)
+    sandbox.stub(queueManager, 'getQueueManager').returns(queueManagerStub)
 
     sandbox.stub(batchService, 'setStatus')
 
@@ -243,7 +243,7 @@ experiment('modules/billing/services/invoice-licences-service', () => {
       })
 
       test('a job is published to the message queue to refresh the batch', async () => {
-        expect(messageQueueStub.add.calledWith(
+        expect(queueManagerStub.add.calledWith(
           'billing.refresh-totals', batchId
         )).to.be.true()
       })

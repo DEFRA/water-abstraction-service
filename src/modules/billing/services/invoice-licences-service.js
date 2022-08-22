@@ -4,7 +4,7 @@ const newRepos = require('../../../lib/connectors/repos')
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs')
 
 // Job handling
-const messageQueue = require('../../../lib/message-queue-v2')
+const queueManager = require('../../../lib/queue-manager')
 const refreshTotalsJob = require('../jobs/refresh-totals')
 
 const mappers = require('../mappers')
@@ -70,7 +70,7 @@ const deleteByInvoiceLicenceId = async invoiceLicenceId => {
     await licencesService.flagForSupplementaryBilling(billingInvoiceLicence.licenceId)
 
     // Publish refresh totals job
-    return messageQueue.getQueueManager().add(refreshTotalsJob.jobName, batchId)
+    return queueManager.getQueueManager().add(refreshTotalsJob.jobName, batchId)
   } catch (err) {
     logger.error(`Failed to delete invoice licence ${invoiceLicenceId} in batch ${batchId}`, err)
     // Set batch to "error" status

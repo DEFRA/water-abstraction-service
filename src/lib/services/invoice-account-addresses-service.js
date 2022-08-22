@@ -3,7 +3,7 @@
 const invoiceAccountsConnector = require('../connectors/crm-v2/invoice-accounts')
 const invoiceAccountAddressesConnector = require('../connectors/crm-v2/invoice-account-addresses')
 const mappers = require('../mappers')
-const messageQueue = require('../message-queue-v2')
+const queueManager = require('../queue-manager')
 const { jobNames } = require('../constants')
 /**
  * Creates a new invoice account address on the specified
@@ -26,7 +26,7 @@ const createInvoiceAccountAddress = async (invoiceAccount, invoiceAccountAddress
   const newInvoiceAccountAddress = await invoiceAccountsConnector.createInvoiceAccountAddress(invoiceAccount.id, data)
 
   // Publish job to update job in message queue
-  await messageQueue.getQueueManager()
+  await queueManager.getQueueManager()
     .add(jobNames.updateCustomerAccount, invoiceAccount.id)
 
   // Return the created service model

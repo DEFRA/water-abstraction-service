@@ -14,7 +14,7 @@ const notifyService = require('../../../../src/lib/notify')
 // Thing under test
 const checkForUpdatedInvoiceAccountsJob = require('../../../../src/modules/billing/jobs/check-for-updated-invoice-accounts')
 
-experiment('modules/billing/jobs/update-customers', () => {
+experiment('modules/billing/jobs/check-for-updated-invoice-accounts', () => {
   const job = {
     id: uuid(),
     name: checkForUpdatedInvoiceAccountsJob.jobName,

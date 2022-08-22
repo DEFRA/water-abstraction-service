@@ -40,7 +40,7 @@ const transactionsService = require('../../../../src/modules/billing/services/tr
 const { createBatch } = require('../test-data/test-billing-data')
 const config = require('../../../../config')
 
-const messageQueue = require('../../../../src/lib/message-queue-v2')
+const queueManager = require('../../../../src/lib/queue-manager')
 const deleteErroredBatchJob = require('../../../../src/modules/billing/jobs/delete-errored-batch')
 
 const REGION_ID = '3e91fd44-dead-4748-a312-83806245c3da'
@@ -149,7 +149,7 @@ experiment('modules/billing/services/batch-service', () => {
     queueManagerStub = {
       add: sandbox.stub()
     }
-    sandbox.stub(messageQueue, 'getQueueManager').returns(queueManagerStub)
+    sandbox.stub(queueManager, 'getQueueManager').returns(queueManagerStub)
   })
 
   afterEach(async () => {

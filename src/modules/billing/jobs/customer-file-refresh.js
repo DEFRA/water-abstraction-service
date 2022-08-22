@@ -42,6 +42,7 @@ const onComplete = async () => {
 exports.jobName = JOB_NAME
 exports.createMessage = createMessage
 exports.handler = handler
+exports.startClean = true
 exports.onFailed = onFailedHandler
 exports.onComplete = onComplete
 exports.hasScheduler = true

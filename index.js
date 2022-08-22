@@ -14,12 +14,11 @@ const Nunjucks = require('nunjucks')
 
 const config = require('./config')
 const db = require('./src/lib/connectors/db')
+const { JobRegistrationService } = require('./src/lib/queue-manager/job-registration-service')
 const { logger } = require('./src/logger')
 const routes = require('./src/routes/water.js')
+const { StartUpJobsService } = require('./src/lib/queue-manager/start-up-jobs-service')
 const { validate } = require('./src/lib/validate')
-
-const notify = require('./src/modules/notify')
-const returnsNotifications = require('./src/modules/returns-notifications')
 
 // Hapi/good is used to log ops statistics, request responses and server log events. It's the reason you'll see
 // 2022-08-18T22:42:39.697Z - info: 220818/224239.697, [ops] memory: 108Mb, uptime (seconds): 63.480054702, load: [0.09,0.11,0.09]
@@ -44,14 +43,8 @@ const server = Hapi.server({
 })
 
 const plugins = [
-  require('./src/lib/message-queue-v2').plugin,
-  require('./src/modules/returns/register-subscribers'),
-  require('./src/modules/address-search/plugin'),
-  require('./src/modules/billing/register-subscribers'),
-  require('./src/modules/batch-notifications/register-subscribers'),
-  require('./src/modules/gauging-stations/register-subscribers'),
-  require('./src/modules/charge-versions-upload/register-subscribers'),
-  require('./src/modules/charge-versions/plugin').plugin
+  require('./src/lib/queue-manager').plugin,
+  require('./src/modules/address-search/plugin')
 ]
 
 const _registerServerPlugins = async (server) => {
@@ -109,12 +102,6 @@ const _configureServerAuthStrategy = (server) => {
   server.auth.default('jwt')
 }
 
-const _configureMessageQueue = async (server) => {
-  notify.registerSubscribers(server.queueManager)
-  returnsNotifications.registerSubscribers(server.queueManager)
-  server.log('info', 'Message queue started')
-}
-
 const _configureNunjucks = async (server) => {
   server.views({
     engines: {
@@ -144,10 +131,15 @@ const start = async function () {
     await _registerServerPlugins(server)
     _configureServerAuthStrategy(server)
     server.route(routes)
-    await _configureMessageQueue(server)
     await _configureNunjucks(server)
 
+    // TODO: Ideally we wouldn't bother registering all the Queues and workers when running unit tests. So, we would
+    // move this into the `if (!module.parent)` block. But when we do the tests only run the first few and then exit.
+    // We should look into what's happening and why we can't move it there.
+    JobRegistrationService.go(server.queueManager)
+
     if (!module.parent) {
+      StartUpJobsService.go(server.queueManager)
       await server.start()
       const name = process.env.SERVICE_NAME
       const uri = server.info.uri
@@ -171,7 +163,7 @@ process
     await server.stop({ timeout: 25 * 1000 })
 
     logger.info('Stopping BullMQ workers')
-    await server.queueManager.stop()
+    await server.queueManager.closeAll()
 
     logger.info('Closing connection pool')
     await db.pool.end()

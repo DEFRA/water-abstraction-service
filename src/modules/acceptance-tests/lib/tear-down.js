@@ -10,7 +10,7 @@ const licenceAgreements = require('./licence-agreements')
 const cmConnector = require('../../../lib/connectors/charge-module/bill-runs')
 const crmConnector = require('./connectors/crm')
 const returnsConnector = require('./connectors/returns')
-const messageQueue = require('../../../lib/message-queue-v2')
+const queueManager = require('../../../lib/queue-manager')
 
 const permits = require('./permits')
 const entities = require('./entities')
@@ -61,7 +61,7 @@ const tearDown = async (...batchesToDelete) => {
   await Promise.all(tasks)
 
   // Delete Bull MQ jobs
-  await messageQueue.getQueueManager().deleteKeysByPattern('bull:*')
+  await queueManager.getQueueManager().deleteKeysByPattern('bull:*')
 
   console.log('Tearing down acceptance test notifications')
   await notifications.delete()
