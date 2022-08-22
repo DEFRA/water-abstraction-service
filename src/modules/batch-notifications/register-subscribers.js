@@ -12,9 +12,5 @@ module.exports = {
       .register(sendMessages)
       .register(refreshEvents)
       .register(getRecipients)
-
-    server.queueManager.add(checkStatus.jobName)
-    server.queueManager.add(sendMessages.jobName)
-    server.queueManager.add(refreshEvents.jobName)
   }
 }

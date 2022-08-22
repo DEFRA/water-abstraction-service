@@ -12,9 +12,5 @@ module.exports = {
       .register(syncGaugingStationsFromSourceCsv)
       .register(syncGaugingStationsLinkagesFromDigitise)
       .register(syncLVPCFromDigitise)
-
-    server.queueManager.add(syncGaugingStationsFromSourceCsv.jobName)
-    server.queueManager.add(syncGaugingStationsLinkagesFromDigitise.jobName)
-    server.queueManager.add(syncLVPCFromDigitise.jobName)
   }
 }

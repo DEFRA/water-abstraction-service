@@ -7,8 +7,6 @@ const registerSubscribers = async (server) => {
   server.queueManager
     .register(licenceNotInChargeVersionWorkflow)
     .register(createChargeVersionWorkflows)
-
-  server.queueManager.add(licenceNotInChargeVersionWorkflow.jobName)
 }
 
 exports.plugin = {

@@ -40,10 +40,5 @@ module.exports = {
       .register(syncChargeCategories)
       .register(updateInvoices)
       .register(syncSupportedSources)
-
-    server.queueManager.add(checkForUpdatedInvoiceAccounts.jobName)
-    server.queueManager.add(syncChargeCategories.jobName)
-    server.queueManager.add(syncSupportedSources.jobName)
-    server.queueManager.add(customerFileRefresh.jobName)
   }
 }
