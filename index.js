@@ -17,7 +17,6 @@ const db = require('./src/lib/connectors/db')
 const { JobRegistrationService } = require('./src/lib/queue-manager/job-registration-service')
 const { logger } = require('./src/logger')
 const routes = require('./src/routes/water.js')
-const { StartUpJobsService } = require('./src/lib/queue-manager/start-up-jobs-service')
 const { validate } = require('./src/lib/validate')
 
 // Hapi/good is used to log ops statistics, request responses and server log events. It's the reason you'll see
@@ -139,7 +138,6 @@ const start = async function () {
     JobRegistrationService.go(server.queueManager)
 
     if (!module.parent) {
-      StartUpJobsService.go(server.queueManager)
       await server.start()
       const name = process.env.SERVICE_NAME
       const uri = server.info.uri
@@ -161,9 +159,6 @@ process
   .on('SIGINT', async () => {
     logger.info('Stopping hapi server: existing requests have 25 seconds to complete')
     await server.stop({ timeout: 25 * 1000 })
-
-    logger.info('Stopping BullMQ workers')
-    await server.queueManager.closeAll()
 
     logger.info('Closing connection pool')
     await db.pool.end()
