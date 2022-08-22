@@ -16,7 +16,11 @@ const config = require('../../../../config')
 const helpers = require('./lib/helpers')
 
 const fork = require('child_process').fork
-const child = fork('./src/modules/billing/jobs/lib/process-charge-version-year-worker.js')
+
+let child
+if (process.env.name === 'service-background') {
+  child = fork('./src/modules/billing/jobs/lib/process-charge-version-year-worker.js')
+}
 
 const createMessage = (batchId, billingBatchChargeVersionYearId) => ([
   JOB_NAME,
