@@ -29,13 +29,13 @@
         ".git/index.lock"
       ],
       "script": "index-background.js",
+      "instances": 1,
+      "exec_mode" : "fork",
       "env": {
         "watch": true
       },
       "env_production": {
-        "watch": false,
-        "instances" : "max",
-        "exec_mode" : "cluster"
+        "watch": false
       }
     }
   ]
