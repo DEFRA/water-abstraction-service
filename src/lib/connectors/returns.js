@@ -170,7 +170,7 @@ exports.getServiceVersion = getServiceVersion
 exports.getReturnsForLicence = getReturnsForLicence
 exports.getLinesForReturn = getLinesForReturn
 
-if (config.isAcceptanceTestTarget) {
+if (!config.isProduction) {
   exports.deleteAcceptanceTestData = deleteAcceptanceTestData
 }
 

@@ -1,8 +1,8 @@
 /**
  * Updates task config data in DB using config files
  */
-const { pool } = require('../src/lib/connectors/db')
-const rows = require('../config/task-config')
+const { pool } = require('../../src/lib/connectors/db')
+const rows = require('./build-config-object')
 
 const migrate = async () => {
   console.log('Updating task configs')

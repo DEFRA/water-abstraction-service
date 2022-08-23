@@ -2,19 +2,16 @@
 
 require('dotenv').config()
 const testMode = parseInt(process.env.TEST_MODE) === 1
-const isAcceptanceTestTarget = ['local', 'dev', 'development', 'test', 'qa', 'preprod'].includes(process.env.NODE_ENV)
-const isProduction = ['production'].includes(process.env.NODE_ENV)
-const isProductionLike = ['production', 'preprod'].includes(process.env.NODE_ENV)
+
+const environment = process.env.ENVIRONMENT
+const isProduction = environment === 'prd'
+
+const srocStartDate = new Date('2022-04-01')
+const isSrocLive = !isProduction && new Date() >= srocStartDate
+
 const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0'
-const isLocal = process.env.NODE_ENV === 'local'
 const isTlsConnection = (process.env.REDIS_HOST || '').includes('aws')
 const isRedisLazy = !!process.env.LAZY_REDIS
-const isPermitsTestDatabase = process.env.DATABASE_URL.includes('permits-test')
-const isTest = process.env.NODE_ENV === 'test'
-const srocStartDate = new Date('2022-04-01')
-
-const isSrocLive = new Date() >= srocStartDate &&
-  ['local', 'dev', 'development', 'qa', 'test', 'preprod'].includes(process.env.NODE_ENV)
 
 module.exports = {
 
@@ -28,10 +25,9 @@ module.exports = {
   },
 
   billing: {
-    supplementaryYears: isTest ? 1 : 5,
-    // There are 4 processes on the environments but only 1 locally
-    createChargeJobConcurrency: isLocal ? 16 : 1,
-    processChargeVersionYearsJobConcurrency: isLocal ? 4 : 2,
+    supplementaryYears: 5,
+    createChargeJobConcurrency: 1,
+    processChargeVersionYearsJobConcurrency: 2,
     prepareTransactionsJobConcurrency: 1,
     // Some billing logic is handled differently depending on whether the
     // transaction is pre/post NALD switchover date
@@ -54,7 +50,9 @@ module.exports = {
       requestEvent: 60000, // 1 minute
       checkStatus: 15000, // 15 seconds
       sendMessages: 15000 // 15 seconds
-    }
+    },
+    chargeVersionWorkflow: process.env.WRLS_CRON_CHARGE_VERSION_WORKFLOW || '0 */6 * * *',
+    checkForUpdatedInvoiceAccounts: process.env.WRLS_CRON_CHECK_FOR_UPDATED_INVOICE_ACCOUNTS || '0 */12 * * *'
   },
 
   jwt: {
@@ -63,7 +61,7 @@ module.exports = {
   },
 
   logger: {
-    level: 'debug', // testMode ? 'info' : 'error',
+    level: process.env.WRLS_LOG_LEVEL || 'info',
     airbrakeKey: process.env.ERRBIT_KEY,
     airbrakeHost: process.env.ERRBIT_SERVER,
     airbrakeLevel: 'error'
@@ -93,8 +91,16 @@ module.exports = {
       stripTrailingSlash: true
     }
   },
+  serverBackground: {
+    port: 8012,
+    router: {
+      stripTrailingSlash: true
+    }
+  },
 
   testMode,
+  environment,
+  isProduction,
 
   licence: {
     regimeId: 1,
@@ -201,7 +207,6 @@ module.exports = {
     returns: { importYears: process.env.IMPORT_RETURNS_YEARS || 3 },
     gaugingStationsSyncFrequencyInMS: 21600000,
     chargeCategoriesSyncFrequencyInMS: 21600000,
-    supportedSourcesSyncFrequencyInMS: 21600000,
     digitiseToLVPCSyncCronExp: '0 18 * * *',
     digitiseToLicenceGaugingStationsCronExp: '0 18 * * *',
     zipPassword: process.env.NALD_ZIP_PASSWORD
@@ -215,10 +220,6 @@ module.exports = {
     import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0',
     reporting: process.env.REPORTING_URI || 'http://127.0.0.1:8011/reporting/1.0'
   },
-
-  isAcceptanceTestTarget,
-
-  isProduction,
 
   chargeModule: {
     host: process.env.CHARGE_MODULE_ORIGIN,
@@ -247,7 +248,7 @@ module.exports = {
       port: process.env.REDIS_PORT || 6379,
       password: process.env.REDIS_PASSWORD || '',
       ...(isTlsConnection) && { tls: {} },
-      db: isPermitsTestDatabase ? 4 : 2,
+      db: process.env.NODE_ENV === 'test' ? 4 : 2,
       lazyConnect: isRedisLazy,
       maxRetriesPerRequest: null,
       enableReadyCheck: false
@@ -256,6 +257,9 @@ module.exports = {
 
   featureToggles: {
     deleteAllBillingData: process.env.ENABLE_DELETE_ALL_BILLING_DATA_FEATURE === 'true' && !isProduction,
-    swagger: !isProductionLike
-  }
+    // TODO: Remove Swagger completely
+    swagger: false
+  },
+
+  slackHook: process.env.SLACK_HOOK
 }

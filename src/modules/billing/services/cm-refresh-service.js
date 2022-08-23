@@ -7,7 +7,7 @@
 const { get } = require('lodash')
 const errors = require('../../../lib/errors')
 
-const messageQueue = require('../../../lib/message-queue-v2')
+const queueManager = require('../../../lib/queue-manager')
 const { jobNames } = require('../../../lib/constants')
 
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs')
@@ -42,7 +42,7 @@ const updateBatch = async batchId => {
   // for a batch containing only re-billing, there are >0 transactions
   // in the batch before calculating the new batch status
 
-  messageQueue.getQueueManager().add(jobNames.updateInvoices, { batch, cmResponse })
+  queueManager.getQueueManager().add(jobNames.updateInvoices, { batch, cmResponse })
 
   await batchService.updateWithCMSummary(batch.id, cmResponse)
 

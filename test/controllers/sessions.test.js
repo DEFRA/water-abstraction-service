@@ -8,7 +8,7 @@ const {
   before
 } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
-const server = require('../../index.js')
+const { server, start } = require('../../index.js')
 
 const createRequest = (method, sessionId) => {
   const url = `/water/1.0/sessions${sessionId ? '/' + sessionId : ''}`
@@ -30,7 +30,7 @@ experiment('controllers/sessions', () => {
   let sessionId
 
   before(async () => {
-    await server._start()
+    await start()
   })
 
   beforeEach(async () => {

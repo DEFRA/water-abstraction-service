@@ -128,7 +128,7 @@ exports.getEntityVerifications = getEntityVerifications
 exports.getOrCreateInternalUserEntity = getOrCreateInternalUserEntity
 exports.updateEntityEmail = updateEntityEmail
 
-if (config.isAcceptanceTestTarget) {
+if (!config.isProduction) {
   exports.deleteAcceptanceTestData = async () => {
     const CRMV1URL = urlJoin(config.services.crm, 'acceptance-tests/entities')
     const CRMV2URL = urlJoin(config.services.crm_v2, 'test-data')

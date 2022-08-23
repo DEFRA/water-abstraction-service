@@ -27,19 +27,19 @@ const crmConnector = require('../../../src/modules/acceptance-tests/lib/connecto
 const returnsConnector = require('../../../src/modules/acceptance-tests/lib/connectors/returns')
 const controller = require('../../../src/modules/acceptance-tests/controller')
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs')
-const messageQueue = require('../../../src/lib/message-queue-v2')
+const queueManager = require('../../../src/lib/queue-manager')
 experiment('modules/acceptance-tests/controller', () => {
-  let knexStub, msgQueue
+  let knexStub, queue
   beforeEach(async () => {
     knexStub = {
       where: sandbox.stub().returnsThis(),
       del: sandbox.stub(),
       raw: sandbox.stub()
     }
-    msgQueue = { deleteKeysByPattern: sandbox.stub() }
+    queue = { deleteKeysByPattern: sandbox.stub() }
 
     sandbox.stub(bookshelf, 'knex').returns(knexStub)
-    sandbox.stub(messageQueue, 'getQueueManager').returns(msgQueue)
+    sandbox.stub(queueManager, 'getQueueManager').returns(queue)
     sandbox.stub(billing, 'tearDown')
     sandbox.stub(gaugingStations, 'tearDown')
     sandbox.stub(chargeVersions, 'tearDown')
@@ -133,7 +133,7 @@ experiment('modules/acceptance-tests/controller', () => {
       expect(licenceAgreements.tearDown.called).to.be.true()
       expect(crmConnector.tearDown.called).to.be.true()
       expect(returnsConnector.tearDown.called).to.be.true()
-      expect(messageQueue.getQueueManager().deleteKeysByPattern.called).to.be.true()
+      expect(queueManager.getQueueManager().deleteKeysByPattern.called).to.be.true()
       expect(notifications.delete.called).to.be.true()
       expect(events.delete.called).to.be.true()
       expect(permits.delete.called).to.be.true()

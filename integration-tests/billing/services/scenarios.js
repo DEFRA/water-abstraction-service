@@ -2,7 +2,7 @@ const promisePoller = require('promise-poller').default
 
 const { ROLES } = require('../../../src/lib/roles')
 
-const server = require('../../../index')
+const { server } = require('../../../index')
 
 const batches = require('./batches')
 
@@ -15,7 +15,7 @@ const batches = require('./batches')
  * @return {String} batchId
  */
 const runScenario = async (regionId, batchType, financialYearEnding = 2020, isSummer = false) => {
-  await server._start()
+  await server.start()
   const response = await server.inject({
     auth: {
       strategy: 'jwt',

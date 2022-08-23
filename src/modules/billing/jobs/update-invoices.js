@@ -1,18 +1,21 @@
-const uuid = require('uuid/v4')
+'use strict'
 
-// Models
-const { BATCH_ERROR_CODE } = require('../../../lib/models/batch')
+const fork = require('child_process').fork
+const uuid = require('uuid/v4')
 
 // Utils
 const batchJob = require('./lib/batch-job')
 const helpers = require('./lib/helpers')
-const { jobNames } = require('../../../lib/constants')
-
-const JOB_NAME = jobNames.updateInvoices
-const fork = require('child_process').fork
-const child = fork('./src/modules/billing/jobs/lib/update-invoices-worker.js')
-
 const { logger } = require('../../../logger')
+
+// Constants
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch')
+const JOB_NAME = 'billing.update-invoices'
+
+let child
+if (process.env.name === 'service-background') {
+  child = fork('./src/modules/billing/jobs/lib/update-invoices-worker.js')
+}
 
 const createMessage = data => ([
   JOB_NAME,
@@ -46,14 +49,16 @@ const handler = async job => {
 
 const onComplete = async job => batchJob.logOnComplete(job)
 
-exports.jobName = JOB_NAME
-exports.handler = handler
-exports.createMessage = createMessage
-exports.onComplete = onComplete
-exports.onFailed = helpers.onFailedHandler
-exports.workerOptions = {
-  maxStalledCount: 3,
-  stalledInterval: 120000,
-  lockDuration: 120000,
-  lockRenewTime: 120000 / 2
+module.exports = {
+  jobName: JOB_NAME,
+  createMessage,
+  handler,
+  onFailed: helpers.onFailedHandler,
+  onComplete,
+  workerOptions: {
+    maxStalledCount: 3,
+    stalledInterval: 120000,
+    lockDuration: 120000,
+    lockRenewTime: 120000 / 2
+  }
 }

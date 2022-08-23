@@ -15,7 +15,7 @@ const messageTypes = {
  */
 const getKey = (env, type) => {
   // Always use live key in production environment
-  if (env.NODE_ENV === 'production') {
+  if (env.ENVIRONMENT === 'prd') {
     return env.LIVE_NOTIFY_KEY
   }
   // In other environments, use whitelist key for email/SMS, and test key for anything else

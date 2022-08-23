@@ -1,22 +1,24 @@
 'use strict'
 
+const { fork } = require('child_process')
 const { get } = require('lodash')
 
-const JOB_NAME = 'billing.process-charge-version-year'
-const { logger } = require('../../../logger')
-const { jobName: prepareTransactionsJobName } = require('./prepare-transactions')
-
-const messageQueue = require('../../../lib/message-queue-v2')
-
-const { BATCH_ERROR_CODE } = require('../../../lib/models/batch')
 const batchJob = require('./lib/batch-job')
 const chargeVersionYearService = require('../services/charge-version-year')
-
 const config = require('../../../../config')
 const helpers = require('./lib/helpers')
+const { logger } = require('../../../logger')
+const queueManager = require('../../../lib/queue-manager')
 
-const fork = require('child_process').fork
-const child = fork('./src/modules/billing/jobs/lib/process-charge-version-year-worker.js')
+// Constants
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch')
+const JOB_NAME = 'billing.process-charge-version-year'
+const { jobName: prepareTransactionsJobName } = require('./prepare-transactions')
+
+let child
+if (process.env.name === 'service-background') {
+  child = fork('./src/modules/billing/jobs/lib/process-charge-version-year-worker.js')
+}
 
 const createMessage = (batchId, billingBatchChargeVersionYearId) => ([
   JOB_NAME,
@@ -36,7 +38,7 @@ const handler = async job => {
     return new Promise((resolve, reject) => {
       child.on('message', msg => {
         if (msg.complete === true && msg.batchId) {
-          messageQueue.getQueueManager().add(prepareTransactionsJobName, msg.batchId)
+          queueManager.getQueueManager().add(prepareTransactionsJobName, msg.batchId)
         } else if (msg.error) {
           logger.error(msg.error)
           reject(msg.error)
@@ -58,13 +60,15 @@ const handler = async job => {
 
 const onComplete = async job => batchJob.logOnComplete(job)
 
-exports.jobName = JOB_NAME
-exports.createMessage = createMessage
-exports.handler = handler
-exports.onFailed = helpers.onFailedHandler
-exports.onComplete = onComplete
-exports.workerOptions = {
-  concurrency: config.billing.processChargeVersionYearsJobConcurrency,
-  lockDuration: 3600000,
-  lockRenewTime: 3600000 / 2
+module.exports = {
+  jobName: JOB_NAME,
+  createMessage,
+  handler,
+  onFailed: helpers.onFailedHandler,
+  onComplete,
+  workerOptions: {
+    concurrency: config.billing.processChargeVersionYearsJobConcurrency,
+    lockDuration: 3600000,
+    lockRenewTime: 3600000 / 2
+  }
 }

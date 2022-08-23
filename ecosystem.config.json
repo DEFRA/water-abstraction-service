@@ -18,6 +18,26 @@
         "instances" : "max",
         "exec_mode" : "cluster"
       }
+    },
+    {
+      "name": "service-background",
+      "ignore_watch": [
+        "node_modules",
+        "src/lib/temp",
+        "temp",
+        ".git",
+        ".git/index.lock"
+      ],
+      "script": "index-background.js",
+      "instances": 1,
+      "exec_mode" : "fork",
+      "env": {
+        "watch": true
+      },
+      "env_production": {
+        "watch": false,
+        "node_args": ["--max-old-space-size=4000"]
+      }
     }
   ]
 }

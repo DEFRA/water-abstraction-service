@@ -92,7 +92,7 @@ async function preview (notifyTemplate, personalisation) {
  * @return {String}
  */
 const getPdfNotifyKey = (env) => {
-  if (env.NODE_ENV === 'production') {
+  if (env.ENVIRONMENT === 'prd') {
     return env.LIVE_NOTIFY_KEY
   }
   return env.TEST_NOTIFY_KEY

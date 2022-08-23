@@ -134,6 +134,6 @@ exports.getLicenceRegionCodes = getLicenceRegionCodes
 exports.getLicenceEndDates = getLicenceEndDates
 exports.getServiceVersion = factory.create(config.services.permits)
 
-if (config.isAcceptanceTestTarget) {
+if (!config.isProduction) {
   exports.deleteAcceptanceTestData = deleteAcceptanceTestData
 }

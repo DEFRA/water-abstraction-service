@@ -3,20 +3,18 @@
 require('dotenv').config()
 
 const Blipp = require('blipp')
-const CatboxRedis = require('@hapi/catbox-redis')
 const Good = require('@hapi/good')
 const GoodWinston = require('good-winston')
 const Hapi = require('@hapi/hapi')
 const HapiAuthJwt2 = require('hapi-auth-jwt2')
-const Vision = require('@hapi/vision')
 const moment = require('moment')
-const Nunjucks = require('nunjucks')
 
 const config = require('./config')
 const db = require('./src/lib/connectors/db')
 const { JobRegistrationService } = require('./src/lib/queue-manager/job-registration-service')
 const { logger } = require('./src/logger')
-const routes = require('./src/routes/water.js')
+const routes = require('./src/routes/background.js')
+const { StartUpJobsService } = require('./src/lib/queue-manager/start-up-jobs-service')
 const { validate } = require('./src/lib/validate')
 
 // Hapi/good is used to log ops statistics, request responses and server log events. It's the reason you'll see
@@ -30,22 +28,14 @@ moment.locale('en-gb')
 
 // Define server
 const server = Hapi.server({
-  ...config.server,
-  cache: [
-    {
-      provider: {
-        constructor: CatboxRedis,
-        options: config.redis.connection
-      }
-    }
-  ]
+  ...config.serverBackground
 })
 
 const plugins = [
-  require('./src/lib/queue-manager').plugin,
-  require('./src/modules/address-search/plugin')
+  require('./src/lib/queue-manager').plugin
 ]
 
+// Register plugins
 const _registerServerPlugins = async (server) => {
   // Service plugins
   await server.register(plugins)
@@ -67,30 +57,6 @@ const _registerServerPlugins = async (server) => {
 
   // JWT token auth
   await server.register(HapiAuthJwt2)
-
-  await server.register(Vision)
-
-  // Add Hapi-swagger in test environments
-  if (config.featureToggles.swagger) {
-    await server.register([
-      {
-        plugin: require('@hapi/vision')
-      },
-      {
-        plugin: require('@hapi/inert')
-      },
-      {
-        plugin: require('hapi-swagger'),
-        options: {
-          info: {
-            title: 'Test API Documentation',
-            version: require('./package.json').version
-          },
-          pathPrefixSize: 3
-        }
-      }
-    ])
-  }
 }
 
 const _configureServerAuthStrategy = (server) => {
@@ -101,36 +67,11 @@ const _configureServerAuthStrategy = (server) => {
   server.auth.default('jwt')
 }
 
-const _configureNunjucks = async (server) => {
-  server.views({
-    engines: {
-      html: {
-        compile: (src, options) => {
-          const template = Nunjucks.compile(src, options.environment)
-
-          return (context) => {
-            return template.render(context)
-          }
-        },
-
-        prepare: (options, next) => {
-          options.compileOptions.environment = Nunjucks.configure(options.path, { watch: false })
-
-          return next()
-        }
-      }
-    },
-    relativeTo: __dirname,
-    path: 'src/views'
-  })
-}
-
 const start = async function () {
   try {
     await _registerServerPlugins(server)
     _configureServerAuthStrategy(server)
     server.route(routes)
-    await _configureNunjucks(server)
 
     // TODO: Ideally we wouldn't bother registering all the Queues and workers when running unit tests. So, we would
     // move this into the `if (!module.parent)` block. But when we do the tests only run the first few and then exit.
@@ -138,8 +79,9 @@ const start = async function () {
     JobRegistrationService.go(server.queueManager)
 
     if (!module.parent) {
+      StartUpJobsService.go(server.queueManager)
       await server.start()
-      const name = process.env.SERVICE_NAME
+      const name = `${process.env.SERVICE_NAME}-background`
       const uri = server.info.uri
       server.log('info', `Service ${name} running at: ${uri}`)
     }
@@ -159,6 +101,9 @@ process
   .on('SIGINT', async () => {
     logger.info('Stopping hapi server: existing requests have 25 seconds to complete')
     await server.stop({ timeout: 25 * 1000 })
+
+    logger.info('Stopping BullMQ workers')
+    await server.queueManager.closeAll()
 
     logger.info('Closing connection pool')
     await db.pool.end()
