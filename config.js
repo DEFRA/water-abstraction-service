@@ -207,7 +207,6 @@ module.exports = {
     returns: { importYears: process.env.IMPORT_RETURNS_YEARS || 3 },
     gaugingStationsSyncFrequencyInMS: 21600000,
     chargeCategoriesSyncFrequencyInMS: 21600000,
-    supportedSourcesSyncFrequencyInMS: 21600000,
     digitiseToLVPCSyncCronExp: '0 18 * * *',
     digitiseToLicenceGaugingStationsCronExp: '0 18 * * *',
     zipPassword: process.env.NALD_ZIP_PASSWORD
