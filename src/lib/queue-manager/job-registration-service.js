@@ -13,7 +13,6 @@ const billingProcessChargeVersions = require('../../modules/billing/jobs/process
 const billingProcessChargeVersionYear = require('../../modules/billing/jobs/process-charge-version-year')
 const billingRebilling = require('../../modules/billing/jobs/rebilling')
 const billingRefreshTotals = require('../../modules/billing/jobs/refresh-totals')
-const billingSupportedSourcesSyncFromCsv = require('../../modules/billing/jobs/sync-supported-sources')
 const billingTwoPartTariffMatching = require('../../modules/billing/jobs/two-part-tariff-matching')
 const billingUpdateCustomerAccount = require('../../modules/billing/jobs/update-customer')
 const billingUpdateInvoices = require('../../modules/billing/jobs/update-invoices')
@@ -86,7 +85,6 @@ class JobRegistrationService {
       billingProcessChargeVersionYear,
       billingRebilling,
       billingRefreshTotals,
-      billingSupportedSourcesSyncFromCsv,
       billingTwoPartTariffMatching,
       billingUpdateCustomerAccount,
       billingUpdateInvoices,

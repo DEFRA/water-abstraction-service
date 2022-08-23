@@ -9,7 +9,6 @@ const sendMessage = require('../../modules/batch-notifications/lib/jobs/send-mes
 const checkForUpdatedInvoiceAccounts = require('../../modules/billing/jobs/check-for-updated-invoice-accounts')
 const customerFileRefresh = require('../../modules/billing//jobs/customer-file-refresh')
 const syncChargeCategories = require('../../modules/billing/jobs/sync-charge-categories')
-const syncSupportedSources = require('../../modules/billing/jobs/sync-supported-sources')
 
 // Charge versions
 const licenceNotInChargeVersionWorkflow = require('../../modules/charge-versions/jobs/licence-not-in-charge-version-workflow')
@@ -37,7 +36,6 @@ class StartUpJobsService {
     queueManager.add(checkForUpdatedInvoiceAccounts.jobName)
     queueManager.add(customerFileRefresh.jobName)
     queueManager.add(syncChargeCategories.jobName)
-    queueManager.add(syncSupportedSources.jobName)
   }
 
   static async _chargeVersionsJobs (queueManager) {
