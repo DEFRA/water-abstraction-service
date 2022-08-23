@@ -5,6 +5,7 @@ const testMode = parseInt(process.env.TEST_MODE) === 1
 
 const environment = process.env.ENVIRONMENT
 const isProduction = environment === 'prd'
+const isBackground = process.env.name === 'service-background'
 
 const srocStartDate = new Date('2022-04-01')
 const isSrocLive = !isProduction && new Date() >= srocStartDate
@@ -101,6 +102,7 @@ module.exports = {
   testMode,
   environment,
   isProduction,
+  isBackground,
 
   licence: {
     regimeId: 1,
