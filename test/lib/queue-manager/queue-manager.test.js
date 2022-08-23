@@ -4,6 +4,7 @@ const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi
 const { expect } = require('@hapi/code')
 
 const { QueueManager } = require('../../../src/lib/queue-manager/queue-manager')
+const config = require('../../../config')
 const bull = require('bullmq')
 const sandbox = require('sinon').createSandbox()
 const EventEmitter = require('events')
@@ -97,18 +98,21 @@ experiment('lib/queue-manager/queue-manager', () => {
     })
 
     experiment('when we are the background (index-background.js) instance', () => {
+      let bgQueueManager
+
       beforeEach(async () => {
-        sandbox.stub(process, 'env').value({ name: 'service-background' })
+        sandbox.stub(config, 'isBackground').value(true)
+        bgQueueManager = new QueueManager(connection)
       })
 
       test('a Worker is instantiated', () => {
-        queueManager.register(job)
+        bgQueueManager.register(job)
 
         expect(bull.Worker.called).to.be.true()
       })
 
       test("the Worker's onFailed handler is registered", async () => {
-        queueManager.register(job)
+        bgQueueManager.register(job)
 
         expect(workerStub.on.calledWith(
           'failed', job.onFailed
@@ -121,7 +125,7 @@ experiment('lib/queue-manager/queue-manager', () => {
         })
 
         test("the Worker's onComplete handler is registered", async () => {
-          queueManager.register(job)
+          bgQueueManager.register(job)
 
           expect(workerStub.on.calledWith('completed')).to.be.true()
         })
@@ -133,7 +137,7 @@ experiment('lib/queue-manager/queue-manager', () => {
         })
 
         test('a QueueScheduler is instantiated', () => {
-          queueManager.register(job)
+          bgQueueManager.register(job)
 
           expect(bull.QueueScheduler.called).to.be.true()
         })
@@ -231,19 +235,22 @@ experiment('lib/queue-manager/queue-manager', () => {
     })
 
     experiment('when we are the background (index-background.js) instance', () => {
+      let bgQueueManager
+
       beforeEach(async () => {
-        sandbox.stub(process, 'env').value({ name: 'service-background' })
-        queueManager.register(job)
+        sandbox.stub(config, 'isBackground').value(true)
+        bgQueueManager = new QueueManager(connection)
+        bgQueueManager.register(job)
       })
 
       test('does call close() on each worker', async () => {
-        await queueManager.closeAll()
+        await bgQueueManager.closeAll()
 
         expect(workerStub.close.callCount).to.equal(1)
       })
 
       test('does call close() on each queue', async () => {
-        await queueManager.closeAll()
+        await bgQueueManager.closeAll()
 
         expect(queueStub.close.callCount).to.equal(1)
       })
@@ -257,7 +264,7 @@ experiment('lib/queue-manager/queue-manager', () => {
           })
 
           test('an error is logged', async () => {
-            await queueManager.closeAll()
+            await bgQueueManager.closeAll()
 
             expect(logger.error.calledWith(`Error closing queue ${job.jobName}`, err)).to.be.true()
           })
@@ -269,7 +276,7 @@ experiment('lib/queue-manager/queue-manager', () => {
           })
 
           test('an error is logged', async () => {
-            await queueManager.closeAll()
+            await bgQueueManager.closeAll()
 
             expect(logger.error.calledWith(`Error closing worker ${job.jobName}`, err)).to.be.true()
           })
