@@ -1,4 +1,4 @@
-const rp = require('request-promise').defaults({
+const rp = require('request-promise-native').defaults({
   strictSSL: false
 })
 
