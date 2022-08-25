@@ -71,7 +71,17 @@ const getPurpose = async (description) => {
   }
 
   if (!cache.purposes[description]) {
-    const purposeUse = await new PurposeUse({ description })
+    let purposeUse = ''
+
+    try {
+      // TODO: Manually test whether this works
+      // TODO: Check whether .where({ description }) would work instead
+      purposeUse = await PurposeUse
+        .where('description', description)
+        .fetch()
+    } catch (_e) {
+      // Do nothing if an error is thrown
+    }
 
     cache.purposes[description] = deepFreeze(purposeUse)
   }
