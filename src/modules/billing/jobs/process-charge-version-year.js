@@ -16,7 +16,7 @@ const JOB_NAME = 'billing.process-charge-version-year'
 const { jobName: prepareTransactionsJobName } = require('./prepare-transactions')
 
 let child
-if (process.env.name === 'service-background') {
+if (config.isBackground) {
   child = fork('./src/modules/billing/jobs/lib/process-charge-version-year-worker.js')
 }
 

@@ -1,6 +1,7 @@
 'use strict'
 
 const BullMQ = require('bullmq')
+const config = require('../../../config')
 const { logger } = require('../../logger')
 
 /**
@@ -203,7 +204,7 @@ class QueueManager {
   _createWorkerAndQueueScheduler (wrlsJob, connection) {
     const result = {}
 
-    if (process.env.name !== 'service-background') {
+    if (!config.isBackground) {
       return result
     }
 

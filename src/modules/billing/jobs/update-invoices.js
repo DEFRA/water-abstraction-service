@@ -5,6 +5,7 @@ const uuid = require('uuid/v4')
 
 // Utils
 const batchJob = require('./lib/batch-job')
+const config = require('../../../../config')
 const helpers = require('./lib/helpers')
 const { logger } = require('../../../logger')
 
@@ -13,7 +14,7 @@ const { BATCH_ERROR_CODE } = require('../../../lib/models/batch')
 const JOB_NAME = 'billing.update-invoices'
 
 let child
-if (process.env.name === 'service-background') {
+if (config.isBackground) {
   child = fork('./src/modules/billing/jobs/lib/update-invoices-worker.js')
 }
 
