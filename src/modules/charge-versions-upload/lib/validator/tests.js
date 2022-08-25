@@ -93,7 +93,7 @@ const testDateBeforeSrocStartDate = async (field, date = '') => {
 
 const testPurpose = async (field, description, licence) => {
   if (licence) {
-    const purpose = await helpers.getPurposeUses(description)
+    const purpose = await helpers.getPurpose(description)
 
     if (!purpose) {
       return `${field} is not an accepted term`

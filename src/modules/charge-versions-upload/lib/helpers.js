@@ -19,7 +19,7 @@ const cache = {}
 const parseFactor = factor => {
   switch (factor) {
     case '1':
-    case '' : return null
+    case '': return null
     default: return factor
   }
 }
@@ -65,7 +65,7 @@ const getLicence = async licenceNumber => {
   return cache.licences[licenceNumber]
 }
 
-const getPurposes = async (description) => {
+const getPurpose = async (description) => {
   if (!cache.purposes) {
     cache.purposes = {}
   }
@@ -165,15 +165,17 @@ const updateEventStatus = async (event, statusMessage, jobName) => {
   return eventsService.update(event)
 }
 
-exports.parseFactor = parseFactor
-exports.parseBool = parseBool
-exports.formatDate = formatDate
-exports.getLicence = getLicence
-exports.getLicenceVersionPurposes = getLicenceVersionPurposes
-exports.getInvoiceAccount = getInvoiceAccount
-exports.getPurposeUses = getPurposeUses
-exports.getSupportedSources = getSupportedSources
-exports.getChangeReason = getChangeReason
-exports.getPurposeUses = getPurposeUses
-exports.clearCache = clearCache
-exports.updateEventStatus = updateEventStatus
+module.exports = {
+  parseFactor,
+  parseBool,
+  formatDate,
+  getLicence,
+  getLicenceVersionPurposes,
+  getInvoiceAccount,
+  getPurposeUses,
+  getSupportedSources,
+  getChangeReason,
+  clearCache,
+  updateEventStatus,
+  getPurpose
+}
