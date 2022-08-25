@@ -10,6 +10,8 @@ const repos = require('../../../lib/connectors/repos')
 const eventsService = require('../../../lib/services/events')
 const { logger } = require('../../../logger')
 
+const PurposeUse = require('../../../lib/connectors/bookshelf/PurposeUse')
+
 const IMPORTED_REASON = 'Strategic review of charges (SRoC)'
 
 const cache = {}
@@ -61,6 +63,20 @@ const getLicence = async licenceNumber => {
     cache.licences[licenceNumber] = deepFreeze({ id, licenceNumber, startDate, expiredDate, lapsedDate, revokedDate, regionalChargeArea, isWaterUndertaker })
   }
   return cache.licences[licenceNumber]
+}
+
+const getPurposes = async (description) => {
+  if (!cache.purposes) {
+    cache.purposes = {}
+  }
+
+  if (!cache.purposes[description]) {
+    const purposeUse = await new PurposeUse({ description })
+
+    cache.purposes[description] = deepFreeze(purposeUse)
+  }
+
+  return cache.purposes[description]
 }
 
 const getLicenceVersionPurposes = async licenceId => {
@@ -158,5 +174,6 @@ exports.getInvoiceAccount = getInvoiceAccount
 exports.getPurposeUses = getPurposeUses
 exports.getSupportedSources = getSupportedSources
 exports.getChangeReason = getChangeReason
+exports.getPurposeUses = getPurposeUses
 exports.clearCache = clearCache
 exports.updateEventStatus = updateEventStatus
