@@ -33,7 +33,7 @@ const server = Hapi.server({
 })
 
 const plugins = [
-  require('./src/lib/queue-manager').plugin,
+  require('./src/lib/queue-manager').plugin
 ]
 
 const _registerServerPlugins = async (server) => {
