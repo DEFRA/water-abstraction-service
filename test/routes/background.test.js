@@ -3,7 +3,7 @@ const { server, start } = require('../../index-background')
 const { experiment, test, beforeEach, before } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
 
-experiment('/status', () => {
+experiment('/status (background)', () => {
   let response
 
   before(async () => {
