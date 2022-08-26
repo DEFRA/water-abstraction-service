@@ -35,7 +35,7 @@ experiment('modules/application-state/controller', () => {
       result = await controller.getAddressSearch(request)
     })
 
-    test('fetches the data via the server method', async () => {
+    test('fetches the data via the address service', async () => {
       expect(addressService.getAddressesByPostcode.calledWith('TT1 1TT')).to.be.true()
     })
 
