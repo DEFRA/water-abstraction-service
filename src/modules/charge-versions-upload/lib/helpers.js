@@ -72,8 +72,8 @@ const confirmPurposeExists = async (description) => {
 
   if (!cache.purposes[description]) {
     const result = await PurposeUse
-      .where({description})
-      .fetch({require: false, columns: ['purpose_use_id']})
+      .where({ description })
+      .fetch({ require: false, columns: ['purpose_use_id'] })
 
     cache.purposes[description] = !!result
   }
