@@ -4,10 +4,15 @@ const {
   experiment,
   test,
   before,
-  after
+  beforeEach,
+  after,
+  afterEach
 } = exports.lab = require('@hapi/lab').script()
 
 const { expect } = require('@hapi/code')
+
+const nock = require('nock')
+// nock.recorder.rec()
 
 const { server, start } = require('../../index.js')
 const { logger } = require('../../src/logger')
@@ -24,6 +29,49 @@ experiment('Test sending a email notification', () => {
 
   after(async () => {
     sandbox.restore()
+  })
+
+  experiment('notify/', () => {
+    let request
+
+    beforeEach(async () => {
+      request = {
+        method: 'POST',
+        payload: {
+          recipient: 'test@test.com',
+          personalisation: {
+            test_value: '00/00/00/00'
+          }
+        },
+        headers: {
+          Authorization: process.env.JWT_TOKEN
+        }
+      }
+    })
+
+    experiment.only('when the request is valid', () => {
+
+      test('I am happy 😁', async () => {
+        nock('https://api.notifications.service.gov.uk:443')
+          .post('/v2/template/8ac8a279-bf93-44da-b536-9b05703cb928/preview')
+          .reply(200, {"body":"","type":""})
+        request.url = '/water/1.0/notify/unit_test_email'
+
+        const res = await server.inject(request)
+
+        expect(res.statusCode).to.equal(200)
+      })
+    })
+
+    experiment('when the request is invalid', () => {
+      test('I am sad 😢', async () => {
+        request.url = '/water/1.0/notify/unit_test_missing_in_notify'
+
+        const res = await server.inject(request)
+
+        expect(res.statusCode).to.equal(400)
+      })
+    })
   })
 
   test('The API should throw an error when personalisation is not supplied', async () => {
