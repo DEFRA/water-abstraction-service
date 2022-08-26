@@ -3,7 +3,6 @@
 require('dotenv').config()
 
 const Blipp = require('blipp')
-const CatboxRedis = require('@hapi/catbox-redis')
 const Good = require('@hapi/good')
 const GoodWinston = require('good-winston')
 const Hapi = require('@hapi/hapi')
@@ -30,20 +29,11 @@ moment.locale('en-gb')
 
 // Define server
 const server = Hapi.server({
-  ...config.server,
-  cache: [
-    {
-      provider: {
-        constructor: CatboxRedis,
-        options: config.redis.connection
-      }
-    }
-  ]
+  ...config.server
 })
 
 const plugins = [
-  require('./src/lib/queue-manager').plugin,
-  require('./src/modules/address-search/plugin')
+  require('./src/lib/queue-manager').plugin
 ]
 
 const _registerServerPlugins = async (server) => {

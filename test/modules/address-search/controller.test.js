@@ -10,8 +10,9 @@ const {
 const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
 
-const Address = require('../../../src/lib/models/address')
 const controller = require('../../../src/modules/address-search/controller')
+
+const addressService = require('../../../src/modules/address-search/services/address-service')
 
 experiment('modules/application-state/controller', () => {
   afterEach(async () => {
@@ -23,27 +24,14 @@ experiment('modules/application-state/controller', () => {
 
     beforeEach(async () => {
       request = {
-        query: { q: 'TT1 1TT' },
-        server: {
-          methods: {
-            getAddressesByPostcode: sandbox.stub().resolves({
-              data: [
-                new Address()
-              ]
-            })
-          }
-        }
+        query: { q: 'TT1 1TT' }
       }
+      sandbox.stub(addressService, 'getAddressesByPostcode').resolvesArg(0)
       result = await controller.getAddressSearch(request)
     })
 
-    test('fetches the data via the server method', async () => {
-      expect(request.server.methods.getAddressesByPostcode.calledWith('TT1 1TT')).to.be.true()
-    })
-
     test('returns the data', async () => {
-      expect(result.data).to.be.an.array().length(1)
-      expect(result.data[0] instanceof Address).to.be.true()
+      expect(result).to.equal('TT1 1TT')
     })
   })
 })
