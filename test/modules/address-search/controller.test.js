@@ -40,7 +40,6 @@ experiment('modules/application-state/controller', () => {
     })
 
     test('returns the data', async () => {
-      console.log(result)
       expect(result.data).to.be.an.array().length(1)
       expect(result.data[0] instanceof Address).to.be.true()
     })
