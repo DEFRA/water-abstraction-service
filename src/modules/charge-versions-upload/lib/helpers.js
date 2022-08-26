@@ -65,25 +65,17 @@ const getLicence = async licenceNumber => {
   return cache.licences[licenceNumber]
 }
 
-const getPurpose = async (description) => {
+const confirmPurposeExists = async (description) => {
   if (!cache.purposes) {
     cache.purposes = {}
   }
 
   if (!cache.purposes[description]) {
-    let purposeUse = ''
+    const result = await PurposeUse
+      .where({description})
+      .fetch({require: false, columns: ['purpose_use_id']})
 
-    try {
-      // TODO: Manually test whether this works
-      // TODO: Check whether .where({ description }) would work instead
-      purposeUse = await PurposeUse
-        .where('description', description)
-        .fetch()
-    } catch (_e) {
-      // Do nothing if an error is thrown
-    }
-
-    cache.purposes[description] = deepFreeze(purposeUse)
+    cache.purposes[description] = !!result
   }
 
   return cache.purposes[description]
@@ -187,5 +179,5 @@ module.exports = {
   getChangeReason,
   clearCache,
   updateEventStatus,
-  getPurpose
+  confirmPurposeExists
 }

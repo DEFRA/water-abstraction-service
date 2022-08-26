@@ -68,7 +68,7 @@ experiment('validator', () => {
     sandbox.stub(helpers, 'getLicenceVersionPurposes')
     sandbox.stub(helpers, 'getInvoiceAccount')
     sandbox.stub(helpers, 'getPurposeUses')
-    sandbox.stub(helpers, 'getPurpose')
+    sandbox.stub(helpers, 'confirmPurposeExists')
     sandbox.stub(helpers, 'getSupportedSources')
     sandbox.stub(helpers, 'updateEventStatus')
     sandbox.stub(repos.supportedSources, 'findAll')
@@ -100,7 +100,7 @@ experiment('validator', () => {
         { description: PURPOSE_USE_DESCRIPTION_TPT, isTwoPartTariff: true }
       ])
 
-      // TODO: Correctly stub helpers.getPurpose
+      // TODO: Correctly stub helpers.confirmPurposeExists
 
       helpers.getLicence = async licenceNumber => licenceNumber === 'INVALID'
         ? undefined
