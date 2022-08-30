@@ -202,6 +202,65 @@ experiment('Notify controller', () => {
     })
   })
 
+  experiment('notify/email', () => {
+    let request
+
+    const createRequest = (url) => {
+      return {
+        method: 'POST',
+        url,
+        payload: {
+          templateId: '8ac8a279-bf93-44da-b536-9b05703cb928',
+          recipient: 'test@test.com',
+          personalisation: {
+            test_value: '00/00/00/00'
+          }
+        },
+        headers: {
+          Authorization: process.env.JWT_TOKEN
+        }
+      }
+    }
+
+    afterEach(() => {
+      nock.cleanAll()
+    })
+
+    experiment('when the request is valid', () => {
+      beforeEach(() => {
+        nock('https://api.notifications.service.gov.uk:443')
+          .post('/v2/notifications/email')
+          .reply(201)
+
+        request = createRequest('/water/1.0/notify/email')
+      })
+
+      test('we return a 201 response', async () => {
+        const res = await server.inject(request)
+
+        expect(res.statusCode).to.equal(201)
+      })
+    })
+
+    experiment('when the request is invalid', () => {
+      beforeEach(() => {
+        nock('https://api.notifications.service.gov.uk:443')
+          .post('/v2/notifications/email')
+          .reply(400)
+
+        request = createRequest('/water/1.0/notify/email')
+      })
+
+      test('we throw an exception', async () => {
+        server.inject(request, (res) => {
+          const error = res.request.caughtError
+
+          expect(error).to.an.instanceof(Error)
+        })
+      })
+    })
+  })
+
   test('The API should throw an error when personalisation is not supplied', async () => {
     const request = {
       method: 'POST',
