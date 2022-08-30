@@ -129,7 +129,7 @@ experiment('Notify controller', () => {
     })
   })
 
-  experiment('notify/callback', () => {
+  experiment.only('notify/callback', () => {
     let request
 
     const createRequest = (url) => {
@@ -170,6 +170,11 @@ experiment('Notify controller', () => {
 
         expect(res.statusCode).to.equal(204)
       })
+
+      test('we call the update function', async () => {
+        await server.inject(request)
+        expect(scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback.called).to.be.true()
+      })
     })
 
     experiment('when the request is invalid', () => {
@@ -182,6 +187,11 @@ experiment('Notify controller', () => {
 
         expect(res.statusCode).to.equal(404)
       })
+
+      test('we do not call the update function', async () => {
+        await server.inject(request)
+        expect(scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback.called).to.be.false()
+      })
     })
 
     experiment('when an error occurs', () => {
@@ -193,6 +203,11 @@ experiment('Notify controller', () => {
         const res = await server.inject(request)
 
         expect(res.statusCode).to.equal(500)
+      })
+
+      test('we do not call the update function', async () => {
+        await server.inject(request)
+        expect(scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback.called).to.be.false()
       })
     })
   })
