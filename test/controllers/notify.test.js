@@ -127,9 +127,25 @@ experiment('Notify controller', () => {
         expect(res.statusCode).to.equal(400)
       })
     })
+
+    experiment('when an unexpected error occurs within the service', () => {
+      beforeEach(() => {
+        nock('https://api.notifications.service.gov.uk:443')
+          .post('/v2/template/8ac8a279-bf93-44da-b536-9b05703cb928/preview')
+          .reply(500)
+
+        request = createRequest('/water/1.0/notifyLater/unit_test_email')
+      })
+
+      test('we return a 500 response', async () => {
+        const res = await server.inject(request)
+
+        expect(res.statusCode).to.equal(500)
+      })
+    })
   })
 
-  experiment.only('notify/callback', () => {
+  experiment('notify/callback', () => {
     let request
 
     const createRequest = (url) => {
