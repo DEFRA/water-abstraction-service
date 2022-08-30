@@ -17,7 +17,7 @@ lab.experiment('Test notify module', () => {
     }
     sandbox.stub(logger, 'error').returns()
     sandbox.stub(logger, 'info').returns()
-    sandbox.stub(notify, 'preview').returns({ body: { body: 'It has a test value of 00/00/00/00', type: 'email' }})
+    sandbox.stub(notify, 'preview').returns({ body: { body: 'It has a test value of 00/00/00/00', type: 'email' } })
   })
 
   lab.after(async () => {
