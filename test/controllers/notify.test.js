@@ -1,22 +1,17 @@
 'use strict'
 
-const {
-  experiment,
-  test,
-  beforeEach,
-  afterEach
-} = exports.lab = require('@hapi/lab').script()
-
+// Test framework dependencies
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
-
+const sandbox = require('sinon').createSandbox()
 const nock = require('nock')
 
-const { server, start } = require('../../index.js')
+// Things we need to stub
 const { logger } = require('../../src/logger')
 const scheduledNotificationsService = require('../../src/lib/services/scheduled-notifications')
 
-const sinon = require('sinon')
-const sandbox = sinon.createSandbox()
+// Thing under test
+const { server, start } = require('../../index.js')
 
 experiment('Notify controller', () => {
   beforeEach(async () => {
