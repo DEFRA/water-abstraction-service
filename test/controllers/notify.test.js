@@ -55,7 +55,7 @@ experiment('Notify controller', () => {
     })
 
     experiment('when the request is valid', () => {
-      before(() => {
+      beforeEach(() => {
         nock('https://api.notifications.service.gov.uk:443')
           .post('/v2/template/8ac8a279-bf93-44da-b536-9b05703cb928/preview')
           .reply(200, { body: '', type: '' })
@@ -71,13 +71,15 @@ experiment('Notify controller', () => {
     })
 
     experiment('when the request is invalid', () => {
-      test('we return a 400 response', async () => {
+      beforeEach(() => {
         nock('https://api.notifications.service.gov.uk:443')
           .post('/v2/template/abcd/preview')
           .reply(400, { errors: [{ error: 'ValidationError', message: 'id is not a valid UUID' }], status_code: 400 })
 
-        const request = createRequest('/water/1.0/notify/unit_test_missing_in_notify')
+          request = createRequest('/water/1.0/notify/unit_test_missing_in_notify')
+      })
 
+      test('we return a 400 response', async () => {
         const res = await server.inject(request)
 
         expect(res.statusCode).to.equal(400)
@@ -109,7 +111,7 @@ experiment('Notify controller', () => {
     })
 
     experiment('when the request is valid', () => {
-      before(() => {
+      beforeEach(() => {
         nock('https://api.notifications.service.gov.uk:443')
           .post('/v2/template/8ac8a279-bf93-44da-b536-9b05703cb928/preview')
           .reply(200, { body: 'It has a test value of 00/00/00/00', type: 'email' })
@@ -125,13 +127,15 @@ experiment('Notify controller', () => {
     })
 
     experiment('when the request is invalid', () => {
-      test('we return a 400 response', async () => {
+      beforeEach(() => {
         nock('https://api.notifications.service.gov.uk:443')
           .post('/v2/template/abcd/preview')
           .reply(400, { errors: [{ error: 'ValidationError', message: 'id is not a valid UUID' }], status_code: 400 })
 
-        const request = createRequest('/water/1.0/notifyLater/unit_test_missing_in_notify')
+        request = createRequest('/water/1.0/notifyLater/unit_test_missing_in_notify')
+      })
 
+      test('we return a 400 response', async () => {
         const res = await server.inject(request)
 
         expect(res.statusCode).to.equal(400)
