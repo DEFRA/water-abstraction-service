@@ -111,7 +111,7 @@ experiment('Notify controller', () => {
       before(() => {
         nock('https://api.notifications.service.gov.uk:443')
           .post('/v2/template/8ac8a279-bf93-44da-b536-9b05703cb928/preview')
-          .reply(200, { body: 'It has a test value of 00/00/00/00', html: '<p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">It has a test value of 00/00/00/00</p>', id: '8ac8a279-bf93-44da-b536-9b05703cb928', postage: null, subject: 'This is a test', type: 'email', version: 1 })
+          .reply(200, { body: 'It has a test value of 00/00/00/00', type: 'email'})
 
         request = createRequest('/water/1.0/notifyLater/unit_test_email')
       })
