@@ -246,12 +246,10 @@ experiment('Notify controller', () => {
         request = createRequest('/water/1.0/notify/email')
       })
 
-      test('we throw an exception', async () => {
-        server.inject(request, (res) => {
-          const error = res.request.caughtError
+      test('we return a 500 response', async () => {
+        const res = await server.inject(request)
 
-          expect(error).to.an.instanceof(Error)
-        })
+        expect(res.statusCode).to.equal(500)
       })
     })
   })
