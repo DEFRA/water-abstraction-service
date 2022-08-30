@@ -6,6 +6,8 @@ const { enqueue } = require('../../../src/modules/notify/index.js')
 const { logger } = require('../../../src/logger')
 const sandbox = require('sinon').createSandbox()
 
+const notify = require('../../../src/lib/notify')
+
 lab.experiment('Test notify module', () => {
   let queueManager
   lab.before(async () => {
@@ -15,6 +17,7 @@ lab.experiment('Test notify module', () => {
     }
     sandbox.stub(logger, 'error').returns()
     sandbox.stub(logger, 'info').returns()
+    sandbox.stub(notify, 'preview').returns({ body: { body: 'It has a test value of 00/00/00/00', type: 'email' }})
   })
 
   lab.after(async () => {
