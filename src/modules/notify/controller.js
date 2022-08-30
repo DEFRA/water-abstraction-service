@@ -72,6 +72,8 @@ const notifyEmailProxy = async (request, h) => {
   return h.response(result)
 }
 
-exports.send = send
-exports.callback = callback
-exports.notifyEmailProxy = notifyEmailProxy
+module.exports = {
+  send,
+  callback,
+  notifyEmailProxy
+}
