@@ -42,5 +42,4 @@ experiment('Test notify module (index.js)', () => {
       expect(data.plaintext).to.equal('It has a test value of 00/00/00/00')
     })
   })
-
 })
