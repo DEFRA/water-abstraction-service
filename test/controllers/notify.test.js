@@ -3,9 +3,7 @@
 const {
   experiment,
   test,
-  before,
   beforeEach,
-  after,
   afterEach
 } = exports.lab = require('@hapi/lab').script()
 
@@ -21,14 +19,15 @@ const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 
 experiment('Notify controller', () => {
-  before(async () => {
+  beforeEach(async () => {
     sandbox.stub(logger, 'error').returns()
     sandbox.stub(logger, 'info').returns()
     await start()
   })
 
-  after(async () => {
+  afterEach(async () => {
     sandbox.restore()
+    nock.cleanAll()
   })
 
   experiment('notify/', () => {
@@ -49,10 +48,6 @@ experiment('Notify controller', () => {
         }
       }
     }
-
-    afterEach(() => {
-      nock.cleanAll()
-    })
 
     experiment('when the request is valid', () => {
       beforeEach(() => {
@@ -105,10 +100,6 @@ experiment('Notify controller', () => {
         }
       }
     }
-
-    afterEach(() => {
-      nock.cleanAll()
-    })
 
     experiment('when the request is valid', () => {
       beforeEach(() => {
@@ -172,12 +163,6 @@ experiment('Notify controller', () => {
       sandbox.stub(scheduledNotificationsService, 'updateScheduledNotificationWithNotifyCallback')
 
       request = createRequest('/water/1.0/notify/callback')
-    })
-
-    afterEach(() => {
-      nock.cleanAll()
-      scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback.restore()
-      scheduledNotificationsService.getScheduledNotificationByNotifyId.restore()
     })
 
     experiment('when the request is valid', () => {
