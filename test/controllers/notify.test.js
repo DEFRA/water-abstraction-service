@@ -176,6 +176,8 @@ experiment('Notify controller', () => {
 
     afterEach(() => {
       nock.cleanAll()
+      scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback.restore()
+      scheduledNotificationsService.getScheduledNotificationByNotifyId.restore()
     })
 
     experiment('when the request is valid', () => {
