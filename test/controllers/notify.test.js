@@ -13,6 +13,17 @@ const scheduledNotificationsService = require('../../src/lib/services/scheduled-
 // Thing under test
 const { server, start } = require('../../index.js')
 
+const createRequest = (url, payload) => {
+  return {
+    method: 'POST',
+    headers: {
+      Authorization: process.env.JWT_TOKEN
+    },
+    url,
+    payload
+  }
+}
+
 experiment('Notify controller', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'error').returns()
@@ -28,19 +39,10 @@ experiment('Notify controller', () => {
   experiment('notify/', () => {
     let request
 
-    const createRequest = (url) => {
-      return {
-        method: 'POST',
-        url,
-        payload: {
-          recipient: 'test@test.com',
-          personalisation: {
-            test_value: '00/00/00/00'
-          }
-        },
-        headers: {
-          Authorization: process.env.JWT_TOKEN
-        }
+    const payload = {
+      recipient: 'test@test.com',
+      personalisation: {
+        test_value: '00/00/00/00'
       }
     }
 
@@ -50,7 +52,7 @@ experiment('Notify controller', () => {
           .post('/v2/template/8ac8a279-bf93-44da-b536-9b05703cb928/preview')
           .reply(200, { body: '', type: '' })
 
-        request = createRequest('/water/1.0/notify/unit_test_email')
+        request = createRequest('/water/1.0/notify/unit_test_email', payload)
       })
 
       test('we return a 200 response', async () => {
@@ -66,7 +68,7 @@ experiment('Notify controller', () => {
           .post('/v2/template/abcd/preview')
           .reply(400, { errors: [{ error: 'ValidationError', message: 'id is not a valid UUID' }], status_code: 400 })
 
-        request = createRequest('/water/1.0/notify/unit_test_missing_in_notify')
+        request = createRequest('/water/1.0/notify/unit_test_missing_in_notify', payload)
       })
 
       test('we return a 400 response', async () => {
@@ -82,7 +84,7 @@ experiment('Notify controller', () => {
           .post('/v2/template/8ac8a279-bf93-44da-b536-9b05703cb928/preview')
           .reply(500)
 
-        request = createRequest('/water/1.0/notify/unit_test_email')
+        request = createRequest('/water/1.0/notify/unit_test_email', payload)
       })
 
       test('we return a 500 response', async () => {
@@ -96,19 +98,10 @@ experiment('Notify controller', () => {
   experiment('notifyLater/', () => {
     let request
 
-    const createRequest = (url) => {
-      return {
-        method: 'POST',
-        url,
-        payload: {
-          recipient: 'test@test.com',
-          personalisation: {
-            test_value: '00/00/00/00'
-          }
-        },
-        headers: {
-          Authorization: process.env.JWT_TOKEN
-        }
+    const payload = {
+      recipient: 'test@test.com',
+      personalisation: {
+        test_value: '00/00/00/00'
       }
     }
 
@@ -118,7 +111,7 @@ experiment('Notify controller', () => {
           .post('/v2/template/8ac8a279-bf93-44da-b536-9b05703cb928/preview')
           .reply(200, { body: 'It has a test value of 00/00/00/00', type: 'email' })
 
-        request = createRequest('/water/1.0/notifyLater/unit_test_email')
+        request = createRequest('/water/1.0/notifyLater/unit_test_email', payload)
       })
 
       test('we return a 200 response', async () => {
@@ -134,7 +127,7 @@ experiment('Notify controller', () => {
           .post('/v2/template/abcd/preview')
           .reply(400, { errors: [{ error: 'ValidationError', message: 'id is not a valid UUID' }], status_code: 400 })
 
-        request = createRequest('/water/1.0/notifyLater/unit_test_missing_in_notify')
+        request = createRequest('/water/1.0/notifyLater/unit_test_missing_in_notify', payload)
       })
 
       test('we return a 400 response', async () => {
@@ -150,7 +143,7 @@ experiment('Notify controller', () => {
           .post('/v2/template/8ac8a279-bf93-44da-b536-9b05703cb928/preview')
           .reply(500)
 
-        request = createRequest('/water/1.0/notifyLater/unit_test_email')
+        request = createRequest('/water/1.0/notifyLater/unit_test_email', payload)
       })
 
       test('we return a 500 response', async () => {
@@ -164,32 +157,23 @@ experiment('Notify controller', () => {
   experiment('notify/callback', () => {
     let request
 
-    const createRequest = (url) => {
-      return {
-        method: 'POST',
-        url,
-        payload: {
-          id: '9b23538e-c493-4b4f-baa7-2a76f643aa1f',
-          reference: 'foobar',
-          to: 'stuart@example.com',
-          status: 'delivered',
-          created_at: '2022-08-09T10:10:31+0000',
-          completed_at: '2022-08-09T10:10:31+0000',
-          sent_at: '2022-08-09T10:10:31+0000',
-          notification_type: 'email',
-          template_id: '8ac8a279-bf93-44da-b536-9b05703cb928',
-          template_version: 2
-        },
-        headers: {
-          Authorization: process.env.JWT_TOKEN
-        }
-      }
+    const payload = {
+      id: '9b23538e-c493-4b4f-baa7-2a76f643aa1f',
+      reference: 'foobar',
+      to: 'stuart@example.com',
+      status: 'delivered',
+      created_at: '2022-08-09T10:10:31+0000',
+      completed_at: '2022-08-09T10:10:31+0000',
+      sent_at: '2022-08-09T10:10:31+0000',
+      notification_type: 'email',
+      template_id: '8ac8a279-bf93-44da-b536-9b05703cb928',
+      template_version: 2
     }
 
     beforeEach(async () => {
       sandbox.stub(scheduledNotificationsService, 'updateScheduledNotificationWithNotifyCallback')
 
-      request = createRequest('/water/1.0/notify/callback')
+      request = createRequest('/water/1.0/notify/callback', payload)
     })
 
     experiment('when the request is valid', () => {
@@ -247,26 +231,13 @@ experiment('Notify controller', () => {
   experiment('notify/email', () => {
     let request
 
-    const createRequest = (url) => {
-      return {
-        method: 'POST',
-        url,
-        payload: {
-          templateId: '8ac8a279-bf93-44da-b536-9b05703cb928',
-          recipient: 'test@test.com',
-          personalisation: {
-            test_value: '00/00/00/00'
-          }
-        },
-        headers: {
-          Authorization: process.env.JWT_TOKEN
-        }
+    const payload = {
+      templateId: '8ac8a279-bf93-44da-b536-9b05703cb928',
+      recipient: 'test@test.com',
+      personalisation: {
+        test_value: '00/00/00/00'
       }
     }
-
-    afterEach(() => {
-      nock.cleanAll()
-    })
 
     experiment('when the request is valid', () => {
       beforeEach(() => {
@@ -274,7 +245,7 @@ experiment('Notify controller', () => {
           .post('/v2/notifications/email')
           .reply(201)
 
-        request = createRequest('/water/1.0/notify/email')
+        request = createRequest('/water/1.0/notify/email', payload)
       })
 
       test('we return a 201 response', async () => {
@@ -290,7 +261,7 @@ experiment('Notify controller', () => {
           .post('/v2/notifications/email')
           .reply(400)
 
-        request = createRequest('/water/1.0/notify/email')
+        request = createRequest('/water/1.0/notify/email', payload)
       })
 
       test('we return a 500 response', async () => {
