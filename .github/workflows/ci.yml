@@ -18,6 +18,9 @@ jobs:
       PGPORT: 5432
       # Additional config needed by the service
       NALD_SERVICE_MAILBOX: some@mailbox.com
+      # Dummy keys as they need to be present but we shouldn't be hitting Notify in CI
+      TEST_NOTIFY_KEY: b3b02fe4-9b30-4bac-bd0d-6c9b83f1e171
+      WHITELIST_NOTIFY_KEY: b3b02fe4-9b30-4bac-bd0d-6c9b83f1e171
 
     # Service containers to run with `runner-job`
     services:
