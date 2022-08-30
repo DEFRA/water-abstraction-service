@@ -76,7 +76,7 @@ experiment('Notify controller', () => {
           .post('/v2/template/abcd/preview')
           .reply(400, { errors: [{ error: 'ValidationError', message: 'id is not a valid UUID' }], status_code: 400 })
 
-          request = createRequest('/water/1.0/notify/unit_test_missing_in_notify')
+        request = createRequest('/water/1.0/notify/unit_test_missing_in_notify')
       })
 
       test('we return a 400 response', async () => {
