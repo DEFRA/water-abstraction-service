@@ -18,10 +18,6 @@ jobs:
       PGPORT: 5432
       # Additional config needed by the service
       NALD_SERVICE_MAILBOX: some@mailbox.com
-      # The unit tests rely on real, valid API keys being provided. Hence, we store them secretly in the repo settings
-      # See https://github.com/DEFRA/water-abstraction-team/issues/35 for more details
-      TEST_NOTIFY_KEY: ${{ secrets.TEST_NOTIFY_KEY }}
-      WHITELIST_NOTIFY_KEY: ${{ secrets.WHITELIST_NOTIFY_KEY }}
 
     # Service containers to run with `runner-job`
     services:
