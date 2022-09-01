@@ -12,7 +12,7 @@ const mapAbstractionPeriod = abstractionPeriod => {
   }
 }
 
-const mapToChargePurposes = () => async data => {
+const mapToChargePurposes = async () => {
   const purpose = {
     loss: data.chargeElementLoss,
     abstractionPeriod: mapAbstractionPeriod(data.chargeElementAbstractionPeriod),
