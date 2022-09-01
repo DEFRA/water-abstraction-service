@@ -24,7 +24,7 @@ const mapToChargeVersion = async (chargeVersionGroup, user, invoiceAccountNumber
     const chargeElementGroup = chargeVersionGroup.shift()
     const chargeElementData = chargeElementGroup[0]
     const chargeCategory = await chargeCategoryMapper.mapToChargeCategory(chargeElementData)
-    const chargePurposes = await Promise.all(chargeElementGroup.map(chargePurposesMapper.mapToChargePurposes(licence.id)))
+    const chargePurposes = await Promise.all(chargeElementGroup.map(chargePurposesMapper.mapToChargePurposes))
     chargeElements.push(await chargeElementMapper.mapToChargeElement(
       chargeElementData,
       licence,

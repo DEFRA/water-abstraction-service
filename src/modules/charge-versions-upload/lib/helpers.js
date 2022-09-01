@@ -1,6 +1,5 @@
 const { assertDate, assertLicenceNumber } = require('../../../lib/models/validators')
 const licencesService = require('../../../lib/services/licences')
-const licencesVersionRepo = require('../../../lib/connectors/repos/licence-versions')
 const { get, set } = require('lodash')
 const documentsService = require('../../../lib/services/documents-service')
 const { billing } = require('../../../../config')
@@ -17,7 +16,7 @@ const cache = {}
 const parseFactor = factor => {
   switch (factor) {
     case '1':
-    case '' : return null
+    case '': return null
     default: return factor
   }
 }
@@ -63,27 +62,6 @@ const getLicence = async licenceNumber => {
   return cache.licences[licenceNumber]
 }
 
-const getLicenceVersionPurposes = async licenceId => {
-  if (!cache.licenceVersionPurposes) {
-    cache.licenceVersionPurposes = {}
-  }
-  if (!cache.licenceVersionPurposes[licenceId]) {
-    const licenceVersions = await licencesService.getLicenceVersions(licenceId)
-    const { id } = licenceVersions.find(licenceVersion => licenceVersion.status === 'current') || {}
-    const licencesVersion = await licencesVersionRepo.findOne(id)
-    const licenceVersionPurposes = get(licencesVersion, 'licenceVersionPurposes') || []
-
-    // Only purposeUse, purposePrimary and purposeSecondary required
-    const purposes = licenceVersionPurposes.map(purpose => {
-      const { purposeUse = {}, purposePrimary = {}, purposeSecondary = {} } = purpose
-      return { purposeUse, purposePrimary, purposeSecondary }
-    })
-
-    cache.licenceVersionPurposes[licenceId] = deepFreeze(purposes)
-  }
-  return cache.licenceVersionPurposes[licenceId]
-}
-
 const getInvoiceAccount = async (licence, invoiceAccountNumber) => {
   if (!cache.invoiceAccounts) {
     cache.invoiceAccounts = {}
@@ -111,11 +89,15 @@ const getInvoiceAccount = async (licence, invoiceAccountNumber) => {
 const getPurposeUses = async () => {
   if (!cache.purposeUses) {
     const purposeUses = await repos.purposeUses.findAll()
-    // Only description and isTwoPartTariff required
-    const uses = purposeUses.map(({ description, isTwoPartTariff }) => ({ description, isTwoPartTariff }))
+    const uses = purposeUses.map(({ purposeUseId, description, isTwoPartTariff }) => ({ purposeUseId, description, isTwoPartTariff }))
     cache.purposeUses = deepFreeze(uses)
   }
   return cache.purposeUses
+}
+
+const getPurposeUse = async (description) => {
+  const purposeUses = await getPurposeUses()
+  return purposeUses.find(purposeUse => purposeUse.description === description)
 }
 
 const getSupportedSources = async () => {
@@ -149,14 +131,16 @@ const updateEventStatus = async (event, statusMessage, jobName) => {
   return eventsService.update(event)
 }
 
-exports.parseFactor = parseFactor
-exports.parseBool = parseBool
-exports.formatDate = formatDate
-exports.getLicence = getLicence
-exports.getLicenceVersionPurposes = getLicenceVersionPurposes
-exports.getInvoiceAccount = getInvoiceAccount
-exports.getPurposeUses = getPurposeUses
-exports.getSupportedSources = getSupportedSources
-exports.getChangeReason = getChangeReason
-exports.clearCache = clearCache
-exports.updateEventStatus = updateEventStatus
+module.exports = {
+  parseFactor,
+  parseBool,
+  formatDate,
+  getLicence,
+  getInvoiceAccount,
+  getPurposeUses,
+  getPurposeUse,
+  getSupportedSources,
+  getChangeReason,
+  clearCache,
+  updateEventStatus
+}
