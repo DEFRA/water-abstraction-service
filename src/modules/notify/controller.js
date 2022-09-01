@@ -64,11 +64,16 @@ const callback = async (request, h) => {
 /**
  * A very basic proxy service to send notify emails via the water service
  */
-const notifyEmailProxy = async request => {
+const notifyEmailProxy = async (request, h) => {
   const { templateId, recipient, personalisation } = request.payload
-  return notifyService.sendEmail(templateId, recipient, personalisation)
+
+  const result = await notifyService.sendEmail(templateId, recipient, personalisation)
+
+  return h.response(result)
 }
 
-exports.send = send
-exports.callback = callback
-exports.notifyEmailProxy = notifyEmailProxy
+module.exports = {
+  send,
+  callback,
+  notifyEmailProxy
+}

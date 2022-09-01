@@ -22,7 +22,6 @@
     "@envage/hapi-pg-rest-api": "^7.0.0",
     "@envage/water-abstraction-helpers": "4.8.1",
     "@hapi/boom": "^7.4.11",
-    "@hapi/catbox-redis": "^6.0.1",
     "@hapi/good": "^8.2.4",
     "@hapi/hapi": "^18.4.1",
     "@hapi/hoek": "^10.0.1",
@@ -81,6 +80,7 @@
     "@hapi/lab": "^24.2.0",
     "auto-changelog": "^1.16.4",
     "csv-stringify": "^2.0.4",
+    "nock": "^13.2.9",
     "promise-poller": "^1.9.1",
     "sinon": "^7.5.0",
     "standard": "^17.0.0"
