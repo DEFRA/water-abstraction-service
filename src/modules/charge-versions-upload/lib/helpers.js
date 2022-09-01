@@ -1,6 +1,5 @@
 const { assertDate, assertLicenceNumber } = require('../../../lib/models/validators')
 const licencesService = require('../../../lib/services/licences')
-const licencesVersionRepo = require('../../../lib/connectors/repos/licence-versions')
 const { get, set } = require('lodash')
 const documentsService = require('../../../lib/services/documents-service')
 const { billing } = require('../../../../config')
@@ -9,9 +8,6 @@ const chargeVersionsService = require('../../../lib/services/charge-versions')
 const repos = require('../../../lib/connectors/repos')
 const eventsService = require('../../../lib/services/events')
 const { logger } = require('../../../logger')
-
-const PurposeUse = require('../../../lib/connectors/bookshelf/PurposeUse')
-const { purposeUse } = require('../../../lib/mappers')
 
 const IMPORTED_REASON = 'Strategic review of charges (SRoC)'
 
