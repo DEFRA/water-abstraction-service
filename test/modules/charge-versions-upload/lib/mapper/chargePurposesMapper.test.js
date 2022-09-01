@@ -15,6 +15,7 @@ const helpers = require('../../../../../src/modules/charge-versions-upload/lib/h
 
 // Thing under test
 const chargePurposesMapper = require('../../../../../src/modules/charge-versions-upload/lib/mapper/chargePurposesMapper')
+
 const CHARGE_ELEMENT_DESCRIPTION = 'Valid Charge Element Description'
 const PURPOSE_USE_DESCRIPTION = 'Valid Purpose Use Description'
 const PURPOSE_USE_ID = 'a-uuid'
@@ -30,7 +31,7 @@ experiment('chargePurposesMapper', () => {
     })
 
     test('maps the data specified to charge purposes', async () => {
-      const result = await chargePurposesMapper.mapToChargePurposes()({
+      const result = await chargePurposesMapper.mapToChargePurposes({
         chargeElementDescription: CHARGE_ELEMENT_DESCRIPTION,
         chargeElementPurpose: PURPOSE_USE_DESCRIPTION,
         chargeElementAbstractionPeriod: '01/22-04/22',
