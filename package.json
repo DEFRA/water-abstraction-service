@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@envage/hapi-pg-rest-api": "^7.0.0",
-    "@envage/water-abstraction-helpers": "4.8.1",
+    "@envage/water-abstraction-helpers": "DEFRA/water-abstraction-helpers#create-url-join-helper",
     "@hapi/boom": "^7.4.11",
     "@hapi/good": "^8.2.4",
     "@hapi/hapi": "^18.4.1",
