@@ -91,10 +91,11 @@ const testDateBeforeSrocStartDate = async (field, date = '') => {
   return ''
 }
 
-const testPurpose = async (field, description, licence) => {
-  if (licence) {
-    const licenceVersionPurposes = await helpers.getLicenceVersionPurposes(licence.id)
-    return licenceVersionPurposes.find(licenceVersionPurpose => licenceVersionPurpose.purposeUse.description === description) ? '' : `${field} is not an accepted term`
+const testPurpose = async (field, description) => {
+  const result = await helpers.getPurposeUse(description)
+
+  if (!result) {
+    return `${field} is not an accepted term`
   }
 
   return ''

@@ -1,5 +1,6 @@
 'use strict'
 
+// Test framework dependencies
 const {
   experiment,
   test,
@@ -9,10 +10,13 @@ const {
 const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
 
+// Things we need to stub
+const helpers = require('../../../../../src/modules/charge-versions-upload/lib/helpers')
 const repos = require('../../../../../src/lib/connectors/repos')
 const { billing } = require('../../../../../config')
+
+// Thing under test
 const { validate } = require('../../../../../src/modules/charge-versions-upload/lib/validator')
-const helpers = require('../../../../../src/modules/charge-versions-upload/lib/helpers')
 
 const SUPPORTED_SOURCE_NAME = 'Valid Supported Source Name'
 const PURPOSE_USE_DESCRIPTION = 'Valid Purpose Use Description'
@@ -65,9 +69,9 @@ const rowErrors = validationErrors => ({
 experiment('validator', () => {
   beforeEach(() => {
     sandbox.stub(helpers, 'getLicence')
-    sandbox.stub(helpers, 'getLicenceVersionPurposes')
     sandbox.stub(helpers, 'getInvoiceAccount')
     sandbox.stub(helpers, 'getPurposeUses')
+    sandbox.stub(helpers, 'getPurposeUse')
     sandbox.stub(helpers, 'getSupportedSources')
     sandbox.stub(helpers, 'updateEventStatus')
     sandbox.stub(repos.supportedSources, 'findAll')
@@ -95,17 +99,15 @@ experiment('validator', () => {
         { name: SUPPORTED_SOURCE_NAME }
       ])
       helpers.getPurposeUses.resolves([
-        { description: PURPOSE_USE_DESCRIPTION, isTwoPartTariff: false },
-        { description: PURPOSE_USE_DESCRIPTION_TPT, isTwoPartTariff: true }
+        { purposeUseId: 'foo', description: PURPOSE_USE_DESCRIPTION, isTwoPartTariff: false },
+        { purposeUseId: 'bar', description: PURPOSE_USE_DESCRIPTION_TPT, isTwoPartTariff: true }
       ])
-
+      helpers.getPurposeUse.resolves(
+        { purposeUseId: 'foo', description: PURPOSE_USE_DESCRIPTION, isTwoPartTariff: false }
+      )
       helpers.getLicence = async licenceNumber => licenceNumber === 'INVALID'
         ? undefined
         : dummyLicence
-      helpers.getLicenceVersionPurposes.resolves([
-        { purposeUse: { description: PURPOSE_USE_DESCRIPTION } },
-        { purposeUse: { description: PURPOSE_USE_DESCRIPTION_TPT } }
-      ])
       helpers.getInvoiceAccount.resolves([INVOICE_ACCOUNT])
       helpers.updateEventStatus.resolves()
     })
@@ -161,6 +163,10 @@ experiment('validator', () => {
       })
 
       experiment('when the charge element purpose', () => {
+        beforeEach(() => {
+          helpers.getPurposeUse.resolves(undefined)
+        })
+
         test('is blank', async () => {
           const row = { ...testRow, charge_element_purpose: '', charge_element_agreement_apply: '' }
           expect(await testValidate(row)).to.equal(rowErrors(['Row 2, charge_element_purpose is blank']))
