@@ -70,7 +70,6 @@
     "snakecase-keys": "^1.1.1",
     "title-case": "^3.0.2",
     "tunnel": "0.0.6",
-    "url-join": "^4.0.1",
     "uuid": "^3.4.0",
     "yamljs": "^0.3.0"
   },
