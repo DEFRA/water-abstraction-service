@@ -2,7 +2,7 @@
 
 const moment = require('moment')
 const gotWithProxy = require('./got-with-proxy')
-const urlJoin = require('url-join')
+const { urlJoin } = require('@envage/water-abstraction-helpers')
 
 const { logger } = require('../../../../logger')
 const config = require('../../../../../config.js')

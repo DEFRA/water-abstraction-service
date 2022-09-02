@@ -1,6 +1,6 @@
 'use strict'
 const config = require('../../../../config')
-const urlJoin = require('url-join')
+const { urlJoin } = require('@envage/water-abstraction-helpers')
 const got = require('got')
 
 /**
