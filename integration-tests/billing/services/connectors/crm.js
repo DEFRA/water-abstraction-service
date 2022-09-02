@@ -1,8 +1,7 @@
 'use strict'
 
-const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const { serviceRequest, urlJoin } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
-const urlJoin = require('url-join')
 
 const createCrmUrl = (...parts) => {
   return urlJoin(config.services.crm_v2, ...parts)

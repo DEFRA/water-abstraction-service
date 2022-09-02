@@ -1,5 +1,4 @@
-const { serviceRequest } = require('@envage/water-abstraction-helpers')
-const urlJoin = require('url-join')
+const { serviceRequest, urlJoin } = require('@envage/water-abstraction-helpers')
 const { URL } = require('url')
 
 /**

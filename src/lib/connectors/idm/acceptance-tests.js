@@ -1,6 +1,5 @@
-const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const { serviceRequest, urlJoin } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
-const urlJoin = require('url-join')
 
 const deleteAcceptanceTestData = () => {
   const url = urlJoin(config.services.idm, 'acceptance-tests')

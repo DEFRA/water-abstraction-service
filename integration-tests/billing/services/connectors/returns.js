@@ -1,6 +1,5 @@
 const config = require('../../../../config')
-const { serviceRequest } = require('@envage/water-abstraction-helpers')
-const urlJoin = require('url-join')
+const { serviceRequest, urlJoin } = require('@envage/water-abstraction-helpers')
 const { logger } = require('../../../../src/logger')
 
 const createUrl = urlTail => urlJoin(config.services.returns, urlTail)

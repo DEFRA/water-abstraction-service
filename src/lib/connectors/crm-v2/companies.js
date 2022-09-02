@@ -1,8 +1,7 @@
 'use strict'
 
 const moment = require('moment')
-const urlJoin = require('url-join')
-const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const { serviceRequest, urlJoin } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
 
 const getUri = (...tail) => urlJoin(config.services.crm_v2, 'companies', ...tail)

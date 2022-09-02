@@ -1,10 +1,9 @@
 'use strict'
 
-const urlJoin = require('url-join')
 const Joi = require('joi')
 const moment = require('moment')
 
-const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const { serviceRequest, urlJoin } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
 
 const VALID_LICENCE_NUMBER = Joi.string().required().example('01/123/R01')

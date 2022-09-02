@@ -1,9 +1,8 @@
 'use strict'
 
-const { http } = require('@envage/water-abstraction-helpers')
+const { http, urlJoin } = require('@envage/water-abstraction-helpers')
 const config = require('../../../config')
 const { set } = require('lodash')
-const urlJoin = require('url-join')
 
 /**
  * Makes a request to the EA address facade

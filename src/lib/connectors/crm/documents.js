@@ -7,9 +7,8 @@ const rp = require('request-promise-native').defaults({
   proxy: null,
   strictSSL: false
 })
-const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const { serviceRequest, urlJoin } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
-const urlJoin = require('url-join')
 const { isArray, flatMap, chunk } = require('lodash')
 
 // Create API client

@@ -3,9 +3,8 @@
 const FixtureLoader = require('./fixture-loader/FixtureLoader')
 const AsyncAdapter = require('./fixture-loader/adapters/AsyncAdapter')
 
-const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const { serviceRequest, urlJoin } = require('@envage/water-abstraction-helpers')
 const config = require('../../../config')
-const urlJoin = require('url-join')
 const createCrmV2Url = (...parts) => urlJoin(config.services.crm_v2, ...parts)
 
 // Resolve path to fixtures directory

@@ -3,9 +3,8 @@
 const FixtureLoader = require('./fixture-loader/FixtureLoader')
 const AsyncAdapter = require('./fixture-loader/adapters/AsyncAdapter')
 
-const { serviceRequest, returns } = require('@envage/water-abstraction-helpers')
+const { serviceRequest, urlJoin, returns } = require('@envage/water-abstraction-helpers')
 const config = require('../../../config')
-const urlJoin = require('url-join')
 const createReturnsUrl = (...parts) => urlJoin(config.services.returns, ...parts)
 const moment = require('moment')
 const { last } = require('lodash')
