@@ -2,10 +2,9 @@ const Joi = require('joi')
 const { head, partialRight } = require('lodash')
 const { throwIfError } = require('@envage/hapi-pg-rest-api')
 const apiClientFactory = require('./api-client-factory')
-const urlJoin = require('url-join')
 const config = require('../../../config')
 const factory = require('./service-version-factory')
-const helpers = require('@envage/water-abstraction-helpers')
+const { serviceRequest, urlJoin } = require('@envage/water-abstraction-helpers')
 const uuid = require('uuid/v4')
 
 const usersClient = apiClientFactory.create(urlJoin(config.services.idm, 'user'))
@@ -63,7 +62,7 @@ const startEmailChange = (userId, email) => {
       email
     }
   }
-  return helpers.serviceRequest.post(url, options)
+  return serviceRequest.post(url, options)
 }
 
 /**
@@ -79,7 +78,7 @@ const verifySecurityCode = (userId, securityCode) => {
       securityCode
     }
   }
-  return helpers.serviceRequest.post(url, options)
+  return serviceRequest.post(url, options)
 }
 
 /**
@@ -89,7 +88,7 @@ const verifySecurityCode = (userId, securityCode) => {
  */
 const getEmailChangeStatus = userId => {
   const url = `${config.services.idm}/user/${userId}/change-email-address`
-  return helpers.serviceRequest.get(url)
+  return serviceRequest.get(url)
 }
 
 /** Creates a new user in the IDM for the given application

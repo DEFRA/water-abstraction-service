@@ -1,16 +1,15 @@
 'use strict'
 
 const { get } = require('lodash')
-const urlJoin = require('url-join')
 const moment = require('moment')
 
-const helpers = require('@envage/water-abstraction-helpers')
+const { nald, serviceRequest, urlJoin } = require('@envage/water-abstraction-helpers')
 const apiClientFactory = require('./api-client-factory')
 const config = require('../../../config')
 const { licence: { regimeId, typeId } } = config
 
 const factory = require('./service-version-factory')
-const calendarToIso = helpers.nald.dates.calendarToIso
+const calendarToIso = nald.dates.calendarToIso
 
 const licences = apiClientFactory.create(`${config.services.permits}licence`)
 
@@ -126,7 +125,7 @@ licences.getWaterLicencesThatHaveGaugingStationLinkagesThatNeedToBeCopiedFromDig
 
 const deleteAcceptanceTestData = () => {
   const url = urlJoin(config.services.permits, 'acceptance-tests')
-  return helpers.serviceRequest.delete(url)
+  return serviceRequest.delete(url)
 }
 
 exports.licences = licences

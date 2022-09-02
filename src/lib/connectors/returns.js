@@ -1,7 +1,6 @@
 const apiClientFactory = require('./api-client-factory')
 const moment = require('moment')
-const helpers = require('@envage/water-abstraction-helpers')
-const urlJoin = require('url-join')
+const { serviceRequest, urlJoin } = require('@envage/water-abstraction-helpers')
 const { URL } = require('url')
 const { chunk, flatMap } = require('lodash')
 
@@ -86,13 +85,13 @@ const getCurrentDueReturns = async (excludeLicences, returnCycle) => {
 const getServiceVersion = async () => {
   const urlParts = new URL(config.services.returns)
   const url = urlJoin(urlParts.protocol, urlParts.host, 'status')
-  const response = await helpers.serviceRequest.get(url)
+  const response = await serviceRequest.get(url)
   return response.version
 }
 
 const deleteAcceptanceTestData = () => {
   const url = urlJoin(config.services.returns, 'acceptance-tests')
-  return helpers.serviceRequest.delete(url)
+  return serviceRequest.delete(url)
 }
 
 const getReturnsForLicence = async (licenceNumber, startDate, endDate) => {
@@ -136,7 +135,7 @@ const getReturnsCyclesReport = async startDate => {
       startDate
     }
   }
-  return helpers.serviceRequest.get(url, options)
+  return serviceRequest.get(url, options)
 }
 
 /**
@@ -147,7 +146,7 @@ const getReturnsCyclesReport = async startDate => {
  */
 const getReturnCycleById = async returnCycleId => {
   const url = urlJoin(config.services.returns, 'return-cycles', returnCycleId)
-  return helpers.serviceRequest.get(url)
+  return serviceRequest.get(url)
 }
 
 /**
@@ -158,7 +157,7 @@ const getReturnCycleById = async returnCycleId => {
  */
 const getReturnCycleReturns = async returnCycleId => {
   const url = urlJoin(config.services.returns, 'return-cycles', returnCycleId, 'returns')
-  return helpers.serviceRequest.get(url)
+  return serviceRequest.get(url)
 }
 
 exports.returns = returnsClient
