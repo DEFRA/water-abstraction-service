@@ -330,7 +330,7 @@ const modelToChargeModuleSroc = transaction => {
     areaCode: licence.regions.historicalAreaCode,
     authorisedDays: transaction.authorisedDays,
     batchNumber: transaction.billingInvoiceLicence.billingInvoice.billingBatchId,
-    billableDays: transaction.authorisedDays, // billable days is set the same
+    billableDays: transaction.billableDays,
     chargeCategoryCode: transaction.chargeElement.chargeCategory.reference,
     chargeCategoryDescription: transaction.chargeElement.chargeCategory.shortDescription,
     chargePeriod: `${periodStart} - ${periodEnd}`,
