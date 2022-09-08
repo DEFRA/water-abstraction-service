@@ -16,6 +16,7 @@
     "migrate:down": "db-migrate down --verbose",
     "migrate:create": "db-migrate create --sql-file --",
     "lint": "standard",
+    "postinstall": "sh fixLibxmljs.sh",
     "version": "auto-changelog -p --commit-limit false && git add CHANGELOG.md"
   },
   "dependencies": {
