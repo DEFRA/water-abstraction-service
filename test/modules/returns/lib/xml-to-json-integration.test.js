@@ -13,7 +13,6 @@ const {
   experiment,
   test
 } = exports.lab = require('@hapi/lab').script()
-const libxmljs = require('libxmljs')
 const { mapXml } = require('../../../../src/modules/returns/lib/xml-adapter/mapper')
 const path = require('path')
 const fs = require('fs')
@@ -23,9 +22,8 @@ const readFile = util.promisify(fs.readFile)
 const permitConnector = require('../../../../src/lib/connectors/permit')
 const returnsConnector = require('../../../../src/lib/connectors/returns')
 
-const getParsedTestFile = async name => {
-  const xml = await readFile(path.join(__dirname, './xml-files-for-tests', name + '.xml'), 'utf-8')
-  return libxmljs.parseXml(xml)
+const getTestFile = async name => {
+  return readFile(path.join(__dirname, './xml-files-for-tests', name + '.xml'), 'utf-8')
 }
 
 const getTestUser = () => ({
@@ -68,8 +66,8 @@ experiment('mapXml output validates the return model schema', () => {
 
   test('single yearly return passes schema validation', async () => {
     stubReturn('123abc', '1111')
-    const parsed = await getParsedTestFile('single-yearly-return')
-    const returns = await mapXml(parsed, getTestUser(), today)
+    const file = await getTestFile('single-yearly-return')
+    const returns = await mapXml(file, getTestUser(), today)
 
     returns.forEach(ret => {
       const result = returnSchema.validate(ret)
@@ -79,8 +77,8 @@ experiment('mapXml output validates the return model schema', () => {
 
   test('estimated monthly return passes schema validation', async () => {
     stubReturn('03/28/22/0070', '14939112')
-    const parsed = await getParsedTestFile('estimated-monthly-return')
-    const returns = await mapXml(parsed, getTestUser(), today)
+    const file = await getTestFile('estimated-monthly-return')
+    const returns = await mapXml(file, getTestUser(), today)
 
     returns.forEach(ret => {
       const result = returnSchema.validate(ret)
@@ -90,8 +88,8 @@ experiment('mapXml output validates the return model schema', () => {
 
   test('nil return return passes schema validation', async () => {
     stubReturn('03/79/22/1230', '10083015')
-    const parsed = await getParsedTestFile('nil-return')
-    const returns = await mapXml(parsed, getTestUser(), today)
+    const file = await getTestFile('nil-return')
+    const returns = await mapXml(file, getTestUser(), today)
 
     returns.forEach(ret => {
       const result = returnSchema.validate(ret)
