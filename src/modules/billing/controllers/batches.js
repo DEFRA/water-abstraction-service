@@ -3,7 +3,6 @@
 const Boom = require('@hapi/boom')
 
 const { flatMap, uniq } = require('lodash')
-const { envelope } = require('../../../lib/response')
 const { jobStatus } = require('../lib/event')
 const { createBatchEvent } = require('../lib/batch-event')
 const controller = require('../../../lib/controller')
@@ -53,11 +52,13 @@ const postCreateBatch = async (request, h) => {
     // add a new job to the queue so that the batch can be created in the CM
     await request.queueManager.add(createBillRunJobName, batch.id)
 
-    return h.response(envelope({
+    const responseData = {
       batch,
       event: batchEvent,
       url: `/water/1.0/event/${batchEvent.id}`
-    })).code(202)
+    }
+
+    return h.response({ data: responseData, error: null }).code(202)
   } catch (err) {
     if (err.existingBatch) {
       return h.response({

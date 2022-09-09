@@ -13,7 +13,6 @@ const { logger } = require('../../logger')
 const invoiceAccountMapper = require('../../lib/mappers/invoice-account')
 
 const mapErrorResponse = require('../../lib/map-error-response')
-const { envelope } = require('../../lib/response')
 
 const rowMapper = ret => {
   const { purposes = [] } = ret.metadata
@@ -120,7 +119,7 @@ const getCompanyContacts = async (request) => {
 
   try {
     const companyContacts = await companyContactsService.getCompanyContacts(companyId)
-    return envelope(companyContacts)
+    return { data: companyContacts, error: null }
   } catch (err) {
     return mapErrorResponse(err)
   }
@@ -147,7 +146,7 @@ const getCompanyInvoiceAccounts = async request => {
 
   try {
     const invoiceAccounts = await companiesService.getCompanyInvoiceAccounts(companyId, regionId)
-    return envelope(invoiceAccounts)
+    return { data: invoiceAccounts, error: null }
   } catch (err) {
     return mapErrorResponse(err)
   }
@@ -157,7 +156,7 @@ const getCompanyLicences = async request => {
   const { companyId } = request.params
   try {
     const licences = await companiesService.getCompanyLicences(companyId)
-    return envelope(licences)
+    return { data: licences, error: null }
   } catch (err) {
     return mapErrorResponse(err)
   }
