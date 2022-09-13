@@ -1,4 +1,3 @@
-const { range } = require('lodash')
 const moment = require('moment')
 const validators = require('./validators')
 
@@ -49,19 +48,6 @@ class FinancialYear {
   isEqualTo (financialYear) {
     validators.assertIsInstanceOf(financialYear, FinancialYear)
     return this.yearEnding === financialYear.yearEnding
-  }
-
-  /**
-   * Gets an array of FinancialYear objects for the range required
-   *
-   * @param {Number} from The end year of the financial year for the start of the range
-   * @param {Number} to The end year of the financial year for the end of the range
-   * @returns {Array<FinancialYear>} The FinancialYear objects in the range
-   */
-  static getFinancialYears (from, to) {
-    return range(from, to + 1).reduce((years, year) => {
-      return [...years, new FinancialYear(year)]
-    }, [])
   }
 }
 
