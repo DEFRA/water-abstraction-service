@@ -9,7 +9,6 @@ const mapErrorResponse = require('../../../lib/map-error-response')
 const { jobStatus } = require('../lib/event')
 const batchStatus = require('../jobs/lib/batch-status')
 const { createBatchEvent, EVENT_TYPES } = require('../lib/batch-event')
-const { envelope } = require('../../../lib/response')
 const bluebird = require('bluebird')
 const { jobName: processChargeVersionsJobName } = require('../jobs/process-charge-versions')
 const invoiceAccountService = require('../../../lib/services/invoice-accounts-service')
@@ -154,11 +153,13 @@ const postApproveReviewBatch = async (request, h) => {
     // Kick off next stage of processing
     await request.queueManager.add(processChargeVersionsJobName, batch.id)
 
-    return envelope({
+    const responseData = {
       event: batchEvent,
       batch: updatedBatch,
       url: `/water/1.0/event/${batchEvent.id}`
-    })
+    }
+
+    return { data: responseData, error: null }
   } catch (err) {
     return mapErrorResponse(err)
   }
