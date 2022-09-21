@@ -23,8 +23,15 @@ const handler = async job => {
   try {
     const batch = await batchService.getBatchById(batchId)
 
+    const startDate = new Date()
+    console.log(`Start date: ${startDate}`)
+
     // Populate water.billing_batch_charge_version_years
     await chargeVersionService.createForBatch(batch)
+
+    const endDate = new Date()
+    console.log(`End date: ${endDate}`)
+    console.log(`Difference: ${Math.abs(startDate - endDate)} milliseconds`)
 
     return { batch }
   } catch (err) {
