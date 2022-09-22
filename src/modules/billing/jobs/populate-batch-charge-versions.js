@@ -5,7 +5,8 @@ const { partial, get } = require('lodash')
 const JOB_NAME = 'billing.populate-batch-charge-versions'
 
 const batchService = require('../services/batch-service')
-const chargeVersionService = require('../services/charge-version-service')
+// const chargeVersionService = require('../services/charge-version-service')
+const PopulateBatchChargeVersionsService = require('../../../services/populate-batch-charge-versions.service')
 
 const { BATCH_ERROR_CODE, BATCH_TYPE } = require('../../../lib/models/batch')
 const helpers = require('./lib/helpers')
@@ -23,15 +24,9 @@ const handler = async job => {
   try {
     const batch = await batchService.getBatchById(batchId)
 
-    const startDate = new Date()
-    console.log(`Start date: ${startDate}`)
-
     // Populate water.billing_batch_charge_version_years
-    await chargeVersionService.createForBatch(batch)
-
-    const endDate = new Date()
-    console.log(`End date: ${endDate}`)
-    console.log(`Difference: ${Math.abs(startDate - endDate)} milliseconds`)
+    // await chargeVersionService.createForBatch(batch)
+    await PopulateBatchChargeVersionsService.go(batch)
 
     return { batch }
   } catch (err) {

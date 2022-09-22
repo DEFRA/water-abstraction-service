@@ -1,15 +1,15 @@
 'use strict'
 
-const { knownHookEvents } = require('got/dist/source')
 const { knex } = require('../../src/lib/connectors/knex')
 const queries = require('../lib/connectors/repos/queries/charge-versions')
+const repos = require('../lib/connectors/repos')
 const helpers = require('@envage/water-abstraction-helpers').charging
 
 class PopulateBatchChargeVersionsService {
   static async go (batch) {
     const financialYears = this._yearRange(batch.startYear.endYear, batch.endYear.endYear)
 
-    for (const year in financialYears) {
+    for (const year of financialYears) {
       await this._createBatchChargeVersion(batch, year)
     }
   }
@@ -22,57 +22,87 @@ class PopulateBatchChargeVersionsService {
     return returnArray
   }
 
-  static async _createBatchChargeVersion (batch, year) {
-    // Get TPT batches in year here?
-
-    const params = {
-      regionId: batch.regionId,
-      financialYearEnding: year
+  static async _createBatchChargeVersion (billingBatch, financialYearEnding) {
+    const batchTypesToCreate = {
+      types: [{
+        type: 'annual',
+        isSummer: false
+      }],
+      hasTwoPartAgreement: false,
+      isChargeable: false
     }
 
-    const { rows } = await knex.raw(this._query, params)
+    const rows = await this._chargeVersionsForYearRegionQuery(billingBatch, financialYearEnding)
 
     for (const row of rows) {
-      // Define our object to be returned
-      const returnObj = {
-        types: [{
-          type: 'annual',
-          isSummer: false
-        }],
-        chargeVersionHasAgreement: false
-      }
-
       if (row.is_two_part_tariff) {
-        const twoPartTariffSeasons = await this._getTwoPartTariffSeasons(row, year, batch.regionId)
+        const twoPartTariffSeasons = await this._getTwoPartTariffSeasons(row, financialYearEnding, billingBatch.region.id)
+
+        if (twoPartTariffSeasons.summer) {
+          batchTypesToCreate.types.push({ type: 'two_part_tariff', isSummer: true })
+        }
+        if (twoPartTariffSeasons.winterAllYear) {
+          batchTypesToCreate.types.push({ type: 'two_part_tariff', isSummer: false })
+        }
+
+        batchTypesToCreate.hasTwoPartAgreement = true
+        batchTypesToCreate.isChargeable = true
       }
 
-      // create a charge batch version year for each one
+      for (const { type, isSummer } of batchTypesToCreate.types) {
+        await this._createBatchChargeVersionYear(billingBatch.id, row.charge_version_id, financialYearEnding, type, isSummer, batchTypesToCreate.hasTwoPartAgreement, batchTypesToCreate.isChargeable)
+      }
     }
   }
 
-  static _query () {
-    return queries.findValidInRegionAndFinancialYearSupplementary
+  static async _createBatchChargeVersionYear (billingBatchId, chargeVersionId, financialYearEnding, transactionType, isSummer, hasTwoPartAgreement, isChargeable) {
+    await repos.billingBatchChargeVersionYears.create({
+      billingBatchId,
+      chargeVersionId,
+      financialYearEnding,
+      status: 'processing',
+      transactionType,
+      isSummer,
+      hasTwoPartAgreement,
+      isChargeable: true
+    })
   }
 
   static async _getTwoPartTariffSeasons (row, financialYear, regionId) {
-    const seasons = []
+    const allSeasons = []
 
     if (helpers.getFinancialYear(row.start_date) <= 2021) {
-      const [thing] = await this._naldTwoPartTariffSeasonsQuery(financialYear, row.charge_version_id)
-      seasons.push({ summer: thing.summer, winterAllYear: thing.winter_all_year })
+      const [naldSeasons] = await this._naldTwoPartTariffSeasonsQuery(financialYear, row.charge_version_id)
+      allSeasons.push({ summer: naldSeasons.summer, winterAllYear: naldSeasons.winter_all_year })
     }
 
-    const [batches] = await this._twoPartTariffReturnVersionPurposesQuery(row.licence_id, row.start_date, row.end_date)
-    const [existingTPTBatches] = await this._twoPartTariffSentSupplementaryBatchesQuery(financialYear, regionId)
+    const [returnVersionSeasons] = await this._twoPartTariffReturnVersionPurposesQuery(row.licence_id, row.start_date, row.end_date)
+    const [billingBatchSeasons] = await this._twoPartTariffSentSupplementaryBatchesQuery(financialYear, regionId)
 
-    const twoPartTariffBatches = {
-      summer: batches.summer && existingTPTBatches.summer,
-      winterAllYear: batches.winter_all_year && existingTPTBatches.winter_all_year
+    const wrlsSeasons = {
+      summer: returnVersionSeasons.summer && billingBatchSeasons.summer,
+      winterAllYear: returnVersionSeasons.winter_all_year && billingBatchSeasons.winter_all_year
     }
 
-    seasons.push(twoPartTariffBatches)
+    allSeasons.push(wrlsSeasons)
 
-    return seasons
+    return this._combineSeasons(allSeasons)
+  }
+
+  static async _chargeVersionsForYearRegionQuery (billingBatch, financialYearEnding) {
+    const query = billingBatch.type === 'supplementary'
+      ? queries.findValidInRegionAndFinancialYearSupplementary
+      : queries.findValidInRegionAndFinancialYear
+
+    const params = {
+      regionId: billingBatch.region.id,
+      financialYearEnding,
+      scheme: billingBatch.scheme
+    }
+
+    const { rows } = await knex.raw(query, params)
+
+    return rows
   }
 
   static async _naldTwoPartTariffSeasonsQuery (financialYear, chargeVersionId) {
@@ -144,6 +174,13 @@ class PopulateBatchChargeVersionsService {
     const { rows } = await knex.raw(query, params)
 
     return rows
+  }
+
+  static _combineSeasons (seasons) {
+    return {
+      summer: seasons.some(season => season.summer),
+      winterAllYear: seasons.some(season => season.winterAllYear)
+    }
   }
 }
 
