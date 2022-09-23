@@ -12,6 +12,7 @@ const batchStatus = require('./lib/batch-status')
 const billingVolumeService = require('../services/billing-volumes-service')
 const twoPartTariffService = require('../services/two-part-tariff')
 const { jobName: processChargeVersionsJobName } = require('./process-charge-versions')
+const TwoPartTariffMatchingService = require('../../../services/two-part-tariff-matching.service')
 
 const createMessage = partial(helpers.createMessage, JOB_NAME)
 
@@ -29,6 +30,7 @@ const handler = async job => {
 
     // Do TPT returns matching and populate water.billing_volumes
     await twoPartTariffService.processBatch(batch)
+    // await TwoPartTariffMatchingService.go(batch)
 
     // Check if there are any TPT billing volumes for review
     // If there are, we go to the TPT review stage
