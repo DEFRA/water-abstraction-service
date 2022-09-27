@@ -35,9 +35,9 @@ const getDates = (financialYear, chargeVersion, isStartDate = true) => {
   const dateType = isStartDate ? 'start' : 'end'
   const dateRef = `${dateType}Date`
   return [
-    chargeVersion.licence[dateRef],
-    financialYear[dateType],
-    chargeVersion.dateRange[dateRef]
+    chargeVersion.licence[dateRef], // cv.licence.startDate
+    financialYear[dateType], // fy.start
+    chargeVersion.dateRange[dateRef] // cv.dateRange.startDate
   ]
 }
 

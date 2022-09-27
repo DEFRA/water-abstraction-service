@@ -1,5 +1,7 @@
 'use strict'
 
+const MomentRange = require('moment-range')
+const moment = MomentRange.extendMoment(require('moment'))
 const { knex } = require('../../src/lib/connectors/knex')
 const { BillingBatchChargeVersionYear } = require('../lib/connectors/bookshelf')
 const { createReturnCycles } = require('@envage/water-abstraction-helpers').returns.date
@@ -50,11 +52,25 @@ class TwoPartTariffMatchingService {
       waterReturns.push(...results)
     }
 
-    return waterReturns
-  }
+    const [chargePeriod] = await this._datesQuery(chargeVersionId, financialYearEnding)
 
-  static async _returnGroup (returns) {
+    const chargeElements = await this._chargeElementsQuery(chargeVersionId)
 
+    const dateFilteredChargeElements = this._filterOutInvalidChargeElementsByPeriod(chargeElements, chargePeriod)
+
+    const tptFilteredChargeElements = this._filterOutChargeElementsByTPT(dateFilteredChargeElements)
+
+    // chargePeriod = chargePeriod
+    // chargeElementGroup = chargeElements
+    // returnGroup = waterReturns
+
+    const waterReturnsWithCurrentVersion = waterReturns.filter(waterReturn => !!waterReturn.version_id)
+
+    waterReturnsWithCurrentVersion.forEach(waterReturn => {
+      // charge element group is being filtered to only include charge elements that match the current returns purpose use
+    })
+
+    // TODO: handle errors in return group
   }
 
   static async _billingBatchChargeVersionYears (billingBatch) {
@@ -165,6 +181,74 @@ class TwoPartTariffMatchingService {
     const { rows } = await knex.raw(query, params)
 
     return rows
+  }
+
+  static async _datesQuery (chargeVersionId, financialYearEnding) {
+    const query = `select 
+    lower(t1.charge_period_dates) as start_date, 
+    upper(t1.charge_period_dates) as end_date
+   from ( 
+    select
+     -- Licence date range
+     daterange(
+      l.start_date,
+      least(l.expired_date, l.lapsed_date, l.revoked_date)
+     )
+     *
+     -- Charge version date range
+     daterange(
+       cv.start_date,
+       cv.end_date
+     )
+     *
+     -- Financial year date range
+     daterange(
+      make_date(:financialYearEnding-1, 4, 1),
+      make_date(:financialYearEnding, 3, 31)
+     ) as charge_period_dates
+    from water.charge_versions cv
+    join water.licences l on cv.licence_ref=l.licence_ref
+    where cv.charge_version_id = :chargeVersionId
+   ) t1
+   `
+
+    const params = {
+      chargeVersionId,
+      financialYearEnding
+    }
+
+    const { rows } = await knex.raw(query, params)
+
+    return rows
+  }
+
+  static async _chargeElementsQuery (chargeVersionId) {
+    const query = 'select * from water.charge_elements ce inner join water.purposes_uses pu on pu.purpose_use_id = ce.purpose_use_id where ce.charge_version_id = :chargeVersionId'
+
+    const params = { chargeVersionId }
+
+    const { rows } = await knex.raw(query, params)
+
+    return rows
+  }
+
+  static _filterOutInvalidChargeElementsByPeriod (chargeElements, chargePeriod) {
+    const chargePeriodRange = moment.range(chargePeriod.start_date, chargePeriod.end_date)
+
+    return chargeElements.filter(chargeElement => {
+      // If time_limited_start_date and time_limited_end_date are both `null` then the intersection of this range and
+      // the chargePeriod range is the whole of the chargePeriod range. We therefore don't need to code a special case
+      // to always return `true` if there is no time limited period.
+      const chargeElementRange = moment.range(chargeElement.time_limited_start_date, chargeElement.time_limited_end_date)
+      const overlap = chargePeriodRange.intersect(chargeElementRange)
+      return !!overlap
+    })
+  }
+
+  static _filterOutChargeElementsByTPT (chargeElements) {
+    return chargeElements.filter(chargeElement => {
+      return chargeElement.is_two_part_tariff && chargeElement.is_section_127_agreement_enabled
+    })
   }
 }
 
