@@ -1,6 +1,8 @@
 'use strict'
 
+const { knex } = require('../../src/lib/connectors/knex')
 const { BillingBatchChargeVersionYear } = require('../lib/connectors/bookshelf')
+const { createReturnCycles } = require('@envage/water-abstraction-helpers').returns.date
 
 class TwoPartTariffMatchingService {
   static async go (billingBatch) {
@@ -15,6 +17,44 @@ class TwoPartTariffMatchingService {
 
   static async _processBillingBatchChargeVersionYear (billingBatchChargeVersionYear) {
     const { chargeVersionId, financialYearEnding, isSummer, billingBatchId } = billingBatchChargeVersionYear
+
+    // TODO: We think the magic number 2 comes from the fact it could be up to 2 years prior that a return was submitted
+    // that will then be billed. But we're not sure so we should confirm and document it.
+    const allReturnCycles = createReturnCycles(`${(financialYearEnding - 2)}-01-01`)
+
+    const matchingReturnCycles = allReturnCycles.filter(cycle => {
+      // createReturnCycles() returns a thing that looks like
+      // {
+      //   startDate: '2015-11-01'
+      //   EndDate: '2016-10-31',
+      //   isSummer: true
+      //   dueDate: '2016-11-28'
+      // }
+      // First, we are only interested in cycles that match the season we are processing. So, we ignore any that don't
+      // match
+      if (cycle.isSummer !== isSummer) {
+        return false
+      }
+      // Then we need to extract the year from end date and then convert to a number so we can compare it against
+      // financialYearEnding. A summer cycle ends in October so to get the financial year end we need to add 1 year
+      // to the year we extracted. Winter cycles end on 20##-03-31 so we don't need to add a year.
+      const endYear = parseInt(cycle.endDate.substr(0, 4))
+      const cycleFinancialYearEnding = cycle.isSummer ? endYear + 1 : endYear
+
+      return cycleFinancialYearEnding === financialYearEnding
+    })
+
+    const waterReturns = []
+    for (const cycle of matchingReturnCycles) {
+      const results = await this._returnsQuery(chargeVersionId, cycle.startDate, cycle.endDate, cycle.isSummer)
+      waterReturns.push(...results)
+    }
+
+    return waterReturns
+  }
+
+  static async _returnGroup (returns) {
+
   }
 
   static async _billingBatchChargeVersionYears (billingBatch) {
@@ -28,6 +68,103 @@ class TwoPartTariffMatchingService {
       .fetchAll({ require: false })
 
     return result
+  }
+
+  /**
+   * Queries the 'returns' and 'water' schema based on a charge version and return cycle
+   *
+   * This replaces what src/lib/services/returns/index.js.getReturnsForLicenceInFinancialYear() does. The existing code
+   * would use the hapi-pg-rest-api connectors to get 'returns' from the 'returns' schema (don't blame us for the
+   * naming!) Then, for each 'returns.returns' found, it would query 'water.return_requirements' for one with a matching
+   * 'external_id'. That result would then be mapped onto the existing Return model instance.
+   *
+   * It also queries 'returns.versions' for records with a matching 'return_id'. A 'returns.returns' record can have
+   * multiple entries in 'returns.versions'. The 'version_number' increments with each one added. The current code
+   * queries for all matching 'returns.versions' entries where 'current = true' and then sorts the results by
+   * 'version_number' and selects the lastest. For example, for a return with 3 'returns.versions' entries the one with
+   * 'version_number = 3' would be returned. If no 'returns.versions' exist, which is possible, the code simply skips
+   * mapping the version onto the return.
+   *
+   * We did some digging and found only the latest version is ever flagged as 'current = true'. So, adding that clause
+   * to a query results in a distinct result set of version numbers and return ids. By this we mean only 1
+   * 'returns.versions' result is ever returned for each return_id when 'current = true' is used as a WHERE clause. This
+   * is how we have replaced all the existing `decorateWithCurrentVersion()` logic with a simple `LEFT JOIN` in our
+   * query.
+   *
+   * ## Show your working
+   *
+   * In Sept 2022 we queried a copy of production data. 'returns.versions' contained 58,523 records and 56,821 distinct
+   * return IDs (remember that second number!)
+   *
+   * ```sql
+   * SELECT COUNT(*) FROM "returns".versions --58523
+   * SELECT COUNT(*) FROM (SELECT DISTINCT return_id FROM "returns".versions) AS temp --56821
+   * ```
+   *
+   * Running the following query gives a count for how many times a return_id appears in the table
+   *
+   * ```sql
+   * SELECT * FROM (
+   *   SELECT rv.*, count(*) OVER (PARTITION BY return_id) FROM "returns".versions rv
+   * ) AS counted
+   * ORDER BY counted.count DESC;
+   * ```
+   *
+   * You can see there are a number with multiple versions. Add 'current = true' to the query though and the count drops
+   * to 1 for all return IDs
+   *
+   * ```sql
+   * SELECT * FROM (
+   *   SELECT rv.*, count(*) OVER (PARTITION BY return_id) FROM "returns".versions rv WHERE rv.current = true
+   * ) AS counted
+   * ORDER BY counted.count DESC;
+   * ```
+   *
+   * Importantly, our result count is 56,821 which matches our count for the number of distinct return IDs in the table.
+   * We double checked a return which has 6 version entries. Again, just the 'current' version was returned, which had
+   * 'version_number = 6'.
+   *
+   * ```sql
+   * SELECT * FROM (
+   *   SELECT rv.*, count(*) OVER (PARTITION BY return_id) FROM "returns".versions rv WHERE rv.current = true
+   * ) AS counted
+   *WHERE return_id = 'v1:7:TH/038/0001/001:10038854:2018-04-01:2019-03-31';
+   * ```
+   *
+   * So, there is no need for logic that expects multiple results for a return ID where 'current = true'. There will
+   * only ever be 1 result.
+   */
+  static async _returnsQuery (chargeVersionId, startDate, endDate, isSummer) {
+    const query = `SELECT
+      r.*,
+      rr.*,
+      rv.*,
+      rl.*
+    FROM "returns"."returns" r
+    INNER JOIN water.charge_versions cv
+      ON cv.licence_ref = r.licence_ref
+    INNER JOIN water.return_requirements rr
+      ON rr.external_id = ((r.metadata->'nald'->>'regionCode') || ':' || (r.metadata->'nald'->>'formatId'))
+    LEFT JOIN "returns".versions rv
+      ON rv.return_id = r.return_id AND rv.current = true
+    LEFT JOIN "returns".lines rl
+      ON rl.version_id = rv.version_id
+    WHERE cv.charge_version_id = :chargeVersionId
+    AND r.status <> 'void'
+    AND r.start_date >= :startDate
+    AND r.end_date <= :endDate
+    AND r.metadata->>'isSummer' = :isSummer`
+
+    const params = {
+      chargeVersionId,
+      startDate,
+      endDate,
+      isSummer: isSummer ? 'true' : 'false'
+    }
+
+    const { rows } = await knex.raw(query, params)
+
+    return rows
   }
 }
 
