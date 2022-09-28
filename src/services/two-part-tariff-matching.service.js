@@ -46,13 +46,13 @@ class TwoPartTariffMatchingService {
       return cycleFinancialYearEnding === financialYearEnding
     })
 
+    const [chargePeriod] = await this._datesQuery(chargeVersionId, financialYearEnding)
+
     const waterReturns = []
     for (const cycle of matchingReturnCycles) {
-      const results = await this._returnsQuery(chargeVersionId, cycle.startDate, cycle.endDate, cycle.isSummer)
+      const results = await this._returnsQuery(chargeVersionId, cycle.startDate, cycle.endDate, cycle.isSummer, chargePeriod.start_date, chargePeriod.end_date)
       waterReturns.push(...results)
     }
-
-    const [chargePeriod] = await this._datesQuery(chargeVersionId, financialYearEnding)
 
     const chargeElements = await this._chargeElementsQuery(chargeVersionId)
 
@@ -67,7 +67,9 @@ class TwoPartTariffMatchingService {
     const waterReturnsWithCurrentVersion = waterReturns.filter(waterReturn => !!waterReturn.version_id)
 
     waterReturnsWithCurrentVersion.forEach(waterReturn => {
-      // charge element group is being filtered to only include charge elements that match the current returns purpose use
+      // TODO: We need to ensure the water return is populated with the purpose uses
+      const returnChargeElements = tptFilteredChargeElements
+        .filter(chargeElement => waterReturn.purposeUses.some(purposeUse => purposeUse.id === chargeElement.purposeUse.id))
     })
 
     // TODO: handle errors in return group
@@ -150,7 +152,7 @@ class TwoPartTariffMatchingService {
    * So, there is no need for logic that expects multiple results for a return ID where 'current = true'. There will
    * only ever be 1 result.
    */
-  static async _returnsQuery (chargeVersionId, startDate, endDate, isSummer) {
+  static async _returnsQuery (chargeVersionId, startDate, endDate, isSummer, chargePeriodStartDate, chargePeriodEndDate) {
     const query = `SELECT
       r.*,
       rr.*,
@@ -165,17 +167,23 @@ class TwoPartTariffMatchingService {
       ON rv.return_id = r.return_id AND rv.current = true
     LEFT JOIN "returns".lines rl
       ON rl.version_id = rv.version_id
+      -- next 2 lines are equivalent to 2 of the filter criteria in ReturnVersion#getReturnLinesForBilling
+      AND rl.quantity > 0
+      AND daterange(:chargePeriodStartDdate, :chargePeriodEndDate) * daterange(rl.start_date, rl.end_date) <> 'empty'
     WHERE cv.charge_version_id = :chargeVersionId
-    AND r.status <> 'void'
-    AND r.start_date >= :startDate
-    AND r.end_date <= :endDate
-    AND r.metadata->>'isSummer' = :isSummer`
+      AND r.status <> 'void'
+      AND r.start_date >= :startDate
+      AND r.end_date <= :endDate
+      AND r.metadata->>'isSummer' = :isSummer
+      `
 
     const params = {
       chargeVersionId,
       startDate,
       endDate,
-      isSummer: isSummer ? 'true' : 'false'
+      isSummer: isSummer ? 'true' : 'false',
+      chargePeriodStartDate,
+      chargePeriodEndDate
     }
 
     const { rows } = await knex.raw(query, params)

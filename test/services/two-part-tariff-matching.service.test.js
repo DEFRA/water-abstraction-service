@@ -31,7 +31,7 @@ experiment('tpt matching service', () => {
     })
   })
 
-  experiment('._datesQuery', () => {
+  experiment.only('._datesQuery', () => {
     test('returns whatever', async () => {
       const result = await TwoPartTariffMatchingService._datesQuery('bb50e8bd-5186-4553-b5ca-6c29d76cf2b5', 2017)
       console.log('🚀 ~ file: two-part-tariff-matching.service.test.js ~ line 41 ~ test ~ result', result)
@@ -45,7 +45,7 @@ experiment('tpt matching service', () => {
     })
   })
 
-  experiment.only('._filterOutInvalidChargeElementsByPeriod', () => {
+  experiment('._filterOutInvalidChargeElementsByPeriod', () => {
     test('filters correctly', () => {
       const chargeElements = [
         {
