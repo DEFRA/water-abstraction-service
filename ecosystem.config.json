@@ -10,6 +10,7 @@
         ".git/index.lock"
       ],
       "script": "index.js",
+      "combine_logs": true,
       "env": {
         "watch": true
       },
@@ -29,6 +30,7 @@
         ".git/index.lock"
       ],
       "script": "index-background.js",
+      "combine_logs": true,
       "instances": 1,
       "exec_mode" : "fork",
       "env": {
