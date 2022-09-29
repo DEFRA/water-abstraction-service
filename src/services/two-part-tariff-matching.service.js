@@ -4,7 +4,7 @@ const MomentRange = require('moment-range')
 const moment = MomentRange.extendMoment(require('moment'))
 const { knex } = require('../../src/lib/connectors/knex')
 const { BillingBatchChargeVersionYear } = require('../lib/connectors/bookshelf')
-const { createReturnCycles } = require('@envage/water-abstraction-helpers').returns.date
+const { createReturnCycles, isDateWithinAbstractionPeriod } = require('@envage/water-abstraction-helpers').returns.date
 
 class TwoPartTariffMatchingService {
   static async go (billingBatch) {
@@ -50,7 +50,7 @@ class TwoPartTariffMatchingService {
 
     const waterReturns = []
     for (const cycle of matchingReturnCycles) {
-      const results = await this._returnsQuery(chargeVersionId, cycle.startDate, cycle.endDate, cycle.isSummer, chargePeriod.start_date, chargePeriod.end_date)
+      const results = await this._returnsQuery(chargeVersionId, cycle.startDate, cycle.endDate, cycle.isSummer)
       waterReturns.push(...results)
     }
 
@@ -64,15 +64,59 @@ class TwoPartTariffMatchingService {
     // chargeElementGroup = chargeElements
     // returnGroup = waterReturns
 
-    const waterReturnsWithCurrentVersion = waterReturns.filter(waterReturn => !!waterReturn.version_id)
+    for (const waterReturn of waterReturns) {
+      if (waterReturn.version_id) {
+        const purposeUseIds = await this._returnRequirementPurposeUseIdsQuery(waterReturn.return_requirement_id)
 
-    waterReturnsWithCurrentVersion.forEach(waterReturn => {
-      // TODO: We need to ensure the water return is populated with the purpose uses
-      const returnChargeElements = tptFilteredChargeElements
-        .filter(chargeElement => waterReturn.purposeUses.some(purposeUse => purposeUse.id === chargeElement.purposeUse.id))
-    })
+        const returnChargeElements = tptFilteredChargeElements
+          .filter(chargeElement => purposeUseIds.some(purposeUseId => purposeUseId === chargeElement.purposeUse.id))
 
+        const waterReturnLines = await this._returnLinesQuery(chargeVersionId, chargePeriod.start_date, chargePeriod.end_date)
+
+        for (const waterReturnLine of waterReturnLines) {
+          const chargeElementChargePeriodOverlapsReturnLine = returnChargeElements.filter(chargeElement => {
+            const waterLineRange = moment.range(waterReturnLine.start_date, waterReturnLine.end_date)
+            const overlap = this._calculateChargeElementPeriodOverlap(chargeElement, chargePeriod)
+
+            return !!waterLineRange.intersect(overlap)
+          })
+
+          const chargeElementAbstractionPeriodOverlapsReturnLine = chargeElementChargePeriodOverlapsReturnLine.filter(chargeElement => {
+            const startDate = moment(waterReturnLine.start_date).format('YYYY-MM-DD')
+            const endDate = moment(waterReturnLine.end_date).format('YYYY-MM-DD')
+
+            const abstractionPeriod = {
+              periodStartDay: chargeElement.abstraction_period_start_day,
+              periodStartMonth: chargeElement.abstraction_period_start_month,
+              periodEndDay: chargeElement.abstraction_period_end_day,
+              periodEndMonth: chargeElement.abstraction_period_end_month
+            }
+
+            return isDateWithinAbstractionPeriod(startDate, abstractionPeriod) || isDateWithinAbstractionPeriod(endDate, abstractionPeriod)
+          })
+
+          const season = isSummer ? 'summer' : 'winterAllYear'
+        }
+      }
+    }
     // TODO: handle errors in return group
+  }
+
+  static async _returnRequirementPurposeUseIdsQuery (returnRequirementId) {
+    const query = `SELECT
+      rrr.purpose_use_id
+    FROM
+      water.return_requirement_purposes rrr
+    WHERE
+      rrr.return_requirement_id = :returnRequirementId`
+
+    const params = {
+      returnRequirementId
+    }
+
+    const { rows } = await knex.raw(query, params)
+
+    return rows
   }
 
   static async _billingBatchChargeVersionYears (billingBatch) {
@@ -152,12 +196,11 @@ class TwoPartTariffMatchingService {
    * So, there is no need for logic that expects multiple results for a return ID where 'current = true'. There will
    * only ever be 1 result.
    */
-  static async _returnsQuery (chargeVersionId, startDate, endDate, isSummer, chargePeriodStartDate, chargePeriodEndDate) {
+  static async _returnsQuery (chargeVersionId, startDate, endDate, isSummer) {
     const query = `SELECT
       r.*,
       rr.*,
-      rv.*,
-      rl.*
+      rv.*
     FROM "returns"."returns" r
     INNER JOIN water.charge_versions cv
       ON cv.licence_ref = r.licence_ref
@@ -165,11 +208,6 @@ class TwoPartTariffMatchingService {
       ON rr.external_id = ((r.metadata->'nald'->>'regionCode') || ':' || (r.metadata->'nald'->>'formatId'))
     LEFT JOIN "returns".versions rv
       ON rv.return_id = r.return_id AND rv.current = true
-    LEFT JOIN "returns".lines rl
-      ON rl.version_id = rv.version_id
-      -- next 2 lines are equivalent to 2 of the filter criteria in ReturnVersion#getReturnLinesForBilling
-      AND rl.quantity > 0
-      AND daterange(:chargePeriodStartDdate, :chargePeriodEndDate) * daterange(rl.start_date, rl.end_date) <> 'empty'
     WHERE cv.charge_version_id = :chargeVersionId
       AND r.status <> 'void'
       AND r.start_date >= :startDate
@@ -181,7 +219,25 @@ class TwoPartTariffMatchingService {
       chargeVersionId,
       startDate,
       endDate,
-      isSummer: isSummer ? 'true' : 'false',
+      isSummer: isSummer ? 'true' : 'false'
+    }
+
+    const { rows } = await knex.raw(query, params)
+
+    return rows
+  }
+
+  static async _returnLinesQuery (returnVersionId, chargePeriodStartDate, chargePeriodEndDate) {
+    const query = `SELECT
+      rl.*
+    FROM "returns"."lines" rl
+    WHERE
+      rl.version_id = :returnVersionId
+    AND rl.quantity > 0
+    AND daterange(:chargePeriodStartDate, :chargePeriodEndDate) * daterange(rl.start_date, rl.end_date) <> 'empty'`
+
+    const params = {
+      returnVersionId,
       chargePeriodStartDate,
       chargePeriodEndDate
     }
@@ -192,33 +248,28 @@ class TwoPartTariffMatchingService {
   }
 
   static async _datesQuery (chargeVersionId, financialYearEnding) {
-    const query = `select 
-    lower(t1.charge_period_dates) as start_date, 
-    upper(t1.charge_period_dates) as end_date
-   from ( 
-    select
-     -- Licence date range
-     daterange(
-      l.start_date,
-      least(l.expired_date, l.lapsed_date, l.revoked_date)
-     )
-     *
-     -- Charge version date range
-     daterange(
-       cv.start_date,
-       cv.end_date
-     )
-     *
-     -- Financial year date range
-     daterange(
-      make_date(:financialYearEnding-1, 4, 1),
-      make_date(:financialYearEnding, 3, 31)
-     ) as charge_period_dates
-    from water.charge_versions cv
-    join water.licences l on cv.licence_ref=l.licence_ref
-    where cv.charge_version_id = :chargeVersionId
-   ) t1
-   `
+    const query = `SELECT
+      LOWER(sub_query.charge_period_dates) AS start_date,
+      UPPER(sub_query.charge_period_dates) AS end_date
+    FROM (
+      SELECT
+        (
+          -- Licence date range
+          daterange(l.start_date, LEAST(l.expired_date, l.lapsed_date, l.revoked_date))
+          *
+          -- Charge version date range
+          daterange(cv.start_date, cv.end_date)
+          *
+          -- Financial year date range
+          daterange(make_date(:financialYearEnding-1, 4, 1), make_date(:financialYearEnding, 3, 31))
+        ) AS charge_period_dates
+      FROM
+        water.charge_versions cv
+      INNER JOIN water.licences l
+        ON cv.licence_ref=l.licence_ref
+      WHERE
+        cv.charge_version_id = :chargeVersionId
+    ) sub_query`
 
     const params = {
       chargeVersionId,
@@ -231,7 +282,14 @@ class TwoPartTariffMatchingService {
   }
 
   static async _chargeElementsQuery (chargeVersionId) {
-    const query = 'select * from water.charge_elements ce inner join water.purposes_uses pu on pu.purpose_use_id = ce.purpose_use_id where ce.charge_version_id = :chargeVersionId'
+    const query = `SELECT
+      *
+    FROM
+      water.charge_elements ce
+    INNER JOIN water.purposes_uses pu
+      ON pu.purpose_use_id = ce.purpose_use_id
+    WHERE
+      ce.charge_version_id = :chargeVersionId`
 
     const params = { chargeVersionId }
 
@@ -244,13 +302,20 @@ class TwoPartTariffMatchingService {
     const chargePeriodRange = moment.range(chargePeriod.start_date, chargePeriod.end_date)
 
     return chargeElements.filter(chargeElement => {
-      // If time_limited_start_date and time_limited_end_date are both `null` then the intersection of this range and
-      // the chargePeriod range is the whole of the chargePeriod range. We therefore don't need to code a special case
-      // to always return `true` if there is no time limited period.
-      const chargeElementRange = moment.range(chargeElement.time_limited_start_date, chargeElement.time_limited_end_date)
-      const overlap = chargePeriodRange.intersect(chargeElementRange)
+      const overlap = this._calculateChargeElementPeriodOverlap(chargeElement, chargePeriodRange)
+
       return !!overlap
     })
+  }
+
+  static _calculateChargeElementPeriodOverlap (chargeElement, chargePeriodRange) {
+    // If time_limited_start_date and time_limited_end_date are both `null` then the intersection of this range and
+    // the chargePeriod range is the whole of the chargePeriod range. We therefore don't need to code a special case
+    // to always return `true` if there is no time limited period.
+    const chargeElementRange = moment.range(chargeElement.time_limited_start_date, chargeElement.time_limited_end_date)
+    const overlap = chargePeriodRange.intersect(chargeElementRange)
+
+    return overlap
   }
 
   static _filterOutChargeElementsByTPT (chargeElements) {
