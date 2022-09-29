@@ -4,6 +4,7 @@ const MomentRange = require('moment-range')
 const moment = MomentRange.extendMoment(require('moment'))
 const { knex } = require('../../src/lib/connectors/knex')
 const { BillingBatchChargeVersionYear } = require('../lib/connectors/bookshelf')
+const { getFinancialYearDate } = require('@envage/water-abstraction-helpers').charging
 const { createReturnCycles, isDateWithinAbstractionPeriod } = require('@envage/water-abstraction-helpers').returns.date
 
 class TwoPartTariffMatchingService {
@@ -55,6 +56,10 @@ class TwoPartTariffMatchingService {
     }
 
     const chargeElements = await this._chargeElementsQuery(chargeVersionId)
+    chargeElements.forEach(chargeElement => {
+      chargeElement.calculatedChargePeriod = this._calculateChargeElementPeriod(chargeElement, chargePeriod)
+      chargeElement.billableAbstractionDays = this._billableDays(chargeElement, financialYearEnding)
+    })
 
     const dateFilteredChargeElements = this._filterOutInvalidChargeElementsByPeriod(chargeElements, chargePeriod)
 
@@ -76,9 +81,8 @@ class TwoPartTariffMatchingService {
         for (const waterReturnLine of waterReturnLines) {
           const chargeElementChargePeriodOverlapsReturnLine = returnChargeElements.filter(chargeElement => {
             const waterLineRange = moment.range(waterReturnLine.start_date, waterReturnLine.end_date)
-            const overlap = this._calculateChargeElementPeriodOverlap(chargeElement, chargePeriod)
 
-            return !!waterLineRange.intersect(overlap)
+            return !!waterLineRange.intersect(chargeElement.calculatedChargePeriod)
           })
 
           const chargeElementAbstractionPeriodOverlapsReturnLine = chargeElementChargePeriodOverlapsReturnLine.filter(chargeElement => {
@@ -95,11 +99,50 @@ class TwoPartTariffMatchingService {
             return isDateWithinAbstractionPeriod(startDate, abstractionPeriod) || isDateWithinAbstractionPeriod(endDate, abstractionPeriod)
           })
 
-          const season = isSummer ? 'summer' : 'winterAllYear'
+          for (const chargeElement of chargeElementAbstractionPeriodOverlapsReturnLine) {
+            const score = this._chargeElementScore(chargeElement, isSummer)
+          }
         }
       }
     }
     // TODO: handle errors in return group
+  }
+
+  static _chargeElementScore (chargeElement, isSummer) {
+    const season = isSummer ? 'summer' : 'winterAllYear'
+
+    let score = 0
+
+    // Give summer elements precedence if matching summer returns
+    if (chargeElement.season === season) {
+      score -= 1000
+    }
+
+    // Give supported source precedence
+    if (chargeElement.source === 'supported') {
+      score -= 1000
+    }
+
+    score += chargeElement.billableAbstractionDays
+
+    return score
+  }
+
+  static _billableDays (chargeElement, financialYear) {
+    const abstractionPeriod = {
+      periodStartDay: chargeElement.abstraction_period_start_day,
+      periodStartMonth: chargeElement.abstraction_period_start_month,
+      periodEndDay: chargeElement.abstraction_period_end_day,
+      periodEndMonth: chargeElement.abstraction_period_end_month
+    }
+    const startDate = getFinancialYearDate(abstractionPeriod.periodStartDay, abstractionPeriod.periodStartMonth, financialYear)
+    const endDate = getFinancialYearDate(abstractionPeriod.periodEndDay, abstractionPeriod.periodEndMonth, financialYear)
+
+    const abstractionRange = moment.range(startDate, endDate)
+
+    const intersection = abstractionRange.intersect(chargeElement.calculatedChargePeriod)
+
+    return intersection.diff('days') + 1
   }
 
   static async _returnRequirementPurposeUseIdsQuery (returnRequirementId) {
@@ -302,13 +345,13 @@ class TwoPartTariffMatchingService {
     const chargePeriodRange = moment.range(chargePeriod.start_date, chargePeriod.end_date)
 
     return chargeElements.filter(chargeElement => {
-      const overlap = this._calculateChargeElementPeriodOverlap(chargeElement, chargePeriodRange)
+      const overlap = this._calculateChargeElementPeriod(chargeElement, chargePeriodRange)
 
       return !!overlap
     })
   }
 
-  static _calculateChargeElementPeriodOverlap (chargeElement, chargePeriodRange) {
+  static _calculateChargeElementPeriod (chargeElement, chargePeriodRange) {
     // If time_limited_start_date and time_limited_end_date are both `null` then the intersection of this range and
     // the chargePeriod range is the whole of the chargePeriod range. We therefore don't need to code a special case
     // to always return `true` if there is no time limited period.
