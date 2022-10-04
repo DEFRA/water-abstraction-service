@@ -5,7 +5,7 @@ const moment = MomentRange.extendMoment(require('moment'))
 const { knex } = require('../../src/lib/connectors/knex')
 const { BillingBatchChargeVersionYear } = require('../lib/connectors/bookshelf')
 const { getFinancialYearDate } = require('@envage/water-abstraction-helpers').charging
-const { createReturnCycles, isDateWithinAbstractionPeriod } = require('@envage/water-abstraction-helpers').returns.date
+const { createReturnCycles, getAbstractionPeriodSeason, isDateWithinAbstractionPeriod } = require('@envage/water-abstraction-helpers').returns.date
 
 class TwoPartTariffMatchingService {
   static async go (billingBatch) {
@@ -59,6 +59,8 @@ class TwoPartTariffMatchingService {
     chargeElements.forEach(chargeElement => {
       chargeElement.calculatedChargePeriod = this._calculateChargeElementPeriod(chargeElement, chargePeriod)
       chargeElement.billableAbstractionDays = this._billableDays(chargeElement, financialYearEnding)
+      chargeElement.calculatedSeason = this._calculateChargeElementSeason(chargeElement)
+      chargeElement.calculatedScore = this._calculateChargeElementScore(chargeElement, isSummer)
     })
 
     const dateFilteredChargeElements = this._filterOutInvalidChargeElementsByPeriod(chargeElements, chargePeriod)
@@ -99,8 +101,30 @@ class TwoPartTariffMatchingService {
             return isDateWithinAbstractionPeriod(startDate, abstractionPeriod) || isDateWithinAbstractionPeriod(endDate, abstractionPeriod)
           })
 
-          for (const chargeElement of chargeElementAbstractionPeriodOverlapsReturnLine) {
-            const score = this._chargeElementScore(chargeElement, isSummer)
+          // TODO: Throw an error if we have no elements at this point
+
+          const sortedChargeElements = chargeElementAbstractionPeriodOverlapsReturnLine.sort((a, b) => {
+            if (a.calculatedScore < b.calculatedScore) {
+              return -1
+            }
+            if (a.calculatedScore > b.calculatedScore) {
+              return 1
+            }
+
+            return 0
+          })
+
+          if (this._returnLineStraddlesChargePeriod(waterReturnLine, financialYearEnding)) {
+            // TODO: Set charge_element_id to chargeElement id, volume to chargeElement volume, is_summer to isSummer
+            // and two_part_tariff_status to ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD in a newly minted
+            // billing_charge_volume record if this is true
+          }
+
+          // Group by purpose use
+          const chargeElementsGroupedByPurposeUse = this._groupChargeElementByPurposeUse(sortedChargeElements)
+
+          for (const group of chargeElementsGroupedByPurposeUse) {
+
           }
         }
       }
@@ -108,13 +132,59 @@ class TwoPartTariffMatchingService {
     // TODO: handle errors in return group
   }
 
-  static _chargeElementScore (chargeElement, isSummer) {
+  /**
+   *
+   * Start with an empty object (groupedChargeElements). On the first pass through add a key based on the first charge element's purpose use ID
+   * and assign the chargeElement to it. For example,
+   *
+   * ```javascript
+   * // groupedChargeElements =
+   * {
+   *  foobar12345: [chargeElement]
+   * }
+   * ```
+   *
+   * On each subsequent iteration we'll check the object for an existing key. If we get a match we assign
+   * the chargeElement to that group, else we create a new key and assign it to that.
+   *
+   * We always return groupedChargeElements for use in the next iteration, and finally as the end result.
+   */
+  static _groupChargeElementByPurposeUse (chargeElements) {
+    return chargeElements.reduce((groupedChargeElements, chargeElement) => {
+      const id = chargeElement.purpose_use_id
+
+      // If the id doesn't already exist as a key in our object, create it
+      if (groupedChargeElements[id] === undefined) {
+        groupedChargeElements[id] = []
+      }
+
+      // Push the chargeElement to its ID key
+      groupedChargeElements[id].push(chargeElement)
+
+      // Pass the object on to the next loop
+      return groupedChargeElements
+    }, {})
+  }
+
+  static _returnLineStraddlesChargePeriod (returnLine, financialYearEnding) {
+    if (returnLine.time_period === 'day') {
+      return false
+    }
+
+    const startDate = new Date(`${financialYearEnding - 1}-04-01`)
+    const endDate = new Date(`${financialYearEnding}-03-31`)
+    const chargePeriod = moment.range(startDate, endDate)
+
+    return !chargePeriod.contains(returnLine.start_date) || !chargePeriod.contains(returnLine.end_date)
+  }
+
+  static _calculateChargeElementScore (chargeElement, isSummer) {
     const season = isSummer ? 'summer' : 'winterAllYear'
 
     let score = 0
 
     // Give summer elements precedence if matching summer returns
-    if (chargeElement.season === season) {
+    if (chargeElement.calculatedSeason === 'summer' && season === 'summer') {
       score -= 1000
     }
 
@@ -123,9 +193,21 @@ class TwoPartTariffMatchingService {
       score -= 1000
     }
 
+    // Give elements with fewer abs days precedence
     score += chargeElement.billableAbstractionDays
 
     return score
+  }
+
+  static _calculateChargeElementSeason (chargeElement) {
+    const abstractionPeriod = {
+      startDay: chargeElement.abstraction_period_start_day,
+      startMonth: chargeElement.abstraction_period_start_month,
+      endDay: chargeElement.abstraction_period_end_day,
+      endMonth: chargeElement.abstraction_period_end_month
+    }
+
+    return getAbstractionPeriodSeason(abstractionPeriod)
   }
 
   static _billableDays (chargeElement, financialYear) {
