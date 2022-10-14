@@ -54,7 +54,7 @@
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
     "moment-range": "^4.0.2",
-    "node-cron": "^1.2.1",
+    "node-cron": "^3.0.2",
     "notifications-node-client": "^4.8.0",
     "nunjucks": "^3.2.3",
     "object-mapper": "^6.2.0",
