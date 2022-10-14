@@ -33,7 +33,7 @@
     "blipp": "^4.0.2",
     "bluebird": "^3.7.2",
     "bookshelf": "^1.2.0",
-    "bookshelf-case-converter-plugin": "^1.0.0",
+    "bookshelf-case-converter-plugin": "^2.0.0",
     "bookshelf-json-columns": "^3.0.0",
     "bullmq": "1.87.2",
     "commander": "^2.20.3",
