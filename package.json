@@ -78,7 +78,7 @@
   "devDependencies": {
     "@hapi/basic": "^7.0.0",
     "@hapi/code": "^9.0.1",
-    "@hapi/lab": "^24.2.0",
+    "@hapi/lab": "^25.0.1",
     "auto-changelog": "^1.16.4",
     "csv-stringify": "^2.0.4",
     "nock": "^13.2.9",
