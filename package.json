@@ -55,7 +55,7 @@
     "moment": "^2.29.4",
     "moment-range": "^4.0.2",
     "node-cron": "^3.0.2",
-    "notifications-node-client": "^4.8.0",
+    "notifications-node-client": "^5.2.0",
     "nunjucks": "^3.2.3",
     "object-mapper": "^6.2.0",
     "p-waterfall": "^2.1.0",
