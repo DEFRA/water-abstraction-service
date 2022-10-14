@@ -27,7 +27,7 @@
     "@hapi/hapi": "^20.2.2",
     "@hapi/hoek": "^10.0.1",
     "@hapi/inert": "^7.0.0",
-    "@hapi/vision": "^5.5.4",
+    "@hapi/vision": "^7.0.0",
     "@sindresorhus/is": "^4.0.0",
     "aws-sdk": "^2.1232.0",
     "blipp": "^4.0.2",
