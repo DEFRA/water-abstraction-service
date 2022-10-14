@@ -76,7 +76,7 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
-    "@hapi/basic": "^6.0.0",
+    "@hapi/basic": "^7.0.0",
     "@hapi/code": "^9.0.1",
     "@hapi/lab": "^24.2.0",
     "auto-changelog": "^1.16.4",
