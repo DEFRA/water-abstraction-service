@@ -30,6 +30,17 @@ INNER JOIN water.charge_versions cv ON cv.licence_id = l.licence_id
 WHERE l.licence_ref
 IN ('`MD/054/0021/030', '03/28/27/0005 S/G'));
 
+DELETE FROM water.licence_version_purposes  WHERE licence_version_id  IN (
+SELECT lv.licence_version_id FROM water.licences l
+INNER JOIN water.licence_versions lv ON lv.licence_id = l.licence_id
+WHERE l.licence_ref
+IN ('`MD/054/0021/030', '03/28/27/0005 S/G'));
+
+DELETE FROM water.licence_versions  WHERE licence_id  IN (
+SELECT l.licence_id FROM water.licences l
+WHERE l.licence_ref
+IN ('`MD/054/0021/030', '03/28/27/0005 S/G'));
+
 DELETE FROM water.licences WHERE licence_ref
 IN ('`MD/054/0021/030', '03/28/27/0005 S/G');
 COMMIT;
