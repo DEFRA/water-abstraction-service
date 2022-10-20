@@ -17,7 +17,7 @@
     "migrate:create": "db-migrate create --sql-file --",
     "lint": "standard",
     "postinstall": "scripts/fix-libxmljs-location.sh",
-    "changelog": "npx --yes auto-changelog -p --commit-limit false"
+    "version": "npx --yes auto-changelog -p --commit-limit false && git add CHANGELOG.md"
   },
   "dependencies": {
     "@envage/hapi-pg-rest-api": "^7.0.0",
