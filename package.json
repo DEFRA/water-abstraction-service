@@ -29,7 +29,7 @@
     "@hapi/inert": "^7.0.0",
     "@hapi/vision": "^7.0.0",
     "@sindresorhus/is": "^4.0.0",
-    "aws-sdk": "^2.1232.0",
+    "aws-sdk": "^2.1236.0",
     "blipp": "^4.0.2",
     "bluebird": "^3.7.2",
     "bookshelf": "^1.2.0",
