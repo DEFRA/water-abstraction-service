@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "API containing the business logic required for the water abstraction service to function",
   "main": "index.js",
   "repository": {
@@ -17,7 +17,7 @@
     "migrate:create": "db-migrate create --sql-file --",
     "lint": "standard",
     "postinstall": "scripts/fix-libxmljs-location.sh",
-    "version": "auto-changelog -p --commit-limit false && git add CHANGELOG.md"
+    "version": "npx --yes auto-changelog -p --commit-limit false && git add CHANGELOG.md"
   },
   "dependencies": {
     "@envage/hapi-pg-rest-api": "^7.0.0",
@@ -79,7 +79,6 @@
     "@hapi/basic": "^7.0.0",
     "@hapi/code": "^9.0.1",
     "@hapi/lab": "^25.0.1",
-    "auto-changelog": "^1.16.4",
     "csv-stringify": "^2.0.4",
     "nock": "^13.2.9",
     "promise-poller": "^1.9.1",
