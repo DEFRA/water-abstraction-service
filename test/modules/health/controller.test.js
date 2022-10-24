@@ -4,7 +4,7 @@ const { expect } = require('@hapi/code')
 const controller = require('../../../src/modules/health/controller')
 const pkg = require('../../../package.json')
 
-experiment.only('modules/service-status/controller', () => {
+experiment('modules/service-status/controller', () => {
   experiment('.getStatus', () => {
     let status
 
