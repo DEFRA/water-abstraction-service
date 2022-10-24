@@ -1,10 +1,10 @@
 module.exports = [
+  ...Object.values(require('./ar-analysis/routes')),
   ...Object.values(require('./notifications/routes')),
   ...Object.values(require('./notify/routes')),
   ...Object.values(require('./returns/routes')),
   ...Object.values(require('./pdf-notifications/routes')),
   ...Object.values(require('./returns-notifications/routes')),
-  ...Object.values(require('./ar-analysis/routes')),
   ...Object.values(require('./licences/routes')),
   ...Object.values(require('./internal-search/routes')),
   ...Object.values(require('./users/routes')),
@@ -30,5 +30,6 @@ module.exports = [
   ...Object.values(require('./reporting/routes')),
   ...Object.values(require('./gauging-stations/routes')),
   ...Object.values(require('./charge-categories/routes')),
+  ...Object.values(require('./health/routes')),
   ...Object.values(require('./supported-sources/routes'))
 ]
