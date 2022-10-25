@@ -1,23 +1,29 @@
+'use strict'
+
+// Test framework dependencies
 const { test, experiment, before } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
 
-const controller = require('../../../src/modules/health/controller')
+// Test helpers
 const pkg = require('../../../package.json')
 
-experiment('modules/service-status/controller', () => {
-  experiment('.getStatus', () => {
-    let status
+// Thing under test
+const controller = require('../../../src/modules/health/controller')
+
+experiment('modules/health/controller', () => {
+  experiment('.getInfo', () => {
+    let info
 
     before(async () => {
-      status = await controller.getStatus()
+      info = await controller.getInfo()
     })
 
     test('contains the expected water service version', async () => {
-      expect(status.version).to.equal(pkg.version)
+      expect(info.version).to.equal(pkg.version)
     })
 
     test('contains the git commit hash', async () => {
-      expect(status.commit).to.exist()
+      expect(info.commit).to.exist()
     })
   })
 })
