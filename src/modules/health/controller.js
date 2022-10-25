@@ -1,3 +1,5 @@
+'use strict'
+
 // We use promisify to wrap exec in a promise. This allows us to await it without resorting to using callbacks.
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
@@ -13,11 +15,11 @@ const _getCommitHash = async () => {
   }
 }
 
-const getStatus = async () => {
+const getInfo = async () => {
   return {
     version: pkg.version,
     commit: await _getCommitHash()
   }
 }
 
-exports.getStatus = getStatus
+exports.getInfo = getInfo
