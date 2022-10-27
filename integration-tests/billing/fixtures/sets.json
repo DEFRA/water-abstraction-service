@@ -89,10 +89,6 @@
     {
       "service": "water",
       "file": "test-charge-versions.yaml"
-    },
-    {
-      "service": "water",
-      "file": "test-billing-data.yaml"
     }
   ],
   "supplementary-billing": [
@@ -405,6 +401,32 @@
           }
         ]
       }
+    }
+  ],
+  "sroc-billing-data": [
+    {
+      "service": "idm",
+      "file": "internal-users.yaml"
+    },
+    {
+      "service": "permits",
+      "file": "sroc-test-permits.yaml"
+    },
+    {
+      "service": "crmV1",
+      "file": "sroc-crm-v1.yaml"
+    },
+    {
+      "service": "crmV2",
+      "file": "sroc-crm-v2.yaml"
+    },
+    {
+      "service": "water",
+      "file": "sroc-test-licences.yaml"
+    },
+    {
+      "service": "water",
+      "file": "sroc-test-charge-versions.yaml"
     }
   ]
 }
