@@ -25,5 +25,5 @@
     isRestrictedSource: false
     waterModel: 'no model'
     volume: 100
-    billingChargeCategoryId: '7d0fecfb-3450-436e-a882-8d72804f4951'
+    billingChargeCategoryId: $chargeCategory.billing_charge_category_id
     eiucRegion: Southern
