@@ -406,7 +406,7 @@
   "sroc-billing-data": [
     {
       "service": "idm",
-      "file": "internal-users.yaml"
+      "file": "sroc-users.yaml"
     },
     {
       "service": "permits",
