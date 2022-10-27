@@ -410,7 +410,7 @@
     },
     {
       "service": "permits",
-      "file": "sroc-test-permits.yaml"
+      "file": "sroc-permits.yaml"
     },
     {
       "service": "crmV1",
@@ -422,11 +422,11 @@
     },
     {
       "service": "water",
-      "file": "sroc-test-licences.yaml"
+      "file": "sroc-licences.yaml"
     },
     {
       "service": "water",
-      "file": "sroc-test-charge-versions.yaml"
+      "file": "sroc-charge-info.yaml"
     }
   ]
 }
