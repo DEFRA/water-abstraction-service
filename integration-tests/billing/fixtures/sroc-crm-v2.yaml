@@ -1,9 +1,17 @@
-- ref: $company
+- ref: $company01
   model: Company
   fields:
-    name: Big Farm Co Ltd
+    name: Big Farm Co Ltd 01
     type: organisation
-    companyNumber: '12345'
+    companyNumber: '1234501'
+    isTest: true
+
+- ref: $company02
+  model: Company
+  fields:
+    name: Big Farm Co Ltd 02
+    type: organisation
+    companyNumber: '1234502'
     isTest: true
 
 - ref: $address1
@@ -37,7 +45,7 @@
 - model: CompanyAddress
   fields:
     roleName: billing
-    companyId: $company.companyId
+    companyId: $company01.companyId
     addressId: $address1.addressId
     startDate: '2022-04-01'
     endDate: null
@@ -46,9 +54,27 @@
 - model: CompanyAddress
   fields:
     roleName: billing
-    companyId: $company.companyId
+    companyId: $company01.companyId
     addressId: $address2.addressId
     startDate: '2022-04-01'
+    endDate: null
+    isTest: true
+
+- model: CompanyAddress
+  fields:
+    roleName: billing
+    companyId: $company02.companyId
+    addressId: $address1.addressId
+    startDate: '2019-01-01'
+    endDate: null
+    isTest: true
+
+- model: CompanyAddress
+  fields:
+    roleName: billing
+    companyId: $company02.companyId
+    addressId: $address2.addressId
+    startDate: '2019-01-01'
     endDate: null
     isTest: true
 
@@ -65,25 +91,43 @@
 
 - model: CompanyContact
   fields:
-    companyId: $company.companyId
+    companyId: $company01.companyId
     contactId: $contact.contactId
     roleName: 'licenceHolder'
     emailAddress: 'acceptance-test.external@example.com'
     startDate: '2022-04-01'
     isTest: true
 
-- ref: $invoiceAccount
+- model: CompanyContact
+  fields:
+    companyId: $company02.companyId
+    contactId: $contact.contactId
+    roleName: 'licenceHolder'
+    emailAddress: 'acceptance-test.external@example.com'
+    startDate: '2019-01-01'
+    isTest: true
+
+- ref: $invoiceAccount01
   model: InvoiceAccount
   fields:
-    invoiceAccountNumber: A99999999A
+    invoiceAccountNumber: A00000001A
     startDate: '2022-04-01'
     endDate: null
-    companyId: $company.companyId
+    companyId: $company01.companyId
+    isTest: true
+
+- ref: $invoiceAccount02
+  model: InvoiceAccount
+  fields:
+    invoiceAccountNumber: A00000002A
+    startDate: '2019-01-01'
+    endDate: null
+    companyId: $company02.companyId
     isTest: true
 
 - model: InvoiceAccountAddress
   fields:
-    invoiceAccountId: $invoiceAccount.invoiceAccountId
+    invoiceAccountId: $invoiceAccount01.invoiceAccountId
     addressId: $address1.addressId
     agentCompanyId: null
     contactId: null
@@ -91,7 +135,17 @@
     endDate: null
     isTest: true
 
-- ref: $documentDaily
+- model: InvoiceAccountAddress
+  fields:
+    invoiceAccountId: $invoiceAccount02.invoiceAccountId
+    addressId: $address1.addressId
+    agentCompanyId: null
+    contactId: null
+    startDate: '2019-01-01'
+    endDate: null
+    isTest: true
+
+- ref: $documentDaily01
   model: Document
   fields:
     startDate: '2022-04-01'
@@ -101,13 +155,34 @@
     documentRef: 'AT/SROC/SUPB/01'
     isTest: true
 
+- ref: $documentDaily02
+  model: Document
+  fields:
+    startDate: '2019-01-01'
+    endDate: null
+    regime: water
+    documentType: abstraction_licence
+    documentRef: 'AT/SROC/SUPB/02'
+    isTest: true
+
 - model: DocumentRole
   fields:
-    documentId: $documentDaily.documentId
+    documentId: $documentDaily01.documentId
     role: licenceHolder
     startDate: '2022-04-01'
     endDate: null
-    companyId: $company.companyId
+    companyId: $company01.companyId
+    addressId: $address1.addressId
+    contactId: $contact.contactId
+    isTest: true
+
+- model: DocumentRole
+  fields:
+    documentId: $documentDaily02.documentId
+    role: licenceHolder
+    startDate: '2019-01-01'
+    endDate: null
+    companyId: $company02.companyId
     addressId: $address1.addressId
     contactId: $contact.contactId
     isTest: true

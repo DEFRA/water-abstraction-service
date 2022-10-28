@@ -9,7 +9,7 @@
     status: current
     regionCode: $region.naldRegionId
     source: wrls
-    invoiceAccountId: $invoiceAccount.invoiceAccountId
+    invoiceAccountId: $invoiceAccount01.invoiceAccountId
     isTest: true
     licenceId: $srocLicence01.licenceId
 
@@ -17,7 +17,7 @@
   model: ChargeElement
   fields:
     chargeVersionId: $chargeVersion01.chargeVersionId
-    description: 'SROC Test Charge Element'
+    description: 'SROC Charge Element 01'
     source: tidal
     loss: medium
     isTest: true
@@ -39,7 +39,90 @@
     authorisedAnnualQuantity: 15.54
     loss: medium
     factorsOverridden: false
-    description: 'Test'
+    description: 'SROC CHarge Purpose 01'
+    isTest: true
+    purposePrimaryId: $primaryPurpose.purposePrimaryId
+    purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+
+- ref: $chargeVersion02
+  model: ChargeVersion
+  fields:
+    licenceRef: $srocLicence02.licenceRef
+    scheme: alcs
+    versionNumber: 1
+    startDate: '2019-01-01'
+    endDate: '2022-03-31'
+    status: current
+    regionCode: $region.naldRegionId
+    source: wrls
+    companyId: $company02.companyId
+    invoiceAccountId: $invoiceAccount02.invoiceAccountId
+    isTest: true
+    licenceId: $srocLicence02.licenceId
+
+- ref: $chargeElement02
+  model: ChargeElement
+  fields:
+    chargeVersionId: $chargeVersion02.chargeVersionId
+    factorsOverridden: false
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 4
+    description: 'PRESROC Charge Element 02'
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 3
+    authorisedAnnualQuantity: 15.54
+    season: 'all year'
+    seasonDerived: 'all year'
+    source: unsupported
+    loss: medium
+    isTest: true
+    purposePrimaryId: $primaryPurpose.purposePrimaryId
+    purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+
+- ref: $chargeVersion03
+  model: ChargeVersion
+  fields:
+    licenceRef: $srocLicence02.licenceRef
+    scheme: sroc
+    versionNumber: 2
+    startDate: '2022-04-01'
+    endDate: null
+    status: current
+    regionCode: $region.naldRegionId
+    source: wrls
+    invoiceAccountId: $invoiceAccount02.invoiceAccountId
+    isTest: true
+    licenceId: $srocLicence02.licenceId
+
+- ref: $chargeElement03
+  model: ChargeElement
+  fields:
+    chargeVersionId: $chargeVersion03.chargeVersionId
+    description: 'SROC Charge Element 02'
+    source: tidal
+    loss: medium
+    isTest: true
+    scheme: sroc
+    isRestrictedSource: false
+    waterModel: 'no model'
+    volume: 100
+    billingChargeCategoryId: $chargeCategory.billing_charge_category_id
+    eiucRegion: Southern
+
+- ref: $chargePurpose02
+  model: ChargePurpose
+  fields:
+    chargeElementId: $chargeElement03.chargeElementId
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 4
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 3
+    authorisedAnnualQuantity: 15.54
+    loss: medium
+    factorsOverridden: false
+    description: 'SROC Charge Purpose 02'
     isTest: true
     purposePrimaryId: $primaryPurpose.purposePrimaryId
     purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
