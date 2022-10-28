@@ -7,7 +7,7 @@
     displayName: Southern (Test replica)
     isTest: true
 
-- ref: $srocLicence
+- ref: $srocLicence01
   model: Licence
   fields:
     regionId: $region.regionId
@@ -19,10 +19,10 @@
     startDate: '2022-04-01'
     isTest: true
 
-- ref: $srocLicenceVersion
+- ref: $srocLicenceVersion01
   model: LicenceVersion
   fields:
-    licenceId: $srocLicence.licenceId
+    licenceId: $srocLicence01.licenceId
     issue : 1
     increment: 0
     status: 'current'

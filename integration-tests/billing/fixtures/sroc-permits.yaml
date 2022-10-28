@@ -1,4 +1,4 @@
-- ref: $srocLicence
+- ref: $srocLicence01
   model: Licence
   fields:
     licenceRef: 'AT/SROC/SUPB/01'

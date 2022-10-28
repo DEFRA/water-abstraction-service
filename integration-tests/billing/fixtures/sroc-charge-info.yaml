@@ -1,7 +1,7 @@
 - ref: $chargeVersion
   model: ChargeVersion
   fields:
-    licenceRef: $srocLicence.licenceRef
+    licenceRef: $srocLicence01.licenceRef
     scheme: sroc
     versionNumber: 1
     startDate: '2022-04-01'
@@ -11,7 +11,7 @@
     source: wrls
     invoiceAccountId: $invoiceAccount.invoiceAccountId
     isTest: true
-    licenceId: $srocLicence.licenceId
+    licenceId: $srocLicence01.licenceId
 
 - ref: $chargeElement
   model: ChargeElement

@@ -27,7 +27,7 @@
     system_id: 'permit-repo'
     system_external_id: 'AT/SROC/SUPB/01'
     company_entity_id: $companyEntity.entity_id
-    system_internal_id: $srocLicence.licence_id
+    system_internal_id: $srocLicence01.licence_id
     document_name: 'the daily cupcake licence'
     metadata:
       Name: 'cupcake factory'
