@@ -409,6 +409,10 @@
       "file": "sroc-users.yaml"
     },
     {
+      "service": "water",
+      "file": "sroc-purposes.yaml"
+    },
+    {
       "service": "permits",
       "file": "sroc-permits.yaml"
     },

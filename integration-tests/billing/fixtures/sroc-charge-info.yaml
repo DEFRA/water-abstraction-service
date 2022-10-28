@@ -1,4 +1,4 @@
-- ref: $chargeVersion
+- ref: $chargeVersion01
   model: ChargeVersion
   fields:
     licenceRef: $srocLicence01.licenceRef
@@ -13,10 +13,10 @@
     isTest: true
     licenceId: $srocLicence01.licenceId
 
-- ref: $chargeElement
+- ref: $chargeElement01
   model: ChargeElement
   fields:
-    chargeVersionId: $chargeVersion.chargeVersionId
+    chargeVersionId: $chargeVersion01.chargeVersionId
     description: 'SROC Test Charge Element'
     source: tidal
     loss: medium
@@ -27,3 +27,20 @@
     volume: 100
     billingChargeCategoryId: $chargeCategory.billing_charge_category_id
     eiucRegion: Southern
+
+- ref: $chargePurpose01
+  model: ChargePurpose
+  fields:
+    chargeElementId: $chargeElement01.chargeElementId
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 4
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 3
+    authorisedAnnualQuantity: 15.54
+    loss: medium
+    factorsOverridden: false
+    description: 'Test'
+    isTest: true
+    purposePrimaryId: $primaryPurpose.purposePrimaryId
+    purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
