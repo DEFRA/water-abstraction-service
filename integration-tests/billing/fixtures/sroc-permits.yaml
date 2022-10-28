@@ -1,5 +1,5 @@
 - ref: $srocLicence
   model: Licence
   fields:
-    licenceRef: 'AT/SROC/DAILY/01'
+    licenceRef: 'AT/SROC/SUPB/01'
     startDate: '2022-04-01'

@@ -25,7 +25,7 @@
   fields:
     regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf'
     system_id: 'permit-repo'
-    system_external_id: 'AT/SROC/DAILY/01'
+    system_external_id: 'AT/SROC/SUPB/01'
     company_entity_id: $companyEntity.entity_id
     system_internal_id: $srocLicence.licence_id
     document_name: 'the daily cupcake licence'

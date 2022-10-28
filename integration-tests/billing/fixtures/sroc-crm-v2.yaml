@@ -98,7 +98,7 @@
     endDate: null
     regime: water
     documentType: abstraction_licence
-    documentRef: 'AT/SROC/DAILY/01'
+    documentRef: 'AT/SROC/SUPB/01'
     isTest: true
 
 - model: DocumentRole

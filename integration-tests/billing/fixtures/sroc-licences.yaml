@@ -11,7 +11,7 @@
   model: Licence
   fields:
     regionId: $region.regionId
-    licenceRef: 'AT/SROC/DAILY/01'
+    licenceRef: 'AT/SROC/SUPB/01'
     regions:
       historicalAreaCode: 'SAAR'
       regionalChargeArea: 'Southern'
