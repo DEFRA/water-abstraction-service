@@ -3,15 +3,15 @@
   fields:
     chargeRegionId: S
     naldRegionId: 9
-    name: Southern (Test replica)
-    displayName: Southern (Test replica)
+    name: Sroc Supplementary Bill (Test)
+    displayName: Sroc Supplementary Bill (Test)
     isTest: true
 
-- ref: $srocLicence
+- ref: $srocLicence01
   model: Licence
   fields:
     regionId: $region.regionId
-    licenceRef: 'AT/SROC/DAILY/01'
+    licenceRef: 'AT/SROC/SUPB/01'
     regions:
       historicalAreaCode: 'SAAR'
       regionalChargeArea: 'Southern'
@@ -19,14 +19,38 @@
     startDate: '2022-04-01'
     isTest: true
 
-- ref: $srocLicenceVersion
+- ref: $srocLicence02
+  model: Licence
+  fields:
+    regionId: $region.regionId
+    licenceRef: 'AT/SROC/SUPB/02'
+    regions:
+      historicalAreaCode: 'SAAR'
+      regionalChargeArea: 'Southern'
+    isWaterUndertaker: true
+    startDate: '2019-01-01'
+    isTest: true
+
+- ref: $srocLicenceVersion01
   model: LicenceVersion
   fields:
-    licenceId: $srocLicence.licenceId
+    licenceId: $srocLicence01.licenceId
     issue : 1
     increment: 0
     status: 'current'
     startDate: '2022-01-01'
     endDate: null
     externalId: 6:1234:1:0
+    isTest: true
+
+- ref: $srocLicenceVersion02
+  model: LicenceVersion
+  fields:
+    licenceId: $srocLicence02.licenceId
+    issue : 1
+    increment: 0
+    status: 'current'
+    startDate: '2019-01-01'
+    endDate: null
+    externalId: 6:1234:2:0
     isTest: true
