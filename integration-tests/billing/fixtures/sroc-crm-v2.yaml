@@ -14,6 +14,14 @@
     companyNumber: '1234502'
     isTest: true
 
+- ref: $company03
+  model: Company
+  fields:
+    name: Big Farm Co Ltd 03
+    type: organisation
+    companyNumber: '1234503'
+    isTest: true
+
 - ref: $address1
   model: Address
   fields:
@@ -78,6 +86,24 @@
     endDate: null
     isTest: true
 
+- model: CompanyAddress
+  fields:
+    roleName: billing
+    companyId: $company03.companyId
+    addressId: $address1.addressId
+    startDate: '2015-01-01'
+    endDate: null
+    isTest: true
+
+- model: CompanyAddress
+  fields:
+    roleName: billing
+    companyId: $company03.companyId
+    addressId: $address2.addressId
+    startDate: '2015-01-01'
+    endDate: null
+    isTest: true
+
 - ref: $contact
   model: Contact
   fields:
@@ -107,6 +133,15 @@
     startDate: '2019-01-01'
     isTest: true
 
+- model: CompanyContact
+  fields:
+    companyId: $company03.companyId
+    contactId: $contact.contactId
+    roleName: 'licenceHolder'
+    emailAddress: 'acceptance-test.external@example.com'
+    startDate: '2015-01-01'
+    isTest: true
+
 - ref: $invoiceAccount01
   model: InvoiceAccount
   fields:
@@ -123,6 +158,15 @@
     startDate: '2019-01-01'
     endDate: null
     companyId: $company02.companyId
+    isTest: true
+
+- ref: $invoiceAccount03
+  model: InvoiceAccount
+  fields:
+    invoiceAccountNumber: A00000003A
+    startDate: '2015-01-01'
+    endDate: null
+    companyId: $company03.companyId
     isTest: true
 
 - model: InvoiceAccountAddress
@@ -142,6 +186,16 @@
     agentCompanyId: null
     contactId: null
     startDate: '2019-01-01'
+    endDate: null
+    isTest: true
+
+- model: InvoiceAccountAddress
+  fields:
+    invoiceAccountId: $invoiceAccount03.invoiceAccountId
+    addressId: $address1.addressId
+    agentCompanyId: null
+    contactId: null
+    startDate: '2015-01-01'
     endDate: null
     isTest: true
 
@@ -165,6 +219,16 @@
     documentRef: 'AT/SROC/SUPB/02'
     isTest: true
 
+- ref: $documentDaily03
+  model: Document
+  fields:
+    startDate: '2015-01-01'
+    endDate: null
+    regime: water
+    documentType: abstraction_licence
+    documentRef: 'AT/SROC/SUPB/03'
+    isTest: true
+
 - model: DocumentRole
   fields:
     documentId: $documentDaily01.documentId
@@ -183,6 +247,17 @@
     startDate: '2019-01-01'
     endDate: null
     companyId: $company02.companyId
+    addressId: $address1.addressId
+    contactId: $contact.contactId
+    isTest: true
+
+- model: DocumentRole
+  fields:
+    documentId: $documentDaily03.documentId
+    role: licenceHolder
+    startDate: '2015-01-01'
+    endDate: null
+    companyId: $company03.companyId
     addressId: $address1.addressId
     contactId: $contact.contactId
     isTest: true

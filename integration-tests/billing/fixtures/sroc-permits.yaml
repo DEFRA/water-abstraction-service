@@ -9,3 +9,9 @@
   fields:
     licenceRef: 'AT/SROC/SUPB/02'
     startDate: '2019-01-01'
+
+- ref: $srocPermit03
+  model: Licence
+  fields:
+    licenceRef: 'AT/SROC/SUPB/03'
+    startDate: '2015-01-01'

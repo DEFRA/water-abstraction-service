@@ -127,3 +127,86 @@
     purposePrimaryId: $primaryPurpose.purposePrimaryId
     purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
     purposeUseId: $purposeUse.purposeUseId
+
+- ref: $chargeVersion04
+  model: ChargeVersion
+  fields:
+    licenceRef: $srocLicence03.licenceRef
+    scheme: alcs
+    versionNumber: 1
+    startDate: '2015-01-01'
+    endDate: '2022-03-31'
+    status: current
+    regionCode: $region.naldRegionId
+    source: wrls
+    companyId: $company03.companyId
+    invoiceAccountId: $invoiceAccount03.invoiceAccountId
+    isTest: true
+    licenceId: $srocLicence03.licenceId
+
+- ref: $chargeElement04
+  model: ChargeElement
+  fields:
+    chargeVersionId: $chargeVersion04.chargeVersionId
+    factorsOverridden: false
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 4
+    description: 'PRESROC Charge Element 03'
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 3
+    authorisedAnnualQuantity: 15.54
+    season: 'all year'
+    seasonDerived: 'all year'
+    source: unsupported
+    loss: medium
+    isTest: true
+    purposePrimaryId: $primaryPurpose.purposePrimaryId
+    purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+
+- ref: $chargeVersion05
+  model: ChargeVersion
+  fields:
+    licenceRef: $srocLicence03.licenceRef
+    scheme: sroc
+    versionNumber: 2
+    startDate: '2022-04-01'
+    endDate: null
+    status: current
+    regionCode: $region.naldRegionId
+    source: wrls
+    invoiceAccountId: $invoiceAccount03.invoiceAccountId
+    isTest: true
+    licenceId: $srocLicence03.licenceId
+
+- ref: $chargeElement05
+  model: ChargeElement
+  fields:
+    chargeVersionId: $chargeVersion05.chargeVersionId
+    description: 'SROC Charge Element 03'
+    source: tidal
+    loss: medium
+    isTest: true
+    scheme: sroc
+    isRestrictedSource: false
+    waterModel: 'no model'
+    volume: 100
+    billingChargeCategoryId: $chargeCategory.billing_charge_category_id
+    eiucRegion: Southern
+
+- ref: $chargePurpose03
+  model: ChargePurpose
+  fields:
+    chargeElementId: $chargeElement05.chargeElementId
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 4
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 3
+    authorisedAnnualQuantity: 15.54
+    loss: medium
+    factorsOverridden: false
+    description: 'SROC Charge Purpose 03'
+    isTest: true
+    purposePrimaryId: $primaryPurpose.purposePrimaryId
+    purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
