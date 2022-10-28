@@ -1,0 +1,32 @@
+- ref: $region
+  model: Region
+  fields:
+    chargeRegionId: S
+    naldRegionId: 9
+    name: Southern (Test replica)
+    displayName: Southern (Test replica)
+    isTest: true
+
+- ref: $srocLicence
+  model: Licence
+  fields:
+    regionId: $region.regionId
+    licenceRef: 'AT/SROC/DAILY/01'
+    regions:
+      historicalAreaCode: 'SAAR'
+      regionalChargeArea: 'Southern'
+    isWaterUndertaker: true
+    startDate: '2022-04-01'
+    isTest: true
+
+- ref: $srocLicenceVersion
+  model: LicenceVersion
+  fields:
+    licenceId: $srocLicence.licenceId
+    issue : 1
+    increment: 0
+    status: 'current'
+    startDate: '2022-01-01'
+    endDate: null
+    externalId: 6:1234:1:0
+    isTest: true

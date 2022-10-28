@@ -1,0 +1,29 @@
+- ref: $chargeVersion
+  model: ChargeVersion
+  fields:
+    licenceRef: $srocLicence.licenceRef
+    scheme: sroc
+    versionNumber: 1
+    startDate: '2022-04-01'
+    endDate: null
+    status: current
+    regionCode: $region.naldRegionId
+    source: wrls
+    invoiceAccountId: $invoiceAccount.invoiceAccountId
+    isTest: true
+    licenceId: $srocLicence.licenceId
+
+- ref: $chargeElement
+  model: ChargeElement
+  fields:
+    chargeVersionId: $chargeVersion.chargeVersionId
+    description: 'SROC Test Charge Element'
+    source: tidal
+    loss: medium
+    isTest: true
+    scheme: sroc
+    isRestrictedSource: false
+    waterModel: 'no model'
+    volume: 100
+    billingChargeCategoryId: $chargeCategory.billing_charge_category_id
+    eiucRegion: Southern
