@@ -1,10 +1,12 @@
+'use strict'
+
 const controller = require('./controller')
 
 module.exports = {
-  getStatus: {
+  getInfo: {
     method: 'GET',
-    path: '/health/status',
-    handler: controller.getStatus,
+    path: '/health/info',
+    handler: controller.getInfo,
     config: {
       auth: false
     }

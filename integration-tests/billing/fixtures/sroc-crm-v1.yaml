@@ -1,0 +1,87 @@
+- ref: $userEntity
+  model: Entity
+  fields:
+    entity_nm: 'acceptance-test.external@example.com'
+    entity_type: 'individual'
+    source: 'acceptance-test-setup'
+
+- ref: $companyEntity01
+  model: Entity
+  fields:
+    entity_nm: 'Big Farm Co Ltd 01'
+    entity_type: 'company'
+    source: 'acceptance-test-setup'
+
+- ref: $companyEntity02
+  model: Entity
+  fields:
+    entity_nm: 'Big Farm Co Ltd 02'
+    entity_type: 'company'
+    source: 'acceptance-test-setup'
+
+- ref: $companyEntity03
+  model: Entity
+  fields:
+    entity_nm: 'Big Farm Co Ltd 03'
+    entity_type: 'company'
+    source: 'acceptance-test-setup'
+
+- model: EntityRole
+  fields:
+    entityId: $userEntity.entity_id
+    company_entity_id: $companyEntity01.entity_id
+    role: 'primary_user'
+    created_by: 'acceptance-test-setup'
+
+- model: EntityRole
+  fields:
+    entityId: $userEntity.entity_id
+    company_entity_id: $companyEntity02.entity_id
+    role: 'primary_user'
+    created_by: 'acceptance-test-setup'
+
+- model: EntityRole
+  fields:
+    entityId: $userEntity.entity_id
+    company_entity_id: $companyEntity03.entity_id
+    role: 'primary_user'
+    created_by: 'acceptance-test-setup'
+
+- model: DocumentHeader
+  fields:
+    regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf'
+    system_id: 'permit-repo'
+    system_external_id: 'AT/SROC/SUPB/01'
+    company_entity_id: $companyEntity01.entity_id
+    system_internal_id: $srocPermit01.licence_id
+    document_name: 'Big Farm 01 permit'
+    metadata:
+      Name: 'Big Farm 01'
+      dataType: 'acceptance-test-setup'
+      IsCurrent: true
+
+- model: DocumentHeader
+  fields:
+    regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf'
+    system_id: 'permit-repo'
+    system_external_id: 'AT/SROC/SUPB/02'
+    company_entity_id: $companyEntity02.entity_id
+    system_internal_id: $srocPermit02.licence_id
+    document_name: 'Big Farm 02 permit'
+    metadata:
+      Name: 'Big Farm 02'
+      dataType: 'acceptance-test-setup'
+      IsCurrent: true
+
+- model: DocumentHeader
+  fields:
+    regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf'
+    system_id: 'permit-repo'
+    system_external_id: 'AT/SROC/SUPB/03'
+    company_entity_id: $companyEntity03.entity_id
+    system_internal_id: $srocPermit03.licence_id
+    document_name: 'Big Farm 03 permit'
+    metadata:
+      Name: 'Big Farm 03'
+      dataType: 'acceptance-test-setup'
+      IsCurrent: true
