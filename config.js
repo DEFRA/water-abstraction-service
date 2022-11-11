@@ -258,9 +258,7 @@ module.exports = {
   },
 
   featureToggles: {
-    deleteAllBillingData: process.env.ENABLE_DELETE_ALL_BILLING_DATA_FEATURE === 'true' && !isProduction,
-    // TODO: Remove Swagger completely
-    swagger: false
+    deleteAllBillingData: process.env.ENABLE_DELETE_ALL_BILLING_DATA_FEATURE === 'true' && !isProduction
   },
 
   slackHook: process.env.SLACK_HOOK
