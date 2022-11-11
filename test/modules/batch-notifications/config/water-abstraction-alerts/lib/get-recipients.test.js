@@ -6,7 +6,7 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script()
 const sandbox = require('sinon').createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const { logger } = require('../../../../../../src/logger')
 const { getRecipients } =

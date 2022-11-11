@@ -8,7 +8,7 @@ const {
 } = exports.lab = require('@hapi/lab').script()
 
 const { expect } = require('@hapi/code')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const sandbox = require('sinon').createSandbox()
 
 const preHandlers = require('../../../src/modules/notifications/pre-handlers')

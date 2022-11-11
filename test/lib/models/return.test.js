@@ -2,7 +2,7 @@
 
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const AbstractionPeriod = require('../../../src/lib/models/abstraction-period')
 const DateRange = require('../../../src/lib/models/date-range')

@@ -8,7 +8,7 @@ const {
   test
 } = exports.lab = require('@hapi/lab').script()
 
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const sandbox = require('sinon').createSandbox()
 
 const returnsConnector = require('../../../src/lib/connectors/returns')

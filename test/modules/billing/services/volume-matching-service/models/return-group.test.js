@@ -3,7 +3,7 @@
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
 
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const moment = require('moment')
 
 const ReturnGroup = require('../../../../../../src/modules/billing/services/volume-matching-service/models/return-group')

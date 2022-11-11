@@ -10,7 +10,7 @@ const {
 } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const Batch = require('../../../../src/lib/models/batch')
 const { SCHEME } = require('../../../../src/lib/models/constants')

@@ -5,7 +5,7 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const sandbox = require('sinon').createSandbox()
 const helpers = require('../../../../../src/modules/charge-versions-upload/lib/helpers')
 const { mapToAdditionalCharges } = require('../../../../../src/modules/charge-versions-upload/lib/mapper/additionalChargesMapper')

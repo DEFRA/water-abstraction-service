@@ -70,7 +70,7 @@
     "title-case": "^3.0.3",
     "tunnel": "0.0.6",
     "url-join": "^4.0.1",
-    "uuid": "^3.4.0",
+    "uuid": "^9.0.0",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {

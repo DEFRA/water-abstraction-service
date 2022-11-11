@@ -2,7 +2,7 @@
 
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const ReturnRequirementVersion = require('../../../src/lib/models/return-requirement-version')
 const ReturnRequirement = require('../../../src/lib/models/return-requirement')

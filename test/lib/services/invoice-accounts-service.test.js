@@ -8,7 +8,7 @@ const { expect } = require('@hapi/code')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const invoiceAccountsService = require('../../../src/lib/services/invoice-accounts-service')
 const companiesService = require('../../../src/lib/services/companies-service')

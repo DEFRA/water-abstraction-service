@@ -1,7 +1,7 @@
 'use strict'
 
 const moment = require('moment')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 // Models
 const Licence = require('../../../../../src/lib/models/licence')

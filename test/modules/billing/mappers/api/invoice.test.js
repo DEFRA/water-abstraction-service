@@ -6,7 +6,7 @@ const {
   beforeEach
 } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const Company = require('../../../../../src/lib/models/company')
 const Invoice = require('../../../../../src/lib/models/invoice')

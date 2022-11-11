@@ -9,7 +9,7 @@ const {
 
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const persistReturnsJob = require('../../../../../src/modules/returns/lib/jobs/persist-returns')
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload')

@@ -20,7 +20,7 @@ const chargeVersionService = require('../../../../src/modules/billing/services/c
 const Batch = require('../../../../src/lib/models/batch')
 const Region = require('../../../../src/lib/models/region')
 
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const batchId = uuid()
 

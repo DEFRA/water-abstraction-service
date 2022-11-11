@@ -2,7 +2,7 @@
 
 const { experiment, test } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const ScheduledNotification = require('../../../src/lib/models/scheduled-notification')
 const Event = require('../../../src/lib/models/event')

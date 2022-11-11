@@ -8,7 +8,7 @@ const {
 
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const validateReturnsJob = require('../../../../../src/modules/returns/lib/jobs/validate-returns')
 const uploadValidator = require('../../../../../src/modules/returns/lib/returns-upload-validator')

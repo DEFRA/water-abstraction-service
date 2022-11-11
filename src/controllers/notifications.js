@@ -5,7 +5,7 @@
 const HAPIRestAPI = require('@envage/hapi-pg-rest-api')
 const Joi = require('joi')
 const { pool } = require('../lib/connectors/db.js')
-const uuidv4 = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const NotificationsApi = new HAPIRestAPI({
   table: 'water.scheduled_notification',
@@ -19,7 +19,7 @@ const NotificationsApi = new HAPIRestAPI({
     set: ['id']
   },
   validation: {
-    id: Joi.string().guid().default(() => uuidv4()),
+    id: Joi.string().guid().default(() => uuid()),
     recipient: Joi.string(),
     message_ref: Joi.string(),
     personalisation: Joi.object(),

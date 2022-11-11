@@ -11,7 +11,7 @@ const fs = require('fs')
 const path = require('path')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const mapToJsonJob = require('../../../../../src/modules/returns/lib/jobs/map-to-json')
 const uploadAdapters = require('../../../../../src/modules/returns/lib/upload-adapters')

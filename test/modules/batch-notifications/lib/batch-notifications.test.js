@@ -13,7 +13,7 @@ const { loadJobData } =
 require('../../../../src/modules/batch-notifications/lib/batch-notifications')
 const eventsService = require('../../../../src/lib/services/events')
 const Event = require('../../../../src/lib/models/event')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const eventId = uuid()
 

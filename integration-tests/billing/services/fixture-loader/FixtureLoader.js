@@ -10,7 +10,7 @@ const path = require('path')
 const { mapValues, isString } = require('lodash')
 const { getFinancialDateRange } = require('../lib/financial-date-range')
 const moment = require('moment')
-const Uuid = require('uuid')
+const { v4: uuid } = require('uuid')
 
 const refRegex = /^(\$[^.]+)\.([a-z0-9-_]+)$/i
 
@@ -61,7 +61,7 @@ const calcValue = (value, index = 0, startDate = '01-04-2022') => {
     }
     case '$annualInvoice': return `TEST00${index}1`
     case '$2PT2Invoice': return `TEST00${index}2`
-    case '$uuid': return Uuid.v4()
+    case '$uuid': return uuid()
     case '$billRunNumber': return String(new Date().getMilliseconds()).padStart(4, '0') + index
     default:
       return value

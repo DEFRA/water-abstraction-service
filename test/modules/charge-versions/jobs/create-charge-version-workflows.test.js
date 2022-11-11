@@ -9,7 +9,7 @@ const {
 
 const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const chargeVersionWorkflowJob = require('../../../../src/modules/charge-versions/jobs/create-charge-version-workflows')
 

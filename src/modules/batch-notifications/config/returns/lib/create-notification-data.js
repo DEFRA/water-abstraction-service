@@ -1,6 +1,6 @@
 'use strict'
 
-const uuidv4 = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const { first } = require('lodash')
 
 const { MESSAGE_STATUS_DRAFT } = require('../../../lib/message-statuses')
@@ -42,7 +42,7 @@ const getReturnPersonalisation = evt => {
  * @return {Object}         - scheduled_notification data
  */
 const createNotification = (ev, contact, context) => ({
-  id: uuidv4(),
+  id: uuid(),
   event_id: ev.id,
   licences: context.licenceNumbers,
   metadata: {

@@ -2,7 +2,7 @@ const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi
 const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
 
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service')
 const chargeVersionService = require('../../../../src/lib/services/charge-versions')

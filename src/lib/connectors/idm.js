@@ -6,7 +6,7 @@ const urlJoin = require('url-join')
 const config = require('../../../config')
 const factory = require('./service-version-factory')
 const helpers = require('@envage/water-abstraction-helpers')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const usersClient = apiClientFactory.create(urlJoin(config.services.idm, 'user'))
 const kpiClient = apiClientFactory.create(urlJoin(config.services.idm, 'kpi'))

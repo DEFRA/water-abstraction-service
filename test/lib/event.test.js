@@ -3,7 +3,7 @@ const Joi = require('joi')
 const sandbox = sinon.createSandbox()
 const { expect } = require('@hapi/code')
 const eventsService = require('../../src/lib/services/events')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const {
   experiment,

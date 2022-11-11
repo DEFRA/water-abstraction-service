@@ -8,7 +8,7 @@ const {
 const { expect } = require('@hapi/code')
 
 const moment = require('moment')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const LicenceVersion = require('../../../src/lib/models/licence-version')
 

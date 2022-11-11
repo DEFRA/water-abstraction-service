@@ -1,7 +1,7 @@
 'use strict'
 
 const fork = require('child_process').fork
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 // Utils
 const batchJob = require('./lib/batch-job')
