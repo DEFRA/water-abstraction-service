@@ -62,7 +62,7 @@
     "pg": "^8.8.0",
     "promise-retry": "^2.0.1",
     "proxy-agent": "^5.0.0",
-    "puppeteer": "^9.0.0",
+    "puppeteer": "^19.2.2",
     "qrcode-svg": "^1.1.0",
     "request": "^2.88.2",
     "request-promise-native": "^1.0.9",
