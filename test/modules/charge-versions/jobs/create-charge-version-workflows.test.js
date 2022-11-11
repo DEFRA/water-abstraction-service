@@ -20,7 +20,7 @@ const licences = require('../../../../src/lib/services/licences')
 // Models
 const ChargeVersionWorkflow = require('../../../../src/lib/models/charge-version-workflow')
 
-const logger = require('../../../../src/logger')
+const { logger } = require('../../../../src/logger')
 
 experiment('modules/charge-versions/jobs/create-charge-version-workflows', () => {
   const licenceVersionId = uuid()
@@ -29,7 +29,8 @@ experiment('modules/charge-versions/jobs/create-charge-version-workflows', () =>
   let chargeVersionWorkflow
   const id = uuid()
   beforeEach(async () => {
-    sandbox.stub(logger)
+    sandbox.stub(logger, 'info')
+    sandbox.stub(logger, 'error')
     sandbox.stub(licences, 'getLicenceById').resolves({ licenceId: 'test-licence-id' })
 
     chargeVersionWorkflow = new ChargeVersionWorkflow(id)

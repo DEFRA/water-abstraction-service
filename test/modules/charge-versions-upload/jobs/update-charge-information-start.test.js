@@ -10,7 +10,7 @@ const {
 const { expect, fail } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
 
-const logger = require('../../../../src/logger')
+const { logger } = require('../../../../src/logger')
 const eventsService = require('../../../../src/lib/services/events')
 const startUploadJob = require('../../../../src/modules/charge-versions-upload/jobs/update-charge-information-start')
 const csvAdapter = require('../../../../src/modules/charge-versions-upload/lib/csv-adapter')
@@ -27,7 +27,8 @@ experiment('modules/charge-versions/jobs/update-charge-information-start', () =>
   let event, csvData
 
   beforeEach(async () => {
-    sandbox.stub(logger)
+    sandbox.stub(logger, 'info')
+    sandbox.stub(logger, 'error')
 
     event = new Event()
     event.fromHash({

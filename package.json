@@ -80,7 +80,7 @@
     "csv-stringify": "^6.2.1",
     "nock": "^13.2.9",
     "promise-poller": "^1.9.1",
-    "sinon": "^7.5.0",
+    "sinon": "^14.0.2",
     "standard": "^17.0.0"
   }
 }
