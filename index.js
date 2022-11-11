@@ -7,7 +7,6 @@ const Good = require('@hapi/good')
 const GoodWinston = require('good-winston')
 const Hapi = require('@hapi/hapi')
 const HapiAuthJwt2 = require('hapi-auth-jwt2')
-const Vision = require('@hapi/vision')
 const moment = require('moment')
 const Nunjucks = require('nunjucks')
 
@@ -57,30 +56,6 @@ const _registerServerPlugins = async (server) => {
 
   // JWT token auth
   await server.register(HapiAuthJwt2)
-
-  await server.register(Vision)
-
-  // Add Hapi-swagger in test environments
-  if (config.featureToggles.swagger) {
-    await server.register([
-      {
-        plugin: require('@hapi/vision')
-      },
-      {
-        plugin: require('@hapi/inert')
-      },
-      {
-        plugin: require('hapi-swagger'),
-        options: {
-          info: {
-            title: 'Test API Documentation',
-            version: require('./package.json').version
-          },
-          pathPrefixSize: 3
-        }
-      }
-    ])
-  }
 }
 
 const _configureServerAuthStrategy = (server) => {
