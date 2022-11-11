@@ -7,6 +7,7 @@ const Good = require('@hapi/good')
 const GoodWinston = require('good-winston')
 const Hapi = require('@hapi/hapi')
 const HapiAuthJwt2 = require('hapi-auth-jwt2')
+const Vision = require('@hapi/vision')
 const moment = require('moment')
 const Nunjucks = require('nunjucks')
 
@@ -56,6 +57,8 @@ const _registerServerPlugins = async (server) => {
 
   // JWT token auth
   await server.register(HapiAuthJwt2)
+
+  await server.register(Vision)
 }
 
 const _configureServerAuthStrategy = (server) => {

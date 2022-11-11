@@ -26,6 +26,7 @@
     "@hapi/good": "^8.2.4",
     "@hapi/hapi": "^18.4.1",
     "@hapi/hoek": "^10.0.1",
+    "@hapi/vision": "^5.5.4",
     "@sindresorhus/is": "^4.0.0",
     "aws-sdk": "^2.728.0",
     "blipp": "^4.0.1",
