@@ -64,7 +64,7 @@
     "qrcode-svg": "^1.1.0",
     "request": "^2.88.2",
     "request-promise-native": "^1.0.9",
-    "sentence-case": "^2.1.1",
+    "sentence-case": "^3.0.4",
     "sha1": "^1.1.1",
     "snakecase-keys": "^1.1.1",
     "title-case": "^3.0.3",
