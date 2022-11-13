@@ -32,8 +32,7 @@ experiment('modules/charge-versions/jobs/update-charge-information-save', () => 
   let event, json, licence
 
   beforeEach(async () => {
-    sandbox.stub(logger, 'info')
-    sandbox.stub(logger, 'error')
+    sandbox.stub(logger)
 
     event = new Event()
     event.fromHash({

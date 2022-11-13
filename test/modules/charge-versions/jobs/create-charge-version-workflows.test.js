@@ -29,8 +29,7 @@ experiment('modules/charge-versions/jobs/create-charge-version-workflows', () =>
   let chargeVersionWorkflow
   const id = uuid()
   beforeEach(async () => {
-    sandbox.stub(logger, 'info')
-    sandbox.stub(logger, 'error')
+    sandbox.stub(logger)
     sandbox.stub(licences, 'getLicenceById').resolves({ licenceId: 'test-licence-id' })
 
     chargeVersionWorkflow = new ChargeVersionWorkflow(id)
