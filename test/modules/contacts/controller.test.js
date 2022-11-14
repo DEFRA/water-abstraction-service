@@ -4,7 +4,7 @@ const Lab = require('@hapi/lab')
 const { experiment, test, beforeEach, afterEach } = exports.lab = Lab.script()
 const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const contactsService = require('../../../src/lib/services/contacts-service')
 const contactMapper = require('../../../src/lib/mappers/contact')

@@ -13,7 +13,7 @@ const sandbox = sinon.createSandbox()
 const Note = require('../../../../src/lib/connectors/bookshelf/Note')
 const repo = require('../../../../src/lib/connectors/repos/notes')
 const helpers = require('../../../../src/lib/connectors/repos/lib/helpers')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 experiment('lib/connectors/repos/notes', () => {
   let model, stub

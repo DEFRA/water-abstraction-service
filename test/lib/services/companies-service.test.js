@@ -8,7 +8,7 @@ const { expect } = require('@hapi/code')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const Company = require('../../../src/lib/models/company')
 const Region = require('../../../src/lib/models/region')

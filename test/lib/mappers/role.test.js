@@ -6,7 +6,7 @@ const {
   beforeEach
 } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const Role = require('../../../src/lib/models/role')
 const roleMapper = require('../../../src/lib/mappers/role')

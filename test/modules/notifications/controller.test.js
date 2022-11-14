@@ -9,7 +9,7 @@ const {
 
 const { pick } = require('lodash')
 const { expect } = require('@hapi/code')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const sandbox = require('sinon').createSandbox()
 
 const controller = require('../../../src/modules/notifications/controller')

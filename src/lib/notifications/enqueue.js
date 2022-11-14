@@ -1,4 +1,4 @@
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const scheduledNotifications = require('../../controllers/notifications')
 
 const createNotificationBody = (recipient, messageRef, type, personalisation) => ({

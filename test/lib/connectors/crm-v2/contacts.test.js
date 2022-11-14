@@ -9,7 +9,7 @@ const {
 const { expect } = require('@hapi/code')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const contactsConnector = require('../../../../src/lib/connectors/crm-v2/contacts')
 const { serviceRequest } = require('@envage/water-abstraction-helpers')

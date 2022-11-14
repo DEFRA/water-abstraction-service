@@ -6,7 +6,7 @@ const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
 
 // Test helpers
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts')
 const { logger } = require('../../../../src/logger')
 const notifyService = require('../../../../src/lib/notify')

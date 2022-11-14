@@ -9,7 +9,7 @@ const {
 const { expect } = require('@hapi/code')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const gotCM = require('../../../../src/lib/connectors/charge-module/lib/got-cm')
 const customerApiConnector = require('../../../../src/lib/connectors/charge-module/customers')

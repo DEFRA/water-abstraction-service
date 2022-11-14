@@ -1,7 +1,7 @@
 'use strict'
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const testHelpers = require('../../../test-helpers')
 
 const routes = require('../../../../src/modules/billing/routes/two-part-tariff-review')

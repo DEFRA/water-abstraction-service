@@ -12,7 +12,7 @@ const sandbox = require('sinon').createSandbox()
 const batchMapper = require('../../../../src/modules/billing/mappers/batch')
 const transactionMapper = require('../../../../src/modules/billing/mappers/transaction')
 
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const Batch = require('../../../../src/lib/models/batch')
 const FinancialYear = require('../../../../src/lib/models/financial-year')

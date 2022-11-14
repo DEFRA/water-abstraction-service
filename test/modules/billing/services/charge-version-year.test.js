@@ -8,7 +8,7 @@ const {
 } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const repos = require('../../../../src/lib/connectors/repos')
 const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year')

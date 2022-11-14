@@ -1,6 +1,6 @@
 'use strict'
 
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 const { expect } = require('@hapi/code')

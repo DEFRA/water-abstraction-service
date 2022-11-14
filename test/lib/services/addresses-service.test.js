@@ -8,7 +8,7 @@ const { expect } = require('@hapi/code')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const addressesService = require('../../../src/lib/services/addresses-service')
 const eventsService = require('../../../src/lib/services/events')
 const addressesConnector = require('../../../src/lib/connectors/crm-v2/addresses')

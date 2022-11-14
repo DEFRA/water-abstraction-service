@@ -1,7 +1,7 @@
 const { get } = require('lodash')
 const moment = require('moment')
 const { convertToCubicMetres, convertToUserUnit } = require('./unit-conversion')
-const uuidv4 = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const returnLines = require('@envage/water-abstraction-helpers').returns.lines
 
 /**
@@ -103,7 +103,7 @@ const mapReturnToModel = (ret, version, lines, versions) => {
  */
 const mapReturnToVersion = (ret) => {
   return {
-    version_id: uuidv4(),
+    version_id: uuid(),
     return_id: ret.returnId,
     user_id: ret.user.email,
     user_type: ret.user.type,
@@ -125,7 +125,7 @@ const mapReturnToVersion = (ret) => {
 const mapReturnToLines = (ret, version) => {
   if (ret.lines) {
     return ret.lines.map(line => ({
-      line_id: uuidv4(),
+      line_id: uuid(),
       version_id: version.version_id,
       substance: 'water',
       quantity: convertToCubicMetres(line.quantity, ret.reading.units),

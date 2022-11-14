@@ -1,4 +1,4 @@
-const sentenceCase = require('sentence-case')
+const { sentenceCase } = require('sentence-case')
 const { find, get } = require('lodash')
 
 // Import models

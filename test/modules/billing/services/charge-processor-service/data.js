@@ -1,6 +1,6 @@
 'use strict'
 
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const Agreement = require('../../../../../src/lib/models/agreement')
 const AbstractionPeriod = require('../../../../../src/lib/models/abstraction-period')
 const Batch = require('../../../../../src/lib/models/batch')

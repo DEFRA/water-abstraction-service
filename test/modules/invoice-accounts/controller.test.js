@@ -10,7 +10,7 @@ const InvoiceAccount = require('../../../src/lib/models/invoice-account')
 const InvoiceAccountAddress = require('../../../src/lib/models/invoice-account-address')
 
 const sandbox = require('sinon').createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 experiment('modules/invoice-accounts/controller', () => {
   let h, responseStub

@@ -6,7 +6,7 @@ const {
   beforeEach
 } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const supplementaryBillingProcessor = require('../../../../../src/modules/billing/services/supplementary-billing-service/supplementary-processor')
 const { actions } = require('../../../../../src/modules/billing/services/supplementary-billing-service/constants')

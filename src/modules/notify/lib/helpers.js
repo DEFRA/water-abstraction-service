@@ -1,6 +1,6 @@
 const Joi = require('joi')
 const { get } = require('lodash')
-const uuidv4 = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 /**
  * Checks whether the supplied message ref is a PDF.
@@ -38,7 +38,7 @@ function validateEnqueueOptions (options, now = new Date()) {
   })
 
   const schema = Joi.object({
-    id: Joi.string().default(uuidv4()),
+    id: Joi.string().default(uuid()),
     messageRef: Joi.string().required(),
     recipient: Joi.string().default('n/a'),
     personalisation: JoiCustomisedToAcceptStringAsObject.objectOrStringifiedObject(),

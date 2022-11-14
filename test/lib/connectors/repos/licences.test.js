@@ -16,7 +16,7 @@ const { Licence, bookshelf } = require('../../../../src/lib/connectors/bookshelf
 const raw = require('../../../../src/lib/connectors/repos/lib/raw')
 const helpers = require('../../../../src/lib/connectors/repos/lib/helpers')
 const moment = require('moment')
-const uuid = require('uuid')
+const { v4: uuid } = require('uuid')
 
 experiment('lib/connectors/repos/licences.js', () => {
   let model, stub

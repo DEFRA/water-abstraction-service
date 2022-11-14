@@ -6,7 +6,7 @@ const {
   test,
   beforeEach
 } = exports.lab = require('@hapi/lab').script()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const moment = require('moment')
 
 const ContactRole = require('../../../src/lib/models/contact-role')

@@ -8,7 +8,7 @@ const {
 const { expect } = require('@hapi/code')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const processChargeVersionsJob = require('../../../../src/modules/billing/jobs/process-charge-versions')
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job')

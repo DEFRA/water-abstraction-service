@@ -10,7 +10,7 @@ const {
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const startUploadJob = require('../../../../../src/modules/returns/lib/jobs/start-upload')
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload')

@@ -2,7 +2,7 @@ const notificationsService = require('../../../../src/lib/services/scheduled-not
 const ScheduledNotification = require('../../../../src/lib/models/scheduled-notification')
 const { pool } = require('../../../lib/connectors/db')
 const { TEST_NOTIFICATION_EMAIL } = require('./constants')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const create = async () => {
   const notification = new ScheduledNotification()

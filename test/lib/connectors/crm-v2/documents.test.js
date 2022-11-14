@@ -4,7 +4,7 @@ const { expect } = require('@hapi/code')
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script()
 const { serviceRequest } = require('@envage/water-abstraction-helpers')
 const documentsConnector = require('../../../../src/lib/connectors/crm-v2/documents')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const config = require('../../../../config')
 

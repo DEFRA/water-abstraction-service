@@ -7,7 +7,7 @@ const {
 } = exports.lab = require('@hapi/lab').script()
 
 const sandbox = require('sinon').createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const controller = require('../../../src/modules/batch-notifications/controller')
 const eventsService = require('../../../src/lib/services/events')

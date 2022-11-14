@@ -7,7 +7,7 @@ const {
 const { expect } = require('@hapi/code')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const { bookshelf, BillingInvoice } = require('../../../../src/lib/connectors/bookshelf')
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-invoices')

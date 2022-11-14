@@ -9,7 +9,7 @@ const {
 
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const sendMessage = require('../../../../../src/modules/batch-notifications/lib/jobs/send-message')
 const messageHelpers = require('../../../../../src/modules/batch-notifications/lib/message-helpers')

@@ -1,5 +1,4 @@
 const moment = require('moment')
-// const uuid = require('uuid/v4');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
 

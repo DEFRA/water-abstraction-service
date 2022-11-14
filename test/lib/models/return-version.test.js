@@ -3,7 +3,7 @@
 const moment = require('moment')
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const ReturnVersion = require('../../../src/lib/models/return-version')
 const ReturnLine = require('../../../src/lib/models/return-line')

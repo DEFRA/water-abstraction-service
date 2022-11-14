@@ -8,7 +8,7 @@ const {
 
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const createNotificationData = require('../../../../../../src/modules/batch-notifications/config/returns/lib/create-notification-data')
 const Contact = require('../../../../../../src/lib/models/contact')

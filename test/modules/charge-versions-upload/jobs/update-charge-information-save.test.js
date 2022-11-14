@@ -10,7 +10,7 @@ const {
 const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
 
-const logger = require('../../../../src/logger')
+const { logger } = require('../../../../src/logger')
 const eventsService = require('../../../../src/lib/services/events')
 const licenceService = require('../../../../src/lib/services/licences')
 const chargeVersionService = require('../../../../src/lib/services/charge-versions')
@@ -18,7 +18,7 @@ const chargeInformationSaveJob = require('../../../../src/modules/charge-version
 const chargeVersionMapper = require('../../../../src/lib/mappers/charge-version')
 const userMapper = require('../../../../src/lib/mappers/user')
 const csvAdapter = require('../../../../src/modules/charge-versions-upload/lib/csv-adapter')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 const Event = require('../../../../src/lib/models/event')
 const { usersClient } = require('../../../../src/lib/connectors/idm')
 const s3 = require('../../../../src/lib/services/s3')

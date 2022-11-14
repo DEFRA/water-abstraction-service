@@ -3,7 +3,7 @@
  * @module lib/licence-transformer/nald-transformer
  */
 const { find, uniqBy, isArray } = require('lodash')
-const sentenceCase = require('sentence-case')
+const { sentenceCase } = require('sentence-case')
 
 const BaseTransformer = require('./base-transformer')
 const LicenceTitleLoader = require('./licence-title-loader')

@@ -9,7 +9,7 @@ const {
 
 const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const chargeVersionWorkflowJob = require('../../../../src/modules/charge-versions/jobs/create-charge-version-workflows')
 
@@ -20,7 +20,7 @@ const licences = require('../../../../src/lib/services/licences')
 // Models
 const ChargeVersionWorkflow = require('../../../../src/lib/models/charge-version-workflow')
 
-const logger = require('../../../../src/logger')
+const { logger } = require('../../../../src/logger')
 
 experiment('modules/charge-versions/jobs/create-charge-version-workflows', () => {
   const licenceVersionId = uuid()

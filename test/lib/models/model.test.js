@@ -4,7 +4,7 @@ const { experiment, test } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
 
 const Model = require('../../../src/lib/models/model')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 class Bike extends Model {
   get numberOfGears () { return this._numberOfGears }

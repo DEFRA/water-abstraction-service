@@ -9,7 +9,7 @@ const {
 const { expect } = require('@hapi/code')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
-const uuid = require('uuid')
+const { v4: uuid } = require('uuid')
 const helpers = require('../../../../src/lib/connectors/repos/lib/helpers')
 const repos = require('../../../../src/lib/connectors/repos')
 const { LicenceAgreement } = require('../../../../src/lib/connectors/bookshelf')

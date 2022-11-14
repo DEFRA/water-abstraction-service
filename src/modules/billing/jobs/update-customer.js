@@ -6,7 +6,7 @@ const JOB_NAME = jobNames.updateCustomerAccount
 const invoiceAccountsService = require('../../../lib/services/invoice-accounts-service')
 const chargeModuleMappers = require('../../../lib/mappers/charge-module')
 const { logger } = require('../../../logger')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const messageInitialiser = (jobName, invoiceAccountId) => ([
   JOB_NAME,
