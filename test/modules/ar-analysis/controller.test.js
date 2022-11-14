@@ -35,8 +35,9 @@ experiment('controller', () => {
   })
 
   experiment('when updateLicenceRow errors', () => {
+    const err = new Error('Opps')
     beforeEach(async () => {
-      updateLicence.updateLicenceRow.rejects({ name: 'nasty error' })
+      updateLicence.updateLicenceRow.rejects(err)
     })
 
     afterEach(async () => sandbox.restore())
@@ -47,7 +48,7 @@ experiment('controller', () => {
       } catch (e) {
         const [message, error, params] = logger.error.lastCall.args
         expect(message).to.equal('Failed to update AR licence')
-        expect(error.name).to.equal('nasty error')
+        expect(error).to.equal(err.stack)
         expect(params.licenceRef).to.equal('123')
       }
     })

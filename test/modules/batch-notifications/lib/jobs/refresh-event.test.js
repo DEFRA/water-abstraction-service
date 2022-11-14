@@ -67,7 +67,7 @@ experiment('refreshEvent job', () => {
         await refreshEvent.handler({ id: jobId, data: jobParams })
         const [msg, error] = logger.error.lastCall.args
         expect(msg).to.equal(`Error handling: ${jobId}`)
-        expect(error).to.equal(err)
+        expect(error).to.equal(err.stack)
       })
 
       test('logs the error refreshing the event', async () => {
@@ -76,7 +76,7 @@ experiment('refreshEvent job', () => {
         await refreshEvent.handler({ id: jobId })
         const [msg, error] = logger.error.lastCall.args
         expect(msg).to.equal('Error refreshing batch message event')
-        expect(error).to.equal(err)
+        expect(error).to.equal(err.stack)
       })
     })
 
@@ -97,7 +97,7 @@ experiment('refreshEvent job', () => {
       await refreshEvent.onFailed({}, err)
       const [msg, error] = logger.error.lastCall.args
       expect(msg).to.equal('notifications.refreshEvent: Job has failed')
-      expect(error).to.equal(err)
+      expect(error).to.equal(err.stack)
     })
   })
 

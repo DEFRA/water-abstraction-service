@@ -1088,7 +1088,7 @@ experiment('modules/billing/controller', () => {
         const func = () => controller.deleteAllBillingData()
         const result = await expect(func()).to.reject()
         expect(logger.error.calledWith(
-          'Error deleting all billing data', err
+          'Error deleting all billing data', err.stack
         )).to.be.true()
         expect(result).to.equal(err)
       })

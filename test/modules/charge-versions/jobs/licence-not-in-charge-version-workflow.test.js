@@ -101,7 +101,7 @@ experiment('modules/charge-versions/jobs/licence-not-in-charge-version-workflow'
 
       expect(logger.error.calledWith(
         `Job ${job.name} ${job.id} failed`,
-        err
+        err.stack
       )).to.be.true()
     })
   })

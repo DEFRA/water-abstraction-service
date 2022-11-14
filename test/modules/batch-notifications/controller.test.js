@@ -174,7 +174,7 @@ experiment('batch notifications controller', () => {
       test('the error is logged', async () => {
         expect(logger.error.calledWith(
           'Batch notification send error',
-          err,
+          err.stack,
           { eventId: request.params.eventId }
         )).to.be.true()
       })

@@ -70,7 +70,7 @@ experiment('getRecipients job', () => {
       test('logs the error', async () => {
         const [msg, error, params] = logger.error.lastCall.args
         expect(msg).to.equal('Batch notifications handleGetRecipients error')
-        expect(error).to.equal(err)
+        expect(error).to.equal(err.stack)
         expect(params).to.equal({ eventId })
       })
 
@@ -120,7 +120,7 @@ experiment('getRecipients job', () => {
       await getRecipients.onFailed({}, err)
       const [msg, error] = logger.error.lastCall.args
       expect(msg).to.equal('notifications.getRecipients: Job has failed')
-      expect(error).to.equal(err)
+      expect(error).to.equal(err.stack)
     })
   })
 

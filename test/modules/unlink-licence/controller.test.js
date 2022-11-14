@@ -70,7 +70,7 @@ experiment('modules/unlink-licence/controller', () => {
         const [{ error: thrownError }] = h.response.lastCall.args
         const [message, err, body] = logger.error.lastCall.args
         expect(message).to.equal('Failed to unlink licence')
-        expect(err).to.equal(thrownError)
+        expect(err).to.equal(thrownError.stack)
         expect(body).to.equal({ callingUserId, documentId: request.params.documentId })
       })
 

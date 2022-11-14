@@ -100,7 +100,7 @@ experiment('sendMessage job', () => {
         await sendMessage.handler({ id: jobId })
         const [msg, error] = logger.error.lastCall.args
         expect(msg).to.equal(`Error handling: ${jobId}`)
-        expect(error).to.equal(err)
+        expect(error).to.equal(err.stack)
       })
 
       test('sets the scheduled_notification status to MESSAGE_STATUS_ERROR', async () => {
@@ -156,7 +156,7 @@ experiment('sendMessage job', () => {
       await sendMessage.onFailed({}, err)
       const [msg, error] = logger.error.lastCall.args
       expect(msg).to.equal('notifications.sendMessage: Job has failed')
-      expect(error).to.equal(err)
+      expect(error).to.equal(err.stack)
     })
   })
 
