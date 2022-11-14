@@ -75,7 +75,7 @@ const handleReturnsUploadStart = async job => {
     // returns an array of objects containing error messages and lines
     await validateS3Object(event, s3Object)
   } catch (error) {
-    logger.error('Returns upload failure', error, { job })
+    logger.error('Returns upload failure', error.stack, { job })
 
     await errorEvent.setEventError(event, error)
     throw error
@@ -83,7 +83,7 @@ const handleReturnsUploadStart = async job => {
 }
 
 const onFailed = async (job, err) => {
-  logger.error(`${JOB_NAME}: Job has failed`, err)
+  logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
 const onComplete = async (job, queueManager) => {

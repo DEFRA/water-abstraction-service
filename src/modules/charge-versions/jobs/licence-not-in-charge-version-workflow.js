@@ -40,7 +40,7 @@ const onComplete = async (job, queueManager) => {
 }
 
 const onFailed = (job, err) => {
-  logger.error(`Job ${job.name} ${job.id} failed`, err)
+  logger.error(`Job ${job.name} ${job.id} failed`, err.stack)
 }
 
 exports.jobName = JOB_NAME

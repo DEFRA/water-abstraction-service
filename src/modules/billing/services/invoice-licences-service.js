@@ -72,7 +72,7 @@ const deleteByInvoiceLicenceId = async invoiceLicenceId => {
     // Publish refresh totals job
     return queueManager.getQueueManager().add(refreshTotalsJob.jobName, batchId)
   } catch (err) {
-    logger.error(`Failed to delete invoice licence ${invoiceLicenceId} in batch ${batchId}`, err)
+    logger.error(`Failed to delete invoice licence ${invoiceLicenceId} in batch ${batchId}`, err.stack)
     // Set batch to "error" status
     await batchService.setStatus(batchId, Batch.BATCH_STATUS.error)
     throw err

@@ -126,7 +126,7 @@ const setOrThrowInvalidEntityError = (chargeVersionWorkflow, changes) => {
   try {
     return chargeVersionWorkflow.fromHash(changes)
   } catch (err) {
-    logger.error(err)
+    logger.error(err.stack)
     throw new InvalidEntityError(`Invalid data for charge version workflow ${chargeVersionWorkflow.id}`)
   }
 }

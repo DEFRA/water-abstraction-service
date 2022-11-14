@@ -74,7 +74,7 @@ async function notificationFactory (contactData, taskConfig, event) {
 
     return options
   } catch (error) {
-    logger.error('Notification Factory error', error)
+    logger.error('Notification Factory error', error.stack)
     return { error }
   }
 }

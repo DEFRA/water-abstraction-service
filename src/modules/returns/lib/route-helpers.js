@@ -6,7 +6,7 @@ const { logger } = require('../../../logger')
  */
 const failAction = async (request, h, err) => {
   const params = { path: request.path, payload: request.payload }
-  logger.error(err.message, err, params)
+  logger.error(err.message, err.stack, params)
   throw Boom.badRequest('Invalid request payload input')
 }
 

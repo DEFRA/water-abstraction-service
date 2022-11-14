@@ -76,7 +76,7 @@ const handleReturnsMapToJsonStart = async job => {
 
     await eventsService.updateStatus(event.id, uploadStatus.VALIDATED)
   } catch (error) {
-    logger.error(`Failed to convert ${event.subtype} to JSON`, error, { job })
+    logger.error(`Failed to convert ${event.subtype} to JSON`, error.stack, { job })
     await errorEvent.setEventError(event, error)
     throw error
   }
@@ -96,7 +96,7 @@ const uploadJsonToS3 = (eventId, json) => {
 }
 
 const onFailed = async (job, err) => {
-  logger.error(`${JOB_NAME}: Job has failed`, err)
+  logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
 const onComplete = async (job, queueManager) => {

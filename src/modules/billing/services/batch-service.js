@@ -141,7 +141,7 @@ const deleteBatch = async (batch, internalCallingUser) => {
 
     await saveEvent('billing-batch:cancel', 'delete', internalCallingUser, batch)
   } catch (err) {
-    logger.error('Failed to delete the batch', err, batch)
+    logger.error('Failed to delete the batch', err.stack, batch)
     await saveEvent('billing-batch:cancel', 'error', internalCallingUser, batch)
     await setStatus(batch.id, BATCH_STATUS.error)
     throw err
@@ -193,7 +193,7 @@ const approveBatch = async (batch, internalCallingUser) => {
 
     return batch
   } catch (err) {
-    logger.error('Failed to approve the batch', err, batch)
+    logger.error('Failed to approve the batch', err.stack, batch)
     // set the status back to ready so the user can retry
     await setStatus(batch.id, BATCH_STATUS.ready)
     await saveEvent('billing-batch:approve', 'error', internalCallingUser, batch)
@@ -453,7 +453,7 @@ const deleteAllBillingData = async () => {
       logger.info(`Deleting Charge Module batch ${externalId}`)
       await chargeModuleBillRunConnector.delete(externalId)
     } catch (err) {
-      logger.error(`Unable to delete Charge Module batch ${externalId}`, err)
+      logger.error(`Unable to delete Charge Module batch ${externalId}`, err.stack)
     }
   }
   // Delete all data in water.billing_* tables

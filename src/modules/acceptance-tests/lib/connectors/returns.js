@@ -5,9 +5,9 @@ const { logger } = require('../../../../logger')
 
 const createUrl = urlTail => urlJoin(config.services.returns, urlTail)
 
-const createEntity = url => body => serviceRequest.post(url, { body }).catch(err => logger.error(err))
+const createEntity = url => body => serviceRequest.post(url, { body }).catch(err => logger.error(err.stack))
 
-const tearDown = url => () => serviceRequest.delete(url).catch(err => logger.error(err))
+const tearDown = url => () => serviceRequest.delete(url).catch(err => logger.error(err.stack))
 
 exports.createReturn = createEntity(createUrl('returns'))
 exports.createVersions = createEntity(createUrl('versions'))

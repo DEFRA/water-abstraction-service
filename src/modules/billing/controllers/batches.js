@@ -185,7 +185,7 @@ const deleteAllBillingData = async (request, h) => {
     await importConnector.postImportChargeVersions()
     return h.response().code(204)
   } catch (err) {
-    logger.error('Error deleting all billing data', err)
+    logger.error('Error deleting all billing data', err.stack)
     return mapErrorResponse(err)
   }
 }

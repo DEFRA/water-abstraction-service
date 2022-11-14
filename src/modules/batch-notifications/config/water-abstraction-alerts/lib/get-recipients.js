@@ -101,7 +101,7 @@ const getRecipients = async eventData => {
 
         licenceNumbers.push(linkage.licenceRef)
       } catch (e) {
-        logger.error(e)
+        logger.error(e.stack)
       }
     }
   }

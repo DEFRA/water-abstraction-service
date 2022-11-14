@@ -83,7 +83,7 @@ const handleChargeInformationUploadStart = async job => {
     await validateS3Object(s3Object, event)
     await helpers.updateEventStatus(event, 'validation complete', JOB_NAME)
   } catch (error) {
-    logger.error('Charge information upload failure', error, { job })
+    logger.error('Charge information upload failure', error.stack, { job })
     if (error.key === errorEvent.keys.csv.INVALID_ROWS) {
       await uploadErrorFile(event, error)
       error.validationErrors = ['Invalid row data']
@@ -95,7 +95,7 @@ const handleChargeInformationUploadStart = async job => {
 
 const onFailed = async (_job, err) => {
   helpers.clearCache()
-  logger.error(`${JOB_NAME}: Job has failed`, err)
+  logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
 const onComplete = async (job, queueManager) => {

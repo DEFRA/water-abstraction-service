@@ -112,12 +112,12 @@ const start = async function () {
       server.log('info', `Service ${name} running at: ${uri}`)
     }
   } catch (err) {
-    logger.error('Failed to start server', err)
+    logger.error('Failed to start server', err.stack)
   }
 }
 
 const _processError = message => err => {
-  logger.error(message, err)
+  logger.error(message, err.stack)
   process.exit(1)
 }
 

@@ -9,7 +9,7 @@ const getLicenceInvoices = async request => {
   try {
     return licencesService.getLicenceInvoices(licenceId, page, perPage)
   } catch (error) {
-    logger.error('Failed to get bills for licence', error, { licenceId })
+    logger.error('Failed to get bills for licence', error.stack, { licenceId })
     return mapErrorResponse(error)
   }
 }

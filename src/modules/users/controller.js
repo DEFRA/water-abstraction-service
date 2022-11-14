@@ -196,7 +196,7 @@ const createOrEnableUser = async (emailAddress, callingUser) => {
 }
 
 const errorHandler = (err, message, params = {}) => {
-  logger.error(message, err, params)
+  logger.error(message, err.stack, params)
   if (err.isBoom) {
     return err
   }

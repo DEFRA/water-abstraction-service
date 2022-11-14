@@ -14,11 +14,11 @@ const logOnComplete = job => {
 }
 
 const logOnCompleteError = (job, error) => {
-  logger.error(`Error handling onComplete: ${job.id}`, error, job.data)
+  logger.error(`Error handling onComplete: ${job.id}`, error.stack, job.data)
 }
 
 const logHandlingError = (job, error) => {
-  logger.error(`Error handling: ${job.id}`, error, job.data)
+  logger.error(`Error handling: ${job.id}`, error.stack, job.data)
 }
 
 /**

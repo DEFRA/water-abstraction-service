@@ -51,7 +51,7 @@ const getInternalSearch = async (request) => {
   try {
     response = await buildInternalSearchResponse(request, response)
   } catch (err) {
-    logger.error('Internal search error', err)
+    logger.error('Internal search error', err.stack)
   }
 
   return response

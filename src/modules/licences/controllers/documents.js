@@ -87,7 +87,7 @@ const handleUnexpectedError = (error, documentId) => {
     return Boom.notFound('Not found', error)
   }
 
-  logger.error('Failed to get licence data for document', error, { documentId })
+  logger.error('Failed to get licence data for document', error.stack, { documentId })
   return Boom.boomify(error)
 }
 

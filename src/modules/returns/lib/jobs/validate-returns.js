@@ -66,7 +66,7 @@ const handleValidateReturnsStart = async job => {
 
     await eventsService.update(event)
   } catch (error) {
-    logger.error('Return upload preview failed', error, { eventId, companyId })
+    logger.error('Return upload preview failed', error.stack, { eventId, companyId })
     await errorEvent.setEventError(event, error)
     throw error
   }
@@ -96,7 +96,7 @@ const getEventReturnData = data =>
   }))
 
 const onFailed = async (job, err) => {
-  logger.error(`${JOB_NAME}: Job has failed`, err)
+  logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
 const onComplete = async () => {

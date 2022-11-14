@@ -39,7 +39,7 @@ const handleSendMessage = async messageId => {
     const notifyResponse = await notify.send(scheduledNotification)
     await scheduledNotificationService.updateScheduledNotificationWithNotifyResponse(messageId, notifyResponse)
   } catch (err) {
-    logger.error('Error sending batch message', err, { messageId })
+    logger.error('Error sending batch message', err.stack, { messageId })
     await messageHelpers.markMessageAsErrored(messageId, err)
   }
 }
@@ -51,12 +51,12 @@ const handler = async job => {
     logger.info(`Sending notify messages - ${batch.length} item(s) found`)
     await Promise.all((batch.map(({ id }) => handleSendMessage(id))))
   } catch (err) {
-    logger.error(`Error handling: ${job.id}`, err, job.data)
+    logger.error(`Error handling: ${job.id}`, err.stack, job.data)
   }
 }
 
 const onFailed = async (job, err) => {
-  logger.error(`${JOB_NAME}: Job has failed`, err)
+  logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
 const onComplete = async () => {

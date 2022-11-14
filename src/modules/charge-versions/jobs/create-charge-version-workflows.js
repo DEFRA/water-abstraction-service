@@ -31,13 +31,13 @@ const handler = async job => {
     const chargeVersionWorkflow = await chargeVersionWorkflowService.create(licence, null, null, CHARGE_VERSION_WORKFLOW_STATUS.toSetup, licenceVersionId)
     return { chargeVersionWorkflowId: chargeVersionWorkflow.id }
   } catch (err) {
-    logger.error(`Error handling: ${job.id}`, err, job.data)
+    logger.error(`Error handling: ${job.id}`, err.stack, job.data)
     throw err
   }
 }
 
 const onFailed = (job, err) => {
-  logger.error(`Job ${job.name} ${job.id} failed`, err)
+  logger.error(`Job ${job.name} ${job.id} failed`, err.stack)
 }
 
 exports.handler = handler

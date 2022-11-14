@@ -47,7 +47,7 @@ const postPrepare = async (request, h) => {
     }
   } catch (err) {
     const code = get(err, 'output.statusCode', 500)
-    logger.error('Batch notification preparation error', err, { messageType, issuer, data })
+    logger.error('Batch notification preparation error', err.stack, { messageType, issuer, data })
     return h.response({
       error: err.message,
       data: null
@@ -70,7 +70,7 @@ const postSend = async request => {
 
     return { error: null, data: event }
   } catch (err) {
-    logger.error('Batch notification send error', err, { eventId })
+    logger.error('Batch notification send error', err.stack, { eventId })
     return mapErrorResponse(err)
   }
 }

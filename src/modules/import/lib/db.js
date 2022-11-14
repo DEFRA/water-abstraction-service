@@ -16,7 +16,7 @@ const dbQuery = async (query, params = []) => {
     }
     return rows
   } catch (error) {
-    logger.error('dbQuery error', error)
+    logger.error('dbQuery error', error.stack)
     throw error
   }
 }

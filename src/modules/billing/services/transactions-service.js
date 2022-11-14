@@ -74,7 +74,7 @@ const updateTransactionWithChargeModuleResponse = (transactionId, response) => {
   }
 
   const err = new Error('Charge module error')
-  logger.error('Unexpected create transaction response from charge module', err, { transactionId, response })
+  logger.error('Unexpected create transaction response from charge module', err.stack, { transactionId, response })
   throw err
 }
 

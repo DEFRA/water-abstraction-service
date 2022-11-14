@@ -86,7 +86,7 @@ const handler = async () => {
 }
 
 const onFailedHandler = async (job, err) => {
-  logger.error(`${JOB_NAME}: Job has failed`, err)
+  logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
 const onComplete = async () => {

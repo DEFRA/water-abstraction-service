@@ -75,7 +75,7 @@ const createLicenceGaugingStationLink = async request => {
     const {
       licenceId
     } = request.payload
-    logger.error(`Something went wrong when attempting to link licence ${licenceId} to station ${gaugingStationId}`, e)
+    logger.error(`Something went wrong when attempting to link licence ${licenceId} to station ${gaugingStationId}`, e.stack)
     return e
   }
 }
@@ -89,7 +89,7 @@ const deleteLicenceGaugingStationLink = async request => {
     }
     return licenceGaugingStationsService.deleteLicenceLink(licenceGaugingStationId)
   } catch (e) {
-    logger.error(`Something went wrong when attempting to destroy the linkage with ID ${licenceGaugingStationId}`, e)
+    logger.error(`Something went wrong when attempting to destroy the linkage with ID ${licenceGaugingStationId}`, e.stack)
     return e
   }
 }

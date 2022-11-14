@@ -109,7 +109,7 @@ const createCompanyInvoiceAccount = async (request, h) => {
 
     return h.response(created).code(201)
   } catch (err) {
-    logger.error('Error saving invoice account', err)
+    logger.error('Error saving invoice account', err.stack)
     return mapErrorResponse(err)
   }
 }

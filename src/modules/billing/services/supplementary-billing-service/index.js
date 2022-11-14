@@ -16,7 +16,7 @@ const processBatch = async batchId => {
 
     return await dataService.persistChanges(batchId, processedTransactions)
   } catch (err) {
-    logger.error(`Supplementary processing error for batch ${batchId}`, err)
+    logger.error(`Supplementary processing error for batch ${batchId}`, err.stack)
     throw err
   }
 }

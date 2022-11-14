@@ -80,7 +80,7 @@ async function sendNotification (queueManager, taskConfig, issuer, contactData, 
     try {
       await enqueue(queueManager, n)
     } catch (error) {
-      logger.error('Error sending notification', error)
+      logger.error('Error sending notification', error.stack)
     }
   }
 
