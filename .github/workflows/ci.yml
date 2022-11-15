@@ -63,7 +63,7 @@ jobs:
       # Our projects use .nvmrc files to specify the node version to use. We can read and then output it as the result
       # this step. Subsequent steps can then access the value
       - name: Read Node version
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        run: echo "{NVMRC}={cat .nvmrc}" >> $GITHUB_OUTPUT
         # Give the step an ID to make it easier to refer to
         id: nvm
 
