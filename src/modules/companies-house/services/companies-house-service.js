@@ -43,7 +43,7 @@ const getCompany = async companyNumber => {
       address: companiesHouseMapper.mapAddress(data.registered_office_address)
     }
   } catch (err) {
-    logger.error('Companies house API error', err)
+    logger.error('Companies house API error', err.stack)
     return null
   }
 }

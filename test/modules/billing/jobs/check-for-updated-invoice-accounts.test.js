@@ -81,7 +81,7 @@ experiment('modules/billing/jobs/check-for-updated-invoice-accounts', () => {
 
       expect(logger.error.calledWith(
         `Job ${job.name} ${job.id} failed`,
-        err
+        err.stack
       )).to.be.true()
     })
   })

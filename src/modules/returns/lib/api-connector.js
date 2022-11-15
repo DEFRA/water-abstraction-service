@@ -125,7 +125,7 @@ const fetchLines = async (returnId, versionId) => {
   const { data, error } = await lines.findMany(filter, sort, pagination)
   if (error) {
     const params = { returnId, versionId }
-    logger.error('Failed to fetch lines for return', error, params)
+    logger.error('Failed to fetch lines for return', error.stack, params)
     throw Boom.boomify(error)
   }
   return data

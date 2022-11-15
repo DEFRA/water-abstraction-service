@@ -79,7 +79,7 @@ const handleChargeInformationMapToJsonStart = async job => {
     event.status = uploadStatus.VALIDATED
     return await eventsService.update(event)
   } catch (error) {
-    logger.error(`Failed to convert ${filename} to JSON`, error, { job })
+    logger.error(`Failed to convert ${filename} to JSON`, error.stack, { job })
     await errorEvent.setEventError(event, error)
     throw error
   }
@@ -100,7 +100,7 @@ const uploadJsonToS3 = (event, json) => {
 
 const onFailed = async (_job, err) => {
   helpers.clearCache()
-  logger.error(`${JOB_NAME}: Job has failed`, err)
+  logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
 const onComplete = async (job, queueManager) => {

@@ -402,7 +402,7 @@ experiment('modules/billing/services/batch-service', () => {
       test('the error is logged', async () => {
         const [message, error, batch] = logger.error.lastCall.args
         expect(message).to.equal('Failed to delete the batch')
-        expect(error).to.equal(err)
+        expect(error).to.equal(err.stack)
         expect(batch).to.equal(batch)
       })
 
@@ -513,7 +513,7 @@ experiment('modules/billing/services/batch-service', () => {
       test('the error is logged', async () => {
         const [message, error, batch] = logger.error.lastCall.args
         expect(message).to.equal('Failed to approve the batch')
-        expect(error).to.equal(err)
+        expect(error).to.equal(err.stack)
         expect(batch).to.equal(batch)
       })
 
@@ -1528,7 +1528,7 @@ experiment('modules/billing/services/batch-service', () => {
       test('an error is logged for the failed call', async () => {
         expect(logger.error.callCount).to.equal(1)
         expect(logger.error.calledWith(
-          'Unable to delete Charge Module batch test-external-id-2', err
+          'Unable to delete Charge Module batch test-external-id-2', err.stack
         )).to.be.true()
       })
 

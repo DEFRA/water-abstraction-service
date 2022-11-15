@@ -11,7 +11,7 @@ const postAddress = async request => {
     const model = addressMapper.uiToModel(request.payload)
     return await addressService.createAddress(model, email)
   } catch (err) {
-    logger.error('Error creating address', err)
+    logger.error('Error creating address', err.stack)
     return mapErrorResponse(err)
   }
 }

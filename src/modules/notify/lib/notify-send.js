@@ -102,14 +102,14 @@ const handleNotifySend = async job => {
   try {
     await sendAndRetry(id)
   } catch (err) {
-    logger.error('Failed to send', err)
+    logger.error('Failed to send', err.stack)
     throw err
   }
 }
 
 const onComplete = async () => logger.info(`${JOB_NAME}: Job has completed`)
 
-const onFailed = async (job, err) => logger.error(`${JOB_NAME}: Job has failed`, err)
+const onFailed = async (job, err) => logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 
 exports.send = send
 exports.createMessage = createMessage

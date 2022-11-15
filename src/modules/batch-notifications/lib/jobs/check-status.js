@@ -45,7 +45,7 @@ const handleCheckStatus = async messageId => {
 
     await scheduledNotifications.repository.update({ id: messageId }, data)
   } catch (err) {
-    logger.error('Error checking notify status', err, { messageId })
+    logger.error('Error checking notify status', err.stack, { messageId })
   }
 }
 
@@ -56,12 +56,12 @@ const handler = async job => {
     logger.info(`Checking notify statuses - ${batch.length} item(s) found`)
     await Promise.all((batch.map(({ id }) => handleCheckStatus(id))))
   } catch (err) {
-    logger.error(`Error handling: ${job.id}`, err, job.data)
+    logger.error(`Error handling: ${job.id}`, err.stack, job.data)
   }
 }
 
 const onFailed = async (job, err) => {
-  logger.error(`${JOB_NAME}: Job has failed`, err)
+  logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
 const onComplete = async () => {

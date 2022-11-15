@@ -63,7 +63,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     test('passes the error', async () => {
       const [, err] = logger.error.lastCall.args
-      expect(err).to.equal(error)
+      expect(err).to.equal(error.stack)
     })
 
     test('logs the data', async () => {
@@ -110,7 +110,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     test('passes the error', async () => {
       const [, err] = logger.error.lastCall.args
-      expect(err).to.equal(error)
+      expect(err).to.equal(error.stack)
     })
 
     test('passes the request data', async () => {
@@ -140,7 +140,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     test('passes the error', async () => {
       const [, err] = logger.error.lastCall.args
-      expect(err).to.equal(error)
+      expect(err).to.equal(error.stack)
     })
 
     test('logs the data', async () => {

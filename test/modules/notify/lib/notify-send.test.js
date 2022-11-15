@@ -118,7 +118,7 @@ experiment('notify-send', () => {
       await notifySendJob.onFailed({}, err)
       const [msg, error] = logger.error.lastCall.args
       expect(msg).to.equal('notify.send: Job has failed')
-      expect(error).to.equal(err)
+      expect(error).to.equal(err.stack)
     })
   })
 

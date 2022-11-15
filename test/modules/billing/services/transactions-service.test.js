@@ -185,7 +185,7 @@ experiment('modules/billing/services/transactions-service', () => {
         } catch (err) {
           const [message, error, params] = logger.error.lastCall.args
           expect(message).to.be.a.string()
-          expect(error instanceof Error).to.be.true()
+          expect(error).to.equal(err.stack)
           expect(params).to.equal({
             transactionId,
             response

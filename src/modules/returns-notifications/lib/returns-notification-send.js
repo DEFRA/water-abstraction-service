@@ -30,7 +30,7 @@ const onComplete = async (job, queueManager) => {
   logger.info(`${JOB_NAME}: Job has completed`)
 }
 
-const onFailed = async (job, err) => logger.error(`${JOB_NAME}: Job has failed`, err)
+const onFailed = async (job, err) => logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 
 exports.createMessage = createMessage
 exports.handler = handleReturnsNotificationSend

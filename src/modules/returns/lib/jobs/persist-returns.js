@@ -121,14 +121,14 @@ const handlePersistReturns = async job => {
     const updatedReturns = await persistReturns(validatedReturns, returns)
     await updateEvent(event, updatedReturns)
   } catch (err) {
-    logger.error('Failed to persist bulk returns upload', err, { job })
+    logger.error('Failed to persist bulk returns upload', err.stack, { job })
     await errorEvent.setEventError(event, err)
     throw err
   }
 }
 
 const onFailed = async (job, err) => {
-  logger.error(`${JOB_NAME}: Job has failed`, err)
+  logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
 const onComplete = async () => {

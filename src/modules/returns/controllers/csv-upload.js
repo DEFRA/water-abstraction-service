@@ -53,7 +53,7 @@ const postUpload = async (request, h) => {
       error: null
     }).code(202)
   } catch (error) {
-    logger.error('Failed to upload bulk returns', error)
+    logger.error('Failed to upload bulk returns', error.stack)
     if (event.id) {
       event.status = uploadStatus.ERROR
       await eventsService.update(event)
@@ -95,7 +95,7 @@ const getUploadPreviewReturn = async (request, h) => {
       }
     }
   } catch (error) {
-    logger.error('Return upload preview failed', error, request.params)
+    logger.error('Return upload preview failed', error.stack, request.params)
     throw error
   }
 }
@@ -156,7 +156,7 @@ const postUploadSubmit = async (request, h) => {
 
     return { data: request.jsonData, error: null }
   } catch (error) {
-    logger.error('Return upload preview failed', error, { eventId, companyId })
+    logger.error('Return upload preview failed', error.stack, { eventId, companyId })
     throw error
   }
 }

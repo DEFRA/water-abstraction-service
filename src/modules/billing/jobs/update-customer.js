@@ -30,7 +30,7 @@ const handler = async job => {
     const invoiceAccountMappedData = await chargeModuleMappers.mapInvoiceAccountToChargeModuleCustomer(invoiceAccountData)
     return chargeModuleCustomersConnector.updateCustomer(invoiceAccountMappedData)
   } catch (e) {
-    logger.error(new Error('Could not update CM with customer details.', e))
+    logger.error(new Error('Could not update CM with customer details.', e.stack))
     return new Error('Could not update CM with customer details.')
   }
 }
@@ -40,7 +40,7 @@ const onComplete = job => {
 }
 
 const onFailedHandler = (job, err) => {
-  logger.error(`onFailed: Job ${job.name} ${job.id} failed`, err)
+  logger.error(`onFailed: Job ${job.name} ${job.id} failed`, err.stack)
 }
 
 exports.jobName = JOB_NAME

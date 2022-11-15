@@ -78,7 +78,7 @@ const postCreateFromWorkflow = async request => {
     const approvedBy = userMapper.pojoToModel(request.defra.internalCallingUser)
     return chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvedBy)
   } catch (err) {
-    logger.error(`Error creating charge version from workflow ${chargeVersionWorkflowId}`, err)
+    logger.error(`Error creating charge version from workflow ${chargeVersionWorkflowId}`, err.stack)
     return mapErrorResponse(err)
   }
 }
@@ -114,7 +114,7 @@ const postUpload = async (request, h) => {
       error: null
     }).code(202)
   } catch (error) {
-    logger.error('Failed to upload charge information', error)
+    logger.error('Failed to upload charge information', error.stack)
     if (event.id) {
       event.status = uploadStatus.ERROR
       await eventsService.update(event)

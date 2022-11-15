@@ -89,7 +89,7 @@ const handleUpdateChargeInformation = async job => {
     set(event, 'status', chargeInformationUpload.uploadStatus.READY)
     return await eventsService.update(event)
   } catch (error) {
-    logger.error('Creation and Update of Charge versions failed', error, { eventId })
+    logger.error('Creation and Update of Charge versions failed', error.stack, { eventId })
     await errorEvent.setEventError(event, error)
     throw error
   }
@@ -97,7 +97,7 @@ const handleUpdateChargeInformation = async job => {
 
 const onFailed = async (_job, err) => {
   helpers.clearCache()
-  logger.error(`${JOB_NAME}: Job has failed`, err)
+  logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
 const onComplete = async () => {

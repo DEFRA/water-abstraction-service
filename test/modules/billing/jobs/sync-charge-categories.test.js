@@ -147,7 +147,7 @@ experiment('modules/billing/jobs/sync-charge-categories', () => {
     })
 
     test('an error message is logged', async () => {
-      expect(logger.error.calledWith('billing.charge-categories.sync-from-csv: Job has failed', error)).to.be.true()
+      expect(logger.error.calledWith('billing.charge-categories.sync-from-csv: Job has failed', error.stack)).to.be.true()
     })
   })
 })

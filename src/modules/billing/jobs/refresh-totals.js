@@ -70,7 +70,7 @@ const onFailedHandler = async (job, err) => {
       logger.error(`CM bill run summary not generated after ${job.attemptsMade} attempts, marking batch as errored ${batchId}`)
       await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary)
     } catch (error) {
-      logger.error(`Unable to set batch status ${batchId}`, error)
+      logger.error(`Unable to set batch status ${batchId}`, error.stack)
     }
   } else if (err.name === 'StateError') {
     // Only logger an info message if we the CM has not generated bill run summary - this is expected

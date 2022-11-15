@@ -72,7 +72,7 @@ const patchChargeVersionWorkflow = async (request, h) => {
     try {
       changes.createdBy = userMapper.pojoToModel(createdBy)
     } catch (err) {
-      logger.error('Error mapping user', err)
+      logger.error('Error mapping user', err.stack)
       return Boom.badData('Invalid user in charge version data')
     }
   }

@@ -13,7 +13,7 @@ const createMessage = (jobName, batchId) => {
 }
 
 const onFailedHandler = (job, err) => {
-  logger.error(`Job ${job.name} ${job.id} failed`, err)
+  logger.error(`Job ${job.name} ${job.id} failed`, err.stack)
 }
 
 const isFinalAttempt = job => job.attemptsMade >= job.opts.attempts

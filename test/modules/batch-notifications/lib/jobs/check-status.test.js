@@ -73,7 +73,7 @@ experiment('checkStatus job', () => {
         await checkStatus.handler({ id: jobId, data: jobParams })
         const [msg, error] = logger.error.lastCall.args
         expect(msg).to.equal(`Error handling: ${jobId}`)
-        expect(error).to.equal(err)
+        expect(error).to.equal(err.stack)
       })
 
       test('Should handle refreshing an event failure correctly', async () => {
@@ -82,7 +82,7 @@ experiment('checkStatus job', () => {
         await checkStatus.handler({ id: jobId })
         const [msg, error, params] = logger.error.lastCall.args
         expect(msg).to.equal('Error checking notify status')
-        expect(error).to.equal(err)
+        expect(error).to.equal(err.stack)
         expect(params).to.equal({ messageId })
       })
     })
@@ -121,7 +121,7 @@ experiment('checkStatus job', () => {
       await checkStatus.onFailed({}, err)
       const [msg, error] = logger.error.lastCall.args
       expect(msg).to.equal('notifications.checkStatus: Job has failed')
-      expect(error).to.equal(err)
+      expect(error).to.equal(err.stack)
     })
   })
 

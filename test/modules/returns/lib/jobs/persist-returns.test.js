@@ -148,7 +148,7 @@ experiment('persist-returns', () => {
       test('the error is logged', async () => {
         const [message, error, params] = logger.error.lastCall.args
         expect(message).to.equal('Failed to persist bulk returns upload')
-        expect(error).to.equal(testError)
+        expect(error).to.equal(testError.stack)
         expect(params.job).to.equal(job)
       })
 

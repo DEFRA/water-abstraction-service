@@ -25,7 +25,7 @@ const handleRefreshEvent = async eventId => {
   try {
     await eventHelpers.refreshEventStatus(eventId)
   } catch (err) {
-    logger.error('Error refreshing batch message event', err, { eventId })
+    logger.error('Error refreshing batch message event', err.stack, { eventId })
   }
 }
 
@@ -36,12 +36,12 @@ const handler = async job => {
     logger.info(`Refreshing notify message events - ${batch.length} item(s) found`)
     await Promise.all((batch.map(({ event_id: id }) => handleRefreshEvent(id))))
   } catch (err) {
-    logger.error(`Error handling: ${job.id}`, err)
+    logger.error(`Error handling: ${job.id}`, err.stack)
   }
 }
 
 const onFailed = async (job, err) => {
-  logger.error(`${JOB_NAME}: Job has failed`, err)
+  logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
 const onComplete = async () => {

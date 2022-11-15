@@ -228,7 +228,7 @@ experiment('lib/queue-manager/queue-manager', () => {
           })
 
           test('an error is logged', async () => {
-            expect(logger.error.calledWith(`Error closing queue ${job.jobName}`, err)).to.be.true()
+            expect(logger.error.calledWith(`Error closing queue ${job.jobName}`, err.stack)).to.be.true()
           })
         })
       })
@@ -266,7 +266,7 @@ experiment('lib/queue-manager/queue-manager', () => {
           test('an error is logged', async () => {
             await bgQueueManager.closeAll()
 
-            expect(logger.error.calledWith(`Error closing queue ${job.jobName}`, err)).to.be.true()
+            expect(logger.error.calledWith(`Error closing queue ${job.jobName}`, err.stack)).to.be.true()
           })
         })
 
@@ -278,7 +278,7 @@ experiment('lib/queue-manager/queue-manager', () => {
           test('an error is logged', async () => {
             await bgQueueManager.closeAll()
 
-            expect(logger.error.calledWith(`Error closing worker ${job.jobName}`, err)).to.be.true()
+            expect(logger.error.calledWith(`Error closing worker ${job.jobName}`, err.stack)).to.be.true()
           })
         })
       })

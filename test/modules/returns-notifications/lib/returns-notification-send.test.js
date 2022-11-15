@@ -61,7 +61,7 @@ experiment('returns-notification-send', () => {
       await returnsNotificationSendJob.onFailed({}, err)
       const [msg, error] = logger.error.lastCall.args
       expect(msg).to.equal('returnsNotification.send: Job has failed')
-      expect(error).to.equal(err)
+      expect(error).to.equal(err.stack)
     })
   })
 

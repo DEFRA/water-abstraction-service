@@ -189,7 +189,7 @@ class QueueManager {
     try {
       await queue.close()
     } catch (err) {
-      logger.error(`Error closing queue ${name}`, err)
+      logger.error(`Error closing queue ${name}`, err.stack)
     }
   }
 
@@ -197,7 +197,7 @@ class QueueManager {
     try {
       await worker.close()
     } catch (err) {
-      logger.error(`Error closing worker ${name}`, err)
+      logger.error(`Error closing worker ${name}`, err.stack)
     }
   }
 

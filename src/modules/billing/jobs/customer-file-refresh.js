@@ -33,7 +33,7 @@ const handler = async job => {
 }
 
 const onFailedHandler = async (job, err) =>
-  logger.error('Failed to fetch customer file data from the charging module', err)
+  logger.error('Failed to fetch customer file data from the charging module', err.stack)
 
 const onComplete = async () => {
   logger.info(`${JOB_NAME}: Job has completed`)

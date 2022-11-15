@@ -12,7 +12,7 @@ const mapOrThrowBoom = (entityName, data, mapper) => {
   try {
     return mapper.pojoToModel(data)
   } catch (err) {
-    logger.error(`Error mapping ${entityName}`, err)
+    logger.error(`Error mapping ${entityName}`, err.stack)
     return Boom.badData('Invalid charge version data')
   }
 }

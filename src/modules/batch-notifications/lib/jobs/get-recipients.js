@@ -28,13 +28,13 @@ const handleGetRecipients = async job => {
     // Use config.getRecipients to get recipient list for this notification
     await data.config.getRecipients(data)
   } catch (err) {
-    logger.error('Batch notifications handleGetRecipients error', err, { eventId })
+    logger.error('Batch notifications handleGetRecipients error', err.stack, { eventId })
     await eventsService.updateStatus(eventId, EVENT_STATUS_ERROR)
   }
 }
 
 const onFailed = async (job, err) => {
-  logger.error(`${JOB_NAME}: Job has failed`, err)
+  logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
 const onComplete = async () => {

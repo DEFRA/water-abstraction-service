@@ -81,7 +81,7 @@ const onFailedHandler = async (job, err) => {
       logger.error(`Rebilling failed ${batchId}`)
       await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToProcessRebilling)
     } catch (error) {
-      logger.error(`Unable to set batch status ${batchId}`, error)
+      logger.error(`Unable to set batch status ${batchId}`, error.stack)
     }
   } else {
     // Do normal error logging
