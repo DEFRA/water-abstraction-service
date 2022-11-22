@@ -4,6 +4,10 @@ const { v4: uuid } = require('uuid')
 
 const JOB_NAME = 'billing.refresh-totals'
 
+const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const config = require('../../../../config')
+const urlJoin = require('url-join')
+
 const batchService = require('../services/batch-service')
 const batchJob = require('./lib/batch-job')
 const helpers = require('./lib/helpers')
@@ -61,6 +65,8 @@ const handler = async job => {
       throw new StateError(`CM bill run summary not ready for batch ${batchId}`)
     }
   }
+
+  await _makeServiceRequest()
 }
 
 const onFailedHandler = async (job, err) => {
@@ -94,6 +100,11 @@ const onComplete = async (job) => {
   } catch (err) {
     batchJob.logOnCompleteError(job, err)
   }
+}
+
+async function _makeServiceRequest () {
+  const requestUrl = urlJoin(config.services.system, 'status')
+  await serviceRequest.get(requestUrl)
 }
 
 exports.jobName = JOB_NAME

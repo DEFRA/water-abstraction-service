@@ -11,17 +11,21 @@ const { expect } = require('@hapi/code')
 const { v4: uuid } = require('uuid')
 const sandbox = require('sinon').createSandbox()
 
-const refreshTotals = require('../../../../src/modules/billing/jobs/refresh-totals')
+const Batch = require('../../../../src/lib/models/batch')
+const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch')
+
+// Things to stub
 const batchService = require('../../../../src/modules/billing/services/batch-service')
 const cmRefreshService = require('../../../../src/modules/billing/services/cm-refresh-service')
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs')
 const billingBatchesRepo = require('../../../../src/lib/connectors/repos/billing-batches')
 const billingTransactionsRepo = require('../../../../src/lib/connectors/repos/billing-transactions')
-
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job')
-const Batch = require('../../../../src/lib/models/batch')
 const { logger } = require('../../../../src/logger')
-const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch')
+const helpers = require('@envage/water-abstraction-helpers')
+
+// Thing under test
+const refreshTotals = require('../../../../src/modules/billing/jobs/refresh-totals')
 
 const BATCH_ID = uuid()
 
@@ -49,6 +53,8 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     sandbox.stub(batchService, 'getBatchById').resolves(batch)
 
     sandbox.stub(logger, 'error')
+
+    sandbox.stub(helpers.serviceRequest, 'get').resolves({})
   })
 
   afterEach(async () => {
@@ -112,6 +118,12 @@ experiment('modules/billing/jobs/refresh-totals', () => {
 
       test('no error is logged', async () => {
         expect(batchJob.logHandlingError.called).to.be.false()
+      })
+
+      test('makes a service request', async () => {
+        const requestUrl = helpers.serviceRequest.get.lastCall.args[0]
+
+        expect(requestUrl).to.endWith('/status')
       })
     })
 
