@@ -17,10 +17,12 @@ const { BATCH_STATUS } = require('../../../lib/models/batch')
 
 const { StateError } = require('../../../lib/errors')
 
-const createMessage = batchId => ([
+const createMessage = (batchId, batchType, scheme) => ([
   JOB_NAME,
   {
-    batchId
+    batchId,
+    batchType,
+    scheme
   },
   {
     jobId: `${JOB_NAME}.${batchId}.${uuid()}`,
@@ -82,7 +84,17 @@ const onFailedHandler = async (job, err) => {
   }
 }
 
-const onComplete = async job => batchJob.logOnComplete(job)
+const onComplete = async (job) => {
+  batchJob.logOnComplete(job)
+
+  try {
+    if (job.data.batchType === 'supplementary' && job.data.scheme === 'alcs') {
+      // Do the thing
+    }
+  } catch (err) {
+    batchJob.logOnCompleteError(job, err)
+  }
+}
 
 exports.jobName = JOB_NAME
 exports.createMessage = createMessage

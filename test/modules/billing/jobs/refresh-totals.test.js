@@ -65,13 +65,17 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     let message
 
     beforeEach(async () => {
-      message = refreshTotals.createMessage(BATCH_ID)
+      message = refreshTotals.createMessage(BATCH_ID, 'supplementary', 'alcs')
     })
 
     test('creates the expected message array', async () => {
       const [name, data, options] = message
       expect(name).to.equal('billing.refresh-totals')
-      expect(data).to.equal({ batchId: BATCH_ID })
+      expect(data).to.equal({
+        batchId: BATCH_ID,
+        batchType: 'supplementary',
+        scheme: 'alcs'
+      })
 
       expect(options.jobId).to.startWith(`billing.refresh-totals.${BATCH_ID}.`)
       expect(options.attempts).to.equal(10)
