@@ -21,7 +21,7 @@ const { BATCH_STATUS } = require('../../../lib/models/batch')
 
 const { StateError } = require('../../../lib/errors')
 
-const createMessage = (batchId, batchType, scheme) => ([
+const createMessage = (batchId, batchType = null, scheme = null) => ([
   JOB_NAME,
   {
     batchId,
