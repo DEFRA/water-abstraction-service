@@ -65,8 +65,6 @@ const handler = async job => {
       throw new StateError(`CM bill run summary not ready for batch ${batchId}`)
     }
   }
-
-  await _makeServiceRequest()
 }
 
 const onFailedHandler = async (job, err) => {
@@ -95,14 +93,14 @@ const onComplete = async (job) => {
 
   try {
     if (job.data.batchType === 'supplementary' && job.data.scheme === 'alcs') {
-      // Do the thing
+      await _initiateSrocSupplementary()
     }
   } catch (err) {
     batchJob.logOnCompleteError(job, err)
   }
 }
 
-async function _makeServiceRequest () {
+async function _initiateSrocSupplementary () {
   const requestUrl = urlJoin(config.services.system, 'status')
   await serviceRequest.get(requestUrl)
 }

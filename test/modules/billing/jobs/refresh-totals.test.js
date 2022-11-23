@@ -35,6 +35,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
   beforeEach(async () => {
     sandbox.stub(batchJob, 'logHandling')
     sandbox.stub(batchJob, 'logHandlingError')
+    sandbox.stub(batchJob, 'logOnComplete')
     sandbox.stub(batchJob, 'logOnCompleteError')
 
     sandbox.stub(billingBatchesRepo, 'update').resolves()
@@ -119,12 +120,6 @@ experiment('modules/billing/jobs/refresh-totals', () => {
       test('no error is logged', async () => {
         expect(batchJob.logHandlingError.called).to.be.false()
       })
-
-      test('makes a service request', async () => {
-        const requestUrl = helpers.serviceRequest.get.lastCall.args[0]
-
-        expect(requestUrl).to.endWith('/status')
-      })
     })
 
     experiment('when the batch is not "processing"', () => {
@@ -194,6 +189,50 @@ experiment('modules/billing/jobs/refresh-totals', () => {
         expect(batchService.setErrorStatus.calledWith(
           BATCH_ID, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary
         )).to.be.true()
+      })
+    })
+  })
+
+  experiment('.onComplete', () => {
+    let job
+
+    beforeEach(() => {
+        job = {
+          data: {
+            batchId: BATCH_ID,
+            batchType: null,
+            scheme: null
+          }
+        }  
+    })
+
+    experiment('when batchType is `supplementary` and scheme is `alcs`', () => {
+      beforeEach(() => {
+        job.data.batchType = 'supplementary'
+        job.data.scheme = 'alcs'
+
+        refreshTotals.onComplete(job)
+      })
+
+      test('makes a service request', async () => {
+        const result = helpers.serviceRequest.get.calledOnce
+  
+        expect(result).to.be.true()
+      })
+    })
+
+    experiment('when batchType is not `supplementary` and scheme is not `alcs`', () => {
+      beforeEach(() => {
+        job.data.batchType = 'two_part_tariff'
+        job.data.scheme = 'sroc'
+
+        refreshTotals.onComplete(job)
+      })
+
+      test('does not make a service request', async () => {
+        const result = helpers.serviceRequest.get.calledOnce
+  
+        expect(result).to.be.false()
       })
     })
   })
