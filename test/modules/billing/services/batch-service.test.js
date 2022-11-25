@@ -389,37 +389,68 @@ experiment('modules/billing/services/batch-service', () => {
 
     experiment('when the batch does not delete', () => {
       let err
-      beforeEach(async () => {
-        err = new Error('whoops')
-        chargeModuleBillRunConnector.delete.rejects(err)
-        try {
-          await batchService.deleteBatch(batch, internalCallingUser)
-        } catch (err) {
 
-        }
+      experiment('because the request to the charging module fails', () => {
+        beforeEach(async () => {
+          err = new Error('charging module says no')
+          chargeModuleBillRunConnector.delete.rejects(err)
+          try {
+            await batchService.deleteBatch(batch, internalCallingUser)
+          } catch (err) {
+
+          }
+        })
+
+        test('the error is logged', async () => {
+          const [message, error, data] = logger.error.lastCall.args
+          expect(message).to.equal('Failed to delete Charging Module Bill Run')
+          expect(error).to.equal(err)
+          expect(data).to.equal({ billRunId: batch.externalId })
+        })
+
+        test('deletes all the billing data', async () => {
+          expect(newRepos.billingBatchChargeVersionYears.deleteByBatchId.calledWith(batch.id)).to.be.true()
+          expect(newRepos.billingVolumes.deleteByBatchId.calledWith(batch.id)).to.be.true()
+          expect(newRepos.billingTransactions.deleteByBatchId.calledWith(batch.id)).to.be.true()
+          expect(newRepos.billingInvoiceLicences.deleteByBatchId.calledWith(batch.id)).to.be.true()
+          expect(newRepos.billingInvoices.deleteByBatchId.calledWith(batch.id, false)).to.be.true()
+          expect(newRepos.billingBatches.delete.calledWith(batch.id)).to.be.true()
+        })
       })
 
-      test('the error is logged', async () => {
-        const [message, error, batch] = logger.error.lastCall.args
-        expect(message).to.equal('Failed to delete the batch')
-        expect(error).to.equal(err.stack)
-        expect(batch).to.equal(batch)
-      })
+      experiment('because something else fails', () => {
+        beforeEach(async () => {
+          err = new Error('chargeing module says no')
+          newRepos.billingBatches.delete.rejects(err)
+          try {
+            await batchService.deleteBatch(batch, internalCallingUser)
+          } catch (err) {
 
-      test('creates an event showing the calling user could not delete the batch', async () => {
-        const [savedEvent] = eventService.create.lastCall.args
-        expect(savedEvent.issuer).to.equal(internalCallingUser.email)
-        expect(savedEvent.type).to.equal('billing-batch:cancel')
-        expect(savedEvent.status).to.equal('error')
-        expect(savedEvent.metadata.user).to.equal(internalCallingUser)
-        expect(savedEvent.metadata.batch).to.equal(batch)
-      })
+          }
+        })
 
-      test('sets the status of the batch to error', async () => {
-        const [id, changes] = newRepos.billingBatches.update.lastCall.args
-        expect(id).to.equal(batch.id)
-        expect(changes).to.equal({
-          status: 'error'
+        test('the error is logged', async () => {
+          const [message, error, batch] = logger.error.lastCall.args
+          expect(message).to.equal('Failed to delete the batch')
+          expect(error).to.equal(err)
+          expect(batch).to.equal(batch)
+        })
+
+        test('creates an event showing the calling user could not delete the batch', async () => {
+          const [savedEvent] = eventService.create.lastCall.args
+          expect(savedEvent.issuer).to.equal(internalCallingUser.email)
+          expect(savedEvent.type).to.equal('billing-batch:cancel')
+          expect(savedEvent.status).to.equal('error')
+          expect(savedEvent.metadata.user).to.equal(internalCallingUser)
+          expect(savedEvent.metadata.batch).to.equal(batch)
+        })
+
+        test('sets the status of the batch to error', async () => {
+          const [id, changes] = newRepos.billingBatches.update.lastCall.args
+          expect(id).to.equal(batch.id)
+          expect(changes).to.equal({
+            status: 'error'
+          })
         })
       })
     })
