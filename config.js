@@ -69,7 +69,7 @@ module.exports = {
   },
 
   pg: {
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.NODE_ENV !== 'test' ? process.env.DATABASE_URL : process.env.TEST_DATABASE_URL,
     max: 36
   },
 
