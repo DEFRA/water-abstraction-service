@@ -197,13 +197,13 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     let job
 
     beforeEach(() => {
-        job = {
-          data: {
-            batchId: BATCH_ID,
-            batchType: null,
-            scheme: null
-          }
-        }  
+      job = {
+        data: {
+          batchId: BATCH_ID,
+          batchType: null,
+          scheme: null
+        }
+      }
     })
 
     experiment('when batchType is `supplementary` and scheme is `alcs`', () => {
@@ -216,7 +216,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
 
       test('makes a service request', async () => {
         const result = helpers.serviceRequest.get.calledOnce
-  
+
         expect(result).to.be.true()
       })
     })
@@ -231,7 +231,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
 
       test('does not make a service request', async () => {
         const result = helpers.serviceRequest.get.calledOnce
-  
+
         expect(result).to.be.false()
       })
     })
