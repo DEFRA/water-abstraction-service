@@ -1,6 +1,6 @@
 'use strict'
 
-const { get, partial } = require('lodash')
+const { get } = require('lodash')
 const bluebird = require('bluebird')
 
 const JOB_NAME = 'billing.prepare-transactions'
@@ -23,7 +23,15 @@ const billingTransactionsRepo = require('../../../lib/connectors/repos/billing-t
 const Transaction = require('../../../lib/models/transaction')
 const { BATCH_STATUS } = require('../../../lib/models/batch')
 
-const createMessage = partial(helpers.createMessage, JOB_NAME)
+const createMessage = (batchId) => ([
+  JOB_NAME,
+  {
+    batchId
+  },
+  {
+    jobId: `${JOB_NAME}.${batchId}`
+  }
+])
 
 const getTransactionId = transaction => transaction.billingTransactionId
 
