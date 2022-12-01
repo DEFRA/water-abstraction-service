@@ -11,17 +11,17 @@ const { expect } = require('@hapi/code')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 
-const { logger } = require('../../../../src/logger')
 const prepareTransactions = require('../../../../src/modules/billing/jobs/prepare-transactions')
 const refreshTotals = require('../../../../src/modules/billing/jobs/refresh-totals')
 
-const billingTransactionsRepo = require('../../../../src/lib/connectors/repos/billing-transactions')
-
+// Things to stub
+const { logger } = require('../../../../src/logger')
 const batchService = require('../../../../src/modules/billing/services/batch-service')
-const supplementaryBillingService = require('../../../../src/modules/billing/services/supplementary-billing-service')
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job')
-
+const supplementaryBillingService = require('../../../../src/modules/billing/services/supplementary-billing-service')
 const Batch = require('../../../../src/lib/models/batch')
+const billingTransactionsRepo = require('../../../../src/lib/connectors/repos/billing-transactions')
+const helpers = require('@envage/water-abstraction-helpers')
 
 const BATCH_ID = uuid()
 
@@ -57,6 +57,8 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
     sandbox.stub(batch, 'isSupplementary')
 
     sandbox.stub(billingTransactionsRepo, 'findByBatchId').resolves(data.transactions)
+
+    sandbox.stub(helpers.serviceRequest, 'get').resolves({})
 
     queueManager = {
       add: sandbox.stub()
@@ -177,7 +179,9 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
     beforeEach(async () => {
       job = {
         data: {
-          batchId: BATCH_ID
+          batchId: BATCH_ID,
+          batchType: null,
+          scheme: null
         },
         returnvalue: {
           billingTransactionIds: [
@@ -237,6 +241,36 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
         expect(queueManager.add.calledWith(
           refreshTotals.jobName, BATCH_ID
         )).to.be.true()
+      })
+
+      experiment('when batchType is `supplementary` and scheme is `alcs`', () => {
+        beforeEach(() => {
+          job.data.batchType = 'supplementary'
+          job.data.scheme = 'alcs'
+
+          refreshTotals.onComplete(job)
+        })
+
+        test('makes a service request', async () => {
+          const result = helpers.serviceRequest.get.calledOnce
+
+          expect(result).to.be.true()
+        })
+      })
+
+      experiment('when batchType is not `supplementary` and scheme is not `alcs`', () => {
+        beforeEach(() => {
+          job.data.batchType = 'two_part_tariff'
+          job.data.scheme = 'sroc'
+
+          refreshTotals.onComplete(job)
+        })
+
+        test('does not make a service request', async () => {
+          const result = helpers.serviceRequest.get.calledOnce
+
+          expect(result).to.be.false()
+        })
       })
     })
   })

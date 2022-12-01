@@ -2,6 +2,8 @@
 
 const { get } = require('lodash')
 const bluebird = require('bluebird')
+const { serviceRequest } = require('@envage/water-abstraction-helpers')
+const urlJoin = require('url-join')
 
 const JOB_NAME = 'billing.prepare-transactions'
 
@@ -82,8 +84,14 @@ const onComplete = async (job, queueManager) => {
       if (numberOfTransactionsInBatch.length === 0) {
         logger.info(`Batch ${batchId} is empty - WRLS will mark is as Empty, and will not ask the Charging module to generate it.`)
         await billingBatchesRepo.update(batchId, { status: BATCH_STATUS.empty })
+
         // Set "IncludeInSupplementaryBillingStatus" to 'no' for all licences in this batch
         await licenceService.updateIncludeInSupplementaryBillingStatusForEmptyBatch(batchId)
+
+        // Initiate sroc supplementary billing if required
+        if (job.data.batchType === 'supplementary' && job.data.scheme === 'alcs') {
+          await _initiateSrocSupplementary()
+        }
       } else {
         await batchService.requestCMBatchGeneration(batchId)
         await queueManager.add(refreshTotalsJobName, batchId)
@@ -98,6 +106,12 @@ const onComplete = async (job, queueManager) => {
   } catch (err) {
     batchJob.logOnCompleteError(job, err)
   }
+}
+
+// TODO: Update this to hit correct endpoint
+async function _initiateSrocSupplementary () {
+  const requestUrl = urlJoin(config.services.system, 'status')
+  await serviceRequest.get(requestUrl)
 }
 
 exports.jobName = JOB_NAME
