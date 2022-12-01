@@ -10,9 +10,9 @@
   "author": "SROC service team",
   "license": "OGL-UK-3.0",
   "scripts": {
-    "test": "DATABASE_URL=postgres://water_user:password@localhost:5432/wabs_test LAZY_REDIS=1 lab",
-    "migrate": "node scripts/create-schema && db-migrate up --verbose && node scripts/migrate-task-config/migrate-task-config.js",
-    "migrate:local-test": "DATABASE_URL=postgres://water_user:password@localhost:5432/wabs_test node scripts/create-schema && DATABASE_URL=postgres://water_user:password@localhost:5432/wabs_test db-migrate up --verbose && DATABASE_URL=postgres://water_user:password@localhost:5432/wabs_test node scripts/migrate-task-config/migrate-task-config.js",
+    "test": "LAZY_REDIS=1 lab",
+    "migrate": "node scripts/create-schema && node scripts/migrate && node scripts/migrate-task-config/migrate-task-config.js",
+    "migrate:local-test": "export NODE_ENV=test && node scripts/create-schema && node scripts/migrate && node scripts/migrate-task-config/migrate-task-config.js",
     "migrate:down": "db-migrate down --verbose",
     "migrate:create": "db-migrate create --sql-file --",
     "lint": "standard",
