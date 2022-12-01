@@ -23,10 +23,12 @@ const billingTransactionsRepo = require('../../../lib/connectors/repos/billing-t
 const Transaction = require('../../../lib/models/transaction')
 const { BATCH_STATUS } = require('../../../lib/models/batch')
 
-const createMessage = (batchId) => ([
+const createMessage = (batchId, batchType = null, scheme = null) => ([
   JOB_NAME,
   {
-    batchId
+    batchId,
+    batchType,
+    scheme
   },
   {
     jobId: `${JOB_NAME}.${batchId}`

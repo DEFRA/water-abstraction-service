@@ -75,14 +75,16 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
     let message
 
     beforeEach(async () => {
-      message = prepareTransactions.createMessage(BATCH_ID)
+      message = prepareTransactions.createMessage(BATCH_ID, 'supplementary', 'alcs')
     })
 
     test('creates the expected message array', async () => {
       expect(message).to.equal([
         'billing.prepare-transactions',
         {
-          batchId: BATCH_ID
+          batchId: BATCH_ID,
+          batchType: 'supplementary',
+          scheme: 'alcs'
         },
         {
           jobId: `billing.prepare-transactions.${BATCH_ID}`
