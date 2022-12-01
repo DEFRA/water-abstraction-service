@@ -100,6 +100,7 @@ const onComplete = async (job) => {
   }
 }
 
+// TODO: Update this to hit correct endpoint
 async function _initiateSrocSupplementary () {
   const requestUrl = urlJoin(config.services.system, 'status')
   await serviceRequest.get(requestUrl)
