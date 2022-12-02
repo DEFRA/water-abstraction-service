@@ -22,6 +22,8 @@ const supplementaryBillingService = require('../../../../src/modules/billing/ser
 const Batch = require('../../../../src/lib/models/batch')
 const billingTransactionsRepo = require('../../../../src/lib/connectors/repos/billing-transactions')
 const helpers = require('@envage/water-abstraction-helpers')
+const billingBatchesRepo = require('../../../../src/lib/connectors/repos/billing-batches')
+const licenceService = require('../../../../src/modules/billing/services/licences-service')
 
 const BATCH_ID = uuid()
 
@@ -50,15 +52,15 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
 
     batch = new Batch(BATCH_ID)
     sandbox.stub(batchService, 'getBatchById').resolves(batch)
+
     sandbox.stub(batchService, 'setErrorStatus').resolves()
     sandbox.stub(batchService, 'requestCMBatchGeneration').resolves()
-
     sandbox.stub(supplementaryBillingService, 'processBatch')
     sandbox.stub(batch, 'isSupplementary')
-
     sandbox.stub(billingTransactionsRepo, 'findByBatchId').resolves(data.transactions)
-
     sandbox.stub(helpers.serviceRequest, 'get').resolves({})
+    sandbox.stub(billingBatchesRepo, 'update')
+    sandbox.stub(licenceService, 'updateIncludeInSupplementaryBillingStatusForEmptyBatch')
 
     queueManager = {
       add: sandbox.stub()
@@ -84,9 +86,7 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
       expect(message).to.equal([
         'billing.prepare-transactions',
         {
-          batchId: BATCH_ID,
-          batchType: 'supplementary',
-          scheme: 'alcs'
+          batchId: BATCH_ID
         },
         {
           jobId: `billing.prepare-transactions.${BATCH_ID}`
@@ -179,15 +179,15 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
     beforeEach(async () => {
       job = {
         data: {
-          batchId: BATCH_ID,
-          batchType: null,
-          scheme: null
+          batchId: BATCH_ID
         },
         returnvalue: {
           billingTransactionIds: [
             data.transactions[0].billingTransactionId,
             data.transactions[1].billingTransactionId
-          ]
+          ],
+          batchType: 'BATCH_TYPE',
+          scheme: 'SCHEME'
         }
       }
     })
@@ -226,50 +226,61 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
       })
     })
 
-    experiment('when there are 0 transactions to process', () => {
-      beforeEach(async () => {
+    experiment('when there are no billing transaction IDs', () => {
+      beforeEach(() => {
         job.returnvalue.billingTransactionIds = []
-        await prepareTransactions.onComplete(job, queueManager)
       })
 
-      test('charge module batch summary is generated', () => {
+      test('charge module batch summary is generated', async () => {
+        await prepareTransactions.onComplete(job, queueManager)
+
         expect(batchService.requestCMBatchGeneration.calledWith(BATCH_ID)).to.be.true()
       })
 
-      test('the refresh totals job is added to the message queue', () => {
+      test('the refresh totals job is added to the message queue', async () => {
+        await prepareTransactions.onComplete(job, queueManager)
+
         expect(queueManager.add.callCount).to.equal(1)
         expect(queueManager.add.calledWith(
-          refreshTotals.jobName, BATCH_ID
+          refreshTotals.jobName,
+          BATCH_ID
         )).to.be.true()
       })
 
-      experiment('when batchType is `supplementary` and scheme is `alcs`', () => {
+      experiment('when there are no transactions in the batch', () => {
         beforeEach(() => {
-          job.data.batchType = 'supplementary'
-          job.data.scheme = 'alcs'
-
-          refreshTotals.onComplete(job)
+          billingTransactionsRepo.findByBatchId.restore()
+          sandbox.stub(billingTransactionsRepo, 'findByBatchId').resolves([])
         })
 
-        test('makes a service request', async () => {
-          const result = helpers.serviceRequest.get.calledOnce
+        experiment('when batchType is `supplementary` and scheme is `alcs`', () => {
+          beforeEach(() => {
+            job.returnvalue.batchType = 'supplementary'
+            job.returnvalue.scheme = 'alcs'
+          })
 
-          expect(result).to.be.true()
+          test('makes a service request', async () => {
+            await prepareTransactions.onComplete(job, queueManager)
+
+            const result = helpers.serviceRequest.get.calledOnce
+
+            expect(result).to.be.true()
+          })
         })
-      })
 
-      experiment('when batchType is not `supplementary` and scheme is not `alcs`', () => {
-        beforeEach(() => {
-          job.data.batchType = 'two_part_tariff'
-          job.data.scheme = 'sroc'
+        experiment('when batchType is not `supplementary` and scheme is not `alcs`', () => {
+          beforeEach(() => {
+            job.returnvalue.batchType = 'two_part_tariff'
+            job.returnvalue.scheme = 'sroc'
+          })
 
-          refreshTotals.onComplete(job)
-        })
+          test('does not make a service request', async () => {
+            await prepareTransactions.onComplete(job, queueManager)
 
-        test('does not make a service request', async () => {
-          const result = helpers.serviceRequest.get.calledOnce
+            const result = helpers.serviceRequest.get.calledOnce
 
-          expect(result).to.be.false()
+            expect(result).to.be.false()
+          })
         })
       })
     })

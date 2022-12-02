@@ -1,6 +1,6 @@
 'use strict'
 
-const { get } = require('lodash')
+const { get, partial } = require('lodash')
 const bluebird = require('bluebird')
 const { serviceRequest } = require('@envage/water-abstraction-helpers')
 const urlJoin = require('url-join')
@@ -25,17 +25,7 @@ const billingTransactionsRepo = require('../../../lib/connectors/repos/billing-t
 const Transaction = require('../../../lib/models/transaction')
 const { BATCH_STATUS } = require('../../../lib/models/batch')
 
-const createMessage = (batchId, batchType = null, scheme = null) => ([
-  JOB_NAME,
-  {
-    batchId,
-    batchType,
-    scheme
-  },
-  {
-    jobId: `${JOB_NAME}.${batchId}`
-  }
-])
+const createMessage = partial(helpers.createMessage, JOB_NAME)
 
 const getTransactionId = transaction => transaction.billingTransactionId
 
@@ -62,7 +52,8 @@ const handler = async job => {
       .map(getTransactionId)
 
     return {
-      billingTransactionIds
+      billingTransactionIds,
+      batch
     }
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToPrepareTransactions)
@@ -79,9 +70,9 @@ const onComplete = async (job, queueManager) => {
     if (billingTransactionIds.length === 0) {
       logger.info(`No transactions left to process for batch ${batchId}. Requesting CM batch generation...`)
 
-      const numberOfTransactionsInBatch = await billingTransactionsRepo.findByBatchId(batchId)
+      const transactionsInBatch = await billingTransactionsRepo.findByBatchId(batchId)
 
-      if (numberOfTransactionsInBatch.length === 0) {
+      if (transactionsInBatch.length === 0) {
         logger.info(`Batch ${batchId} is empty - WRLS will mark is as Empty, and will not ask the Charging module to generate it.`)
         await billingBatchesRepo.update(batchId, { status: BATCH_STATUS.empty })
 
@@ -89,7 +80,7 @@ const onComplete = async (job, queueManager) => {
         await licenceService.updateIncludeInSupplementaryBillingStatusForEmptyBatch(batchId)
 
         // Initiate sroc supplementary billing if required
-        if (job.data.batchType === 'supplementary' && job.data.scheme === 'alcs') {
+        if (job.returnvalue.batchType === 'supplementary' && job.returnvalue.scheme === 'alcs') {
           await _initiateSrocSupplementary()
         }
       } else {
