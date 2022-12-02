@@ -186,8 +186,10 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
             data.transactions[0].billingTransactionId,
             data.transactions[1].billingTransactionId
           ],
-          batchType: 'BATCH_TYPE',
-          scheme: 'SCHEME'
+          batch: {
+            batchType: 'BATCH_TYPE',
+            scheme: 'SCHEME'
+          }
         }
       }
     })
@@ -255,8 +257,8 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
 
         experiment('when batchType is `supplementary` and scheme is `alcs`', () => {
           beforeEach(() => {
-            job.returnvalue.batchType = 'supplementary'
-            job.returnvalue.scheme = 'alcs'
+            job.returnvalue.batch.batchType = 'supplementary'
+            job.returnvalue.batch.scheme = 'alcs'
           })
 
           test('makes a service request', async () => {
@@ -270,8 +272,8 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
 
         experiment('when batchType is not `supplementary` and scheme is not `alcs`', () => {
           beforeEach(() => {
-            job.returnvalue.batchType = 'two_part_tariff'
-            job.returnvalue.scheme = 'sroc'
+            job.returnvalue.batch.batchType = 'two_part_tariff'
+            job.returnvalue.batch.scheme = 'sroc'
           })
 
           test('does not make a service request', async () => {

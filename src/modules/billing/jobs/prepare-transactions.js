@@ -80,7 +80,8 @@ const onComplete = async (job, queueManager) => {
         await licenceService.updateIncludeInSupplementaryBillingStatusForEmptyBatch(batchId)
 
         // Initiate sroc supplementary billing if required
-        if (job.returnvalue.batchType === 'supplementary' && job.returnvalue.scheme === 'alcs') {
+        const { batch } = job.returnvalue
+        if (batch.batchType === 'supplementary' && batch.scheme === 'alcs') {
           await _initiateSrocSupplementary()
         }
       } else {
