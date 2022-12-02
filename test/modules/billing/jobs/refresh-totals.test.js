@@ -29,7 +29,7 @@ const refreshTotals = require('../../../../src/modules/billing/jobs/refresh-tota
 
 const BATCH_ID = uuid()
 
-experiment.only('modules/billing/jobs/refresh-totals', () => {
+experiment('modules/billing/jobs/refresh-totals', () => {
   let batch
 
   beforeEach(async () => {
