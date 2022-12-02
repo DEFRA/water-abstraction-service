@@ -21,12 +21,10 @@ const { BATCH_STATUS } = require('../../../lib/models/batch')
 
 const { StateError } = require('../../../lib/errors')
 
-const createMessage = (batchId, batchType = null, scheme = null) => ([
+const createMessage = (batchId) => ([
   JOB_NAME,
   {
-    batchId,
-    batchType,
-    scheme
+    batchId
   },
   {
     jobId: `${JOB_NAME}.${batchId}.${uuid()}`,
@@ -65,6 +63,8 @@ const handler = async job => {
       throw new StateError(`CM bill run summary not ready for batch ${batchId}`)
     }
   }
+
+  return { batch }
 }
 
 const onFailedHandler = async (job, err) => {
@@ -91,8 +91,10 @@ const onFailedHandler = async (job, err) => {
 const onComplete = async (job) => {
   batchJob.logOnComplete(job)
 
+  const { batch } = job.returnvalue
+
   try {
-    if (job.data.batchType === 'supplementary' && job.data.scheme === 'alcs') {
+    if (batch.batchType === 'supplementary' && batch.scheme === 'alcs') {
       await _initiateSrocSupplementary()
     }
   } catch (err) {

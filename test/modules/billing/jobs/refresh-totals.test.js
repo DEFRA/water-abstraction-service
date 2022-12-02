@@ -29,7 +29,7 @@ const refreshTotals = require('../../../../src/modules/billing/jobs/refresh-tota
 
 const BATCH_ID = uuid()
 
-experiment('modules/billing/jobs/refresh-totals', () => {
+experiment.only('modules/billing/jobs/refresh-totals', () => {
   let batch
 
   beforeEach(async () => {
@@ -72,17 +72,13 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     let message
 
     beforeEach(async () => {
-      message = refreshTotals.createMessage(BATCH_ID, 'supplementary', 'alcs')
+      message = refreshTotals.createMessage(BATCH_ID)
     })
 
     test('creates the expected message array', async () => {
       const [name, data, options] = message
       expect(name).to.equal('billing.refresh-totals')
-      expect(data).to.equal({
-        batchId: BATCH_ID,
-        batchType: 'supplementary',
-        scheme: 'alcs'
-      })
+      expect(data).to.equal({ batchId: BATCH_ID })
 
       expect(options.jobId).to.startWith(`billing.refresh-totals.${BATCH_ID}.`)
       expect(options.attempts).to.equal(10)
@@ -93,24 +89,27 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     })
   })
 
-  experiment('.handler', () => {
-    let job
-    beforeEach(async () => {
-      job = {
-        data: {
-          batchId: BATCH_ID
-        }
+  const defaultJob = {
+    data: {
+      batchId: BATCH_ID
+    },
+    returnvalue: {
+      batch: {
+        batchType: 'BATCH_TYPE',
+        scheme: 'SCHEME'
       }
-    })
+    }
+  }
 
+  experiment('.handler', () => {
     experiment('when there are no errors', () => {
       beforeEach(async () => {
         cmRefreshService.updateBatch.resolves(true)
-        await refreshTotals.handler(job)
+        await refreshTotals.handler(defaultJob)
       })
 
       test('logs an info message', async () => {
-        expect(batchJob.logHandling.calledWith(job)).to.be.true()
+        expect(batchJob.logHandling.calledWith(defaultJob)).to.be.true()
       })
 
       test('refreshes the totals from the charge module using the batch ID', async () => {
@@ -125,7 +124,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     experiment('when the batch is not "processing"', () => {
       beforeEach(async () => {
         batch.status = Batch.BATCH_STATUS.error
-        await expect(refreshTotals.handler(job)).to.reject()
+        await expect(refreshTotals.handler(defaultJob)).to.reject()
       })
 
       test('the error is not logged because logging is left to the onFailed handler', async () => {
@@ -139,7 +138,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
       beforeEach(async () => {
         error = new Error('refresh error')
         cmRefreshService.updateBatch.rejects(error)
-        await expect(refreshTotals.handler(job)).to.reject()
+        await expect(refreshTotals.handler(defaultJob)).to.reject()
       })
 
       test('the error is not logged because logging is left to the onFailed handler', async () => {
@@ -155,9 +154,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     experiment('when the attempt to get the bill run summary from CM is not the final one', () => {
       beforeEach(async () => {
         job = {
-          data: {
-            batchId: BATCH_ID
-          },
+          ...defaultJob,
           attemptsMade: 5,
           opts: {
             attempts: 10
@@ -174,9 +171,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     experiment('on the final attempt to get the bill run summary from CM', () => {
       beforeEach(async () => {
         job = {
-          data: {
-            batchId: BATCH_ID
-          },
+          ...defaultJob,
           attemptsMade: 10,
           opts: {
             attempts: 10
@@ -198,18 +193,14 @@ experiment('modules/billing/jobs/refresh-totals', () => {
 
     beforeEach(() => {
       job = {
-        data: {
-          batchId: BATCH_ID,
-          batchType: null,
-          scheme: null
-        }
+        ...defaultJob
       }
     })
 
     experiment('when batchType is `supplementary` and scheme is `alcs`', () => {
       beforeEach(() => {
-        job.data.batchType = 'supplementary'
-        job.data.scheme = 'alcs'
+        job.returnvalue.batch.batchType = 'supplementary'
+        job.returnvalue.batch.scheme = 'alcs'
 
         refreshTotals.onComplete(job)
       })
@@ -223,8 +214,8 @@ experiment('modules/billing/jobs/refresh-totals', () => {
 
     experiment('when batchType is not `supplementary` and scheme is not `alcs`', () => {
       beforeEach(() => {
-        job.data.batchType = 'two_part_tariff'
-        job.data.scheme = 'sroc'
+        job.returnvalue.batch.batchType = 'two_part_tariff'
+        job.returnvalue.batch.scheme = 'sroc'
 
         refreshTotals.onComplete(job)
       })
