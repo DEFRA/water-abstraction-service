@@ -127,7 +127,7 @@ const deleteBatch = async (batch, internalCallingUser) => {
   }
 
   try {
-    await chargeModuleBillRunConnector.delete(batch.externalId)
+    await deleteChargingModuleBillRun(batch.externalId)
 
     // These are populated at every stage in the bill run
     await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batch.id, false)
@@ -141,10 +141,18 @@ const deleteBatch = async (batch, internalCallingUser) => {
 
     await saveEvent('billing-batch:cancel', 'delete', internalCallingUser, batch)
   } catch (err) {
-    logger.error('Failed to delete the batch', err.stack, batch)
+    logger.error('Failed to delete the batch', err, batch)
     await saveEvent('billing-batch:cancel', 'error', internalCallingUser, batch)
     await setStatus(batch.id, BATCH_STATUS.error)
     throw err
+  }
+}
+
+async function deleteChargingModuleBillRun (billRunId) {
+  try {
+    await chargeModuleBillRunConnector.delete(billRunId)
+  } catch (err) {
+    logger.error('Failed to delete Charging Module Bill Run', err, { billRunId })
   }
 }
 
