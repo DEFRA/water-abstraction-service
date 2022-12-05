@@ -34,8 +34,7 @@ const handler = async job => {
     const billingBatchChargeVersionYearIds = billingBatchChargeVersionYears.map(getChargeVersionYearId)
 
     return {
-      billingBatchChargeVersionYearIds,
-      batch
+      billingBatchChargeVersionYearIds
     }
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToProcessChargeVersions)
@@ -53,9 +52,7 @@ const onComplete = async (job, queueManager) => {
     // If there's nothing to process, skip to cm refresh
     if (billingBatchChargeVersionYearIds.length === 0) {
       await batchService.requestCMBatchGeneration(batchId)
-
-      const { batchType, scheme } = job.returnvalue.batch
-      await queueManager.add(refreshTotalsJobName, batchId, batchType, scheme)
+      await queueManager.add(refreshTotalsJobName, batchId)
     }
 
     // Publish a job to process each charge version year

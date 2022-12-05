@@ -157,11 +157,7 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
           batchId
         },
         returnvalue: {
-          billingBatchChargeVersionYearIds: ['test-id-1', 'test-id-2'],
-          batch: {
-            batchType: 'BATCH_TYPE',
-            scheme: 'SCHEME'
-          }
+          billingBatchChargeVersionYearIds: ['test-id-1', 'test-id-2']
         }
       }
     })
@@ -197,10 +193,7 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
       test('a job is published to refresh the totals', async () => {
         expect(queueManager.add.callCount).to.equal(1)
         expect(queueManager.add.calledWith(
-          'billing.refresh-totals',
-          batchId,
-          'BATCH_TYPE',
-          'SCHEME'
+          'billing.refresh-totals', batchId
         )).to.be.true()
       })
     })
