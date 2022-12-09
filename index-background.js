@@ -3,24 +3,18 @@
 require('dotenv').config()
 
 const Blipp = require('blipp')
-const Good = require('@hapi/good')
-const GoodWinston = require('good-winston')
 const Hapi = require('@hapi/hapi')
 const HapiAuthJwt2 = require('hapi-auth-jwt2')
 const moment = require('moment')
 
 const config = require('./config')
 const db = require('./src/lib/connectors/db')
+const HapiPinoPlugin = require('./src/plugins/hapi-pino.plugin.js')
 const { JobRegistrationService } = require('./src/lib/queue-manager/job-registration-service')
 const { logger } = require('./src/logger')
 const routes = require('./src/routes/background.js')
 const { StartUpJobsService } = require('./src/lib/queue-manager/start-up-jobs-service')
 const { validate } = require('./src/lib/validate')
-
-// Hapi/good is used to log ops statistics, request responses and server log events. It's the reason you'll see
-// 2022-08-18T22:42:39.697Z - info: 220818/224239.697, [ops] memory: 108Mb, uptime (seconds): 63.480054702, load: [0.09,0.11,0.09]
-// throughout our logs. This call initialises it
-const goodWinstonStream = new GoodWinston({ winston: logger })
 
 // This changes the locale for moment globally to English (United Kingdom). Any new instances of moment will use this
 // rather than the default 'en-US'
@@ -38,18 +32,9 @@ const plugins = [
 // Register plugins
 const _registerServerPlugins = async (server) => {
   // Service plugins
+  await server.register(HapiPinoPlugin())
   await server.register(plugins)
 
-  // Third-party plugins
-  await server.register({
-    plugin: Good,
-    options: {
-      ...config.good,
-      reporters: {
-        winston: [goodWinstonStream]
-      }
-    }
-  })
   await server.register({
     plugin: Blipp,
     options: config.blipp
