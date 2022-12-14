@@ -15,3 +15,9 @@
   fields:
     licenceRef: 'AT/SROC/SUPB/03'
     startDate: '2015-01-01'
+
+- ref: $srocPermit04
+  model: Licence
+  fields:
+    licenceRef: 'AT/SROC/SUPB/04'
+    startDate: '2022-04-01'

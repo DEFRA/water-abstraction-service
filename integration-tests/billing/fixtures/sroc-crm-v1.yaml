@@ -26,6 +26,13 @@
     entity_type: 'company'
     source: 'acceptance-test-setup'
 
+- ref: $companyEntity04
+  model: Entity
+  fields:
+    entity_nm: 'Big Farm Co Ltd 04'
+    entity_type: 'company'
+    source: 'acceptance-test-setup'
+
 - model: EntityRole
   fields:
     entityId: $userEntity.entity_id
@@ -44,6 +51,13 @@
   fields:
     entityId: $userEntity.entity_id
     company_entity_id: $companyEntity03.entity_id
+    role: 'primary_user'
+    created_by: 'acceptance-test-setup'
+
+- model: EntityRole
+  fields:
+    entityId: $userEntity.entity_id
+    company_entity_id: $companyEntity04.entity_id
     role: 'primary_user'
     created_by: 'acceptance-test-setup'
 
@@ -83,5 +97,18 @@
     document_name: 'Big Farm 03 permit'
     metadata:
       Name: 'Big Farm 03'
+      dataType: 'acceptance-test-setup'
+      IsCurrent: true
+
+- model: DocumentHeader
+  fields:
+    regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf'
+    system_id: 'permit-repo'
+    system_external_id: 'AT/SROC/SUPB/04'
+    company_entity_id: $companyEntity04.entity_id
+    system_internal_id: $srocPermit04.licence_id
+    document_name: 'Big Farm 04 permit'
+    metadata:
+      Name: 'Big Farm 04'
       dataType: 'acceptance-test-setup'
       IsCurrent: true

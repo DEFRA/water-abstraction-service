@@ -43,6 +43,18 @@
     startDate: '2015-01-01'
     isTest: true
 
+- ref: $srocLicence04
+  model: Licence
+  fields:
+    regionId: $region.regionId
+    licenceRef: 'AT/SROC/SUPB/04'
+    regions:
+      historicalAreaCode: 'SAAR'
+      regionalChargeArea: 'Southern'
+    isWaterUndertaker: true
+    startDate: '2015-01-01'
+    isTest: true
+
 - ref: $srocLicenceVersion01
   model: LicenceVersion
   fields:
@@ -77,4 +89,16 @@
     startDate: '2015-01-01'
     endDate: null
     externalId: 6:1234:3:0
+    isTest: true
+
+- ref: $srocLicenceVersion04
+  model: LicenceVersion
+  fields:
+    licenceId: $srocLicence04.licenceId
+    issue : 1
+    increment: 0
+    status: 'current'
+    startDate: '2022-04-01'
+    endDate: null
+    externalId: 6:1234:4:0
     isTest: true
