@@ -25,7 +25,7 @@
     isRestrictedSource: false
     waterModel: 'no model'
     volume: 100
-    billingChargeCategoryId: $chargeCategory.billing_charge_category_id
+    billingChargeCategoryId: $chargeCategory421.billing_charge_category_id
     eiucRegion: Southern
 
 - ref: $chargePurpose01
@@ -108,7 +108,7 @@
     isRestrictedSource: false
     waterModel: 'no model'
     volume: 100
-    billingChargeCategoryId: $chargeCategory.billing_charge_category_id
+    billingChargeCategoryId: $chargeCategory421.billing_charge_category_id
     eiucRegion: Southern
 
 - ref: $chargePurpose02
@@ -191,7 +191,7 @@
     isRestrictedSource: false
     waterModel: 'no model'
     volume: 100
-    billingChargeCategoryId: $chargeCategory.billing_charge_category_id
+    billingChargeCategoryId: $chargeCategory421.billing_charge_category_id
     eiucRegion: Southern
 
 - ref: $chargePurpose03
@@ -238,7 +238,7 @@
     isRestrictedSource: false
     waterModel: 'no model'
     volume: 100
-    billingChargeCategoryId: $chargeCategory.billing_charge_category_id
+    billingChargeCategoryId: $chargeCategory421.billing_charge_category_id
     eiucRegion: Southern
 
 - ref: $chargePurpose04
@@ -287,7 +287,7 @@
     isRestrictedSource: false
     waterModel: 'no model'
     volume: 100
-    billingChargeCategoryId: $chargeCategory.billing_charge_category_id
+    billingChargeCategoryId: $chargeCategory421.billing_charge_category_id
     eiucRegion: Southern
 
 - ref: $chargePurpose06
