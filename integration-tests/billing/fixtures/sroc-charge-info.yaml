@@ -286,8 +286,8 @@
     scheme: sroc
     isRestrictedSource: false
     waterModel: 'no model'
-    volume: 100
-    billingChargeCategoryId: $chargeCategory421.billing_charge_category_id
+    volume: 750
+    billingChargeCategoryId: $chargeCategory4210.billing_charge_category_id
     eiucRegion: Southern
 
 - ref: $chargePurpose06
