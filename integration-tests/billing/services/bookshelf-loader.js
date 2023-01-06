@@ -38,8 +38,8 @@ const dir = path.resolve(__dirname, '../fixtures')
 // how all that works just to support `create()` becoming async. 😩
 //
 // So, instead we mix up async/await with some old fashioned promise callbacks. We wrap our call to the DB with the
-// async method `getChargeCategory()`. It's going to return a promise when called from a non-async method. So, we use
-// `then()` to add a callback to the promise. In the callback we can get the returned value and assign it to the
+// async method `getChargeCategories()`. It's going to return a promise when called from a non-async method. So, we use
+// `then()` to add a callback to the promise. In the callback we can get the returned values and assign them to the
 // loader.
 //
 // That brings us to what is going on here. Unlike the other loaders we declare `loader` at the top level of the module
@@ -47,20 +47,32 @@ const dir = path.resolve(__dirname, '../fixtures')
 // access the same object. This allows us to set the charge category as a 'ref', which can be referred to in
 // fixtures like `sroc-charge-info.yaml`.
 //
-// It isn't pretty, it is ridiculously complex, and its all for one weird edge case. But it solves this specific problem
-// without resorting to re-writing how integration-tests works.
+// It isn't pretty, it is ridiculously complex, and it's all for one weird edge case. But it solves this specific
+// problem without resorting to re-writing how integration-tests works.
 //
 // ¯\_(ツ)_/¯
 const bookshelfAdapter = new BookshelfAdapter(bookshelf)
 const loader = new FixtureLoader(bookshelfAdapter, dir)
 
-const getChargeCategory = async () => {
-  const { rows } = await bookshelf.knex.raw("SELECT * FROM water.billing_charge_categories WHERE reference = '4.2.1'")
+const getChargeCategories = async () => {
+  const { rows } = await bookshelf.knex.raw(
+    "SELECT * FROM water.billing_charge_categories WHERE reference IN ('4.1.1', '4.2.1', '4.2.10') ORDER BY reference"
+  )
 
-  return {
-    name: '$chargeCategory',
-    obj: { ...rows[0] }
-  }
+  return [
+    {
+      name: '$chargeCategory411',
+      obj: { ...rows[0] }
+    },
+    {
+      name: '$chargeCategory421',
+      obj: { ...rows[1] }
+    },
+    {
+      name: '$chargeCategory4210',
+      obj: { ...rows[2] }
+    }
+  ]
 }
 
 const getChargeVersionStartDate = () => {
@@ -84,8 +96,10 @@ const create = () => {
   }
   loader.setRef(refDates.name, refDates.obj)
 
-  getChargeCategory().then((chargeVersion) => {
-    loader.setRef(chargeVersion.name, chargeVersion.obj)
+  getChargeCategories().then((chargeVersions) => {
+    for (const chargeVersion of chargeVersions) {
+      loader.setRef(chargeVersion.name, chargeVersion.obj)
+    }
   })
 
   return loader
