@@ -4,7 +4,6 @@ const { expect } = require('@hapi/code')
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script()
 const routes = require('../../../src/modules/charge-categories/routes')
 const testHelpers = require('../../test-helpers')
-const { omit } = require('lodash')
 
 const makeRequest = (method, url) => ({
   method,
@@ -21,6 +20,12 @@ const makeRequest = (method, url) => ({
 })
 
 const makeGet = url => makeRequest('get', url)
+
+const omit = (obj, props) => {
+  obj = { ...obj }
+  delete obj[props]
+  return obj
+}
 
 experiment('modules/charge-categories/routes', () => {
   experiment('getChargeCategoryByProperties', () => {

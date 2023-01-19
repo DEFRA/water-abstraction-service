@@ -1,4 +1,4 @@
-const { get, omit } = require('lodash')
+const { get } = require('lodash')
 
 /**
  * Gets the total abstracted volume for a return
@@ -34,8 +34,10 @@ const mapSingleReturn = (validatedReturn, ret) => {
  * @return {Object} return including totalVolume and excluding lines
  */
 const mapMultipleReturn = ret => {
+  const returns = { ...ret }
+  delete returns.lines
   return {
-    ...omit(ret, 'lines'),
+    ...returns,
     totalVolume: getTotalVolume(ret)
   }
 }

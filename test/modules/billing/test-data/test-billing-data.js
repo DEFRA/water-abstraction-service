@@ -13,7 +13,6 @@ const DateRange = require('../../../../src/lib/models/date-range')
 const FinancialYear = require('../../../../src/lib/models/financial-year')
 const User = require('../../../../src/lib/models/user')
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants')
-const { omit } = require('lodash')
 const createFinancialYear = year => new FinancialYear(year)
 
 const createUser = options => {
@@ -65,8 +64,9 @@ const createTransaction = (options = {}, chargeElement) => {
 
 const createBillingVolume = (options = {}) => {
   const billingVolume = new BillingVolume()
+  delete options.billingVolumeId
   return billingVolume.fromHash({
-    ...omit(options, 'billingVolumeId'),
+    ...(options),
     id: options.billingVolumeId || '0310af58-bb31-45ec-9a8a-f4a8f8da8ee7',
     chargeElementId: options.chargeElementId || '29328315-9b24-473b-bde7-02c60e881501',
     financialYear: createFinancialYear(options.financialYear || 2018),
@@ -149,8 +149,9 @@ const createTransactionDBRow = (options = {}, chargeElement) => {
   }
 
   if (options.chargeElementId) {
+    delete dbRow.chargeElement
     return {
-      ...omit(dbRow, chargeElement),
+      ...(dbRow),
       chargeElementId: options.chargeElementId
     }
   }

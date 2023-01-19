@@ -1,5 +1,5 @@
 const Bluebird = require('bluebird')
-const { isNull, difference, omit } = require('lodash')
+const { isNull, difference } = require('lodash')
 
 // Models
 const Transaction = require('../../../../lib/models/transaction')
@@ -41,8 +41,12 @@ const invoiceMaps = (invoices, cmResponse) => ({
 const mapTransaction = (transactionMap, cmTransaction, scheme) => {
   if (scheme === 'sroc') {
     const srocTransaction = transactionMapper.cmToPojo(cmTransaction)
+    delete srocTransaction.id
+    delete srocTransaction.value
+    delete srocTransaction.isCompensationCharge
+
     return {
-      ...(omit(srocTransaction, ['id', 'value', 'isCompensationCharge'])),
+      ...(srocTransaction),
       scheme: 'sroc',
       billingTransactionId: cmTransaction.clientId,
       netAmount: cmTransaction.chargeValue,

@@ -6,13 +6,17 @@ const AsyncAdapter = require('./fixture-loader/adapters/AsyncAdapter')
 const { serviceRequest } = require('@envage/water-abstraction-helpers')
 const config = require('../../../config')
 const urlJoin = require('url-join')
-const { omit } = require('lodash')
 
 const createCrmV1Url = (...parts) => urlJoin(config.services.crm, ...parts)
 
 // Resolve path to fixtures directory
 const path = require('path')
 const dir = path.resolve(__dirname, '../fixtures')
+const omit = (obj, props) => {
+  obj = { ...obj }
+  delete obj[props]
+  return obj
+}
 
 const create = () => {
   // Create CRM fixture loader

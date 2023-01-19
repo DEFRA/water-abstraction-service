@@ -3,7 +3,6 @@
 const { assertNullableString, assertNullableEnum, assertEnum, assertNullableStringAllowEmpty } = require('./validators')
 const Model = require('./model')
 const Joi = require('joi')
-const { omit } = require('lodash')
 
 const CONTACT_TYPES = { person: 'person', department: 'department' }
 const DATA_SOURCE_TYPES = { nald: 'nald', wrls: 'wrls' }
@@ -136,7 +135,10 @@ class Contact extends Model {
 
   isValid () {
     const schema = this._type === CONTACT_TYPES.person ? contactPersonSchema : contactDepartmentSchema
-    return schema.validate(omit(this.toJSON(), ['type', 'fullName']), { abortEarly: false })
+    const thisToJSON = this.toJSON()
+    delete thisToJSON.type
+    delete thisToJSON.fullName
+    return schema.validate(thisToJSON, { abortEarly: false })
   }
 }
 

@@ -1,7 +1,7 @@
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 const { expect } = require('@hapi/code')
-const { cloneDeep, set, omit } = require('lodash')
+const { cloneDeep, set } = require('lodash')
 const { experiment, test, afterEach, beforeEach } = exports.lab = require('@hapi/lab').script()
 const returnsUploadValidator = require('../../../../src/modules/returns/lib/returns-upload-validator')
 
@@ -134,7 +134,8 @@ experiment('validate', () => {
 
   test('it should fail validation if it doesnt match the Joi schema', async () => {
     const { ERR_SCHEMA } = returnsUploadValidator.uploadErrors
-    const upload = [omit(data.upload[4], 'isCurrent')]
+    const upload = cloneDeep([data.upload[4]])
+    delete upload[0].isCurrent
     const [{ errors }] = await returnsUploadValidator.validate(upload, data.companyId, true)
     expect(errors).to.equal([ERR_SCHEMA])
   })
