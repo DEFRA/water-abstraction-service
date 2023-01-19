@@ -5,7 +5,7 @@ const { getAddressObjectFromArray } = require('./lib/helpers')
  * @module maps service models to Notify address lines
  */
 
-const { omit, pick } = require('lodash')
+const { pick } = require('lodash')
 const { DATA_SOURCE_TYPES } = require('../models/contact-v2')
 
 const MAX_NUMBER_OF_LINES = 7
@@ -81,7 +81,8 @@ function _getAddressHeadArray (company, contact, addressLines) {
  */
 function _getAddressBodyObject (addressBody, headArray, tailArray) {
   // Chop addressLine1 off the top as this is already in the address head
-  const cutBody = omit(addressBody, 'addressLine1')
+  const cutBody = { ...addressBody }
+  delete cutBody.addressLine1
 
   // If our cut body fits into the remaining number of lines, just return it as-is
   const headTailLength = [...headArray, ...tailArray].length
@@ -90,13 +91,15 @@ function _getAddressBodyObject (addressBody, headArray, tailArray) {
   }
 
   // Otherwise, try removing the county and see if that fits
-  const bodyWithoutCounty = omit(cutBody, 'county')
+  const bodyWithoutCounty = { ...cutBody }
+  delete bodyWithoutCounty.county
   if (headTailLength + Object.values(bodyWithoutCounty).length <= MAX_NUMBER_OF_LINES) {
     return bodyWithoutCounty
   }
 
   // Now try removing addressLine4
-  const bodyWithoutCountyOrLine4 = omit(bodyWithoutCounty, 'addressLine4')
+  const bodyWithoutCountyOrLine4 = { ...bodyWithoutCounty }
+  delete bodyWithoutCountyOrLine4.addressLine4
   if (headTailLength + Object.values(bodyWithoutCountyOrLine4).length <= MAX_NUMBER_OF_LINES) {
     return bodyWithoutCountyOrLine4
   }

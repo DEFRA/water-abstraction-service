@@ -9,7 +9,6 @@ const {
   before,
   after
 } = exports.lab = require('@hapi/lab').script()
-const { omit } = require('lodash')
 
 const services = require('../../services')
 // const transactionTests = require('../transaction-tests');
@@ -86,7 +85,10 @@ experiment('two part tariff ref: 2PT2', () => {
         })
 
         test('has the correct invoice address', async () => {
-          expect(omit(invoice.address, ['uprn', 'isTest'])).to.equal({
+          const invoiceAddress = { ...invoice.address }
+          delete invoiceAddress.uprn
+          delete invoiceAddress.isTest
+          expect(invoiceAddress).to.equal({
             town: 'Testington',
             county: 'Testingshire',
             country: 'UK',

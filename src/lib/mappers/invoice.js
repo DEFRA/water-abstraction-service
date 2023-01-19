@@ -1,6 +1,6 @@
 'use strict'
 
-const { omit, isNull } = require('lodash')
+const { isNull } = require('lodash')
 
 const Invoice = require('../models/invoice')
 const InvoiceAccount = require('../models/invoice-account')
@@ -84,10 +84,11 @@ const getRebillingStateLabels = invoice => {
 }
 
 const mapAddress = (invoice, scheme = 'alcs') => {
-  return scheme === 'alcs'
-    ? omit(invoice.address.toJSON(), 'id')
-    // sroc invoices are not mapped to the internal models so does not hhave the toJSON function.
-    : omit(invoice.address, 'id')
+  // sroc invoices are not mapped to the internal models so does not have the toJSON function.
+  const result = scheme === 'alcs' ? invoice?.address.toJSON() : { ...invoice?.address }
+  delete result?.id
+
+  return result
 }
 
 /**

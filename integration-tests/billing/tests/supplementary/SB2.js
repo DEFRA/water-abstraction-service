@@ -1,7 +1,6 @@
 'use strict'
 
 const { expect } = require('@hapi/code')
-const { omit } = require('lodash')
 
 const {
   experiment,
@@ -120,7 +119,10 @@ experiment('supplementary ref: SB2', () => {
       })
 
       test('has the correct invoice address', async () => {
-        expect(omit(invoice.address, ['uprn', 'isTest'])).to.equal({
+        const invoiceAddress = { ...invoice.address }
+        delete invoiceAddress.uprn
+        delete invoiceAddress.isTest
+        expect(invoiceAddress).to.equal({
           town: 'Testington',
           county: 'Testingshire',
           country: 'UK',

@@ -6,7 +6,6 @@ const {
   beforeEach
 } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
-const { omit } = require('lodash')
 
 const InvoiceAccountAddress = require('../../../src/lib/models/invoice-account-address')
 const Address = require('../../../src/lib/models/address')
@@ -48,6 +47,13 @@ const pojo = {
     postcode: 'TT1 1TT',
     country: 'UK'
   }
+}
+
+const omit = (obj, props) => {
+  obj = { ...obj }
+  delete obj[props]
+
+  return obj
 }
 
 experiment('modules/billing/mappers/invoice-account-address', () => {

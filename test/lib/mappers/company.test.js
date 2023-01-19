@@ -10,7 +10,6 @@ const { v4: uuid } = require('uuid')
 
 const Company = require('../../../src/lib/models/company')
 const companyMapper = require('../../../src/lib/mappers/company')
-const { omit } = require('lodash')
 
 const dbRow = {
   companyId: '00000000-0000-0000-0000-000000000000',
@@ -100,7 +99,8 @@ experiment('modules/billing/mappers/company', () => {
     })
 
     experiment('when type = "organisation"', () => {
-      const organisationTypes = omit(Company.ORGANISATION_TYPES, 'individual')
+      const organisationTypes = { ...Company.ORGANISATION_TYPES }
+      delete organisationTypes.individual
       Object.values(organisationTypes).forEach(organisationType => {
         test(`maps data correctly when organisationType is set to ${organisationType}`, async () => {
           result = companyMapper.uiToModel({

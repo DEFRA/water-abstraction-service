@@ -1,4 +1,4 @@
-const { identity, omit, startCase } = require('lodash')
+const { identity, startCase } = require('lodash')
 
 const getGaugingStationForUpdate = (station, gaugingStationsInDb) => {
   const stationInDbWithMatchingHydrologyGuid = gaugingStationsInDb
@@ -36,8 +36,8 @@ const gaugingStationsCSVHeaders = [
  */
 const abstractionPeriodInObjectParser = inputObject => {
   // Create a replica of the input
-  const replicatedObject = omit(inputObject, 'abstractionPeriod')
-
+  const replicatedObject = { ...inputObject }
+  delete replicatedObject.abstractionPeriod
   // If the input doesn't have an abstractionPeriod sub-object, no action is taken.
   if (inputObject.abstractionPeriod) {
     // For each item in the abstractionPeriod subobject...
