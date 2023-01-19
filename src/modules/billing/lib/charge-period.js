@@ -1,7 +1,7 @@
 'use strict'
 
 const moment = require('moment')
-const { sortBy, first, last, identity } = require('lodash')
+const { sortBy, first, identity } = require('lodash')
 
 const config = require('../../../../config')
 
@@ -23,7 +23,10 @@ const getSortedDates = arr => sortBy(
 )
 
 const getMinDate = arr => first(getSortedDates(arr))
-const getMaxDate = arr => last(getSortedDates(arr))
+const getMaxDate = (arr) => {
+  const sorted = getSortedDates(arr)
+  return sorted[sorted.length - 1]
+}
 
 /**
  * Gets dates for charge period start and end date functions

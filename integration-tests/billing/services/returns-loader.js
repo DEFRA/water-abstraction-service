@@ -8,7 +8,6 @@ const config = require('../../../config')
 const urlJoin = require('url-join')
 const createReturnsUrl = (...parts) => urlJoin(config.services.returns, ...parts)
 const moment = require('moment')
-const { last } = require('lodash')
 
 // Resolve path to fixtures directory
 const path = require('path')
@@ -19,9 +18,12 @@ const createConnector = tail => async body => {
   return data
 }
 
+const returnCycleDates = () => {
+  const sorted = returns.date.createReturnCycles()
+  return sorted[sorted.length - 1]
+}
 const create = () => {
   // todo this might need to be tweaked again or the year calculated dynamically.
-  const returnCycleDates = last(returns.date.createReturnCycles())
   // create a future date and pass it to the fixture loader as reference for use in yaml objects
   const refDates = {
     name: '$returnDates',

@@ -1,7 +1,6 @@
 'use strict'
 
 const moment = require('moment')
-const { last } = require('lodash')
 const helpers = require('@envage/water-abstraction-helpers')
 
 const eventHelpers = require('../../../lib/event-helpers')
@@ -25,7 +24,7 @@ const createEvent = async (...args) => {
   const cycles = helpers.returns.date.createReturnCycles(undefined, refDate)
 
   // Decorate event with return cycle info
-  evt.metadata.returnCycle = last(cycles)
+  evt.metadata.returnCycle = cycles[cycles.length - 1]
 
   return evt
 }

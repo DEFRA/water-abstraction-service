@@ -1,6 +1,6 @@
 'use strict'
 
-const { flatMap, first, last, identity } = require('lodash')
+const { flatMap, first, identity } = require('lodash')
 const bluebird = require('bluebird')
 const moment = require('moment')
 
@@ -137,9 +137,10 @@ const filterDocumentRoles = document => {
  * @param {Document} document
  * @return {String} date YYYY-MM-DD
  */
-const getFilterStartDate = document => last(
-  [document.dateRange.startDate, '2009-03-31'].sort()
-)
+const getFilterStartDate = (document) => {
+  const item = [document.dateRange.startDate, '2009-03-31'].sort()
+  return item[item.length - 1]
+}
 
 /**
  * Gets the earlier of: document end date, today's date
