@@ -45,6 +45,7 @@ experiment('modules/billing/jobs/create-bill-run', () => {
 
     sandbox.stub(batchService, 'createChargeModuleBillRun').resolves(batch)
     sandbox.stub(batchService, 'setErrorStatus').resolves(batch)
+    sandbox.stub(batchService, 'setStatus').resolves({ ...batch, status: 'processing' })
 
     queueManager = {
       add: sandbox.stub()
