@@ -295,7 +295,7 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
   }
 
   const { billingBatchId } = await newRepos.billingBatches.create({
-    status: Batch.BATCH_STATUS.processing,
+    status: Batch.BATCH_STATUS.queued,
     regionId,
     batchType,
     fromFinancialYearEnding,

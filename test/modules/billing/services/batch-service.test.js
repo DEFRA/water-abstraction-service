@@ -1051,10 +1051,10 @@ experiment('modules/billing/services/batch-service', () => {
           result = await batchService.create(regionId, 'annual', 2023, 'all-year')
         })
 
-        test('a batch is created processing 1 financial year', async () => {
+        test('a batch is created queued 1 financial year', async () => {
           const args = newRepos.billingBatches.create.lastCall.args[0]
           expect(args).to.equal({
-            status: 'processing',
+            status: 'queued',
             regionId,
             batchType: 'annual',
             fromFinancialYearEnding: 2023,
@@ -1074,10 +1074,10 @@ experiment('modules/billing/services/batch-service', () => {
           result = await batchService.create(regionId, 'supplementary', 2022, 'all-year')
         })
 
-        test('a batch is created processing the number of years specified in config.billing.supplementaryYears', async () => {
+        test('a batch is created queued the number of years specified in config.billing.supplementaryYears', async () => {
           const args = newRepos.billingBatches.create.lastCall.args[0]
           expect(args).to.equal({
-            status: 'processing',
+            status: 'queued',
             regionId,
             batchType: 'supplementary',
             fromFinancialYearEnding: 2017,

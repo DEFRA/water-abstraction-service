@@ -25,7 +25,9 @@ const BATCH_STATUS = {
   cancel: 'cancel',
   // if there are no charge versions, or all billing has already happened
   // in earlier run, or all customers have been removed from the batch
-  empty: 'empty'
+  empty: 'empty',
+  // Initial state of all new bill runs. Once picked up for processing the status is then updated to `processing`
+  queued: 'queued'
 }
 
 const BATCH_ERROR_CODE = {
