@@ -5,7 +5,7 @@ const { get, partial } = require('lodash')
 const JOB_NAME = 'billing.create-bill-run'
 
 const batchService = require('../services/batch-service')
-const { BATCH_ERROR_CODE, BATCH_TYPE } = require('../../../lib/models/batch')
+const { BATCH_ERROR_CODE, BATCH_STATUS, BATCH_TYPE } = require('../../../lib/models/batch')
 const batchJob = require('./lib/batch-job')
 const helpers = require('./lib/helpers')
 
@@ -23,6 +23,7 @@ const handler = async job => {
   const batchId = get(job, 'data.batchId')
 
   try {
+    await batchService.setStatus(batchId, BATCH_STATUS.processing)
     const batch = await batchService.createChargeModuleBillRun(batchId)
     return { type: batch.type }
   } catch (err) {

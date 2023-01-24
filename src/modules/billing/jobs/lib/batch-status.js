@@ -21,7 +21,10 @@ const assertCmBatchIsGeneratedOrBilled = cmBatch => {
   }
 }
 
-const assertBatchIsProcessing = partialRight(assertBatchIsStatus, [Batch.BATCH_STATUS.processing, Batch.BATCH_STATUS.sending])
+const assertBatchIsProcessing = partialRight(
+  assertBatchIsStatus,
+  [Batch.BATCH_STATUS.queued, Batch.BATCH_STATUS.processing, Batch.BATCH_STATUS.sending]
+)
 const assertBatchIsInReview = partialRight(assertBatchIsStatus, [Batch.BATCH_STATUS.review])
 
 exports.assertCmBatchIsGeneratedOrBilled = assertCmBatchIsGeneratedOrBilled
