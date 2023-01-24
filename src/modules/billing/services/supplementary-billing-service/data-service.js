@@ -1,6 +1,6 @@
 'use strict'
 
-const { groupBy, pick } = require('lodash')
+const { groupBy } = require('lodash')
 
 // Models
 const Transaction = require('../../../../lib/models/transaction')
@@ -45,6 +45,14 @@ const pickKeys = [
   'isDeMinimis',
   'isNewLicence'
 ]
+
+const pick = (obj, props) => {
+  const picked = {}
+  for (const prop of props) {
+    picked[prop] = obj[prop]
+  }
+  return picked
+}
 
 const getReversedTransaction = (invoiceLicence, sourceTransaction) => {
   return {

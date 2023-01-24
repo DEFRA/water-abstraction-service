@@ -7,7 +7,6 @@ const {
   test
 } = exports.lab = require('@hapi/lab').script()
 
-const { pick } = require('lodash')
 const { expect } = require('@hapi/code')
 const { v4: uuid } = require('uuid')
 const sandbox = require('sinon').createSandbox()
@@ -78,9 +77,10 @@ experiment('modules/notifications/controller', () => {
 
     test('response contains a .data array of notification events', async () => {
       const { data } = response
+      const { id, issuer, type, subtype, errorCount, created, referenceCode } = event
       expect(data).to.be.an.array().length(1)
       expect(data[0]).to.equal({
-        ...pick(event, 'id', 'issuer', 'type', 'subtype', 'errorCount', 'created', 'referenceCode'),
+        ...{ id, issuer, type, subtype, errorCount, created, referenceCode },
         name: event.metadata.name,
         options: event.metadata.options,
         recipientCount: 4
@@ -107,8 +107,9 @@ experiment('modules/notifications/controller', () => {
     })
 
     test('resolves with the mapped request.pre.event', async () => {
+      const { id, issuer, type, subtype, errorCount, created, referenceCode } = event
       expect(response).to.equal({
-        ...pick(event, 'id', 'issuer', 'type', 'subtype', 'errorCount', 'created', 'referenceCode'),
+        ...{ id, issuer, type, subtype, errorCount, created, referenceCode },
         name: event.metadata.name,
         options: event.metadata.options,
         recipientCount: event.metadata.recipients

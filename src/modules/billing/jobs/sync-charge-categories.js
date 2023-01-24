@@ -2,7 +2,7 @@
 'use strict'
 
 // Dependencies
-const { pick, isEqual } = require('lodash')
+const { isEqual } = require('lodash')
 const moment = require('moment')
 const BlueBirdPromise = require('bluebird')
 const csvParse = BlueBirdPromise.promisify(require('csv-parse'))
@@ -31,6 +31,14 @@ const createMessage = () => ([
     }
   }
 ])
+
+const pick = (obj, props) => {
+  const picked = {}
+  for (const prop of props) {
+    picked[prop] = obj[prop]
+  }
+  return picked
+}
 
 const handler = async () => {
   logger.info(`${JOB_NAME}: Job has started`)

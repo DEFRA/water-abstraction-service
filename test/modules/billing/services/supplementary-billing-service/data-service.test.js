@@ -9,7 +9,6 @@ const {
 const { expect } = require('@hapi/code')
 const { v4: uuid } = require('uuid')
 const sandbox = require('sinon').createSandbox()
-const { pick } = require('lodash')
 
 const billingTransactionsRepo = require('../../../../../src/lib/connectors/repos/billing-transactions')
 const dataService = require('../../../../../src/modules/billing/services/supplementary-billing-service/data-service')
@@ -25,6 +24,14 @@ const { actions } = require('../../../../../src/modules/billing/services/supplem
 const batchId = uuid()
 
 const { createTransaction } = require('./test-helpers')
+
+const pick = (obj, props) => {
+  const picked = {}
+  for (const prop of props) {
+    picked[prop] = obj[prop]
+  }
+  return picked
+}
 
 experiment('modules/billing/services/supplementary-billing-service/data-service', () => {
   let result

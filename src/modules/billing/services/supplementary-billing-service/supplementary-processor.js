@@ -7,7 +7,7 @@
  * changes are needed
  */
 
-const { groupBy, pick, negate, flatMap, mapValues, sortBy } = require('lodash')
+const { groupBy, negate, flatMap, mapValues, sortBy } = require('lodash')
 const moment = require('moment')
 const Decimal = require('decimal.js-light')
 
@@ -46,6 +46,14 @@ const commonTransactionKeys = [
   'invoiceAccountNumber',
   'financialYearEnding'
 ]
+
+const pick = (obj, props) => {
+  const picked = {}
+  for (const prop of props) {
+    picked[prop] = obj[prop]
+  }
+  return picked
+}
 
 /**
  * Gets a grouping key for the given transaction - this is to allow

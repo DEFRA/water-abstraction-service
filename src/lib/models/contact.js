@@ -1,4 +1,3 @@
-const { pick } = require('lodash')
 const sha1 = require('sha1')
 
 const CONTACT_TYPE_PERSON = 'Person'
@@ -55,10 +54,27 @@ class Contact {
    * @return {String}
    */
   generateId () {
-    const properties = ['initials', 'salutation', 'firstName', 'name',
-      'addressLine1', 'addressLine2', 'addressLine3', 'addressLine4', 'town',
-      'county', 'postcode', 'country', 'email']
-    const values = Object.values(pick(this, properties))
+    const {
+      initials, salutation, firstName, name,
+      addressLine1, addressLine2, addressLine3, addressLine4, town,
+      county, postcode, country, email
+    } = this
+    const values = Object.values(
+      {
+        initials,
+        salutation,
+        firstName,
+        name,
+        addressLine1,
+        addressLine2,
+        addressLine3,
+        addressLine4,
+        town,
+        county,
+        postcode,
+        country,
+        email
+      })
     const normalised = values.map(val => (val || '').trim().toLowerCase())
     return sha1(normalised.join(','))
   }

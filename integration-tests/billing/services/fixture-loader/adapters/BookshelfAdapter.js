@@ -1,7 +1,5 @@
 'use strict'
 
-const { pick } = require('lodash')
-
 class BookshelfAdapter {
   constructor (bookshelf) {
     this._bookshelf = bookshelf
@@ -34,7 +32,7 @@ class BookshelfAdapter {
       if (err.code === '23505' && (err.constraint in constraints) && ref) {
         const model = await this._bookshelf
           .model(modelName)
-          .forge(pick(data, constraints[err.constraint]))
+          .forge(this._pick(data, constraints[err.constraint]))
           .fetch()
 
         return model.toJSON()
@@ -42,6 +40,16 @@ class BookshelfAdapter {
         throw err
       }
     }
+  }
+
+  _pick (obj, props) {
+    const picked = {}
+    for (const prop of props) {
+      if (obj[prop] !== undefined) {
+        picked[prop] = obj[prop]
+      }
+    }
+    return picked
   }
 }
 
