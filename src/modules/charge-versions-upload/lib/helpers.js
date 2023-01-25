@@ -1,6 +1,8 @@
+'use strict'
+
 const { assertDate, assertLicenceNumber } = require('../../../lib/models/validators')
 const licencesService = require('../../../lib/services/licences')
-const { get, set } = require('lodash')
+const { set } = require('lodash')
 const documentsService = require('../../../lib/services/documents-service')
 const { billing } = require('../../../../config')
 const companiesService = require('../../../lib/services/companies-service')
@@ -76,7 +78,7 @@ const getInvoiceAccount = async (licence, invoiceAccountNumber) => {
       cache.invoiceAccounts[key] = deepFreeze(invoiceAccounts.find(account => account.accountNumber === invoiceAccountNumber))
     } else {
       const chargeVersions = await chargeVersionsService.getByLicenceRef(licenceNumber)
-      const chargeVersion = chargeVersions.find(version => !get(version, 'dateRange.endDate') && version.status === 'current')
+      const chargeVersion = chargeVersions.find(version => !version.dateRange.endDate && version.status === 'current')
       if (chargeVersion) {
         const { invoiceAccount } = await chargeVersionsService.getByIdWithInvoiceAccount(chargeVersion.id)
         cache.invoiceAccounts[key] = deepFreeze(invoiceAccount)

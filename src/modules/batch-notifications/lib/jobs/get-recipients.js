@@ -1,6 +1,5 @@
 'use strict'
 
-const { get } = require('lodash')
 const batchNotifications = require('../batch-notifications')
 const { logger } = require('../../../../logger')
 const eventsService = require('../../../../lib/services/events')
@@ -21,7 +20,7 @@ const createMessage = eventId => {
 
 const handleGetRecipients = async job => {
   logger.info(`Handling: ${JOB_NAME}:${job.id}`)
-  const eventId = get(job, 'data.eventId')
+  const eventId = job.data.eventId
   try {
     const data = await batchNotifications.loadJobData(eventId)
 

@@ -1,7 +1,5 @@
 'use strict'
 
-const { get } = require('lodash')
-
 const JOB_NAME = 'billing.rebilling'
 
 const { logger } = require('../../../logger')
@@ -34,7 +32,7 @@ const createMessage = batchId => ([
   }
 ])
 
-const getBatchId = job => get(job, 'data.batchId')
+const getBatchId = job => job.data.batchId
 
 const handler = async job => {
   batchJob.logHandling(job)

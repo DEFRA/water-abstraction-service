@@ -1,6 +1,6 @@
 'use strict'
 
-const { partial, get } = require('lodash')
+const { partial } = require('lodash')
 
 const JOB_NAME = 'billing.populate-batch-charge-versions'
 
@@ -18,7 +18,7 @@ const createMessage = partial(helpers.createMessage, JOB_NAME)
 
 const handler = async job => {
   batchJob.logHandling(job)
-  const batchId = get(job, 'data.batchId')
+  const batchId = job.data.batchId
 
   try {
     const batch = await batchService.getBatchById(batchId)

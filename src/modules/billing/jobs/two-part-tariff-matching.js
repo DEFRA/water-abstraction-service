@@ -1,6 +1,6 @@
 'use strict'
 
-const { get, partial } = require('lodash')
+const { partial } = require('lodash')
 
 const JOB_NAME = 'billing.two-part-tariff-matching'
 
@@ -18,7 +18,7 @@ const createMessage = partial(helpers.createMessage, JOB_NAME)
 const handler = async job => {
   batchJob.logHandling(job)
 
-  const batchId = get(job, 'data.batchId')
+  const batchId = job.data.batchId
 
   try {
     // Get batch

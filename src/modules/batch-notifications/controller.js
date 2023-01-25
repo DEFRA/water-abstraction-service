@@ -2,7 +2,7 @@
 
 const Boom = require('@hapi/boom')
 const { logger } = require('../../logger')
-const { get, find } = require('lodash')
+const { find } = require('lodash')
 
 const configs = require('./config')
 
@@ -46,7 +46,7 @@ const postPrepare = async (request, h) => {
       data: ev
     }
   } catch (err) {
-    const code = get(err, 'output.statusCode', 500)
+    const code = err.output?.statusCode ? err.output.statusCode : 500
     logger.error('Batch notification preparation error', err.stack, { messageType, issuer, data })
     return h.response({
       error: err.message,

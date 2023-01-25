@@ -4,7 +4,6 @@
  * @module syncs the charge module invoices/licences/transactions
  * to the local WRLS DB
  */
-const { get } = require('lodash')
 const errors = require('../../../lib/errors')
 
 const queueManager = require('../../../lib/queue-manager')
@@ -15,7 +14,7 @@ const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-mod
 // Services
 const batchService = require('./batch-service')
 
-const isCMGeneratingSummary = cmResponse => ['pending', 'sending'].includes(get(cmResponse, 'billRun.status'))
+const isCMGeneratingSummary = cmResponse => ['pending', 'sending'].includes(cmResponse.billRun.status)
 
 /**
  * Updates the batch with the given batch ID

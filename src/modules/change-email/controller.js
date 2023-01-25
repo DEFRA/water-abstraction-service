@@ -1,8 +1,9 @@
+'use strict'
+
 const event = require('../../lib/event')
 const idm = require('../../lib/connectors/idm')
 const crmEntities = require('../../lib/connectors/crm/entities')
 const changeEmailHelpers = require('./lib/helpers')
-const { get } = require('lodash')
 
 const notifications = require('../../lib/notifications/emails')
 
@@ -22,7 +23,7 @@ const errorCodes = {
  * @param {Object}        - HAPI response
  */
 const errorHandler = (error, h) => {
-  const statusCode = get(error, 'statusCode')
+  const statusCode = error.statusCode
   if (statusCode in errorCodes) {
     return h.response({
       data: null,
@@ -53,7 +54,7 @@ const postStartEmailAddressChange = async (request, h) => {
   try {
     const response = await idm.startEmailChange(userId, email)
 
-    const securityCode = get(response, 'data.securityCode')
+    const securityCode = response?.data.securityCode
 
     // Send verification code to existing user
     await notifications.sendVerificationCodeEmail(email, securityCode)

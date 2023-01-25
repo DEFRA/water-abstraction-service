@@ -1,6 +1,6 @@
 'use strict'
 
-const { flatMap, get } = require('lodash')
+const { flatMap } = require('lodash')
 
 const MomentRange = require('moment-range')
 const moment = MomentRange.extendMoment(require('moment'))
@@ -173,7 +173,7 @@ const doesMinimumChargeApply = (chargePeriod, chargeVersion) => {
   }
 
   const isSharedStartDate = chargePeriodStartDate.isSame(moment(dateRange.startDate), 'day')
-  const isFirstChargeOnNewLicence = isSharedStartDate && get(changeReason, 'triggersMinimumCharge', false)
+  const isFirstChargeOnNewLicence = isSharedStartDate && changeReason.triggersMinimumCharge ? changeReason.triggersMinimumCharge : false
 
   return doesChargePeriodStartOnFirstApril(chargePeriodStartDate) || isFirstChargeOnNewLicence
 }

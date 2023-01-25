@@ -1,5 +1,5 @@
 'use strict'
-const { get } = require('lodash')
+
 const Repository = require('@envage/hapi-pg-rest-api/src/repository')
 const db = require('../db')
 
@@ -170,7 +170,7 @@ class BillingInvoiceRepository extends Repository {
    */
   async findOneByTransactionId (transactionId) {
     const result = await this.dbQuery(findOneByTransactionIdQuery, [transactionId])
-    return get(result, 'rows.0', null)
+    return result.rows[0] ? result.rows[0] : null
   }
 }
 

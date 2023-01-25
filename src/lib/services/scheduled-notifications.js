@@ -1,6 +1,5 @@
 'use strict'
 
-const { get } = require('lodash')
 const repo = require('../connectors/repos/scheduled-notifications')
 const mapper = require('../mappers/scheduled-notification')
 const service = require('./service')
@@ -24,8 +23,8 @@ const createScheduledNotification = async scheduledNotification => {
  * @return {Promise} resolves when scheduled notification record updated
  */
 const updateScheduledNotificationWithNotifyResponse = (messageId, notifyResponse) => {
-  const notifyId = get(notifyResponse, 'body.id', null)
-  const plainText = get(notifyResponse, 'body.content.body', '')
+  const notifyId = notifyResponse.body.id ? notifyResponse.body.id : null
+  const plainText = notifyResponse.body.content.body ? notifyResponse.body.content.body : ''
   const changes = {
     status: MESSAGE_STATUSES.sent,
     notify_id: notifyId,

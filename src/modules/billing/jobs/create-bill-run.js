@@ -1,6 +1,6 @@
 'use strict'
 
-const { get, partial } = require('lodash')
+const { partial } = require('lodash')
 
 const JOB_NAME = 'billing.create-bill-run'
 
@@ -20,7 +20,7 @@ const getNextJobName = batchType => batchType === BATCH_TYPE.supplementary
 
 const handler = async job => {
   batchJob.logHandling(job)
-  const batchId = get(job, 'data.batchId')
+  const batchId = job.data.batchId
 
   try {
     await batchService.setStatus(batchId, BATCH_STATUS.processing)
@@ -36,7 +36,7 @@ const onComplete = async (job, queueManager) => {
   batchJob.logOnComplete(job)
   try {
     // Publish next job in process
-    const batchId = get(job, 'data.batchId')
+    const batchId = job.data.batchId
     const nextJobName = getNextJobName(job.returnvalue.type)
     await queueManager.add(nextJobName, batchId)
   } catch (err) {

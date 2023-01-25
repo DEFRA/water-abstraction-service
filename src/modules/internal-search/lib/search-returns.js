@@ -1,4 +1,6 @@
-const { get, groupBy, mapValues, first } = require('lodash')
+'use strict'
+
+const { groupBy, mapValues, first } = require('lodash')
 const helpers = require('@envage/water-abstraction-helpers')
 const { throwIfError } = require('@envage/hapi-pg-rest-api')
 const returnsService = require('../../../lib/connectors/returns')
@@ -12,7 +14,7 @@ const { isReturnId } = require('./query-parser')
  */
 const mapReturn = (row) => {
   const { metadata, ...rest } = row
-  const regionCode = get(metadata, 'nald.regionCode')
+  const regionCode = metadata.nald.regionCode
   const region = helpers.regions.getRegion(regionCode)
   return {
     ...rest,

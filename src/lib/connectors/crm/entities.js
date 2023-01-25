@@ -1,5 +1,5 @@
 const urlJoin = require('url-join')
-const { get, partialRight } = require('lodash')
+const { partialRight } = require('lodash')
 const { serviceRequest } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
 const helpers = require('@envage/water-abstraction-helpers')
@@ -39,7 +39,7 @@ const getEntity = async (name, type = 'individual') => {
   const url = `${config.services.crm}/entity?filter=${filter}`
   const response = await serviceRequest.get(url)
 
-  return get(response, 'data[0]')
+  return response.data?.[0]
 }
 
 /**
@@ -62,7 +62,7 @@ const createEntity = async (name, type = 'individual', source) => {
   }
 
   const response = await serviceRequest.post(url, { body })
-  return get(response, 'data')
+  return response.data
 }
 
 /**
@@ -88,7 +88,7 @@ const createEntityRole = async (entityId, role, createdBy, companyEntityId = nul
   }
 
   const response = await serviceRequest.post(url, { body })
-  return get(response, 'data')
+  return response.data
 }
 
 const createAdminEntityRole = (entityId, createdBy) => {

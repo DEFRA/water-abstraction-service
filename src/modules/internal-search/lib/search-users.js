@@ -1,4 +1,5 @@
-const { get } = require('lodash')
+'use strict'
+
 const { throwIfError } = require('@envage/hapi-pg-rest-api')
 const idm = require('../../../lib/connectors/idm')
 const { getPagination } = require('./pagination')
@@ -26,7 +27,7 @@ const getFilter = (query) => {
  * @return {Array}          - users
  */
 const mapRow = (row) => {
-  const scopes = get(row, 'role.scopes', [])
+  const scopes = row.role.scopes ? row.role.scopes : []
   return {
     userId: row.user_id,
     email: row.user_name,

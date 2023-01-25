@@ -1,6 +1,6 @@
 'use strict'
 
-const { get, partial } = require('lodash')
+const { partial } = require('lodash')
 
 const JOB_NAME = 'billing.process-charge-versions'
 
@@ -20,7 +20,7 @@ const getChargeVersionYearId = billingBatchChargeVersionYear => billingBatchChar
 const handler = async job => {
   batchJob.logHandling(job)
 
-  const batchId = get(job, 'data.batchId')
+  const batchId = job.data.batchId
 
   try {
     // Load batch
@@ -46,7 +46,7 @@ const onComplete = async (job, queueManager) => {
   batchJob.logOnComplete(job)
 
   try {
-    const batchId = get(job, 'data.batchId')
+    const batchId = job.data.batchId
     const { billingBatchChargeVersionYearIds } = job.returnvalue
 
     // If there's nothing to process, skip to cm refresh

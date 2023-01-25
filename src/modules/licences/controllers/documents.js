@@ -2,7 +2,7 @@
 
 const moment = require('moment')
 const Boom = require('@hapi/boom')
-const { get, isObject } = require('lodash')
+const { isObject } = require('lodash')
 const documentsClient = require('../../../lib/connectors/crm/documents')
 const crmEntities = require('../../../lib/connectors/crm/entities')
 const { usersClient } = require('../../../lib/connectors/idm')
@@ -24,7 +24,7 @@ const getDocumentHeader = async (documentId, includeExpired = false) => {
     document_id: documentId,
     includeExpired
   })
-  return get(documentResponse, 'data[0]')
+  return documentResponse.data[0]
 }
 
 const addDocumentDetails = (licence, document) => {
@@ -75,7 +75,7 @@ const getLicence = async (document, includeExpired, companyId) => {
     licence_regime_id: regimeId
   })
 
-  const licence = get(licenceResponse, 'data[0]')
+  const licence = licenceResponse.data[0]
 
   if (licence) {
     return addDocumentDetails(licence, documentHeader)
@@ -165,7 +165,7 @@ const extractLicenceData = async (request, extractFn) => {
     const licence = await getLicence(documentId, undefined, companyId)
 
     if (licence) {
-      const currentVersion = get(licence, 'licence_data_value.data.current_version')
+      const currentVersion = licence.licence_data_value.data?.current_version
       return wrapData(extractFn(currentVersion))
     }
     return Boom.notFound()
@@ -191,7 +191,7 @@ const getLicenceUsersByDocumentId = async (request, h) => {
     }
 
     const documentUsers = await documentsClient.getDocumentUsers(documentId)
-    const userEntityIds = get(documentUsers, 'data', []).map(u => u.entityId)
+    const userEntityIds = (documentUsers.data ? documentUsers.data : []).map(u => u.entityId)
     const { data: users } = await usersClient.getUsersByExternalId(userEntityIds)
 
     return {
@@ -213,7 +213,7 @@ const mapSummary = async (documentHeader, licence) => {
   await transformer.load(licence.licence_data_value)
   return {
     ...transformer.export(),
-    documentName: get(documentHeader, 'document_name')
+    documentName: documentHeader.document_name
   }
 }
 
@@ -262,12 +262,12 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
 }
 
 const mapNotification = (row) => {
-  const isPdf = get(row, 'message_ref', '').startsWith('pdf.')
+  const isPdf = (row.message_ref ? row.message_ref : '').startsWith('pdf.')
   return {
     notificationId: row.id,
     messageType: row.message_type,
     date: row.send_after,
-    notificationType: get(row, 'event_metadata.name', null),
+    notificationType: row.event_metadata.name ? row.event_metadata.name : null,
     sender: row.issuer,
     isPdf
   }

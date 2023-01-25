@@ -1,6 +1,8 @@
+'use strict'
+
 const notificationsController = require('../../controllers/notifications')
 const eventsController = require('../../controllers/events')
-const { get, mapKeys, camelCase } = require('lodash')
+const { mapKeys, camelCase } = require('lodash')
 const Boom = require('@hapi/boom')
 const crmDocumentConnector = require('../../lib/connectors/crm/documents')
 
@@ -9,7 +11,7 @@ const camelCaseKeys = obj => mapKeys(obj, (value, key) => camelCase(key))
 const getNotification = async id => {
   const result = await notificationsController.repository.find({ id })
 
-  const notification = get(result, 'rows[0]')
+  const notification = result.rows[0]
 
   if (!notification) {
     throw Boom.notFound(`No notification found for ${id}`)
@@ -46,7 +48,7 @@ const formatEvent = evt => {
   data.id = evt.event_id
   data.subType = evt.subtype
   data.createdDate = evt.created
-  data.name = get(evt, 'metadata.name')
+  data.name = evt.metadata.name
   return camelCaseKeys(data)
 }
 
@@ -71,7 +73,7 @@ const formatDocuments = documents => {
 
 const getEvent = async id => {
   const result = await eventsController.repository.find({ event_id: id })
-  const evt = get(result, 'rows[0]')
+  const evt = result.rows[0]
 
   if (!evt) {
     throw Boom.notFound(`Notification event ${id} not found`)

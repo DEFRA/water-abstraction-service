@@ -1,7 +1,5 @@
 'use strict'
 
-const { get } = require('lodash')
-
 const JOB_NAME = 'billing.approve-batch'
 
 const batchService = require('../services/batch-service')
@@ -23,8 +21,8 @@ const createMessage = (batchId, user) => ([
 const handler = async job => {
   batchJob.logHandling(job)
 
-  const batchId = get(job, 'data.batchId')
-  const user = get(job, 'data.user')
+  const batchId = job.data.batchId
+  const user = job.data.user
 
   const batch = await batchService.getBatchById(batchId)
 
@@ -35,7 +33,7 @@ const onComplete = async (job, queueManager) => {
   batchJob.logOnComplete(job)
 
   try {
-    const batchId = get(job, 'data.batchId')
+    const batchId = job.data.batchId
     await queueManager.add(refreshTotalsJobName, batchId)
   } catch (err) {
     batchJob.logOnCompleteError(job, err)

@@ -1,5 +1,7 @@
+'use strict'
+
 const { sentenceCase } = require('sentence-case')
-const { find, get } = require('lodash')
+const { find } = require('lodash')
 
 // Import models
 const Contact = require('../contact')
@@ -68,7 +70,7 @@ const createContacts = (data) => {
   contacts.add(licenceHolder)
 
   // Add other contacts for allowed roles
-  const roles = get(data, 'data.roles')
+  const roles = data.data.roles
   roles.filter(rolePredicate).forEach((role) => {
     const contact = createContact(mapRole(role), role.role_party, role.role_address)
     contacts.add(contact)

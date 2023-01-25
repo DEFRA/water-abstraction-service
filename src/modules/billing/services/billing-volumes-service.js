@@ -4,7 +4,6 @@ const billingVolumesRepo = require('../../../lib/connectors/repos/billing-volume
 const mappers = require('../mappers')
 const { NotFoundError } = require('../../../lib/errors')
 const { BillingVolumeStatusError } = require('../lib/errors')
-const { get } = require('lodash')
 const chargeVersionService = require('../../../lib/services/charge-versions')
 const chargePeriod = require('../lib/charge-period')
 
@@ -155,7 +154,7 @@ const getBillingVolumesByChargeVersion = async (chargeVersionId, financialYear, 
  * @return {Promise<DateRange>, invoiceAccountId} invoiceAccountId is optional for the ui
  */
 const getBillingVolumeChargePeriod = async billingVolume => {
-  const chargeVersionId = get(billingVolume, 'chargeElement.chargeVersionId')
+  const chargeVersionId = billingVolume.chargeElement.chargeVersionId
   const chargeVersion = await chargeVersionService.getByChargeVersionId(chargeVersionId)
   return { chargePeriod: chargePeriod.getChargePeriod(billingVolume.financialYear, chargeVersion), invoiceAccountId: chargeVersion.invoiceAccount.id }
 }

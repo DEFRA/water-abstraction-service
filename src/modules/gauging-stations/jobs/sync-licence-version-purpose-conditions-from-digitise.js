@@ -3,7 +3,6 @@
 
 // Dependencies
 const moment = require('moment')
-const { get } = require('lodash')
 const { logger } = require('../../../logger')
 const permitConnector = require('../../../lib/connectors/permit')
 const { digitise } = require('@envage/water-abstraction-helpers')
@@ -41,13 +40,13 @@ const handler = async () => {
   // Iterate through each licence's licence_data_value column.
   return licences.map(async eachLicence => {
     logger.info(`Processing ${eachLicence.licence_ref}...`)
-    const edits = get(eachLicence, 'licence_data_value', {})
+    const edits = eachLicence.licence_data_value ? eachLicence.licence_data_value : {}
     if (edits.status === 'Approved') {
       logger.info(`Processing ${eachLicence.licence_ref}: Status is approved...`)
       // Take the permit data, and put it through the Digitise reducer
       const originalLicence = await permitConnector.licences.getWaterLicence(eachLicence.licence_ref)
       const initialState = originalLicence && digitise.getInitialState(originalLicence)
-      const hasData = get(initialState, 'licence.data.current_version') !== undefined
+      const hasData = initialState.licence.data.current_version !== undefined
       if (hasData) {
         const finalState = digitise.stateManager(initialState, edits.actions)
         const { licence } = finalState
@@ -55,7 +54,7 @@ const handler = async () => {
         if (licence && arData) {
           arData.map(async eachArSegment => {
             const thisSchema = eachArSegment.schema
-            const licenceVersionPurposeConditionURI = get(eachArSegment, 'content.nald_condition.id', null)
+            const licenceVersionPurposeConditionURI = eachArSegment.content.nald_condition.id ? eachArSegment.content.nald_condition.id : null
             const parts = licenceVersionPurposeConditionURI.split('/')
             const licenceVersionPurposeConditionLegacyId = `${parts[parts.length - 1]}:${parts[parts.length - 2]}`
             const {
