@@ -18,7 +18,7 @@
   }
 ]
  */
-const { chunk, flatMap, find, uniq, cond, negate, get, isEqual, pick } = require('lodash')
+const { chunk, flatMap, find, uniq, cond, negate, get, isEqual } = require('lodash')
 
 const returnsConnector = require('../../../lib/connectors/returns')
 const documents = require('../../../lib/connectors/crm/documents')
@@ -90,7 +90,10 @@ const getCompanyDocumentFilter = (licenceNumber, companyId) => ({
  * @param {Object} line
  * @return {Object}
  */
-const getLineDateRange = line => pick(line, ['startDate', 'endDate', 'timePeriod'])
+const getLineDateRange = (line) => {
+  const { startDate, endDate, timePeriod } = line
+  return { startDate, endDate, timePeriod }
+}
 
 /**
  * Checks that the return lines in the uploaded data match those calculated

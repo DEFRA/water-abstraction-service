@@ -53,18 +53,20 @@ experiment('lib/models/model', () => {
   })
 
   experiment('.pickFrom', () => {
-    const bike = new Bike()
-    const other = {
-      id: uuid(),
-      numberOfGears: 10,
-      hasSuspension: false
-    }
+    test('testing the pickFrom method', () => {
+      const bike = new Bike()
+      const other = {
+        id: uuid(),
+        numberOfGears: 10,
+        hasSuspension: false
+      }
 
-    bike.pickFrom(other, ['id', 'numberOfGears'])
+      bike.pickFrom(other, ['id', 'numberOfGears'])
 
-    expect(bike.id).to.equal(other.id)
-    expect(bike.numberOfGears).to.equal(other.numberOfGears)
-    expect(bike.hasSuspension).to.be.undefined()
+      expect(bike.id).to.equal(other.id)
+      expect(bike.numberOfGears).to.equal(other.numberOfGears)
+      expect(bike.hasSuspension).to.be.undefined()
+    })
   })
 
   experiment('.pick', () => {
