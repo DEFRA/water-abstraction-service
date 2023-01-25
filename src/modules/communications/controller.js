@@ -1,6 +1,6 @@
 const notificationsController = require('../../controllers/notifications')
 const eventsController = require('../../controllers/events')
-const { get, mapKeys, camelCase, pick } = require('lodash')
+const { get, mapKeys, camelCase } = require('lodash')
 const Boom = require('@hapi/boom')
 const crmDocumentConnector = require('../../lib/connectors/crm/documents')
 
@@ -18,21 +18,31 @@ const getNotification = async id => {
 }
 
 const formatNotification = notification => {
-  const data = pick(notification, ['id', 'recipient', 'message_ref', 'message_type', 'licences'])
+  const { id, recipient, message_ref: messageRef, message_type: messageType, licences } = notification
+  const data = { id, recipient, message_ref: messageRef, message_type: messageType, licences }
   data.plainText = notification.plaintext
-  data.address = camelCaseKeys(pick(notification.personalisation, [
-    'address_line_1',
-    'address_line_2',
-    'address_line_3',
-    'address_line_4',
-    'address_line_5',
-    'postcode'
-  ]))
+  const {
+    address_line_1: addressLine1,
+    address_line_2: addressLine2,
+    address_line_3: addressLine3,
+    address_line_4: addressLine4,
+    address_line_5: addressLine5,
+    postcode
+  } = notification.personalisation
+  data.address = camelCaseKeys({
+    address_line_1: addressLine1,
+    address_line_2: addressLine2,
+    address_line_3: addressLine3,
+    address_line_4: addressLine4,
+    address_line_5: addressLine5,
+    postcode
+  })
   return camelCaseKeys(data)
 }
 
 const formatEvent = evt => {
-  const data = pick(evt, ['reference_code', 'type', 'issuer'])
+  const { reference_code: referenceCode, type, issuer } = evt
+  const data = { reference_code: referenceCode, type, issuer }
   data.id = evt.event_id
   data.subType = evt.subtype
   data.createdDate = evt.created
@@ -52,7 +62,8 @@ const getLicenceDocuments = async licenceNumbers => {
 
 const formatDocuments = documents => {
   return documents.map(doc => {
-    const data = pick(doc, ['document_id', 'company_entity_id', 'document_name'])
+    const { document_id: documentId, company_entity_id: companyEntityId, document_name: documentName } = doc
+    const data = { document_id: documentId, company_entity_id: companyEntityId, document_name: documentName }
     data.licenceRef = doc.system_external_id
     return camelCaseKeys(data)
   })

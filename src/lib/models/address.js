@@ -3,7 +3,7 @@
 const Model = require('./model')
 const validators = require('./validators')
 const Joi = require('joi')
-const { identity, pick } = require('lodash')
+const { identity } = require('lodash')
 const { VALID_ADDRESS } = require('@envage/water-abstraction-helpers').validators
 
 const ADDRESS_SOURCE = {
@@ -57,21 +57,34 @@ const getSortKey = address => {
     .join('_')
 }
 
-const mapToValidator = address => ({
-  ...pick(address,
-    [
-      'addressLine1',
-      'addressLine2',
-      'addressLine3',
-      'addressLine4',
-      'town',
-      'county',
-      'postcode',
-      'country',
-      'uprn'
-    ]),
-  dataSource: address.source
-})
+const mapToValidator = (address) => {
+  const {
+    addressLine1,
+    addressLine2,
+    addressLine3,
+    addressLine4,
+    town,
+    county,
+    postcode,
+    country,
+    uprn
+  } = address
+
+  return {
+    ...{
+      addressLine1,
+      addressLine2,
+      addressLine3,
+      addressLine4,
+      town,
+      county,
+      postcode,
+      country,
+      uprn
+    },
+    dataSource: address.source
+  }
+}
 
 class Address extends Model {
   constructor (...args) {

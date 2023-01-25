@@ -1,7 +1,6 @@
 'use strict'
 
 const mapErrorResponse = require('../../../lib/map-error-response')
-const { pick } = require('lodash')
 
 const licenceAgreementsService = require('../../../lib/services/licence-agreements')
 const controller = require('../../../lib/controller')
@@ -47,7 +46,8 @@ const deleteAgreement = async (request, h) => {
 const postLicenceAgreement = async (request, h) => {
   const { licence } = request.pre
   const { internalCallingUserModel: issuer } = request.defra
-  const data = pick(request.payload, ['code', 'startDate', 'dateSigned'])
+  const { code, startDate, dateSigned } = request.payload
+  const data = { code, startDate, dateSigned }
 
   try {
     const model = await licenceAgreementsService.createLicenceAgreement(licence, data, issuer)
