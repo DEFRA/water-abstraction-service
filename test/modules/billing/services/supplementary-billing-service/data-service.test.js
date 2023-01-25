@@ -25,14 +25,6 @@ const batchId = uuid()
 
 const { createTransaction } = require('./test-helpers')
 
-const pick = (obj, props) => {
-  const picked = {}
-  for (const prop of props) {
-    picked[prop] = obj[prop]
-  }
-  return picked
-}
-
 experiment('modules/billing/services/supplementary-billing-service/data-service', () => {
   let result
 
@@ -280,7 +272,9 @@ experiment('modules/billing/services/supplementary-billing-service/data-service'
           'isNewLicence'
         ]
 
-        expect(pick(transactions[0], matchingKeys)).to.equal(pick(createdTransaction, matchingKeys))
+        for (const key of matchingKeys) {
+          expect(transactions[0][key]).to.equal(createdTransaction[key])
+        }
 
         expect(createdTransaction.billingInvoiceLicenceId).to.equal(invoiceLicence.id)
         expect(createdTransaction.sourceTransactionId).to.equal(transactions[0].billingTransactionId)

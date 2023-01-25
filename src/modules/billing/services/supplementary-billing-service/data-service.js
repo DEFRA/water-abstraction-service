@@ -18,45 +18,33 @@ const { actions } = require('./constants')
  * transaction object when creating a reversed transaction
  * before attempting to write the transaction back to the DB
  */
-const pickKeys = [
-  'chargeElementId',
-  'startDate',
-  'endDate',
-  'abstractionPeriod',
-  'netAmount',
-  'authorisedQuantity',
-  'billableQuantity',
-  'authorisedDays',
-  'billableDays',
-  'description',
-  'source',
-  'season',
-  'loss',
-  'chargeType',
-  'volume',
-  'section126Factor',
-  'section127Agreement',
-  'section130Agreement',
-  'isTwoPartSecondPartCharge',
-  'calculatedVolume',
-  'twoPartTariffError',
-  'twoPartTariffStatus',
-  'twoPartTariffReview',
-  'isDeMinimis',
-  'isNewLicence'
-]
-
-const pick = (obj, props) => {
-  const picked = {}
-  for (const prop of props) {
-    picked[prop] = obj[prop]
-  }
-  return picked
-}
-
 const getReversedTransaction = (invoiceLicence, sourceTransaction) => {
   return {
-    ...pick(sourceTransaction, pickKeys),
+    chargeElementId: sourceTransaction.chargeElementId,
+    startDate: sourceTransaction.startDate,
+    endDate: sourceTransaction.endDate,
+    abstractionPeriod: sourceTransaction.abstractionPeriod,
+    netAmount: sourceTransaction.netAmount,
+    authorisedQuantity: sourceTransaction.authorisedQuantity,
+    billableQuantity: sourceTransaction.billableQuantity,
+    authorisedDays: sourceTransaction.authorisedDays,
+    billableDays: sourceTransaction.billableDays,
+    description: sourceTransaction.description,
+    source: sourceTransaction.source,
+    season: sourceTransaction.season,
+    loss: sourceTransaction.loss,
+    chargeType: sourceTransaction.chargeType,
+    volume: sourceTransaction.volume,
+    section126Factor: sourceTransaction.section126Factor,
+    section127Agreement: sourceTransaction.section127Agreement,
+    section130Agreement: sourceTransaction.section130Agreement,
+    isTwoPartSecondPartCharge: sourceTransaction.isTwoPartSecondPartCharge,
+    calculatedVolume: sourceTransaction.calculatedVolume,
+    twoPartTariffError: sourceTransaction.twoPartTariffError,
+    twoPartTariffStatus: sourceTransaction.twoPartTariffStatus,
+    twoPartTariffReview: sourceTransaction.twoPartTariffReview,
+    isDeMinimis: sourceTransaction.isDeMinimis,
+    isNewLicence: sourceTransaction.isNewLicence,
     billingInvoiceLicenceId: invoiceLicence.id,
     sourceTransactionId: sourceTransaction.billingTransactionId,
     status: Transaction.statuses.candidate,

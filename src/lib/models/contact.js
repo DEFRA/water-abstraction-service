@@ -59,22 +59,21 @@ class Contact {
       addressLine1, addressLine2, addressLine3, addressLine4, town,
       county, postcode, country, email
     } = this
-    const values = Object.values(
-      {
-        initials,
-        salutation,
-        firstName,
-        name,
-        addressLine1,
-        addressLine2,
-        addressLine3,
-        addressLine4,
-        town,
-        county,
-        postcode,
-        country,
-        email
-      })
+    const values = [
+      initials,
+      salutation,
+      firstName,
+      name,
+      addressLine1,
+      addressLine2,
+      addressLine3,
+      addressLine4,
+      town,
+      county,
+      postcode,
+      country,
+      email
+    ]
     const normalised = values.map(val => (val || '').trim().toLowerCase())
     return sha1(normalised.join(','))
   }

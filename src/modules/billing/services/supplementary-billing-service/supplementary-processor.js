@@ -17,45 +17,6 @@ const { actions } = require('./constants')
 const { isNaldTransaction } = require('../../lib/charge-period')
 
 /**
- * These are the keys in the abstractionPeriod field
- * By specifying the keys we guarantee their ordering
- */
-const abstractionPeriodKeys = [
-  'startDay',
-  'startMonth',
-  'endDay',
-  'endMonth'
-]
-
-/**
- * These are the common keys for all transactions when
- * generating a grouping key.
- * TPT and annual transactions have a slightly different
- * grouping key - this list of keys is therefore
- * augmented in the function below
- */
-const commonTransactionKeys = [
-  'source',
-  'season',
-  'loss',
-  'chargeType',
-  'section126Factor',
-  'section127Agreement',
-  'section130Agreement',
-  'isTwoPartSecondPartCharge',
-  'invoiceAccountNumber',
-  'financialYearEnding'
-]
-
-const pick = (obj, props) => {
-  const picked = {}
-  for (const prop of props) {
-    picked[prop] = obj[prop]
-  }
-  return picked
-}
-
-/**
  * Gets a grouping key for the given transaction - this is to allow
  * similar transactions to be grouped together
  *
@@ -66,23 +27,56 @@ const pick = (obj, props) => {
  * @return {String} grouping key
  */
 const getGroupingKey = transaction => {
+  /**
+ * These are the common keys for all transactions when
+ * generating a grouping key.
+ * TPT and annual transactions have a slightly different
+ * grouping key - this list of keys is therefore
+ * augmented in the function below
+ */
   // Create a list of keys which will form the grouping key
-  const keys = [...commonTransactionKeys]
-  transaction.isTwoPartSecondPartCharge
-    ? keys.push('isSummer')
-    : keys.push('authorisedDays', 'volume')
+  const keys = {
+    source: transaction.source,
+    season: transaction.season,
+    loss: transaction.loss,
+    chargeType: transaction.chargeType,
+    section126Factor: transaction.section126Factor,
+    section127Agreement: transaction.section127Agreement,
+    section130Agreement: transaction.section130Agreement,
+    isTwoPartSecondPartCharge: transaction.isTwoPartSecondPartCharge,
+    invoiceAccountNumber: transaction.invoiceAccountNumber,
+    financialYearEnding: transaction.financialYearEnding
+  }
+
+  if (transaction.isTwoPartSecondPartCharge) {
+    keys.isSummer = transaction.isSummer
+  } else {
+    keys.authorisedDays = transaction.authorisedDays
+    keys.volume = transaction.volume
+  }
 
   // The 'new licence' flag only affects WRLS transactions so it does not
   // need to be incorporated into the key for NALD transactions
   if (!isNaldTransaction(transaction.startDate)) {
-    keys.push('isNewLicence')
+    keys.isNewLicence = transaction.isNewLicence
+  }
+
+  /**
+ * These are the keys in the abstractionPeriod field
+ * By specifying the keys we guarantee their ordering
+ */
+  const abstractionPeriod = {
+    startDay: transaction.abstractionPeriod.startDay,
+    startMonth: transaction.abstractionPeriod.startMonth,
+    endDay: transaction.abstractionPeriod.endDay,
+    endMonth: transaction.abstractionPeriod.endMonth
   }
 
   // Get the data and serialize to a JSON string
   const data = {
-    ...pick(transaction, keys),
+    ...keys,
     chargeElementPurposeUseCode: transaction.chargeElementPurposeUseCode,
-    abstractionPeriod: pick(transaction.abstractionPeriod, abstractionPeriodKeys)
+    abstractionPeriod
   }
   return hashers.createMd5Hash(JSON.stringify(data))
 }
@@ -182,11 +176,13 @@ const markCurrentBatchTransactionsForDeletion = group => {
  * @return {String}
  */
 const getPairGroupingKey = transaction => {
-  const keys = ['startDate', 'endDate']
-  keys.push(
-    transaction.isTwoPartSecondPartCharge ? 'volume' : 'billableDays'
-  )
-  return JSON.stringify(pick(transaction, keys))
+  const transactionDetails = { startDate: transaction.startDate, endDate: transaction.endDate }
+  if (transaction.isTwoPartSecondPartCharge) {
+    transactionDetails.volume = transaction.volume
+  } else {
+    transactionDetails.billableDays = transaction.billableDays
+  }
+  return JSON.stringify(transactionDetails)
 }
 
 /**

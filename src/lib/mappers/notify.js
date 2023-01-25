@@ -51,9 +51,7 @@ function _buildAddress (headArray, bodyObject, tailArray) {
 function _bunchUpAddressLines (address) {
   // Turn `addressLine1` etc. into an array of values, filtering out any empty lines
   const { addressLine1, addressLine2, addressLine3, addressLine4 } = address
-  const filteredAddressArray = Object.values(
-    { addressLine1, addressLine2, addressLine3, addressLine4 }
-  ).filter(element => element)
+  const filteredAddressArray = [addressLine1, addressLine2, addressLine3, addressLine4].filter(element => element)
 
   // Return the remaining values renumbered `addressLine1` etc. so we've now "bunched up" our address lines
   return getAddressObjectFromArray(filteredAddressArray, 'addressLine')
