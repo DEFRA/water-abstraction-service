@@ -5,7 +5,6 @@ const { getAddressObjectFromArray } = require('./lib/helpers')
  * @module maps service models to Notify address lines
  */
 
-const { pick } = require('lodash')
 const { DATA_SOURCE_TYPES } = require('../models/contact-v2')
 
 const MAX_NUMBER_OF_LINES = 7
@@ -30,9 +29,10 @@ const mapModelsToNotifyAddress = models => {
   const addressTailArray = _getAddressTailArray(address)
 
   // Get our address body ie. the address lines in the middle that we can concatenate
+  const { town, county } = address
   const addressBodyObject = _getAddressBodyObject({
     ...bunchedAddressLines,
-    ...pick(address, 'town', 'county')
+    ...{ town, county }
   }, addressHeadArray, addressTailArray)
 
   return _buildAddress(addressHeadArray, addressBodyObject, addressTailArray)
@@ -50,9 +50,8 @@ function _buildAddress (headArray, bodyObject, tailArray) {
  */
 function _bunchUpAddressLines (address) {
   // Turn `addressLine1` etc. into an array of values, filtering out any empty lines
-  const filteredAddressArray = Object.values(
-    pick(address, 'addressLine1', 'addressLine2', 'addressLine3', 'addressLine4')
-  ).filter(element => element)
+  const { addressLine1, addressLine2, addressLine3, addressLine4 } = address
+  const filteredAddressArray = [addressLine1, addressLine2, addressLine3, addressLine4].filter(element => element)
 
   // Return the remaining values renumbered `addressLine1` etc. so we've now "bunched up" our address lines
   return getAddressObjectFromArray(filteredAddressArray, 'addressLine')

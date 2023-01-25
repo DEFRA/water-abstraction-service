@@ -2,7 +2,6 @@
 'use strict'
 
 // Dependencies
-const { pick, isEqual } = require('lodash')
 const moment = require('moment')
 const BlueBirdPromise = require('bluebird')
 const csvParse = BlueBirdPromise.promisify(require('csv-parse'))
@@ -51,20 +50,8 @@ const handler = async () => {
     const mappedChargeCategory = chargeCategoriesMapper.csvToModel(arraysFromCSV[i])
     const chargeCategoryExists = await chargeCategoriesRepo.findOneByReference(mappedChargeCategory.reference)
 
-    const keys = [
-      'description',
-      'shortDescription',
-      'subsistenceCharge',
-      'minVolume',
-      'maxVolume',
-      'isTidal',
-      'lossFactor',
-      'modelTier',
-      'isRestrictedSource'
-    ]
-
     if (chargeCategoryExists) {
-      if (!isEqual(pick(chargeCategoryExists, keys), pick(mappedChargeCategory, keys))) {
+      if (_updateExistingCategory(chargeCategoryExists, mappedChargeCategory)) {
         logger.info(`Updating an existing charge category: ${mappedChargeCategory.reference}`)
         await chargeCategoriesRepo.updateByReference(mappedChargeCategory.reference, mappedChargeCategory)
       }
@@ -75,6 +62,28 @@ const handler = async () => {
   }
 
   return applicationState.save('charge-categories-import', { etag: ETag })
+}
+
+const _updateExistingCategory = (existingCategory, mappedCategory) => {
+  const keys = [
+    'description',
+    'shortDescription',
+    'subsistenceCharge',
+    'minVolume',
+    'maxVolume',
+    'isTidal',
+    'lossFactor',
+    'modelTier',
+    'isRestrictedSource'
+  ]
+
+  for (const key of keys) {
+    if (existingCategory[key] !== mappedCategory[key]) {
+      return true
+    }
+  }
+
+  return false
 }
 
 const onFailedHandler = async (job, err) => {

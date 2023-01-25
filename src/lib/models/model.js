@@ -1,6 +1,6 @@
 'use strict'
 
-const { pick: _pick, isObject } = require('lodash')
+const { isObject } = require('lodash')
 
 const { assertId } = require('./validators')
 const { getDateTimeFromValue } = require('../dates')
@@ -29,7 +29,16 @@ class Model {
   };
 
   pickFrom (source, keys) {
-    this.fromHash(_pick(source, keys))
+    if (!source || !keys) return
+    const picked = {}
+    for (const key of keys) {
+      if (source[key] !== undefined) {
+        picked[key] = source[key]
+      }
+    }
+
+    this.fromHash(picked)
+
     return this
   }
 
@@ -38,8 +47,23 @@ class Model {
    *
    * @param  {...String} keys The keys to extract from this instance
    */
-  pick (...keys) {
-    return _pick(this, ...keys)
+  pick (...args) {
+    let keys
+    const picked = {}
+
+    if (Array.isArray(args[0])) {
+      keys = args[0]
+    } else {
+      keys = args
+    }
+
+    for (const key of keys) {
+      if (this[key] !== undefined) {
+        picked[key] = this[key]
+      }
+    }
+
+    return picked
   }
 
   toJSON () {

@@ -9,7 +9,6 @@ const {
 const { expect } = require('@hapi/code')
 const { v4: uuid } = require('uuid')
 const sandbox = require('sinon').createSandbox()
-const { pick } = require('lodash')
 
 const billingTransactionsRepo = require('../../../../../src/lib/connectors/repos/billing-transactions')
 const dataService = require('../../../../../src/modules/billing/services/supplementary-billing-service/data-service')
@@ -273,7 +272,9 @@ experiment('modules/billing/services/supplementary-billing-service/data-service'
           'isNewLicence'
         ]
 
-        expect(pick(transactions[0], matchingKeys)).to.equal(pick(createdTransaction, matchingKeys))
+        for (const key of matchingKeys) {
+          expect(transactions[0][key]).to.equal(createdTransaction[key])
+        }
 
         expect(createdTransaction.billingInvoiceLicenceId).to.equal(invoiceLicence.id)
         expect(createdTransaction.sourceTransactionId).to.equal(transactions[0].billingTransactionId)

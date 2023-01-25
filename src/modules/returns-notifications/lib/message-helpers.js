@@ -1,4 +1,4 @@
-const { mapKeys, get, pick } = require('lodash')
+const { mapKeys, get } = require('lodash')
 
 /**
  * Create job data for a returns notification message regarding a return to
@@ -51,10 +51,14 @@ const formatEnqueuePersonalisation = (ret, contact) => {
   const metadata = ret.metadata || {}
   const nald = metadata.nald
 
+  const picked = { formatId: nald.formatId, regionCode: nald.regionCode }
+  if (nald.areaCode) {
+    picked.areaCode = nald.areaCode
+  }
   return {
     ...formatAddressKeys(contact),
     licenceRef,
-    ...pick(nald, ['formatId', 'regionCode', 'areaCode']),
+    ...picked,
     siteDescription: metadata.description,
     isTwoPartTariff: metadata.isTwoPartTariff,
     qrUrl: returnId,
