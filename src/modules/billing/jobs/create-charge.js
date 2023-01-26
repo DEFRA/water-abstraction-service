@@ -1,6 +1,6 @@
 'use strict'
 
-const { get, inRange } = require('lodash')
+const { inRange } = require('lodash')
 
 const JOB_NAME = 'billing.create-charge'
 
@@ -36,7 +36,7 @@ const createMessage = (batchId, billingBatchTransactionId) => ([
   }
 ])
 
-const getStatus = err => get(err, 'statusCode', 0)
+const getStatus = err => err.statusCode ? err.statusCode : 0
 
 /**
  * Checks if the error is an HTTP client error (in range 400 - 499)
@@ -48,7 +48,7 @@ const isClientError = err => inRange(getStatus(err), 400, 500)
 const updateBatchState = async batchId => {
   const statuses = await batchService.getTransactionStatusCounts(batchId)
 
-  const isReady = get(statuses, Transaction.statuses.candidate, 0) === 0
+  const isReady = (statuses.Transaction?.statuses.candidate ? statuses.Transaction.statuses.candidate : 0) === 0
 
   if (isReady) {
     // Clean up batch
@@ -58,12 +58,12 @@ const updateBatchState = async batchId => {
   return isReady
 }
 
-const getTransactionStatus = batch => get(batch, 'invoices[0].invoiceLicences[0].transactions[0].status')
+const getTransactionStatus = batch => batch.invoices?.[0].invoiceLicences[0].transactions[0].status
 
 const handler = async job => {
   batchJob.logHandling(job)
-  const transactionId = get(job, 'data.billingBatchTransactionId')
-  const batchId = get(job, 'data.batchId')
+  const transactionId = job.data.billingBatchTransactionId
+  const batchId = job.data.batchId
 
   // Create batch model from loaded data
   // the batch contains all lower level related objects for pre-sroc
@@ -120,8 +120,8 @@ const onComplete = async (job, queueManager) => {
 }
 
 const onFailedHandler = async (job, err) => {
-  const batchId = get(job, 'data.batchId')
-  const transactionId = get(job, 'data.billingBatchTransactionId')
+  const batchId = job.data.batchId
+  const transactionId = job.data.billingBatchTransactionId
 
   // On final attempt, error the batch and log
   if (helpers.isFinalAttempt(job)) {

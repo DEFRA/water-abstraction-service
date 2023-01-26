@@ -1,4 +1,5 @@
-const { get } = require('lodash')
+'use strict'
+
 const Boom = require('@hapi/boom')
 const eventsService = require('../../lib/services/events')
 const returnsUpload = require('./lib/returns-upload')
@@ -41,8 +42,8 @@ const preLoadJson = async (request, h) => {
  * @return {Promise} resolves with h.continue
  */
 const preCheckIssuer = async (request, h) => {
-  const issuer = get(request, 'query.userName')
-  const originalIssuer = get(request, 'event.issuer')
+  const issuer = request.query.userName
+  const originalIssuer = request.event.issuer
 
   if (issuer !== originalIssuer) {
     throw Boom.unauthorized('Return upload permission denied')

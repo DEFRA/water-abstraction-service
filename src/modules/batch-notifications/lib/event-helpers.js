@@ -1,4 +1,6 @@
-const { find, get, set, uniq } = require('lodash')
+'use strict'
+
+const { find, set, uniq } = require('lodash')
 const generateReference = require('../../../lib/reference-generator')
 const {
   EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING,
@@ -68,7 +70,8 @@ const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
  * @return {Number} of messages in the requested status
  */
 const getStatusCount = (statuses, status) => {
-  return parseInt(get(find(statuses, { status }), 'count', 0))
+  const foundStatus = find(statuses, { status })
+  return parseInt(foundStatus.count ? foundStatus.count : 0)
 }
 
 /**
@@ -90,7 +93,7 @@ const refreshEventStatus = async (eventId) => {
   const sent = getStatusCount(statuses, MESSAGE_STATUS_SENT)
   const error = getStatusCount(statuses, MESSAGE_STATUS_ERROR)
 
-  const isComplete = (sent + error) === get(ev, 'metadata.recipients')
+  const isComplete = (sent + error) === ev.metadata.recipients
 
   set(ev, 'status', isComplete ? EVENT_STATUS_COMPLETED : EVENT_STATUS_SENDING)
   set(ev, 'metadata.sent', sent)

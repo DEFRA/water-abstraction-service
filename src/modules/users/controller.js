@@ -1,6 +1,8 @@
+'use strict'
+
 const idmConnector = require('../../lib/connectors/idm')
 const Boom = require('@hapi/boom')
-const { get, partial } = require('lodash')
+const { partial } = require('lodash')
 const crmEntitiesConnector = require('../../lib/connectors/crm/entities')
 const crmDocumentsConnector = require('../../lib/connectors/crm/documents')
 const idmUserRolesConnector = require('../../lib/connectors/idm/user-roles')
@@ -43,7 +45,7 @@ const getCompanyLicences = (company, documentHeaders, licencesMap) => {
     .map(doc => ({
       documentId: doc.document_id,
       licenceRef: doc.system_external_id,
-      licenceHolder: get(doc, 'metadata.contacts[0].name', ''),
+      licenceHolder: doc.metadata.contacts[0].name ? doc.metadata.contacts[0].name : '',
       licence: licencesMap.get(doc.system_external_id)
     }))
 }
@@ -206,7 +208,7 @@ const errorHandler = (err, message, params = {}) => {
 const getStatus = async (request, h) => {
   const userResponse = await idmConnector.usersClient.findOne(request.params.id)
 
-  if (get(userResponse, 'error.name') === 'NotFoundError') {
+  if (userResponse.error?.name === 'NotFoundError') {
     return Boom.notFound('User not found')
   }
 
@@ -218,8 +220,8 @@ const getStatus = async (request, h) => {
     data: {
       user: mapUserStatus(userResponse.data),
       companies: mapCompanies(
-        get(companies, 'data.companies', []),
-        get(verifications, 'data', []),
+        companies.data?.companies ? companies.data.companies : [],
+        verifications.data ? verifications.data : [],
         documentHeaders,
         licencesMap
       )

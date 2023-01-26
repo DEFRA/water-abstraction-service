@@ -1,5 +1,6 @@
+'use strict'
+
 const Joi = require('joi')
-const { get } = require('lodash')
 const { v4: uuid } = require('uuid')
 
 /**
@@ -61,8 +62,8 @@ function validateEnqueueOptions (options, now = new Date()) {
  * @return {Object} field values
  */
 const parseSentResponse = (notifyResponse) => {
-  const notifyId = get(notifyResponse, 'body.id', null)
-  const plainText = get(notifyResponse, 'body.content.body', '')
+  const notifyId = notifyResponse.body.id ? notifyResponse.body.id : null
+  const plainText = notifyResponse.body.content.body ? notifyResponse.body.content.body : ''
   return {
     status: 'sent',
     notify_id: notifyId,

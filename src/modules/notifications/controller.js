@@ -1,8 +1,9 @@
+'use strict'
+
 /**
  * Controller methods to send/preview notifications
  * @module src/modules/notifications/controller
  */
-const { get } = require('lodash')
 const { prepareNotification, sendNotification } = require('./lib')
 const taskConfigLoader = require('./lib/task-config-loader')
 const generateReference = require('../../lib/reference-generator')
@@ -64,9 +65,9 @@ const mapNotificationEvent = (notification) => {
   const { id, issuer, type, subtype, errorCount, created, referenceCode } = notification
   return {
     ...{ id, issuer, type, subtype, errorCount, created, referenceCode },
-    name: get(notification, 'metadata.name'),
-    options: get(notification, 'metadata.options', {}),
-    recipientCount: get(notification, 'metadata.recipients')
+    name: notification.metadata.name,
+    options: notification.metadata.options ? notification.metadata.options : {},
+    recipientCount: notification.metadata.recipients
   }
 }
 

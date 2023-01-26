@@ -1,4 +1,6 @@
-const { get, uniqBy } = require('lodash')
+'use strict'
+
+const { uniqBy } = require('lodash')
 const { createUniqueId } = require('../../../lib/licence-transformer/nald-helpers')
 const type = 'points'
 
@@ -16,7 +18,7 @@ const mapPoints = (points = []) => {
  * Extracts all licence abstraction points across all purposes within a licence.
  */
 const extractPoints = (licence = {}) => {
-  const purposes = get(licence, 'purposes', [])
+  const purposes = licence.purposes ? licence.purposes : []
 
   const extractedPoints = purposes.reduce((points, purpose) => {
     const { purposePoints } = purpose
