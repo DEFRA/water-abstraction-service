@@ -1,7 +1,7 @@
 'use strict'
 
 const bluebird = require('bluebird')
-const { get } = require('lodash')
+
 // Services
 const service = require('../../../lib/services/service')
 const documentsService = require('../../../lib/services/documents-service')
@@ -50,19 +50,22 @@ const getAllWithPaging = async (tabFilter, page, perPage) => {
  * @return {Promise<Role>}
  */
 const getLicenceHolderRole = async chargeVersionWorkflow => {
+  let chargeVersion = chargeVersionWorkflow?.chargeVersion
   let isDataMapped = true
-  let startDateKey = 'chargeVersion.dateRange.startDate'
 
   let { licenceNumber, licenceRef } = chargeVersionWorkflow.licence
   if (!licenceNumber) {
     licenceNumber = licenceRef
     isDataMapped = false
-    startDateKey = 'data.chargeVersion.dateRange.startDate'
+    chargeVersion = chargeVersionWorkflow.data?.chargeVersion
   }
 
-  const startDate = chargeVersionWorkflow.status === 'to_setup'
-    ? chargeVersionWorkflow.licenceVersion.startDate
-    : get(chargeVersionWorkflow, startDateKey, null)
+  let startDate = null
+  if (chargeVersionWorkflow.status === 'to_setup') {
+    startDate = chargeVersionWorkflow.licenceVersion.startDate
+  } else {
+    startDate = chargeVersion?.dateRange?.startDate
+  }
 
   const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate)
   const role = doc ? doc.getRoleOnDate(Role.ROLE_NAMES.licenceHolder, startDate) : {}

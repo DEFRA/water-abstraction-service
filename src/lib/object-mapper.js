@@ -6,7 +6,7 @@
  *         by default nulls are mapped, with an option of ignoring them
  */
 
-const { identity, get, set, isUndefined, isNull, isFunction, isObject, isArray } = require('lodash')
+const { identity, set, isUndefined, isNull, isFunction, isObject, isArray } = require('lodash')
 
 const getSourceKeys = value => {
   if (isArray(value)) {
@@ -75,9 +75,19 @@ class Mapper {
   execute (data) {
     return this._rules.reduce((acc, row) => {
       // If the source key is omitted, supply the entire object
-      const values = row.sourceKeys.length === 0
-        ? [data]
-        : row.sourceKeys.map(key => get(data, key))
+      let values = [data]
+
+      if (row.sourceKeys.length !== 0) {
+        values = row.sourceKeys.map((sourceKey) => {
+          const keys = sourceKey.split('.')
+          let tempData = data
+          for (const key of keys) {
+            tempData = tempData?.[key]
+          }
+
+          return tempData
+        })
+      }
 
       // Undefined values in the source are skipped
       if (values.every(isUndefined)) {

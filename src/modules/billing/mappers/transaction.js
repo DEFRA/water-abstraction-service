@@ -2,7 +2,7 @@
 
 const moment = require('moment')
 const { titleCase } = require('title-case')
-const { identity, get, isNull, trim } = require('lodash')
+const { identity, isNull, trim } = require('lodash')
 const helpers = require('@envage/water-abstraction-helpers').charging
 
 const DateRange = require('../../../lib/models/date-range')
@@ -158,9 +158,15 @@ const mapChargeType = (isCompensationCharge, isMinimumCharge) => {
 
 const isSection127Agreement = agreements => !!agreements.find(agreement => agreement.isTwoPartTariff())
 
-const getSection126Factor = agreements => get(agreements.find(agreement => agreement.isAbatement()), 'factor', null)
+const getSection126Factor = (agreements) => {
+  const foundAgreement = agreements.find(agreement => agreement.isAbatement())
+  return foundAgreement?.factor ? foundAgreement.factor : null
+}
 
-const getSection130Agreement = agreements => get(agreements.find(agreement => agreement.isCanalAndRiversTrust()), 'code', null)
+const getSection130Agreement = (agreements) => {
+  const foundAgreement = agreements.find(agreement => agreement.isCanalAndRiversTrust())
+  return foundAgreement?.code ? foundAgreement.code : null
+}
 
 const modelToDbMapper = createMapper()
   .copy(

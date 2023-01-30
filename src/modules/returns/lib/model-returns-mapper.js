@@ -1,4 +1,5 @@
-const { get } = require('lodash')
+'use strict'
+
 const moment = require('moment')
 const { convertToCubicMetres, convertToUserUnit } = require('./unit-conversion')
 const { v4: uuid } = require('uuid')
@@ -32,25 +33,25 @@ const returnLineToModel = (line) => {
 const mapMeter = meter => {
   return {
     ...meter,
-    meterDetailsProvided: get(meter, 'meterDetailsProvided', !!meter.manufacturer)
+    meterDetailsProvided: meter.meterDetailsProvided ? meter.meterDetailsProvided : !!meter.manufacturer
   }
 }
 
 const getMetersFromVersionMetadata = version => {
-  const meters = get(version, 'metadata.meters', [])
+  const meters = version?.metadata.meters ? version.metadata.meters : []
   return meters.map(mapMeter)
 }
 
 const getReadingFromVersionMetadata = version => {
   return {
-    type: get(version, 'metadata.type', null),
-    method: get(version, 'metadata.method', null),
-    units: get(version, 'metadata.units', null),
-    totalFlag: get(version, 'metadata.totalFlag', null),
-    total: get(version, 'metadata.total', null),
-    totalCustomDates: get(version, 'metadata.totalCustomDates', false),
-    totalCustomDateStart: get(version, 'metadata.totalCustomDateStart', null),
-    totalCustomDateEnd: get(version, 'metadata.totalCustomDateEnd', null)
+    type: version?.metadata.type ? version.metadata.type : null,
+    method: version?.metadata.method ? version.metadata.method : null,
+    units: version?.metadata.units ? version.metadata.units : null,
+    totalFlag: version?.metadata.totalFlag ? version.metadata.totalFlag : false,
+    total: version?.metadata.total ? version.metadata.total : null,
+    totalCustomDates: version?.metadata.totalCustomDates ? version.metadata.totalCustomDates : false,
+    totalCustomDateStart: version?.metadata.totalCustomDateStart ? version.metadata.totalCustomDateStart : null,
+    totalCustomDateEnd: version?.metadata.totalCustomDateEnd ? version.metadata.totalCustomDateEnd : null
   }
 }
 
@@ -75,7 +76,7 @@ const mapReturnToModel = (ret, version, lines, versions) => {
     endDate: moment(ret.end_date).format('YYYY-MM-DD'),
     dueDate: ret.due_date,
     frequency: ret.returns_frequency,
-    isNil: get(version, 'nil_return'),
+    isNil: version?.nil_return,
     status: ret.status,
     versionNumber: version ? version.version_number : null,
     isCurrent: version ? version.current : null,
