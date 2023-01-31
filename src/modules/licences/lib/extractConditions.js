@@ -24,7 +24,7 @@ const mapConditions = (purposeText, conditions = []) => {
  * Extracts all licence conditions across all purposes within a licence.
  */
 const extractConditions = (licence = {}) => {
-  const purposes = licence.purposes ? licence.purposes : []
+  const purposes = licence.purposes ?? []
 
   return purposes.reduce((conditions, purpose) => {
     const purposeText = purpose.purpose[0].purpose_tertiary.DESCR

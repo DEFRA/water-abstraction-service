@@ -45,7 +45,7 @@ const getCompanyLicences = (company, documentHeaders, licencesMap) => {
     .map(doc => ({
       documentId: doc.document_id,
       licenceRef: doc.system_external_id,
-      licenceHolder: doc.metadata.contacts[0].name ? doc.metadata.contacts[0].name : '',
+      licenceHolder: doc.metadata.contacts[0].name ?? '',
       licence: licencesMap.get(doc.system_external_id)
     }))
 }
@@ -214,17 +214,23 @@ const getStatus = async (request, h) => {
 
   const results = await getUserCompanyStatus(userResponse.data)
 
-  const [companies, verifications, documentHeaders = [], licencesMap] = results
+  const companiesData = results[0].data?.companies ?? []
+  const verificationData = results[1].data ?? []
+  const documentHeaders = results[2] ?? []
+  const licenceMap = results[3]
+
+  const user = mapUserStatus(userResponse.data)
+  const companies = mapCompanies(
+    companiesData,
+    verificationData,
+    documentHeaders,
+    licenceMap
+  )
 
   return {
     data: {
-      user: mapUserStatus(userResponse.data),
-      companies: mapCompanies(
-        companies.data?.companies ? companies.data.companies : [],
-        verifications.data ? verifications.data : [],
-        documentHeaders,
-        licencesMap
-      )
+      user,
+      companies
     },
     error: null
   }

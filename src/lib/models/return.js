@@ -56,7 +56,7 @@ class Return extends Model {
   }
 
   get purposeUses () {
-    const result = this.returnRequirement.returnRequirementPurposes ? this.returnRequirement.returnRequirementPurposes : []
+    const result = this.returnRequirement.returnRequirementPurposes ?? []
     return result
       .map(returnRequirementPurpose => returnRequirementPurpose.purposeUse)
   }

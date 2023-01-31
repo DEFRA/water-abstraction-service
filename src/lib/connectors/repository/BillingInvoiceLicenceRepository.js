@@ -33,7 +33,7 @@ class BillingInvoiceLicenceRepository extends Repository {
    */
   async findOneByTransactionId (transactionId) {
     const result = await this.dbQuery(findOneByTransactionIdQuery, [transactionId])
-    return result.rows[0] ? result.rows[0] : null
+    return result.rows[0] ?? null
   }
 };
 

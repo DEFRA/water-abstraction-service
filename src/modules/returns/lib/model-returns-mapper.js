@@ -33,25 +33,25 @@ const returnLineToModel = (line) => {
 const mapMeter = meter => {
   return {
     ...meter,
-    meterDetailsProvided: meter.meterDetailsProvided ? meter.meterDetailsProvided : !!meter.manufacturer
+    meterDetailsProvided: meter.meterDetailsProvided ?? !!meter.manufacturer
   }
 }
 
 const getMetersFromVersionMetadata = version => {
-  const meters = version?.metadata.meters ? version.metadata.meters : []
+  const meters = version?.metadata.meters ?? []
   return meters.map(mapMeter)
 }
 
 const getReadingFromVersionMetadata = version => {
   return {
-    type: version?.metadata.type ? version.metadata.type : null,
-    method: version?.metadata.method ? version.metadata.method : null,
-    units: version?.metadata.units ? version.metadata.units : null,
-    totalFlag: version?.metadata.totalFlag ? version.metadata.totalFlag : false,
-    total: version?.metadata.total ? version.metadata.total : null,
-    totalCustomDates: version?.metadata.totalCustomDates ? version.metadata.totalCustomDates : false,
-    totalCustomDateStart: version?.metadata.totalCustomDateStart ? version.metadata.totalCustomDateStart : null,
-    totalCustomDateEnd: version?.metadata.totalCustomDateEnd ? version.metadata.totalCustomDateEnd : null
+    type: version?.metadata.type ?? null,
+    method: version?.metadata.method ?? null,
+    units: version?.metadata.units ?? null,
+    totalFlag: version?.metadata.totalFlag ?? false,
+    total: version?.metadata.total ?? null,
+    totalCustomDates: version?.metadata.totalCustomDates ?? false,
+    totalCustomDateStart: version?.metadata.totalCustomDateStart ?? null,
+    totalCustomDateEnd: version?.metadata.totalCustomDateEnd ?? null
   }
 }
 

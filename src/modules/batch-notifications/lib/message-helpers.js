@@ -42,8 +42,8 @@ const getMessageById = async (messageId) => {
  * @return {Promise}                resolves when message record updated
  */
 const markMessageAsSent = (messageId, notifyResponse) => {
-  const notifyId = notifyResponse.body.id ? notifyResponse.body.id : null
-  const plainText = notifyResponse.body.content.body ? notifyResponse.body.content.body : ''
+  const notifyId = notifyResponse.body.id ?? null
+  const plainText = notifyResponse.body.content.body ?? ''
   const filter = { id: messageId }
   const data = {
     status: MESSAGE_STATUS_SENT,

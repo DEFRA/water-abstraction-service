@@ -23,8 +23,8 @@ const createScheduledNotification = async scheduledNotification => {
  * @return {Promise} resolves when scheduled notification record updated
  */
 const updateScheduledNotificationWithNotifyResponse = (messageId, notifyResponse) => {
-  const notifyId = notifyResponse.body.id ? notifyResponse.body.id : null
-  const plainText = notifyResponse.body.content.body ? notifyResponse.body.content.body : ''
+  const notifyId = notifyResponse.body.id ?? null
+  const plainText = notifyResponse.body.content.body ?? ''
   const changes = {
     status: MESSAGE_STATUSES.sent,
     notify_id: notifyId,

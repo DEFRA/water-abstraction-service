@@ -119,7 +119,7 @@ const handlePersistReturns = async job => {
 
     const returns = await getReturnsFromS3(eventId)
 
-    const validatedReturns = event.metadata.returns ? event.metadata.returns : []
+    const validatedReturns = event.metadata.returns ?? []
     const updatedReturns = await persistReturns(validatedReturns, returns)
     await updateEvent(event, updatedReturns)
   } catch (err) {

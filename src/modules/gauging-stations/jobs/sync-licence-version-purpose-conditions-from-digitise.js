@@ -40,7 +40,7 @@ const handler = async () => {
   // Iterate through each licence's licence_data_value column.
   return licences.map(async eachLicence => {
     logger.info(`Processing ${eachLicence.licence_ref}...`)
-    const edits = eachLicence.licence_data_value ? eachLicence.licence_data_value : {}
+    const edits = eachLicence.licence_data_value ?? {}
     if (edits.status === 'Approved') {
       logger.info(`Processing ${eachLicence.licence_ref}: Status is approved...`)
       // Take the permit data, and put it through the Digitise reducer
@@ -54,7 +54,7 @@ const handler = async () => {
         if (licence && arData) {
           arData.map(async eachArSegment => {
             const thisSchema = eachArSegment.schema
-            const licenceVersionPurposeConditionURI = eachArSegment.content.nald_condition.id ? eachArSegment.content.nald_condition.id : null
+            const licenceVersionPurposeConditionURI = eachArSegment.content.nald_condition.id ?? null
             const parts = licenceVersionPurposeConditionURI.split('/')
             const licenceVersionPurposeConditionLegacyId = `${parts[parts.length - 1]}:${parts[parts.length - 2]}`
             const {

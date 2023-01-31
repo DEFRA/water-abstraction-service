@@ -36,7 +36,7 @@ const createMessage = (batchId, billingBatchTransactionId) => ([
   }
 ])
 
-const getStatus = err => err.statusCode ? err.statusCode : 0
+const getStatus = err => err.statusCode ?? 0
 
 /**
  * Checks if the error is an HTTP client error (in range 400 - 499)
@@ -48,7 +48,8 @@ const isClientError = err => inRange(getStatus(err), 400, 500)
 const updateBatchState = async batchId => {
   const statuses = await batchService.getTransactionStatusCounts(batchId)
 
-  const isReady = (statuses.Transaction?.statuses.candidate ? statuses.Transaction.statuses.candidate : 0) === 0
+  const candidate = statuses.Transaction?.statuses.candidate ?? 0
+  const isReady = candidate === 0
 
   if (isReady) {
     // Clean up batch

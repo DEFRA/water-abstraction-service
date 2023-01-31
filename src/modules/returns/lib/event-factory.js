@@ -19,7 +19,7 @@ const createSubmissionEvent = (ret, version, eventType = 'return') => {
 
   const { returnId, licenceNumber, status, receivedDate, underQuery } = ret
   const { type, email, entityId } = ret.user
-  const versionId = version?.version_id ? version.version_id : null
+  const versionId = version?.version_id ?? null
 
   const event = new Event()
   return event.fromHash({

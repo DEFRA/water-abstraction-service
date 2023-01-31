@@ -17,7 +17,7 @@ const getReturnSkeleton = () => ({
  * @return {String} user type - internal|external
  */
 const getUserType = user => {
-  const scopes = user.role.scopes ? user.role.scopes : []
+  const scopes = user.role.scopes ?? []
   return scopes.includes('external') ? 'external' : 'internal'
 }
 

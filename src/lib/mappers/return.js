@@ -31,7 +31,7 @@ const returnsServiceToModel = (ret, returnRequirement) => {
   r.fromHash({
     dateRange: new DateRange(ret.start_date, ret.end_date),
     isUnderQuery: ret.under_query,
-    isSummer: ret.metadata.isSummer ? ret.metadata.isSummer : false,
+    isSummer: ret.metadata.isSummer ?? false,
     dueDate: ret.due_date,
     receivedDate: ret.received_date,
     status: ret.status,

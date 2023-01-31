@@ -18,7 +18,7 @@ const mapPoints = (points = []) => {
  * Extracts all licence abstraction points across all purposes within a licence.
  */
 const extractPoints = (licence = {}) => {
-  const purposes = licence.purposes ? licence.purposes : []
+  const purposes = licence.purposes ?? []
 
   const extractedPoints = purposes.reduce((points, purpose) => {
     const { purposePoints } = purpose

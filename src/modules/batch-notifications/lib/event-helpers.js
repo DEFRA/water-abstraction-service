@@ -71,7 +71,9 @@ const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
  */
 const getStatusCount = (statuses, status) => {
   const foundStatus = find(statuses, { status })
-  return parseInt(foundStatus.count ? foundStatus.count : 0)
+  const count = foundStatus.count ?? 0
+
+  return parseInt(count)
 }
 
 /**

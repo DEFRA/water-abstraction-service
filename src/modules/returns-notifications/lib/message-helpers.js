@@ -47,7 +47,7 @@ const formatEnqueuePersonalisation = (ret, contact) => {
     due_date: dueDate
   } = ret
 
-  const purposes = ret.metadata.purposes ? ret.metadata.purposes : []
+  const purposes = ret.metadata.purposes ?? []
   const purpose = purposes.map(purpose => purpose.tertiary.description).join(', ')
 
   const metadata = ret.metadata || {}

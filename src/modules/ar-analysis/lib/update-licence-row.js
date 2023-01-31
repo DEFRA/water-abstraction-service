@@ -52,8 +52,11 @@ const getLicence = async (licenceRef, config) => {
   return row
 }
 
-const hasAbstractionReformActions = licence =>
-  (licence.licence_data_value.actions ? licence.licence_data_value.actions : []).length > 0
+const hasAbstractionReformActions = (licence) => {
+  const actions = licence.licence_data_value.actions ?? []
+
+  return actions.length > 0
+}
 
 /**
  * Updates the licence analysis table

@@ -44,7 +44,7 @@ const getNaldData = async ret => {
   const nilReturn = await naldConnector.isNilReturn(formatId, regionCode, startDate, endDate)
   const naldLines = nilReturn ? [] : await naldConnector.getLines(formatId, regionCode, startDate, endDate)
 
-  const naldUnit = naldLines[0]?.UNIT_RET_FLAG ? naldLines[0].UNIT_RET_FLAG : 'M'
+  const naldUnit = naldLines[0]?.UNIT_RET_FLAG ?? 'M'
 
   const version = {
     version_id: returnId,

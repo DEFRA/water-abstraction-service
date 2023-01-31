@@ -66,7 +66,7 @@ class InvoiceAccount extends Model {
   get lastInvoiceAccountAddress () {
     const arr = this.invoiceAccountAddresses || []
     const sorted = sortBy(arr, row => {
-      const startDate = row.dateRange?.startDate ? row.dateRange.startDate : undefined
+      const startDate = row.dateRange?.startDate ?? undefined
       return moment(startDate).unix()
     })
     return sorted[sorted.length - 1]

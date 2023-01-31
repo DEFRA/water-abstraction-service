@@ -66,7 +66,7 @@ const mapNotificationEvent = (notification) => {
   return {
     ...{ id, issuer, type, subtype, errorCount, created, referenceCode },
     name: notification.metadata.name,
-    options: notification.metadata.options ? notification.metadata.options : {},
+    options: notification.metadata.options ?? {},
     recipientCount: notification.metadata.recipients
   }
 }

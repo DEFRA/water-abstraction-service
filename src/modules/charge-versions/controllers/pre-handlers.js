@@ -40,7 +40,7 @@ const mapChargeVersion = (request, h) => {
  * @return {User} - if mapped
  */
 const mapInternalCallingUser = (request, h) => {
-  const internalCallingUser = request.defra.internalCallingUser ? request.defra.internalCallingUser : null
+  const internalCallingUser = request.defra.internalCallingUser ?? null
   return mapOrThrowBoom('user', internalCallingUser, userMapper)
 }
 

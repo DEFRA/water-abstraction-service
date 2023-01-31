@@ -191,7 +191,7 @@ const getLicenceUsersByDocumentId = async (request, h) => {
     }
 
     const documentUsers = await documentsClient.getDocumentUsers(documentId)
-    const userEntityIds = (documentUsers.data ? documentUsers.data : []).map(u => u.entityId)
+    const userEntityIds = (documentUsers.data ?? []).map(u => u.entityId)
     const { data: users } = await usersClient.getUsersByExternalId(userEntityIds)
 
     return {
@@ -262,12 +262,13 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
 }
 
 const mapNotification = (row) => {
-  const isPdf = (row.message_ref ? row.message_ref : '').startsWith('pdf.')
+  const messageRef = row.message_ref ?? ''
+  const isPdf = messageRef.startsWith('pdf.')
   return {
     notificationId: row.id,
     messageType: row.message_type,
     date: row.send_after,
-    notificationType: row.event_metadata.name ? row.event_metadata.name : null,
+    notificationType: row.event_metadata.name ?? null,
     sender: row.issuer,
     isPdf
   }

@@ -27,7 +27,7 @@ const getFilter = (query) => {
  * @return {Array}          - users
  */
 const mapRow = (row) => {
-  const scopes = row.role.scopes ? row.role.scopes : []
+  const scopes = row.role.scopes ?? []
   return {
     userId: row.user_id,
     email: row.user_name,

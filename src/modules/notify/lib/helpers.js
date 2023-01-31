@@ -62,8 +62,8 @@ function validateEnqueueOptions (options, now = new Date()) {
  * @return {Object} field values
  */
 const parseSentResponse = (notifyResponse) => {
-  const notifyId = notifyResponse.body.id ? notifyResponse.body.id : null
-  const plainText = notifyResponse.body.content.body ? notifyResponse.body.content.body : ''
+  const notifyId = notifyResponse.body.id ?? null
+  const plainText = notifyResponse.body.content.body ?? ''
   return {
     status: 'sent',
     notify_id: notifyId,

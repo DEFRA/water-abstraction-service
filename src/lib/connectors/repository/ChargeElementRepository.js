@@ -39,7 +39,7 @@ class ChargeElementRepository extends Repository {
    */
   async findOneById (chargeElementId) {
     const result = await this.find({ charge_element_id: chargeElementId })
-    return result.rows[0] ? result.rows[0] : null
+    return result.rows[0] ?? null
   };
 }
 

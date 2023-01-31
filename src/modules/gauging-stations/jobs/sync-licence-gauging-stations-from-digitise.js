@@ -38,7 +38,7 @@ const handler = async () => {
   // Iterate through each licence's licence_data_value column.
   return licences.map(async eachLicence => {
     logger.info(`Processing ${eachLicence.licence_ref}...`)
-    const edits = eachLicence.licence_data_value ? eachLicence.licence_data_value : {}
+    const edits = eachLicence.licence_data_value ?? {}
     if (edits.status === 'Approved') {
       logger.info(`Processing ${eachLicence.licence_ref}: Status is approved...`)
       // Take the permit data, and put it through the Digitise reducer
@@ -80,16 +80,23 @@ const handler = async () => {
               alertType = 'reduce'
             }
 
-            const licenceVersionPurposeConditionURI = eachArSegment.content.nald_condition.id ? eachArSegment.content.nald_condition.id : null
+            const licenceVersionPurposeConditionURI = eachArSegment.content.nald_condition.id ?? null
             if (licenceVersionPurposeConditionURI) {
               const parts = licenceVersionPurposeConditionURI.split('/')
               const licenceVersionPurposeConditionLegacyId = `${parts[parts.length - 1]}:${parts[parts.length - 2]}`
               const { licenceVersionPurposeConditionId } = await licenceVersionPurposeConditionsService.getLicenceVersionConditionByPartialExternalId(licenceVersionPurposeConditionLegacyId)
-              const thresholdUnit = (eachArSegment.content.unit ? eachArSegment.content.unit : null || eachArSegment.content.max_rate_unit ? eachArSegment.content.max_rate_unit : '').replace('³', '3')
-              const thresholdValue = eachArSegment.content.max_rate ? eachArSegment.content.max_rate : null || eachArSegment.content.hol_rate_level ? eachArSegment.content.hol_rate_level : null
+              const unit = eachArSegment.content.unit ?? null
+              const maxRateUnit = eachArSegment.content.max_rate_unit ?? ''
+              const unparsedThresholdUnit = unit ?? maxRateUnit
+              const thresholdUnit = unparsedThresholdUnit.replace('³', '3')
+
+              const maxRate = eachArSegment.content.max_rate ?? null
+              const holRateLevel = eachArSegment.content.hol_rate_level ?? null
+              const thresholdValue = maxRate ?? holRateLevel
+
               const flowUnits = ['Ml/d', 'm3/s', 'm3/d', 'l/s']
               const restrictionType = flowUnits.includes(thresholdUnit) ? 'flow' : 'level'
-              const gaugingStationId = eachArSegment.content.gauging_station.id ? eachArSegment.content.gauging_station.id : null
+              const gaugingStationId = eachArSegment.content.gauging_station.id ?? null
               const source = 'digitise'
               if (thresholdUnit && thresholdValue && gaugingStationId && eachLicence.licence_ref && licenceVersionPurposeConditionId) {
                 const licenceRecord = await licencesService.getLicenceByLicenceRef(eachLicence.licence_ref)

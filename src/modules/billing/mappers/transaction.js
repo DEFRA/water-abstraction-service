@@ -160,12 +160,14 @@ const isSection127Agreement = agreements => !!agreements.find(agreement => agree
 
 const getSection126Factor = (agreements) => {
   const foundAgreement = agreements.find(agreement => agreement.isAbatement())
-  return foundAgreement?.factor ? foundAgreement.factor : null
+
+  return foundAgreement?.factor ?? null
 }
 
 const getSection130Agreement = (agreements) => {
   const foundAgreement = agreements.find(agreement => agreement.isCanalAndRiversTrust())
-  return foundAgreement?.code ? foundAgreement.code : null
+
+  return foundAgreement?.code ?? null
 }
 
 const modelToDbMapper = createMapper()
