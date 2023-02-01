@@ -7,7 +7,7 @@
 
 const YAML = require('yamljs')
 const path = require('path')
-const { mapValues, isString } = require('lodash')
+const { mapValues } = require('lodash')
 const { getFinancialDateRange } = require('../lib/financial-date-range')
 const moment = require('moment')
 const { v4: uuid } = require('uuid')
@@ -21,7 +21,7 @@ const refRegex = /^(\$[^.]+)\.([a-z0-9-_]+)$/i
  * @return {Mixed} value
  */
 const mapValue = (value, refs) => {
-  if (!isString(value)) {
+  if (typeof value !== 'string') {
     return value
   }
 
