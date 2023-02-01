@@ -1,3 +1,4 @@
+'use strict'
 /**
  * A module to validate a batch of returns data sent via XML
  *
@@ -18,7 +19,7 @@
   }
 ]
  */
-const { chunk, flatMap, find, uniq, cond, negate, get, isEqual } = require('lodash')
+const { chunk, flatMap, find, uniq, cond, negate, isEqual } = require('lodash')
 
 const returnsConnector = require('../../../lib/connectors/returns')
 const documents = require('../../../lib/connectors/crm/documents')
@@ -180,7 +181,7 @@ const validateReturnExists = (ret, context) =>
  */
 const validateReturnDue = (ret, context) => {
   const match = find(context.returns, { return_id: ret.returnId })
-  return get(match, 'status') === 'due'
+  return match.status === 'due'
 }
 
 /**

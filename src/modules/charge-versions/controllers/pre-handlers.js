@@ -1,7 +1,5 @@
 'use strict'
 
-const { get } = require('lodash')
-
 const chargeVersionMapper = require('../../../lib/mappers/charge-version')
 const userMapper = require('../../../lib/mappers/user')
 const chargeVersionWorkflowService = require('../services/charge-version-workflows')
@@ -42,7 +40,7 @@ const mapChargeVersion = (request, h) => {
  * @return {User} - if mapped
  */
 const mapInternalCallingUser = (request, h) => {
-  const internalCallingUser = get(request, 'defra.internalCallingUser', null)
+  const internalCallingUser = request.defra.internalCallingUser ?? null
   return mapOrThrowBoom('user', internalCallingUser, userMapper)
 }
 

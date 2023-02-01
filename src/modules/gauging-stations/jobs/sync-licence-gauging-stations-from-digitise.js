@@ -3,7 +3,6 @@
 
 // Dependencies
 const moment = require('moment')
-const { get } = require('lodash')
 const { logger } = require('../../../logger')
 const permitConnector = require('../../../lib/connectors/permit')
 const { digitise } = require('@envage/water-abstraction-helpers')
@@ -39,13 +38,13 @@ const handler = async () => {
   // Iterate through each licence's licence_data_value column.
   return licences.map(async eachLicence => {
     logger.info(`Processing ${eachLicence.licence_ref}...`)
-    const edits = get(eachLicence, 'licence_data_value', {})
+    const edits = eachLicence.licence_data_value ?? {}
     if (edits.status === 'Approved') {
       logger.info(`Processing ${eachLicence.licence_ref}: Status is approved...`)
       // Take the permit data, and put it through the Digitise reducer
       const originalLicence = await permitConnector.licences.getWaterLicence(eachLicence.licence_ref)
       const initialState = originalLicence && digitise.getInitialState(originalLicence)
-      const hasData = get(initialState, 'licence.data.current_version') !== undefined
+      const hasData = initialState.licence.data.current_version !== undefined
       if (hasData) {
         const finalState = digitise.stateManager(initialState, edits.actions)
         const { licence } = finalState
@@ -81,16 +80,23 @@ const handler = async () => {
               alertType = 'reduce'
             }
 
-            const licenceVersionPurposeConditionURI = get(eachArSegment, 'content.nald_condition.id', null)
+            const licenceVersionPurposeConditionURI = eachArSegment.content.nald_condition.id ?? null
             if (licenceVersionPurposeConditionURI) {
               const parts = licenceVersionPurposeConditionURI.split('/')
               const licenceVersionPurposeConditionLegacyId = `${parts[parts.length - 1]}:${parts[parts.length - 2]}`
               const { licenceVersionPurposeConditionId } = await licenceVersionPurposeConditionsService.getLicenceVersionConditionByPartialExternalId(licenceVersionPurposeConditionLegacyId)
-              const thresholdUnit = (get(eachArSegment, 'content.unit', null) || get(eachArSegment, 'content.max_rate_unit', '')).replace('³', '3')
-              const thresholdValue = get(eachArSegment, 'content.max_rate', null) || get(eachArSegment, 'content.hol_rate_level', null)
+              const unit = eachArSegment.content.unit ?? null
+              const maxRateUnit = eachArSegment.content.max_rate_unit ?? ''
+              const unparsedThresholdUnit = unit ?? maxRateUnit
+              const thresholdUnit = unparsedThresholdUnit.replace('³', '3')
+
+              const maxRate = eachArSegment.content.max_rate ?? null
+              const holRateLevel = eachArSegment.content.hol_rate_level ?? null
+              const thresholdValue = maxRate ?? holRateLevel
+
               const flowUnits = ['Ml/d', 'm3/s', 'm3/d', 'l/s']
               const restrictionType = flowUnits.includes(thresholdUnit) ? 'flow' : 'level'
-              const gaugingStationId = get(eachArSegment, 'content.gauging_station.id', null)
+              const gaugingStationId = eachArSegment.content.gauging_station.id ?? null
               const source = 'digitise'
               if (thresholdUnit && thresholdValue && gaugingStationId && eachLicence.licence_ref && licenceVersionPurposeConditionId) {
                 const licenceRecord = await licencesService.getLicenceByLicenceRef(eachLicence.licence_ref)

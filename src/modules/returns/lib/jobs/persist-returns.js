@@ -1,4 +1,6 @@
-const { find, get, set } = require('lodash')
+'use strict'
+
+const { find, set } = require('lodash')
 const eventsService = require('../../../../lib/services/events')
 const { logger } = require('../../../../logger')
 const returnsUpload = require('../../lib/returns-upload')
@@ -117,7 +119,7 @@ const handlePersistReturns = async job => {
 
     const returns = await getReturnsFromS3(eventId)
 
-    const validatedReturns = get(event, 'metadata.returns', [])
+    const validatedReturns = event.metadata.returns ?? []
     const updatedReturns = await persistReturns(validatedReturns, returns)
     await updateEvent(event, updatedReturns)
   } catch (err) {

@@ -4,7 +4,7 @@ const Transaction = require('../../../lib/models/transaction')
 const { logger } = require('../../../logger')
 const newRepos = require('../../../lib/connectors/repos')
 const mappers = require('../mappers')
-const { get, flatMap } = require('lodash')
+const { flatMap } = require('lodash')
 const { TRANSACTION_TYPE } = require('../../../lib/models/charge-version-year')
 const moment = require('moment')
 /**
@@ -65,7 +65,7 @@ const getById = async transactionId => {
  * @param {Object} response
  */
 const updateTransactionWithChargeModuleResponse = (transactionId, response) => {
-  const externalId = get(response, 'transaction.id')
+  const externalId = response.transaction?.id
   if (externalId) {
     return newRepos.billingTransactions.update(transactionId, {
       status: Transaction.statuses.chargeCreated,

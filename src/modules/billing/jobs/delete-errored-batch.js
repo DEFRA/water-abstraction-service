@@ -1,7 +1,5 @@
 'use strict'
 
-const { get } = require('lodash')
-
 const JOB_NAME = 'billing.delete-errored-batch'
 
 const batchService = require('../services/batch-service')
@@ -30,7 +28,7 @@ const handler = async job => {
   batchJob.logHandling(job)
 
   // Get batch
-  const batchId = get(job, 'data.batchId')
+  const batchId = job.data.batchId
   const batch = await batchService.getBatchById(batchId)
 
   // Delete batch in charge module
@@ -38,7 +36,7 @@ const handler = async job => {
 }
 
 const onFailedHandler = async (job, err) => {
-  const batchId = get(job, 'data.batchId')
+  const batchId = job.data.batchId
 
   // Log error on final attempt
   if (helpers.isFinalAttempt(job)) {

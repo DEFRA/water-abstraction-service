@@ -1,6 +1,6 @@
 'use strict'
 
-const { get, partial } = require('lodash')
+const { partial } = require('lodash')
 const bluebird = require('bluebird')
 
 const JOB_NAME = 'billing.prepare-transactions'
@@ -32,7 +32,7 @@ const isCandidateTransaction = transaction => transaction.status === Transaction
 const handler = async job => {
   batchJob.logHandling(job)
 
-  const batchId = get(job, 'data.batchId')
+  const batchId = job.data.batchId
 
   try {
     const batch = await batchService.getBatchById(batchId)
@@ -60,7 +60,7 @@ const handler = async job => {
 
 const onComplete = async (job, queueManager) => {
   try {
-    const batchId = get(job, 'data.batchId')
+    const batchId = job.data.batchId
     const { billingTransactionIds } = job.returnvalue
 
     // If there's nothing to process, skip to cm refresh

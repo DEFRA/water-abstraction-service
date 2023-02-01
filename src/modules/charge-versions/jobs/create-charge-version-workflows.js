@@ -1,6 +1,5 @@
 'use strict'
 
-const { get } = require('lodash')
 const JOB_NAME = 'new-LicenceVersion'
 const chargeVersionWorkflowService = require('../services/charge-version-workflows')
 const { logger } = require('../../../logger')
@@ -23,8 +22,8 @@ const createMessage = (licenceVersionId, licenceId) => {
 
 const handler = async job => {
   logger.info(`Handling: ${job.id}`)
-  const licenceVersionId = get(job, 'data.licenceVersionId')
-  const licenceId = get(job, 'data.licenceId')
+  const licenceVersionId = job.data.licenceVersionId
+  const licenceId = job.data.licenceId
 
   try {
     const licence = await licences.getLicenceById(licenceId)

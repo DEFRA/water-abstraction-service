@@ -1,9 +1,10 @@
+'use strict'
+
 /**
  * This layer gets return data, and depending on the date, either
  * loads data from the NALD import DB, or direct from the returns service
  */
 const moment = require('moment')
-const { get } = require('lodash')
 const apiConnector = require('./api-connector')
 const naldConnector = require('../../import/lib/nald-returns-queries')
 const waterHelpers = require('@envage/water-abstraction-helpers')
@@ -43,7 +44,7 @@ const getNaldData = async ret => {
   const nilReturn = await naldConnector.isNilReturn(formatId, regionCode, startDate, endDate)
   const naldLines = nilReturn ? [] : await naldConnector.getLines(formatId, regionCode, startDate, endDate)
 
-  const naldUnit = get(naldLines, '0.UNIT_RET_FLAG', 'M')
+  const naldUnit = naldLines[0]?.UNIT_RET_FLAG ?? 'M'
 
   const version = {
     version_id: returnId,

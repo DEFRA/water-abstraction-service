@@ -1,4 +1,5 @@
-const { get } = require('lodash')
+'use strict'
+
 const ExtendableError = require('es6-error')
 const { throwIfError } = require('@envage/hapi-pg-rest-api')
 
@@ -51,8 +52,11 @@ const getLicence = async (licenceRef, config) => {
   return row
 }
 
-const hasAbstractionReformActions = licence =>
-  get(licence, 'licence_data_value.actions', []).length > 0
+const hasAbstractionReformActions = (licence) => {
+  const actions = licence.licence_data_value.actions ?? []
+
+  return actions.length > 0
+}
 
 /**
  * Updates the licence analysis table
@@ -70,7 +74,7 @@ const updateLicenceRow = async (licenceRef) => {
   const base = await getLicence(licenceRef, licence)
 
   // Map data to analysis row
-  const regionCode = get(base, 'licence_data_value.FGAC_REGION_CODE')
+  const regionCode = base.licence_data_value.FGAC_REGION_CODE
   const arAnalysisRow = mapLicenceToTableRow(regionCode, licenceRef, ar.licence_data_value)
 
   // Persist to DB analysis table

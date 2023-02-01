@@ -1,4 +1,5 @@
-const { get } = require('lodash')
+'use strict'
+
 const { createUniqueId } = require('../../../lib/licence-transformer/nald-helpers')
 const type = 'conditions'
 
@@ -23,10 +24,10 @@ const mapConditions = (purposeText, conditions = []) => {
  * Extracts all licence conditions across all purposes within a licence.
  */
 const extractConditions = (licence = {}) => {
-  const purposes = get(licence, 'purposes', [])
+  const purposes = licence.purposes ?? []
 
   return purposes.reduce((conditions, purpose) => {
-    const purposeText = get(purpose, 'purpose[0].purpose_tertiary.DESCR')
+    const purposeText = purpose.purpose[0].purpose_tertiary.DESCR
     const { licenceConditions } = purpose
     return [...conditions, ...mapConditions(purposeText, licenceConditions)]
   }, [])

@@ -1,4 +1,4 @@
-const { get } = require('lodash')
+'use strict'
 
 /**
  * Gets the total abstracted volume for a return
@@ -24,7 +24,7 @@ const mapSingleReturn = (validatedReturn, ret) => {
   return {
     ...validatedReturn,
     totalVolume: getTotalVolume(validatedReturn),
-    metadata: get(ret, 'metadata')
+    metadata: ret?.metadata
   }
 }
 

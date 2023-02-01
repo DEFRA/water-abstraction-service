@@ -1,6 +1,5 @@
 'use strict'
 
-const { get } = require('lodash')
 const urlJoin = require('url-join')
 const moment = require('moment')
 
@@ -77,7 +76,7 @@ licences.getWaterLicence = async (licenceNumber) => {
     licence_regime_id: regimeId
   }
   const licenceResponse = await licences.findMany(filter)
-  return get(licenceResponse, 'data[0]')
+  return licenceResponse.data[0]
 }
 
 /**

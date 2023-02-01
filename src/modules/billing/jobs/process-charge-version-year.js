@@ -1,7 +1,6 @@
 'use strict'
 
 const { fork } = require('child_process')
-const { get } = require('lodash')
 
 const batchJob = require('./lib/batch-job')
 const chargeVersionYearService = require('../services/charge-version-year')
@@ -33,7 +32,7 @@ const createMessage = (batchId, billingBatchChargeVersionYearId) => ([
 
 const handler = async job => {
   batchJob.logHandling(job)
-  const chargeVersionYearId = get(job, 'data.billingBatchChargeVersionYearId')
+  const chargeVersionYearId = job.data.billingBatchChargeVersionYearId
   try {
     return new Promise((resolve, reject) => {
       child.on('message', msg => {

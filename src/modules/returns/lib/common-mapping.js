@@ -1,4 +1,4 @@
-const { get } = require('lodash')
+'use strict'
 
 /**
  * Gets a basic shape for the return
@@ -17,7 +17,7 @@ const getReturnSkeleton = () => ({
  * @return {String} user type - internal|external
  */
 const getUserType = user => {
-  const scopes = get(user, 'role.scopes', [])
+  const scopes = user.role.scopes ?? []
   return scopes.includes('external') ? 'external' : 'internal'
 }
 

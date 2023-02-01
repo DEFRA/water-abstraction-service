@@ -9,7 +9,6 @@ const ReturnVersion = require('./return-version')
 const ReturnRequirement = require('./return-requirement')
 
 const validators = require('./validators')
-const { get } = require('lodash')
 const config = require('../../../config')
 
 const RETURN_STATUS = {
@@ -57,7 +56,8 @@ class Return extends Model {
   }
 
   get purposeUses () {
-    return get(this, 'returnRequirement.returnRequirementPurposes', [])
+    const result = this.returnRequirement.returnRequirementPurposes ?? []
+    return result
       .map(returnRequirementPurpose => returnRequirementPurpose.purposeUse)
   }
 

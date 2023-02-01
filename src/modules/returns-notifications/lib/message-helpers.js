@@ -1,4 +1,6 @@
-const { mapKeys, get } = require('lodash')
+'use strict'
+
+const { mapKeys } = require('lodash')
 
 /**
  * Create job data for a returns notification message regarding a return to
@@ -45,7 +47,7 @@ const formatEnqueuePersonalisation = (ret, contact) => {
     due_date: dueDate
   } = ret
 
-  const purposes = get(ret, 'metadata.purposes', [])
+  const purposes = ret.metadata.purposes ?? []
   const purpose = purposes.map(purpose => purpose.tertiary.description).join(', ')
 
   const metadata = ret.metadata || {}

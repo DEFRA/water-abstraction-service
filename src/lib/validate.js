@@ -1,6 +1,6 @@
 'use strict'
 
-const { get, set } = require('lodash')
+const { set } = require('lodash')
 const idmConnector = require('./connectors/idm')
 const User = require('./models/user')
 
@@ -50,7 +50,7 @@ const validate = async (decoded, request) => {
   }
 
   // Support loading internal user by header
-  const userId = get(request, 'headers.defra-internal-user-id')
+  const userId = request?.headers?.['defra-internal-user-id']
   if (!decoded.email && userId) {
     // Get user from IDM and check they are internal
     const user = await idmConnector.usersClient.findOneById(userId)

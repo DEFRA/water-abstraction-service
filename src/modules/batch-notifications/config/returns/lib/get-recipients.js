@@ -1,4 +1,6 @@
-const { get, uniq } = require('lodash')
+'use strict'
+
+const { uniq } = require('lodash')
 
 const { stringifyValues } = require('../../../../../lib/stringify-values')
 
@@ -15,7 +17,7 @@ const notificationRecipients = require('./return-notification-recipients')
  * @return {[type]}      [description]
  */
 const getExcludeLicences = job => {
-  const licenceNumbers = get(job, 'ev.metadata.options.excludeLicences', [])
+  const licenceNumbers = job.ev.metadata.options.excludeLicences ?? []
   return uniq(licenceNumbers)
 }
 
@@ -52,7 +54,7 @@ const getRecipients = async (data) => {
       recipientCount++
       licenceNumbers.push(...context.licenceNumbers)
     } else {
-      const name = get(data, 'ev.metadata.name', 'Returns notification')
+      const name = data.ev.metadata.name ?? 'Returns notification'
       logger.error(`${name} - no contact found for ${context.returnIds.join(', ')}`)
     }
   }

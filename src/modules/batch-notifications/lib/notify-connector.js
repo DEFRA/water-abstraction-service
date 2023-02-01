@@ -1,7 +1,6 @@
 'use strict'
 
 const notifyConnector = require('../../../lib/connectors/notify')
-const { get } = require('lodash')
 const pdfCreator = require('../../../lib/services/pdf-generation/pdf')
 const config = require('../../../../config')
 const s3Connector = require('../../../lib/services/s3')
@@ -14,7 +13,7 @@ const s3Connector = require('../../../lib/services/s3')
  */
 const createNotifyReference = (scheduledNotification) => {
   const { id } = scheduledNotification
-  const addressLine1 = get(scheduledNotification, 'personalisation.address_line_1')
+  const addressLine1 = scheduledNotification.personalisation.address_line_1
   return `${addressLine1} ${id}`
 }
 
@@ -25,7 +24,7 @@ const createNotifyReference = (scheduledNotification) => {
  */
 const getNotifyTemplate = scheduledNotification => {
   const { messageRef } = scheduledNotification
-  return get(config, `notify.templates.${messageRef}`)
+  return config.notify.templates[messageRef]
 }
 
 /**

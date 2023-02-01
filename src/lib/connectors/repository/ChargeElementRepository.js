@@ -1,5 +1,6 @@
+'use strict'
+
 const Repository = require('@envage/hapi-pg-rest-api/src/repository')
-const { get } = require('lodash')
 
 class ChargeElementRepository extends Repository {
   /**
@@ -38,7 +39,7 @@ class ChargeElementRepository extends Repository {
    */
   async findOneById (chargeElementId) {
     const result = await this.find({ charge_element_id: chargeElementId })
-    return get(result, 'rows.0', null)
+    return result.rows[0] ?? null
   };
 }
 

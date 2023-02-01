@@ -1,4 +1,5 @@
-const { get } = require('lodash')
+'use strict'
+
 const Repository = require('@envage/hapi-pg-rest-api/src/repository')
 const db = require('../db')
 
@@ -25,7 +26,7 @@ class LicenceRepository extends Repository {
    */
   async findOneByLicenceNumber (licenceNumber) {
     const result = await this.dbQuery(findOneByLicenceNumberQuery, [licenceNumber])
-    return get(result, 'rows.0')
+    return result.rows[0]
   }
 };
 

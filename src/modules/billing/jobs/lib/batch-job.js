@@ -1,7 +1,5 @@
 'use strict'
 
-const { get } = require('lodash')
-
 const { logger } = require('../../../../logger')
 const batchService = require('../../services/batch-service')
 
@@ -37,7 +35,7 @@ const logHandlingErrorAndSetBatchStatus = async (job, err, errorCode) => {
   logHandlingError(job, err)
 
   // Mark batch as in error status
-  const batchId = get(job, 'data.batchId')
+  const batchId = job.data.batchId
   await batchService.setErrorStatus(batchId, errorCode)
   return err
 }
