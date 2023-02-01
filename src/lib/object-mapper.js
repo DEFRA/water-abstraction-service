@@ -6,10 +6,10 @@
  *         by default nulls are mapped, with an option of ignoring them
  */
 
-const { identity, set, isUndefined, isNull, isFunction, isObject, isArray } = require('lodash')
+const { identity, set, isUndefined, isNull, isFunction, isObject } = require('lodash')
 
 const getSourceKeys = value => {
-  if (isArray(value)) {
+  if (Array.isArray(value)) {
     return value
   } else if (isUndefined(value)) {
     return []

@@ -1,8 +1,10 @@
+'use strict'
+
 /**
  * Transforms NALD data into VML native format
  * @module lib/licence-transformer/nald-transformer
  */
-const { find, uniqBy, isArray } = require('lodash')
+const { find, uniqBy } = require('lodash')
 const { sentenceCase } = require('sentence-case')
 
 const BaseTransformer = require('./base-transformer')
@@ -350,8 +352,8 @@ class NALDTransformer extends BaseTransformer {
    * @param {Array|String} subCode - the condition subcode
    */
   filterConditions (conditions, code, subCode) {
-    const arrCode = isArray(code) ? code : [code]
-    const arrSubCode = isArray(subCode) ? subCode : [subCode]
+    const arrCode = Array.isArray(code) ? code : [code]
+    const arrSubCode = Array.isArray(subCode) ? subCode : [subCode]
     return conditions.filter(row => {
       return arrCode.includes(row.code) && arrSubCode.includes(row.subCode)
     })
