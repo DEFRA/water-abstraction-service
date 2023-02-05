@@ -249,29 +249,28 @@ experiment('modules/billing/services/supplementary-billing-service/data-service'
           'startDate',
           'endDate',
           'abstractionPeriod',
+          'source',
+          'season',
+          'loss',
           'netAmount',
+          'chargeType',
           'authorisedQuantity',
           'billableQuantity',
           'authorisedDays',
           'billableDays',
           'description',
-          'source',
-          'season',
-          'loss',
-          'chargeType',
           'volume',
           'section126Factor',
           'section127Agreement',
           'section130Agreement',
-          'isTwoPartSecondPartCharge',
-          'calculatedVolume',
-          'twoPartTariffError',
-          'twoPartTariffStatus',
-          'twoPartTariffReview',
           'isDeMinimis',
-          'isNewLicence'
+          'isNewLicence',
+          'isTwoPartSecondPartCharge'
         ]
 
+        // NOTE: This is comparing the values passed when creating the transaction, not a direct comparison of the old
+        // and new transaction. Some values will be different which is why `matchingKeys` is a subset of all the
+        // properties on a transaction
         for (const key of matchingKeys) {
           expect(transactions[0][key]).to.equal(createdTransaction[key])
         }
