@@ -41,6 +41,10 @@ const beforeRequestHook = async () => {
  * @param {Object} options - got request options
  */
 const afterResponseHook = async (response, retryWithMergedOptions) => {
+  if (response.statusCode >= 400) {
+    logger.error(`Charging Module API error: ${response.statusCode}`, response.body)
+  }
+
   if (response.statusCode === 401) { // Unauthorized
     // Refresh the access token
     const accessToken = await accessTokenManager.refreshAccessToken()
