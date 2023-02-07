@@ -18,6 +18,7 @@ class AccessTokenManager {
    * @returns
    */
   async refreshAccessToken (refDate) {
+    this.tokenCounter()
     logger.info('Getting a new Cognito token')
     const uri = urlJoin(config.chargeModule.cognito.host, '/oauth2/token')
     const buff = Buffer.from(`${config.chargeModule.cognito.username}:${config.chargeModule.cognito.password}`)
@@ -40,6 +41,16 @@ class AccessTokenManager {
     logger.info(`Obtained a new Cognito token. It expires at ${this.expiresAt.format()}`)
 
     return this.accessToken
+  }
+
+  tokenCounter () {
+    if (!global.tokenRequestCount) {
+      global.tokenRequestCount = 0
+    }
+
+    global.tokenRequestCount += 1
+
+    logger.info(`❗️ Token counter is now ${global.tokenRequestCount}`)
   }
 
   /**
