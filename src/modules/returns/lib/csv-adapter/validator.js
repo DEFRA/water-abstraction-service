@@ -1,6 +1,6 @@
 'use strict'
 
-const { isEmpty, flatten, compact, times } = require('lodash')
+const { flatten, compact, times } = require('lodash')
 
 const waterHelpers = require('@envage/water-abstraction-helpers')
 const { returnIDRegex, parseReturnId } = waterHelpers.returns
@@ -153,7 +153,7 @@ const recordsToLicences = records => {
 const validateLicenceNumber = licence => {
   const { value, line } = licence.licenceNumber
 
-  if (isEmpty(value)) {
+  if (!value) {
     return createError(errorMessages.licenceNumber, line)
   }
 }
@@ -164,7 +164,7 @@ const validateLicenceNumber = licence => {
 const validateReturnReference = licence => {
   const { value, line } = licence.returnReference
 
-  if (isEmpty(value) || /^\d{1,}$/g.test(value) === false) {
+  if (!value || /^\d{1,}$/g.test(value) === false) {
     return createError(errorMessages.returnReference, line)
   }
 }

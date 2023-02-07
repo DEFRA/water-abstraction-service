@@ -32,8 +32,13 @@ experiment('modules/billing/mappers/change-reason', () => {
       result = changeReasonMapper.dbToModel(dbRow)
     })
 
-    test('returns null when data is empty', async () => {
+    test('returns null when data is null', async () => {
       const result = changeReasonMapper.dbToModel(null)
+      expect(result).to.equal(null)
+    })
+
+    test('returns null when data is empty', async () => {
+      const result = changeReasonMapper.dbToModel({})
       expect(result).to.equal(null)
     })
 

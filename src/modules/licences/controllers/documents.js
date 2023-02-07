@@ -15,7 +15,6 @@ const LicenceTransformer = require('../../../lib/licence-transformer')
 const queries = require('../lib/queries')
 const { createContacts } = require('../../../lib/models/factory/contact-list')
 const eventHelper = require('../lib/event-helper')
-const { isEmpty } = require('lodash')
 
 const licencesService = require('../../../lib/services/licences')
 
@@ -314,8 +313,12 @@ const postLicenceName = async (request, h) => {
   const { documentId } = request.params
   const { documentName } = request.payload
   const { data: currentDoc } = await documentsClient.findOne(documentId)
-  if (!currentDoc) { return Boom.notFound(`Document ${documentId} not found`) }
-  const rename = !isEmpty(currentDoc.document_name)
+
+  if (!currentDoc) {
+    return Boom.notFound(`Document ${documentId} not found`)
+  }
+
+  const rename = !!currentDoc.document_name
   const { data } = await documentsClient.setLicenceName(documentId, documentName)
   const metadata = { documentId, documentName, rename }
   const eventData = await eventHelper.saveEvent('licence:name', rename ? 'rename' : 'name', [data.system_external_id], 'completed', request.payload.userName, metadata)

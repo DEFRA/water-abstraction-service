@@ -12,14 +12,21 @@ const batchMapper = require('../../lib/mappers/batch')
 
 const { createMapper } = require('../object-mapper')
 const { createModel } = require('./lib/helpers')
-const { isEmpty } = require('lodash')
 
 const mapLinkedInvoices = (billingInvoiceId, linkedBillingInvoices = [], originalBillingInvoice = {}) => {
   const invoices = linkedBillingInvoices
     .filter(linkedBillingInvoice => ![billingInvoiceId, originalBillingInvoice.billingInvoiceId].includes(linkedBillingInvoice.billingInvoiceId))
     .map(dbToModel)
 
-  if (!(isEmpty(originalBillingInvoice)) && billingInvoiceId !== originalBillingInvoice.billingInvoiceId) {
+  let isNotEmpty
+
+  if ((originalBillingInvoice === null) || (Object.keys(originalBillingInvoice).length === 0)) {
+    isNotEmpty = false
+  } else {
+    isNotEmpty = true
+  }
+
+  if (isNotEmpty && billingInvoiceId !== originalBillingInvoice.billingInvoiceId) {
     invoices.push(dbToModel(originalBillingInvoice))
   }
   return invoices

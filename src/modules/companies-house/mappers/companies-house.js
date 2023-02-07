@@ -1,6 +1,6 @@
 'use strict'
 
-const { isEmpty, omitBy } = require('lodash')
+const { omitBy } = require('lodash')
 
 const Company = require('../../../lib/models/company')
 const Address = require('../../../lib/models/address')
@@ -33,7 +33,9 @@ const mapAddress = data => {
     source: Address.ADDRESS_SOURCE.companiesHouse
   }
 
-  return address.fromHash(omitBy(obj, isEmpty))
+  return address.fromHash(omitBy(obj, (value) => {
+    return !value
+  }))
 }
 
 /**
