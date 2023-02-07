@@ -173,7 +173,8 @@ const doesMinimumChargeApply = (chargePeriod, chargeVersion) => {
   }
 
   const isSharedStartDate = chargePeriodStartDate.isSame(moment(dateRange.startDate), 'day')
-  const isFirstChargeOnNewLicence = isSharedStartDate && changeReason.triggersMinimumCharge ? changeReason.triggersMinimumCharge : false
+  const triggersMinimumCharge = changeReason?.triggersMinimumCharge ?? false
+  const isFirstChargeOnNewLicence = isSharedStartDate && triggersMinimumCharge
 
   return doesChargePeriodStartOnFirstApril(chargePeriodStartDate) || isFirstChargeOnNewLicence
 }

@@ -20,37 +20,33 @@ const { actions } = require('./constants')
  */
 const getReversedTransaction = (invoiceLicence, sourceTransaction) => {
   return {
+    billingInvoiceLicenceId: invoiceLicence.id,
     chargeElementId: sourceTransaction.chargeElementId,
     startDate: sourceTransaction.startDate,
     endDate: sourceTransaction.endDate,
     abstractionPeriod: sourceTransaction.abstractionPeriod,
+    source: sourceTransaction.source,
+    season: sourceTransaction.season,
+    loss: sourceTransaction.loss,
     netAmount: sourceTransaction.netAmount,
+    isCredit: !sourceTransaction.isCredit,
+    chargeType: sourceTransaction.chargeType,
     authorisedQuantity: sourceTransaction.authorisedQuantity,
     billableQuantity: sourceTransaction.billableQuantity,
     authorisedDays: sourceTransaction.authorisedDays,
     billableDays: sourceTransaction.billableDays,
+    status: Transaction.statuses.candidate,
     description: sourceTransaction.description,
-    source: sourceTransaction.source,
-    season: sourceTransaction.season,
-    loss: sourceTransaction.loss,
-    chargeType: sourceTransaction.chargeType,
+    externalId: null,
     volume: sourceTransaction.volume,
     section126Factor: sourceTransaction.section126Factor,
     section127Agreement: sourceTransaction.section127Agreement,
     section130Agreement: sourceTransaction.section130Agreement,
-    isTwoPartSecondPartCharge: sourceTransaction.isTwoPartSecondPartCharge,
-    calculatedVolume: sourceTransaction.calculatedVolume,
-    twoPartTariffError: sourceTransaction.twoPartTariffError,
-    twoPartTariffStatus: sourceTransaction.twoPartTariffStatus,
-    twoPartTariffReview: sourceTransaction.twoPartTariffReview,
     isDeMinimis: sourceTransaction.isDeMinimis,
     isNewLicence: sourceTransaction.isNewLicence,
-    billingInvoiceLicenceId: invoiceLicence.id,
-    sourceTransactionId: sourceTransaction.billingTransactionId,
-    status: Transaction.statuses.candidate,
     legacyId: null,
-    externalId: null,
-    isCredit: !sourceTransaction.isCredit
+    sourceTransactionId: sourceTransaction.billingTransactionId,
+    isTwoPartSecondPartCharge: sourceTransaction.isTwoPartSecondPartCharge
   }
 }
 

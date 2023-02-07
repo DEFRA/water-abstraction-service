@@ -48,7 +48,7 @@ const isClientError = err => inRange(getStatus(err), 400, 500)
 const updateBatchState = async batchId => {
   const statuses = await batchService.getTransactionStatusCounts(batchId)
 
-  const candidate = statuses.Transaction?.statuses.candidate ?? 0
+  const candidate = statuses[Transaction.statuses.candidate] ?? 0
   const isReady = candidate === 0
 
   if (isReady) {
