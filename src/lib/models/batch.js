@@ -5,7 +5,6 @@ const FinancialYear = require('./financial-year')
 const Region = require('./region')
 const Totals = require('./totals')
 const { assert } = require('@hapi/hoek')
-const { isArray } = require('lodash')
 const config = require('../../../config')
 
 const validators = require('./validators')
@@ -223,7 +222,7 @@ class Batch extends Totals {
    * @param {Array<Invoice>} invoices
    */
   addInvoices (invoices = []) {
-    assert(isArray(invoices), 'Array expected')
+    assert(Array.isArray(invoices), 'Array expected')
     return invoices.map(invoice => this.addInvoice(invoice))
   }
 

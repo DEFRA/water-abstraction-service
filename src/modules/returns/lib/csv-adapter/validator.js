@@ -1,6 +1,6 @@
 'use strict'
 
-const { isEmpty, flatten, compact, isString, times } = require('lodash')
+const { flatten, compact, times } = require('lodash')
 
 const waterHelpers = require('@envage/water-abstraction-helpers')
 const { returnIDRegex, parseReturnId } = waterHelpers.returns
@@ -50,9 +50,11 @@ const createLicenceReturn = column => ({
  * @return {boolean} True if the value meets the expectation
  */
 const validateExpectation = (expectation, val) => {
-  return isString(expectation)
-    ? val === expectation
-    : expectation(val)
+  if (typeof expectation === 'string') {
+    return val === expectation
+  } else {
+    return expectation(val)
+  }
 }
 
 const getHeadingExpectation = expectation => ({
@@ -151,7 +153,7 @@ const recordsToLicences = records => {
 const validateLicenceNumber = licence => {
   const { value, line } = licence.licenceNumber
 
-  if (isEmpty(value)) {
+  if (!value) {
     return createError(errorMessages.licenceNumber, line)
   }
 }
@@ -162,7 +164,7 @@ const validateLicenceNumber = licence => {
 const validateReturnReference = licence => {
   const { value, line } = licence.returnReference
 
-  if (isEmpty(value) || /^\d{1,}$/g.test(value) === false) {
+  if (!value || /^\d{1,}$/g.test(value) === false) {
     return createError(errorMessages.returnReference, line)
   }
 }

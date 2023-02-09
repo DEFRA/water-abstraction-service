@@ -1,11 +1,10 @@
 'use strict'
 
-const { isEmpty } = require('lodash')
-
 const Event = require('../models/event')
 
-const mapStatus = status =>
-  isEmpty(status) ? null : status
+const mapStatus = (status) => {
+  return !status ? null : status
+}
 
 /**
  * Creates Event object model from data received from the repo layer
