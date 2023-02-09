@@ -1,6 +1,5 @@
 'use strict'
 
-const { isObject } = require('lodash')
 const Company = require('../models/company')
 
 const { createMapper } = require('../object-mapper')
@@ -48,7 +47,7 @@ const modelToCrm = company => {
 }
 
 const pojoToModel = object => {
-  if (!isObject(object)) {
+  if (!(object instanceof Object)) {
     return null
   }
   const company = new Company()

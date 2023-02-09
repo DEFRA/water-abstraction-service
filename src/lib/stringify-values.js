@@ -1,4 +1,6 @@
-const { isArray, isObject, mapValues } = require('lodash')
+'use strict'
+
+const { mapValues } = require('lodash')
 
 /**
  * Stringifies array/object data for writing to DB
@@ -6,12 +8,14 @@ const { isArray, isObject, mapValues } = require('lodash')
  * @return {Object}      - row data with arrays/objects stringified
  */
 const stringifyValues = data => {
-  return mapValues(data, (value, key) => {
-    if (isArray(value) || isObject(value)) {
+  const result = mapValues(data, (value, key) => {
+    if (value instanceof Object) {
       return JSON.stringify(value)
     }
     return value
   })
+
+  return result
 }
 
 exports.stringifyValues = stringifyValues
