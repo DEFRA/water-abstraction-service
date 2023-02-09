@@ -1,106 +1,143 @@
 'use strict'
 
-const {
-  experiment,
-  test,
-  beforeEach,
-  afterEach
-} = exports.lab = require('@hapi/lab').script()
-const { expect } = require('@hapi/code')
-const sinon = require('sinon')
-const sandbox = sinon.createSandbox()
-const moment = require('moment')
+// Test framework dependencies
+const Lab = require('@hapi/lab')
+const Code = require('@hapi/code')
+const Sinon = require('sinon')
 
-const gotWithProxy = require('../../../../../src/lib/connectors/charge-module/lib/got-with-proxy')
-const AccessTokenManager = require('../../../../../src/lib/connectors/charge-module/lib/AccessTokenManager')
-const { logger } = require('../../../../../src/logger')
+const { experiment, test, beforeEach, afterEach } = exports.lab = Lab.script()
+const { expect } = Code
+
+// Things we need to stub
 const config = require('../../../../../config')
+const gotWithProxy = require('../../../../../src/lib/connectors/charge-module/lib/got-with-proxy')
+const { logger } = require('../../../../../src/logger')
 
-const data = {
-  cognitoHost: 'https://test-host',
-  cognitoUsername: 'test-user',
-  cognitoPassword: 'test-password',
-  accessToken: 'test-token',
-  expiresIn: 3600,
-  refDate: '2020-01-01T00:00:00.000Z',
-  futureDate: '3020-01-01T00:00:00.000Z'
-}
+// Thing under test
+const AccessTokenManager = require('../../../../../src/lib/connectors/charge-module/lib/AccessTokenManager')
 
-experiment('lib/connectors/charge-module/lib/AccessTokenManager', () => {
-  let instance, result
+experiment('AccessTokenManager', () => {
+  const data = {
+    cognitoHost: 'https://test-host',
+    cognitoUsername: 'test-user',
+    cognitoPassword: 'test-password',
+    accessToken: 'test-token',
+    expiresIn: 3600
+  }
+
+  let gotWithProxyStub
+  let instance
 
   beforeEach(async () => {
-    sandbox.stub(gotWithProxy, 'post')
-    sandbox.stub(logger, 'info')
-    sandbox.stub(config.chargeModule.cognito, 'host').value(data.cognitoHost)
-    sandbox.stub(config.chargeModule.cognito, 'username').value(data.cognitoUsername)
-    sandbox.stub(config.chargeModule.cognito, 'password').value(data.cognitoPassword)
+    gotWithProxyStub = Sinon.stub(gotWithProxy, 'post')
 
-    instance = new AccessTokenManager()
+    // We stub the logger just to silence it during testing
+    Sinon.stub(logger, 'info')
   })
 
   afterEach(async () => {
-    sandbox.restore()
+    Sinon.restore()
   })
 
-  experiment('.refreshAccessToken', () => {
-    beforeEach(async () => {
-      gotWithProxy.post.resolves({
-        access_token: data.accessToken,
-        expires_in: data.expiresIn
+  experiment('#token()', () => {
+    experiment('when there is an existing token', () => {
+      beforeEach(async () => {
+        gotWithProxyStub.onFirstCall().resolves({
+          access_token: data.accessToken,
+          expires_in: data.expiresIn
+        })
+
+        gotWithProxyStub.onSecondCall().resolves({
+          access_token: 'i-am-the-second-token',
+          expires_in: data.expiresIn
+        })
+
+        instance = new AccessTokenManager()
+        await instance.token()
       })
-      result = await instance.refreshAccessToken(data.refDate)
-    })
 
-    test('calls the POST endpoint with the correct uri', async () => {
-      const [uri] = gotWithProxy.post.lastCall.args
-      expect(uri).to.equal('https://test-host/oauth2/token')
-    })
+      experiment('that has not expired', () => {
+        experiment(' and it is not forced to refresh the token', () => {
+          test('it does not make a second request', async () => {
+            const result = await instance.token()
 
-    test('calls the POST endpoint with the correct query params', async () => {
-      const [, { searchParams }] = gotWithProxy.post.lastCall.args
-      expect(searchParams).to.equal({
-        grant_type: 'client_credentials'
+            expect(result).to.equal(data.accessToken)
+            expect(gotWithProxyStub.calledOnce).to.be.true()
+          })
+        })
+
+        experiment('and it is forced to refresh the token', () => {
+          test('it makes a second request', async () => {
+            const result = await instance.token(true)
+
+            expect(result).to.equal('i-am-the-second-token')
+            expect(gotWithProxyStub.calledTwice).to.be.true()
+          })
+        })
+      })
+
+      experiment('that has expired', () => {
+        let clockFake
+
+        beforeEach(async () => {
+          const testDate = new Date(2031, 9, 21, 20, 31, 57)
+
+          clockFake = Sinon.useFakeTimers(testDate)
+        })
+
+        afterEach(async () => {
+          clockFake.restore()
+        })
+
+        test('it makes a second request', async () => {
+          const result = await instance.token()
+
+          expect(result).to.equal('i-am-the-second-token')
+          expect(gotWithProxyStub.calledTwice).to.be.true()
+        })
       })
     })
 
-    test('calls the POST endpoint with the correct headers', async () => {
-      const [, { headers }] = gotWithProxy.post.lastCall.args
-      expect(headers['content-type']).to.equal('application/x-www-form-urlencoded')
-      expect(headers.authorization).to.equal('Basic dGVzdC11c2VyOnRlc3QtcGFzc3dvcmQ=')
+    experiment('when the request to AWS Cognito succeeds', () => {
+      beforeEach(async () => {
+        Sinon.stub(config.chargeModule.cognito, 'username').value(data.cognitoUsername)
+        Sinon.stub(config.chargeModule.cognito, 'password').value(data.cognitoPassword)
+
+        gotWithProxyStub.resolves({
+          access_token: data.accessToken,
+          expires_in: data.expiresIn
+        })
+      })
+
+      test('returns the JWT', async () => {
+        instance = new AccessTokenManager()
+        const result = await instance.token()
+
+        expect(result).to.equal(data.accessToken)
+      })
+
+      test('had set the auth headers correctly', async () => {
+        instance = new AccessTokenManager()
+        await instance.token()
+
+        const [, { headers }] = gotWithProxyStub.lastCall.args
+
+        expect(headers['content-type']).to.equal('application/x-www-form-urlencoded')
+        // We know this is the Base64 encoded version of our test credentials
+        expect(headers.authorization).to.equal('Basic dGVzdC11c2VyOnRlc3QtcGFzc3dvcmQ=')
+      })
     })
 
-    test('sets the access token', async () => {
-      expect(instance.accessToken).to.equal(data.accessToken)
-    })
+    experiment('when the request to AWS Cognito fails', () => {
+      beforeEach(async () => {
+        gotWithProxyStub.rejects()
+      })
 
-    test('resolves with the access token', async () => {
-      expect(result).to.equal(data.accessToken)
-    })
+      test('throws an exception', async () => {
+        instance = new AccessTokenManager()
 
-    test('sets the expiry time', async () => {
-      expect(instance.expiresAt.toISOString()).to.equal('2020-01-01T01:00:00.000Z')
-    })
-  })
-
-  experiment('.isTokenValid', () => {
-    test('returns false if no access token', async () => {
-      expect(instance.isTokenValid()).to.be.false()
-      expect(logger.info.calledWith('no cognito token'))
-    })
-
-    test('returns false if token expired', async () => {
-      instance.accessToken = data.accessToken
-      instance.expiresAt = moment(data.refDate)
-      expect(instance.isTokenValid()).to.be.false()
-      expect(logger.info.calledWith('cognito token expired'))
-    })
-
-    test('returns true if token not expired', async () => {
-      instance.accessToken = data.accessToken
-      instance.expiresAt = moment(data.futureDate)
-      expect(instance.isTokenValid()).to.be.true()
-      expect(logger.info.calledWith('use existing cognito token'))
+        await expect(instance.token()).to.reject()
+      })
     })
   })
 })
