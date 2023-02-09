@@ -1,6 +1,5 @@
 'use strict'
 
-const { first } = require('lodash')
 const apiConnector = require('../../connectors/returns')
 
 /**
@@ -37,7 +36,7 @@ const getCurrentVersion = async returnId => {
   }
   const sort = { version_number: -1 }
   const versions = await apiConnector.versions.findAll(filter, sort)
-  return first(versions)
+  return versions[0]
 }
 
 /**

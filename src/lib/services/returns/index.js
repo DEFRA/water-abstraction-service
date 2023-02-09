@@ -1,6 +1,6 @@
 'use strict'
 
-const { flatMap, first, identity } = require('lodash')
+const { flatMap, identity } = require('lodash')
 const bluebird = require('bluebird')
 const moment = require('moment')
 
@@ -147,11 +147,13 @@ const getFilterStartDate = (document) => {
  * @param {Document} document
  * @return {String} date YYYY-MM-DD
  */
-const getFilterEndDate = document => first(
-  [document.dateRange.endDate, moment().format(DATE_FORMAT)]
+const getFilterEndDate = (document) => {
+  const result = [document.dateRange.endDate, moment().format(DATE_FORMAT)]
     .filter(identity)
     .sort()
-)
+
+  return result[0]
+}
 
 /**
  * Gets both the CRM document and a list of returns for the specified
