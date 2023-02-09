@@ -1,7 +1,5 @@
 'use strict'
 
-const { isNull } = require('lodash')
-
 const Invoice = require('../models/invoice')
 const InvoiceAccount = require('../models/invoice-account')
 const FinancialYear = require('../models/financial-year')
@@ -104,7 +102,7 @@ const modelToDb = (invoice, scheme) => ({
   address: invoice.address ? mapAddress(invoice, scheme) : {},
   financialYearEnding: invoice.financialYear.endYear,
   invoiceNumber: invoice.invoiceNumber || null,
-  isCredit: isNull(invoice.netTotal) ? null : invoice.netTotal < 0,
+  isCredit: invoice.netTotal === null ? null : invoice.netTotal < 0,
   isDeMinimis: invoice.isDeMinimis,
   netAmount: invoice.netTotal,
   invoiceValue: invoice.invoiceValue,

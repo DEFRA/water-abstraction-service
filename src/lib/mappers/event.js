@@ -1,6 +1,6 @@
 'use strict'
 
-const { isNull, isEmpty } = require('lodash')
+const { isEmpty } = require('lodash')
 
 const Event = require('../models/event')
 
@@ -13,7 +13,7 @@ const mapStatus = status =>
  * @return {Object}      - data with keys camel cased
  */
 const dbToModel = data => {
-  if (isNull(data)) {
+  if (data === null) {
     return null
   }
   const { eventId, status, ...rest } = data

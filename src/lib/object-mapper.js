@@ -6,7 +6,7 @@
  *         by default nulls are mapped, with an option of ignoring them
  */
 
-const { identity, set, isUndefined, isNull, isFunction, isObject, isArray } = require('lodash')
+const { identity, set, isUndefined, isFunction, isObject, isArray } = require('lodash')
 
 const getSourceKeys = value => {
   if (isArray(value)) {
@@ -95,7 +95,7 @@ class Mapper {
       }
 
       // Optionally skip null values in source (by default they are mapped)
-      if (!row.options.mapNull && values.every(isNull)) {
+      if (!row.options.mapNull && values.every((value) => value === null)) {
         return acc
       }
 

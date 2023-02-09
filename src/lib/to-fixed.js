@@ -1,6 +1,5 @@
 'use strict'
 
-const { isNull } = require('lodash')
 const Decimal = require('decimal.js-light')
 
 /**
@@ -10,6 +9,6 @@ const Decimal = require('decimal.js-light')
  * @param {Integer} [precision] - default 3 DP
  */
 const toFixedPrecision = (number, precision = 3) =>
-  isNull(number) ? null : new Decimal(number).toFixed(precision)
+  (number === null) ? null : new Decimal(number).toFixed(precision)
 
 module.exports = toFixedPrecision

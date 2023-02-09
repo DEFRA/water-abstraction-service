@@ -6,7 +6,6 @@ const Decimal = require('decimal.js-light')
 const Model = require('./model')
 const FinancialYear = require('./financial-year')
 const User = require('./user')
-const { isNull } = require('lodash')
 const is = require('@sindresorhus/is')
 
 const validators = require('./validators')
@@ -87,7 +86,7 @@ class BillingVolume extends Model {
   }
 
   set calculatedVolume (calculatedVolume) {
-    if (isNull(calculatedVolume)) {
+    if (calculatedVolume === null) {
       this._calculatedVolume = null
     } else {
       const value = new Decimal(calculatedVolume)
@@ -182,7 +181,7 @@ class BillingVolume extends Model {
 
   set volume (volume) {
     validators.assertNullableQuantity(volume)
-    this._volume = isNull(volume) ? null : parseFloat(volume)
+    this._volume = volume === null ? null : parseFloat(volume)
   }
 
   assertIsNotApproved () {
@@ -238,7 +237,7 @@ class BillingVolume extends Model {
    */
   get approvedOrCalculatedVolume () {
     if (this.isApproved) {
-      return isNull(this.volume) ? new Decimal(0) : new Decimal(this.volume)
+      return this?.volume === null ? new Decimal(0) : new Decimal(this.volume)
     }
     return new Decimal(this.calculatedVolume || 0)
   }
@@ -246,7 +245,7 @@ class BillingVolume extends Model {
   toJSON () {
     return {
       ...super.toJSON(),
-      calculatedVolume: isNull(this.calculatedVolume) ? new Decimal(0) : this.calculatedVolume.toDecimalPlaces(6).toNumber()
+      calculatedVolume: this?.calculatedVolume === null ? new Decimal(0) : this.calculatedVolume.toDecimalPlaces(6).toNumber()
     }
   }
 }
