@@ -6,12 +6,12 @@
  *         by default nulls are mapped, with an option of ignoring them
  */
 
-const { identity, set, isUndefined, isNull, isFunction } = require('lodash')
+const { identity, set, isNull, isFunction } = require('lodash')
 
 const getSourceKeys = value => {
   if (Array.isArray(value)) {
     return value
-  } else if (isUndefined(value)) {
+  } else if (value === undefined) {
     return []
   }
   return [value]
@@ -90,7 +90,7 @@ class Mapper {
       }
 
       // Undefined values in the source are skipped
-      if (values.every(isUndefined)) {
+      if (values.every(val => val === undefined)) {
         return acc
       }
 
