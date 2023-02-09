@@ -1,7 +1,7 @@
 'use strict'
 
-const { cloneDeep } = require('lodash')
 const Hapi = require('@hapi/hapi')
+const Hoek = require('@hapi/hoek')
 
 const validate = async () => ({ isValid: true })
 
@@ -24,7 +24,7 @@ const createServerForRoute = async (route, isAuth = false) => {
   }
 
   // Clone test route and attach dummy handler
-  const testRoute = cloneDeep(route)
+  const testRoute = Hoek.clone(route)
   testRoute.handler = async () => 'ok'
 
   // Strip pre-handlers

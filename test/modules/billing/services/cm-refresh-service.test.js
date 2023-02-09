@@ -10,8 +10,6 @@ const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
 const { v4: uuid } = require('uuid')
 
-const { cloneDeep } = require('lodash')
-
 // Services
 const cmBillRunsConnector = require('../../../../src/lib/connectors/charge-module/bill-runs')
 const cmRefreshService = require('../../../../src/modules/billing/services/cm-refresh-service')
@@ -296,7 +294,7 @@ experiment('modules/billing/services/cm-refresh-service', () => {
 
           invoiceService.getInvoicesForBatch.resolves(invoices)
 
-          const batchSummary = cloneDeep(cmResponses.batchSummary.ready)
+          const batchSummary = { ...cmResponses.batchSummary.ready }
           batchSummary.billRun.invoices[0].rebilledType = 'C'
           batchSummary.billRun.invoices[1].rebilledType = 'R'
           cmBillRunsConnector.get.resolves(batchSummary)
