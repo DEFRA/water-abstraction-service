@@ -1,8 +1,11 @@
-const { reduce, isArray, isPlainObject, camelCase } = require('lodash')
+'use strict'
 
-const camelCaseObjectKeys = data => {
+const { reduce, isPlainObject, camelCase } = require('lodash')
+
+const camelCaseObjectKeys = (data) => {
   return reduce(data, (acc, value, key) => {
     acc[camelCase(key)] = camelCaseKeys(value)
+
     return acc
   }, {})
 }
@@ -12,14 +15,15 @@ const camelCaseObjectKeys = data => {
  * @param {Array|Object} data The array of objects, or object that is to
  * have it's keys camel cased
  */
-const camelCaseKeys = data => {
-  if (isArray(data)) {
+const camelCaseKeys = (data) => {
+  if (Array.isArray(data)) {
     return data.map(camelCaseKeys)
   }
 
   if (isPlainObject(data)) {
     return camelCaseObjectKeys(data)
   }
+
   return data
 }
 
