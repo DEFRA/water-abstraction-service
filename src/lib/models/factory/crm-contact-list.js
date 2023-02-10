@@ -1,4 +1,4 @@
-const { isNull } = require('lodash')
+'use strict'
 
 // Import models
 const Contact = require('../contact')
@@ -28,7 +28,7 @@ const mapType = contact => {
       : Contact.CONTACT_TYPE_PERSON
   }
   // NALD company
-  if (isNull(contact.initials) && isNull(contact.forename) && isNull(contact.salutation)) {
+  if ((contact.initials && contact.forename && contact.salutation) === null) {
     return Contact.CONTACT_TYPE_ORGANISATION
   }
   // NALD person

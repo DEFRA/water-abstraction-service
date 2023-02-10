@@ -1,5 +1,6 @@
+'use strict'
+
 const { expect } = require('@hapi/code')
-const { cloneDeep } = require('lodash')
 const {
   experiment,
   test,
@@ -15,7 +16,7 @@ experiment('postUploadChargeInformation', () => {
   beforeEach(async () => {
     server = Hapi.server()
 
-    const route = cloneDeep(routes.postUploadChargeInformation)
+    const route = { ...routes.postUploadChargeInformation }
     route.handler = async () => 'ok'
     server.route(route)
   })

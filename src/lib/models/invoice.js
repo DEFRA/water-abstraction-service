@@ -1,6 +1,6 @@
 'use strict'
 
-const { uniq, flatMap, isNull } = require('lodash')
+const { uniq, flatMap } = require('lodash')
 
 const {
   assertIsInstanceOf, assertIsArrayOfType,
@@ -216,7 +216,7 @@ class Invoice extends Totals {
    */
   set netTotal (netTotal) {
     assertNullableInteger(netTotal)
-    this._netTotal = isNull(netTotal) ? null : parseInt(netTotal)
+    this._netTotal = netTotal === null ? null : parseInt(netTotal)
   }
 
   get netTotal () {

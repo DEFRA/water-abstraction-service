@@ -1,7 +1,10 @@
+'use strict'
+
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 const { expect } = require('@hapi/code')
-const { cloneDeep, set } = require('lodash')
+const Hoek = require('@hapi/hoek')
+const { set } = require('lodash')
 const { experiment, test, afterEach, beforeEach } = exports.lab = require('@hapi/lab').script()
 const returnsUploadValidator = require('../../../../src/modules/returns/lib/returns-upload-validator')
 
@@ -96,7 +99,7 @@ experiment('validate', () => {
 
   test('fails validation if any of the abstraction volumes are negative', async () => {
     const { ERR_VOLUMES } = returnsUploadValidator.uploadErrors
-    const returnData = cloneDeep([data.upload[5]])
+    const returnData = Hoek.clone([data.upload[5]])
     returnData[0].lines[0].quantity = '-4'
     const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId, true)
     expect(errors).to.equal([ERR_VOLUMES])
@@ -134,7 +137,7 @@ experiment('validate', () => {
 
   test('it should fail validation if it doesnt match the Joi schema', async () => {
     const { ERR_SCHEMA } = returnsUploadValidator.uploadErrors
-    const upload = cloneDeep([data.upload[4]])
+    const upload = Hoek.clone([data.upload[4]])
     delete upload[0].isCurrent
     const [{ errors }] = await returnsUploadValidator.validate(upload, data.companyId, true)
     expect(errors).to.equal([ERR_SCHEMA])
@@ -143,7 +146,7 @@ experiment('validate', () => {
   experiment('if a meter is used', () => {
     let returnData
     beforeEach(async () => {
-      returnData = cloneDeep([data.upload[4]])
+      returnData = Hoek.clone([data.upload[4]])
       set(returnData[0], 'lines', [])
       returnData[0].meters.push({
         meterDetailsProvided: true,

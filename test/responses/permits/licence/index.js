@@ -1,4 +1,6 @@
-const { cloneDeep } = require('lodash')
+'use strict'
+
+const Hoek = require('@hapi/hoek')
 
 const licenceDataValue = require('./licence-data.json')
 const emptyActions = {
@@ -44,30 +46,30 @@ const abstractionReformActions = () => ({
 })
 
 const emptyAbstractionReform = () => {
-  const shell = cloneDeep(licences)
+  const shell = Hoek.clone(licences)
   shell.data[0].licence_data_value = emptyActions
   return shell
 }
 
 const abstractionReformLicence = () => {
-  const shell = cloneDeep(licences)
+  const shell = Hoek.clone(licences)
   shell.data[0].licence_data_value = abstractionReformActions()
   return shell
 }
 
 const getWaterLicence = () => {
-  const shell = cloneDeep(licences)
+  const shell = Hoek.clone(licences)
   return shell.data[0]
 }
 
 const getExpiringLicence = () => {
-  const shell = cloneDeep(licences)
+  const shell = Hoek.clone(licences)
   shell.data[0].licence_end_dt = '01/01/2021'
   return shell
 }
 
 module.exports = {
-  licences: () => cloneDeep(licences),
+  licences: () => Hoek.clone(licences),
   emptyAbstractionReform,
   abstractionReformLicence,
   getWaterLicence,

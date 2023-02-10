@@ -1,6 +1,6 @@
 'use strict'
 
-const { isNull, max } = require('lodash')
+const { max } = require('lodash')
 
 const Model = require('./model')
 const AbstractionPeriod = require('./abstraction-period')
@@ -66,7 +66,7 @@ class ChargePurpose extends Model {
 
   set billableAnnualQuantity (quantity) {
     validators.assertNullableQuantity(quantity)
-    this._billableAnnualQuantity = isNull(quantity) ? null : parseFloat(quantity)
+    this._billableAnnualQuantity = quantity === null ? null : parseFloat(quantity)
   }
 
   /**
