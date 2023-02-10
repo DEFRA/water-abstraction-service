@@ -1,9 +1,8 @@
 'use strict'
 
 const gotWithProxy = require('./got-with-proxy')
-const urlJoin = require('url-join')
-
 const { logger } = require('../../../../logger')
+
 const config = require('../../../../../config.js')
 
 class AccessTokenManager {
@@ -43,7 +42,7 @@ class AccessTokenManager {
    * @returns
    */
   async _refresh () {
-    const uri = urlJoin(config.chargeModule.cognito.host, '/oauth2/token')
+    const url = new URL('/oauth2/token', config.chargeModule.cognito.host)
     const options = {
       searchParams: {
         grant_type: 'client_credentials'
@@ -55,7 +54,7 @@ class AccessTokenManager {
     }
 
     // Make got request
-    const { access_token: accessToken, expires_in: expiresIn } = await gotWithProxy.post(uri, options)
+    const { access_token: accessToken, expires_in: expiresIn } = await gotWithProxy.post(url.href, options)
 
     // Update this instance with the access token and expiry time
     this._accessToken = accessToken
