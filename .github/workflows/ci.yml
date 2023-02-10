@@ -11,6 +11,9 @@ jobs:
       TEST_DATABASE_URL: postgres://water_user:password@localhost:5432/wabs_test
       JWT_SECRET: ItsNoSecretBecauseYouToldEverybody
       JWT_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6InRlc3QiLCJpYXQiOjE1MDMzMTg0NDV9.eWghqjYlPrb8ZjWacYzTCTh1PBtr2BeSv-_ZIwrtmwE
+      COGNITO_HOST: https://mycognitoinstance.amazoncognito.com
+      COGNITO_USERNAME: random5letters6and2numbers7
+      COGNITO_PASSWORD: longer0random9letters1and6numbers8
       # These need to be duplicated in services section for postgres. Unfortunately, there is not a way to reuse them
       PGUSER: water_user
       PGPASSWORD: password
