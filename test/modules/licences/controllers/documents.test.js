@@ -3,7 +3,6 @@
 const { expect } = require('@hapi/code')
 const { afterEach, beforeEach, experiment, test } = exports.lab = require('@hapi/lab').script()
 
-const { cloneDeep } = require('lodash')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 
@@ -142,7 +141,7 @@ experiment('modules/licences/controllers/documents', () => {
     })
 
     test('requests expired licences if the includeExpired query param is truthy', async () => {
-      const request = cloneDeep(testRequest)
+      const request = { ...testRequest }
       request.query.includeExpired = true
       await controller.getLicenceByDocumentId(request)
 
@@ -399,7 +398,7 @@ experiment('modules/licences/controllers/documents', () => {
     })
 
     test('can request expired licences by setting includeExpired to true', async () => {
-      const request = cloneDeep(testRequest)
+      const request = { ...testRequest }
       request.query.includeExpired = true
       await controller.getLicenceCommunicationsByDocumentId(request)
 

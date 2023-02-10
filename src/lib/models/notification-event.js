@@ -1,6 +1,5 @@
 'use strict'
 
-const { isNull } = require('lodash')
 const Event = require('./event')
 
 const validators = require('./validators')
@@ -12,7 +11,7 @@ class NotificationEvent extends Event {
    */
   set recipientCount (recipientCount) {
     validators.assertNullablePositiveOrZeroInteger(recipientCount)
-    this._recipientCount = isNull(recipientCount) ? null : parseInt(recipientCount)
+    this._recipientCount = recipientCount === null ? null : parseInt(recipientCount)
   }
 
   get recipientCount () {
@@ -25,7 +24,7 @@ class NotificationEvent extends Event {
    */
   set errorCount (errorCount) {
     validators.assertNullablePositiveOrZeroInteger(errorCount)
-    this._errorCount = isNull(errorCount) ? null : parseInt(errorCount)
+    this._errorCount = errorCount === null ? null : parseInt(errorCount)
   }
 
   get errorCount () {
