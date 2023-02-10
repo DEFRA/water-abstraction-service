@@ -1,7 +1,5 @@
 'use strict'
 
-const got = require('got')
-
 const config = require('../../../../../config.js')
 const { logger } = require('../../../../logger.js')
 
