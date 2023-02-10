@@ -1,7 +1,5 @@
 'use strict'
 
-const { isNull } = require('lodash')
-
 const Invoice = require('../models/invoice')
 const InvoiceAccount = require('../models/invoice-account')
 const FinancialYear = require('../models/financial-year')
@@ -12,14 +10,21 @@ const batchMapper = require('../../lib/mappers/batch')
 
 const { createMapper } = require('../object-mapper')
 const { createModel } = require('./lib/helpers')
-const { isEmpty } = require('lodash')
 
 const mapLinkedInvoices = (billingInvoiceId, linkedBillingInvoices = [], originalBillingInvoice = {}) => {
   const invoices = linkedBillingInvoices
     .filter(linkedBillingInvoice => ![billingInvoiceId, originalBillingInvoice.billingInvoiceId].includes(linkedBillingInvoice.billingInvoiceId))
     .map(dbToModel)
 
-  if (!(isEmpty(originalBillingInvoice)) && billingInvoiceId !== originalBillingInvoice.billingInvoiceId) {
+  let isNotEmpty
+
+  if ((originalBillingInvoice === null) || (Object.keys(originalBillingInvoice).length === 0)) {
+    isNotEmpty = false
+  } else {
+    isNotEmpty = true
+  }
+
+  if (isNotEmpty && billingInvoiceId !== originalBillingInvoice.billingInvoiceId) {
     invoices.push(dbToModel(originalBillingInvoice))
   }
   return invoices
@@ -104,7 +109,7 @@ const modelToDb = (invoice, scheme) => ({
   address: invoice.address ? mapAddress(invoice, scheme) : {},
   financialYearEnding: invoice.financialYear.endYear,
   invoiceNumber: invoice.invoiceNumber || null,
-  isCredit: isNull(invoice.netTotal) ? null : invoice.netTotal < 0,
+  isCredit: invoice.netTotal === null ? null : invoice.netTotal < 0,
   isDeMinimis: invoice.isDeMinimis,
   netAmount: invoice.netTotal,
   invoiceValue: invoice.invoiceValue,

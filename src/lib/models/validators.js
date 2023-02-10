@@ -1,6 +1,5 @@
 'use strict'
 
-const { isArray } = require('lodash')
 const hoek = require('@hapi/hoek')
 const Joi = require('joi')
 
@@ -34,14 +33,14 @@ const VALID_OBJECT = Joi.object()
 const VALID_ARRAY = Joi.array()
 
 const assertIsArrayOfType = (values, Type) => {
-  hoek.assert(isArray(values), 'Array expected')
+  hoek.assert(Array.isArray(values), 'Array expected')
   values.forEach((value, i) =>
     hoek.assert(value instanceof Type, `${new Type().constructor.name} expected at position ${i}`)
   )
 }
 
 const assertIsArrayOfNullableStrings = (values) => {
-  hoek.assert(isArray(values), 'Array expected')
+  hoek.assert(Array.isArray(values), 'Array expected')
   values.forEach((value, i) =>
     hoek.assert(typeof value === 'string' || value === null, `String expected at position ${i}`)
   )

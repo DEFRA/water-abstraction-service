@@ -1,7 +1,6 @@
 'use strict'
 
 const Hapi = require('@hapi/hapi')
-const { cloneDeep } = require('lodash')
 
 const { expect } = require('@hapi/code')
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script()
@@ -22,7 +21,7 @@ const controller = require('../../../src/modules/contacts/controller')
 const getServer = route => {
   const server = Hapi.server({ port: 80 })
 
-  const testRoute = cloneDeep(route)
+  const testRoute = { ...route }
   testRoute.handler = (req, h) => h.response('Test handler').code(200)
   testRoute.config.pre = []
   server.route(testRoute)

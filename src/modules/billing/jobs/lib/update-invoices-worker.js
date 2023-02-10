@@ -1,5 +1,7 @@
+'use strict'
+
 const Bluebird = require('bluebird')
-const { isNull, difference } = require('lodash')
+const { difference } = require('lodash')
 
 // Models
 const Transaction = require('../../../../lib/models/transaction')
@@ -20,7 +22,7 @@ const { logger } = require('../../../../logger')
 const getCustomerFinancialYearKey = (invoiceAccountNumber, financialYearEnding) =>
   `${invoiceAccountNumber}_${financialYearEnding}`
 
-const getWRLSInvoiceKey = invoice => isNull(invoice.rebillingState)
+const getWRLSInvoiceKey = invoice => invoice?.rebillingState === null
   ? getCustomerFinancialYearKey(invoice.invoiceAccount.accountNumber, invoice.financialYear.endYear)
   : invoice.externalId
 

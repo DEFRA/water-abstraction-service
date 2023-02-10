@@ -1,7 +1,6 @@
 'use strict'
 
 const moment = require('moment')
-const { isString } = require('lodash')
 const { assertIsoString } = require('./models/validators')
 
 const DATE_FORMAT = 'YYYY-MM-DD'
@@ -30,7 +29,7 @@ const getDateTimeFromValue = value => {
     return value
   }
 
-  if (isString(value)) {
+  if (typeof value === 'string') {
     assertIsoString(value)
     return moment(value)
   }

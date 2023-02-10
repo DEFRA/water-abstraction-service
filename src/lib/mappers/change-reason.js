@@ -1,5 +1,6 @@
+'use strict'
+
 const ChangeReason = require('../models/change-reason')
-const { isEmpty } = require('lodash')
 const { createMapper } = require('../object-mapper')
 const { createModel } = require('./lib/helpers')
 
@@ -9,9 +10,10 @@ const { createModel } = require('./lib/helpers')
  * @return {Contact}
  */
 const dbToModel = row => {
-  if (isEmpty(row)) {
+  if (!row || Object.keys(row).length === 0) {
     return null
   }
+
   const model = new ChangeReason(row.changeReasonId)
   return model.pickFrom(row, [
     'description',

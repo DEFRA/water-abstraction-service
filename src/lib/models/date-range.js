@@ -1,7 +1,5 @@
 'use strict'
 
-const { isNull } = require('lodash')
-
 const MomentRange = require('moment-range')
 const moment = MomentRange.extendMoment(require('moment'))
 
@@ -89,7 +87,7 @@ class DateRange {
    */
   get days () {
     // If open-ended range, not possible to get days in range
-    if (isNull(this.endDate)) {
+    if (this?.endDate === null) {
       return undefined
     }
 

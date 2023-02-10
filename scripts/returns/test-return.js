@@ -1,7 +1,5 @@
 'use strict'
 
-const { cloneDeep } = require('lodash')
-
 const waterHelpers = require('@envage/water-abstraction-helpers')
 
 const startDate = '2018-11-01'
@@ -30,7 +28,7 @@ const createTestReturnId = existingReturn => {
 const create = existingReturn => {
   const returnId = createTestReturnId(existingReturn, startDate, endDate)
 
-  const testReturn = cloneDeep(existingReturn)
+  const testReturn = { ...existingReturn }
 
   testReturn.return_id = returnId
   testReturn.status = 'due'

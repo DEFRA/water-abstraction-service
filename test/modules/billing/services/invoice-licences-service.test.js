@@ -5,11 +5,12 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
+const Hoek = require('@hapi/hoek')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 const { v4: uuid } = require('uuid')
 
-const { set, cloneDeep } = require('lodash')
+const { set } = require('lodash')
 const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service')
 const batchService = require('../../../../src/modules/billing/services/batch-service')
 const licencesService = require('../../../../src/lib/services/licences')
@@ -266,7 +267,7 @@ experiment('modules/billing/services/invoice-licences-service', () => {
     experiment('when the batch is not ready', () => {
       beforeEach(async () => {
         const billingInvoiceLicenceUnreadyBatch = set(
-          cloneDeep(billingInvoiceLicence),
+          Hoek.clone(billingInvoiceLicence),
           'billingInvoice.billingBatch.status',
           Batch.BATCH_STATUS.processing
         )
@@ -285,7 +286,7 @@ experiment('modules/billing/services/invoice-licences-service', () => {
     experiment('when the invoice is a rebilling invoice', () => {
       beforeEach(async () => {
         const billingInvoiceLicenceRebilling = set(
-          cloneDeep(billingInvoiceLicence),
+          Hoek.clone(billingInvoiceLicence),
           'billingInvoice.rebillingState',
           'rebilling'
         )

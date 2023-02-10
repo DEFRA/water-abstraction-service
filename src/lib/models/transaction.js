@@ -1,6 +1,6 @@
 'use strict'
 
-const { isNull, identity } = require('lodash')
+const { identity } = require('lodash')
 const { titleCase } = require('title-case')
 
 const Model = require('./model')
@@ -212,7 +212,7 @@ class Transaction extends Model {
 
   set volume (volume) {
     validators.assertNullableQuantity(volume)
-    if (isNull(volume)) {
+    if (volume === null) {
       this._volume = volume
     } else {
       /* Important note
