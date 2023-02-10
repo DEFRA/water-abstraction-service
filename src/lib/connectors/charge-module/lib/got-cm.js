@@ -73,7 +73,18 @@ const afterResponseHook = async (response, retryWithMergedOptions) => {
  */
 const instance = gotWithProxy.extend({
   prefixUrl: config.chargeModule.host,
-  retries: 3,
+  // Got has a built in retry mechanism. We have found though you have to be careful with what gets retried. Our
+  // preference is to only retry in the event of a timeout on assumption the destination server might be busy but has
+  // a chance to succeed when attempted again
+  retry: {
+    // We ensure that the only network errors Got retries are timeout errors
+    errorCodes: ['ETIMEDOUT'],
+    // By default, Got does not retry POST requests. As we only retry timeouts there is no risk in retrying POST
+    // requests. So, we set methods to be Got's defaults plus 'POST'
+    methods: ['GET', 'POST', 'PUT', 'HEAD', 'DELETE', 'OPTIONS', 'TRACE'],
+    // The only status code we want to retry is 401 Unauthorized. We do not believe there is value in retrying others
+    statusCodes: [401]
+  },
   hooks: {
     beforeRequest: [beforeRequestHook],
     afterResponse: [afterResponseHook]
