@@ -66,13 +66,26 @@ const afterResponseHook = async (response, retryWithMergedOptions) => {
 }
 
 /**
- * Creates a got instance which is further extended to include:
+ * Creates an extended Got instance
  *
- * - fetching of access token
+ * The Got default options are updated to include:
+ *
  * - prefixUrl set to the CM API base URL
+ * - JSON response types (all the CM APIs have JSON responses)
+ * - how long to try before timing out the request
+ * - Resolve with the response body only - this helps make the API more compatible with request which was
+ *   used previously
+ *
+ * We also add 2 hooks; beforeRequest() to handle applying the auth header and token and afterResponse() to handle
+ * logging errors and force a token refresh on a 401 Unauthorized response.
  */
 const instance = gotWithProxy.extend({
   prefixUrl: config.chargeModule.host,
+  responseType: 'json',
+  resolveBodyOnly: true,
+  timeout: {
+    request: 10000
+  },
   // Got has a built in retry mechanism. We have found though you have to be careful with what gets retried. Our
   // preference is to only retry in the event of a timeout on assumption the destination server might be busy but has
   // a chance to succeed when attempted again
