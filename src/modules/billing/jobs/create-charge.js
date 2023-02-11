@@ -7,14 +7,12 @@ const JOB_NAME = 'billing.create-charge'
 const batchService = require('../services/batch-service')
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch')
 const batchJob = require('./lib/batch-job')
-const helpers = require('./lib/helpers')
 const transactionsService = require('../services/transactions-service')
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs')
 const batchMapper = require('../mappers/batch')
 const Transaction = require('../../../lib/models/transaction')
 const { jobName: refreshTotalsJobName } = require('./refresh-totals')
 const config = require('../../../../config')
-const { logger } = require('../../../logger')
 
 const workerOptions = {
   concurrency: config.billing.createChargeJobConcurrency
@@ -116,21 +114,7 @@ const onComplete = async (job, queueManager) => {
 }
 
 const onFailedHandler = async (job, err) => {
-  const batchId = job.data.batchId
-  const transactionId = job.data.billingBatchTransactionId
-
-  // On final attempt, error the batch and log
-  if (helpers.isFinalAttempt(job)) {
-    try {
-      logger.error(`Transaction with id ${transactionId} not generated in CM after ${job.attemptsMade} attempts, marking batch as errored ${batchId}`)
-      await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToCreateCharge)
-    } catch (error) {
-      logger.error(`Unable to set batch status ${batchId}`, error.stack)
-    }
-  } else {
-    // Do normal error logging
-    helpers.onFailedHandler(job, err)
-  }
+  await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToCreateCharge)
 }
 
 exports.handler = handler
