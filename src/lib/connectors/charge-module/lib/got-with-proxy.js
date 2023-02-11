@@ -22,20 +22,13 @@ const beforeRequestHook = options => {
 }
 
 /**
- * Creates a got instance which is extended to include:
+ * Creates an extended Got instance
+ *
+ * The Got default options are updated to include:
  *
  * - proxy settings to work on AWS environments
- * - JSON response types (all the CM APIs have JSON responses)
- * - how long to try before timing out the request
- * - to resolve with the response body only - this helps make the API
- *   more compatible with request which was used previously
  */
 const gotWithProxy = got.extend({
-  responseType: 'json',
-  resolveBodyOnly: true,
-  timeout: {
-    request: 5000
-  },
   hooks: {
     beforeRequest: [beforeRequestHook]
   }
