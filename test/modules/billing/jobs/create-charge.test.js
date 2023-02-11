@@ -305,50 +305,28 @@ experiment('modules/billing/jobs/create-charge', () => {
       })
     })
 
-    experiment('when there is 4xx error in the charge module', () => {
+    experiment('when the request to the Charging Module errors', () => {
       const err = new Error('Test error')
-      err.statusCode = 422
 
       beforeEach(async () => {
         chargeModuleBillRunConnector.addTransaction.rejects(err)
-        await createChargeJob.handler(job)
       })
 
       test('sets the transaction status to error', async () => {
+        await expect(createChargeJob.handler(job)).to.reject()
+
         const [id] = transactionService.setErrorStatus.lastCall.args
         expect(id).to.equal(data.transaction.billing_transaction_id)
       })
 
       test('the error is logged', async () => {
-        expect(batchJob.logHandlingError.calledWith(
-          job, err
-        )).to.be.true()
+        await expect(createChargeJob.handler(job)).to.reject()
+        expect(batchJob.logHandlingError.calledWith(job, err)).to.be.true()
       })
 
       test('the batch status is not set to "error"', async () => {
+        await expect(createChargeJob.handler(job)).to.reject()
         expect(batchService.setErrorStatus.called).to.be.false()
-      })
-    })
-
-    experiment('when there is a 5xx error', () => {
-      const err = new Error('Test error')
-      err.statusCode = 500
-      let error
-
-      beforeEach(async () => {
-        chargeModuleBillRunConnector.addTransaction.rejects(err)
-        const func = () => createChargeJob.handler(job)
-        error = await expect(func()).to.reject()
-      })
-
-      test('the error is not logged because this is done by the failed handler', async () => {
-        expect(batchJob.logHandlingError.calledWith(
-          job, err
-        )).to.be.true()
-      })
-
-      test('throws an error to go to the retry handler', async () => {
-        expect(error.message).to.equal('Test error')
       })
     })
   })
