@@ -101,7 +101,7 @@ const onComplete = async (job, queueManager) => {
 }
 
 const onFailedHandler = async (job, err) => {
-  await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToCreateCharge)
+  batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToCreateCharge)
 }
 
 exports.handler = handler
