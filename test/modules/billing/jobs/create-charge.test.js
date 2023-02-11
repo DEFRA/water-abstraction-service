@@ -425,47 +425,20 @@ experiment('modules/billing/jobs/create-charge', () => {
   })
 
   experiment('.onFailedHandler', () => {
-    let job
+    const job = {
+      data: {
+        batchId,
+        billingBatchTransactionId: '91615f88-6459-4ca1-9a01-5b6890ff4002'
+      }
+    }
     const err = new Error('oops')
 
-    experiment('when the attempt to create the charge in the CM failed but is not the final one', () => {
-      beforeEach(async () => {
-        job = {
-          data: {
-            batchId,
-            billingBatchTransactionId: await uuid()
-          },
-          attemptsMade: 5,
-          opts: {
-            attempts: 10
-          }
-        }
+    experiment('when the attempt to create the charge in the CM failed', () => {
+      test('the batch status is updated to errored', async () => {
         await createChargeJob.onFailed(job, err)
-      })
 
-      test('the batch is not updated', async () => {
-        expect(batchService.setErrorStatus.called).to.be.false()
-      })
-    })
-
-    experiment('on the final attempt to create the charge in the CM', () => {
-      beforeEach(async () => {
-        job = {
-          data: {
-            batchId,
-            billingBatchTransactionId: await uuid()
-          },
-          attemptsMade: 10,
-          opts: {
-            attempts: 10
-          }
-        }
-        await createChargeJob.onFailed(job, err)
-      })
-
-      test('the batch is not updated', async () => {
-        expect(batchService.setErrorStatus.calledWith(
-          job.data.batchId, BATCH_ERROR_CODE.failedToCreateCharge
+        expect(batchJob.logHandlingErrorAndSetBatchStatus.calledWith(
+          job, err, BATCH_ERROR_CODE.failedToCreateCharge
         )).to.be.true()
       })
     })
