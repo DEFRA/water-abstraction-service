@@ -27,12 +27,7 @@ const createMessage = (batchId, billingBatchTransactionId) => ([
     billingBatchTransactionId
   },
   {
-    jobId: `${JOB_NAME}.${batchId}.${billingBatchTransactionId}`,
-    attempts: 6,
-    backoff: {
-      type: 'exponential',
-      delay: 5000
-    }
+    jobId: `${JOB_NAME}.${batchId}.${billingBatchTransactionId}`
   }
 ])
 
