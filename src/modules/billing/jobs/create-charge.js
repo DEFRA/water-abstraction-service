@@ -1,7 +1,5 @@
 'use strict'
 
-const { inRange } = require('lodash')
-
 const JOB_NAME = 'billing.create-charge'
 
 const batchService = require('../services/batch-service')
@@ -28,15 +26,6 @@ const createMessage = (batchId, billingBatchTransactionId) => ([
     jobId: `${JOB_NAME}.${batchId}.${billingBatchTransactionId}`
   }
 ])
-
-const getStatus = err => err.statusCode ?? 0
-
-/**
- * Checks if the error is an HTTP client error (in range 400 - 499)
- * @param {Error} err
- * @return {Boolean}
- */
-const isClientError = err => inRange(getStatus(err), 400, 500)
 
 const updateBatchState = async batchId => {
   const statuses = await batchService.getTransactionStatusCounts(batchId)
@@ -87,12 +76,10 @@ const handler = async job => {
   } catch (err) {
     batchJob.logHandlingError(job, err)
 
-    // if error code >= 400 and < 500 set transaction status to error and continue
-    if (isClientError(err)) {
-      await transactionsService.setErrorStatus(transactionId)
-      return updateBatchState(batchId)
-    }
-    // throw error to retry
+    await transactionsService.setErrorStatus(transactionId)
+
+    // The exceptions thrown in a processor must be an Error object for BullMQ to work correctly.
+    // The onFailedHandler will only be called if we throw an Error
     throw err
   }
 }
