@@ -1,7 +1,5 @@
 'use strict'
 
-const got = require('got')
-
 const config = require('../../../../../config.js')
 const { logger } = require('../../../../logger.js')
 
@@ -12,27 +10,29 @@ const AccessTokenManager = require('./AccessTokenManager')
 const accessTokenManager = new AccessTokenManager()
 
 /**
- * This hook occurs before the request is made in the lifecycle.
- * It checks if the access token appears to be valid, and if not,
- * requests a new one.
+ * Apply the Charging Module 'authorization' header to the request
  *
- * It then updates the default Authorization header for future
- * requests.
+ * This hook occurs before the request is made in the lifecycle. It uses our `AccessTokenManager` instance to get the
+ * AWS Cognito JWT needed to authenticate with the Charging Module and then uses it to update the Got options
+ * with an 'authorization' header.
  *
- * @param {Object} options - got request options
+ * @param {Object} options The current got request options
  */
-const beforeRequestHook = async () => {
-  if (!accessTokenManager.isTokenValid()) {
-    logger.info('Fetching a new Cognito token')
-    // Save for further requests
-    const accessToken = await accessTokenManager.refreshAccessToken()
-    instance.defaults.options.headers.Authorization = `Bearer ${accessToken}`
+const beforeRequestHook = async (options) => {
+  const token = await accessTokenManager.token()
+
+  options.headers = {
+    authorization: `Bearer ${token}`
   }
 }
 
 /**
- * This hook occurs after the request is made in the lifecycle.
- * It checks if the request failed with a 401 (unauthorized), and
+ * Log errors with responses and retry those failed because of 401 (unauthorized)
+ *
+ * This hook occurs after the request is made in the lifecycle. Any response with a status code of 400 or greater is
+ * logged as an error.
+ *
+ * In the case of a 401 (unauthorized), it forces a refresh of the Charging Module Auth token and tries again
  * if so, it fetches a new access token and retries the request.
  *
  * It also updates the default Authorization header for future
@@ -46,16 +46,13 @@ const afterResponseHook = async (response, retryWithMergedOptions) => {
   }
 
   if (response.statusCode === 401) { // Unauthorized
-    // Refresh the access token
-    const accessToken = await accessTokenManager.refreshAccessToken()
+    // Force a refresh of access token
+    const token = await accessTokenManager.token(true)
     const updatedOptions = {
       headers: {
-        Authorization: `Bearer ${accessToken}`
+        authorization: `Bearer ${token}`
       }
     }
-
-    // Save for further requests
-    instance.defaults.options = got.mergeOptions(instance.defaults.options, updatedOptions)
 
     // Make a new retry
     return retryWithMergedOptions(updatedOptions)
