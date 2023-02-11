@@ -158,11 +158,6 @@ experiment('modules/billing/jobs/create-charge', () => {
           billingBatchTransactionId: transactionId
         },
         {
-          attempts: 6,
-          backoff: {
-            type: 'exponential',
-            delay: 5000
-          },
           jobId: `billing.create-charge.${batchId}.${transactionId}`
         }
       ])
@@ -310,50 +305,28 @@ experiment('modules/billing/jobs/create-charge', () => {
       })
     })
 
-    experiment('when there is 4xx error in the charge module', () => {
+    experiment('when the request to the Charging Module errors', () => {
       const err = new Error('Test error')
-      err.statusCode = 422
 
       beforeEach(async () => {
         chargeModuleBillRunConnector.addTransaction.rejects(err)
-        await createChargeJob.handler(job)
       })
 
       test('sets the transaction status to error', async () => {
+        await expect(createChargeJob.handler(job)).to.reject()
+
         const [id] = transactionService.setErrorStatus.lastCall.args
         expect(id).to.equal(data.transaction.billing_transaction_id)
       })
 
       test('the error is logged', async () => {
-        expect(batchJob.logHandlingError.calledWith(
-          job, err
-        )).to.be.true()
+        await expect(createChargeJob.handler(job)).to.reject()
+        expect(batchJob.logHandlingError.calledWith(job, err)).to.be.true()
       })
 
       test('the batch status is not set to "error"', async () => {
+        await expect(createChargeJob.handler(job)).to.reject()
         expect(batchService.setErrorStatus.called).to.be.false()
-      })
-    })
-
-    experiment('when there is a 5xx error', () => {
-      const err = new Error('Test error')
-      err.statusCode = 500
-      let error
-
-      beforeEach(async () => {
-        chargeModuleBillRunConnector.addTransaction.rejects(err)
-        const func = () => createChargeJob.handler(job)
-        error = await expect(func()).to.reject()
-      })
-
-      test('the error is not logged because this is done by the failed handler', async () => {
-        expect(batchJob.logHandlingError.calledWith(
-          job, err
-        )).to.be.true()
-      })
-
-      test('throws an error to go to the retry handler', async () => {
-        expect(error.message).to.equal('Test error')
       })
     })
   })
@@ -430,47 +403,20 @@ experiment('modules/billing/jobs/create-charge', () => {
   })
 
   experiment('.onFailedHandler', () => {
-    let job
+    const job = {
+      data: {
+        batchId,
+        billingBatchTransactionId: '91615f88-6459-4ca1-9a01-5b6890ff4002'
+      }
+    }
     const err = new Error('oops')
 
-    experiment('when the attempt to create the charge in the CM failed but is not the final one', () => {
-      beforeEach(async () => {
-        job = {
-          data: {
-            batchId,
-            billingBatchTransactionId: await uuid()
-          },
-          attemptsMade: 5,
-          opts: {
-            attempts: 10
-          }
-        }
+    experiment('when the attempt to create the charge in the CM failed', () => {
+      test('the batch status is updated to errored', async () => {
         await createChargeJob.onFailed(job, err)
-      })
 
-      test('the batch is not updated', async () => {
-        expect(batchService.setErrorStatus.called).to.be.false()
-      })
-    })
-
-    experiment('on the final attempt to create the charge in the CM', () => {
-      beforeEach(async () => {
-        job = {
-          data: {
-            batchId,
-            billingBatchTransactionId: await uuid()
-          },
-          attemptsMade: 10,
-          opts: {
-            attempts: 10
-          }
-        }
-        await createChargeJob.onFailed(job, err)
-      })
-
-      test('the batch is not updated', async () => {
-        expect(batchService.setErrorStatus.calledWith(
-          job.data.batchId, BATCH_ERROR_CODE.failedToCreateCharge
+        expect(batchJob.logHandlingErrorAndSetBatchStatus.calledWith(
+          job, err, BATCH_ERROR_CODE.failedToCreateCharge
         )).to.be.true()
       })
     })
