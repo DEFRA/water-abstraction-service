@@ -158,11 +158,6 @@ experiment('modules/billing/jobs/create-charge', () => {
           billingBatchTransactionId: transactionId
         },
         {
-          attempts: 6,
-          backoff: {
-            type: 'exponential',
-            delay: 5000
-          },
           jobId: `billing.create-charge.${batchId}.${transactionId}`
         }
       ])
