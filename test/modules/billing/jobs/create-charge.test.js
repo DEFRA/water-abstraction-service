@@ -9,7 +9,6 @@ const {
 
 const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
-const { v4: uuid } = require('uuid')
 
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job')
 const createChargeJob = require('../../../../src/modules/billing/jobs/create-charge')
@@ -29,9 +28,9 @@ const InvoiceLicence = require('../../../../src/lib/models/invoice-licence')
 const Invoice = require('../../../../src/lib/models/invoice')
 const Transaction = require('../../../../src/lib/models/transaction')
 
-const transactionId = uuid()
-const batchId = uuid()
-const chargeModuleBillRunId = uuid()
+const transactionId = 'fef6bc45-ffba-48a9-8fa0-456ac51d6f3a'
+const batchId = '7eb70e4a-a5b0-4509-ae86-14a4cf55fe82'
+const chargeModuleBillRunId = 'dac89570-7f44-4f94-b2fb-4722f2fecce0'
 
 const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch')
 
