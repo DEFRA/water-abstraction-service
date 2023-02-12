@@ -16,11 +16,12 @@ const workerOptions = {
   concurrency: config.billing.createChargeJobConcurrency
 }
 
-const createMessage = (batchId, billingBatchTransactionId) => ([
+const createMessage = (batchId, billingBatchTransactionId, lastOfUs) => ([
   JOB_NAME,
   {
     batchId,
-    billingBatchTransactionId
+    billingBatchTransactionId,
+    lastOfUs
   },
   {
     jobId: `${JOB_NAME}.${batchId}.${billingBatchTransactionId}`

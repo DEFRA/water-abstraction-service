@@ -147,14 +147,14 @@ experiment('modules/billing/jobs/create-charge', () => {
     test('creates the expected message array', async () => {
       const message = createChargeJob.createMessage(
         batchId,
-        transactionId
+        transactionId,
       )
 
       expect(message).to.equal([
         'billing.create-charge',
         {
           batchId,
-          billingBatchTransactionId: transactionId
+          billingBatchTransactionId: transactionId,
         },
         {
           jobId: `billing.create-charge.${batchId}.${transactionId}`
