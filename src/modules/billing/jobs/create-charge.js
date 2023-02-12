@@ -28,26 +28,11 @@ const createMessage = (batchId, billingBatchTransactionId, lastOfUs) => ([
   }
 ])
 
-const updateBatchState = async batchId => {
-  const statuses = await batchService.getTransactionStatusCounts(batchId)
-
-  const candidate = statuses[Transaction.statuses.candidate] ?? 0
-  const isReady = candidate === 0
-
-  if (isReady) {
-    // Clean up batch
-    await batchService.cleanup(batchId)
-  }
-
-  return isReady
-}
-
 const getTransactionStatus = batch => batch.invoices?.[0].invoiceLicences[0].transactions[0].status
 
 const handler = async job => {
   batchJob.logHandling(job)
   const transactionId = job.data.billingBatchTransactionId
-  const batchId = job.data.batchId
 
   // Create batch model from loaded data
   // the batch contains all lower level related objects for pre-sroc
@@ -59,7 +44,7 @@ const handler = async job => {
     // Skip CM call if transaction is already processed
     const status = getTransactionStatus(batch) || batch.status
     if (status !== Transaction.statuses.candidate) {
-      return await updateBatchState(batchId)
+      return
     }
 
     // Map data to charge module transaction
@@ -71,9 +56,6 @@ const handler = async job => {
 
     // Update/remove our local transaction in water.billing_transactions
     await transactionsService.updateWithChargeModuleResponse(transactionId, response)
-
-    // Note: the await is needed to ensure any error is handled here
-    return await updateBatchState(batchId)
   } catch (err) {
     batchJob.logHandlingError(job, err)
 
@@ -90,10 +72,12 @@ const onComplete = async (job, queueManager) => {
 
   try {
     const { batchId } = job.data
-    const isReady = job.returnvalue
 
-    if (isReady) {
+    if (job.data.lastOfUs) {
+      batchJob.logInfo(job, 'Finished last create-charge. Now cleaning up and queuing refresh-totals')
       await batchService.requestCMBatchGeneration(batchId)
+
+      await batchService.cleanup(batchId)
       await queueManager.add(refreshTotalsJobName, batchId)
     }
   } catch (err) {

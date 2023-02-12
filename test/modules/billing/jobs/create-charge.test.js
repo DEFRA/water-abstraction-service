@@ -101,6 +101,7 @@ experiment('modules/billing/jobs/create-charge', () => {
 
   beforeEach(async () => {
     sandbox.stub(batchJob, 'logHandling')
+    sandbox.stub(batchJob, 'logInfo')
     sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus')
     sandbox.stub(batchJob, 'logHandlingError')
     sandbox.stub(batchJob, 'logOnComplete')
@@ -148,6 +149,7 @@ experiment('modules/billing/jobs/create-charge', () => {
       const message = createChargeJob.createMessage(
         batchId,
         transactionId,
+        false
       )
 
       expect(message).to.equal([
@@ -155,6 +157,7 @@ experiment('modules/billing/jobs/create-charge', () => {
         {
           batchId,
           billingBatchTransactionId: transactionId,
+          lastOfUs: false
         },
         {
           jobId: `billing.create-charge.${batchId}.${transactionId}`
@@ -164,20 +167,21 @@ experiment('modules/billing/jobs/create-charge', () => {
   })
 
   experiment('.handler', () => {
-    let result, job
+    let job
 
     beforeEach(async () => {
       job = {
         data: {
           batchId,
-          billingBatchTransactionId: transactionId
+          billingBatchTransactionId: transactionId,
+          lastOfUs: false
         }
       }
     })
 
     experiment('when there is no error', () => {
       beforeEach(async () => {
-        result = await createChargeJob.handler(job)
+        await createChargeJob.handler(job)
       })
 
       test('the transaction is loaded within the context of its batch', async () => {
@@ -201,18 +205,8 @@ experiment('modules/billing/jobs/create-charge', () => {
         expect(response).to.equal(data.chargeModuleResponse)
       })
 
-      test('the batchService.cleanup method is called', async () => {
-        expect(batchService.cleanup.calledWith(
-          batchId
-        )).to.be.true()
-      })
-
       test('the batch status is not changed', async () => {
         expect(batchService.setStatus.called).to.be.false()
-      })
-
-      test('resolves with boolean to indicate if batch ready', async () => {
-        expect(result).to.equal(true)
       })
     })
 
@@ -221,7 +215,7 @@ experiment('modules/billing/jobs/create-charge', () => {
         batch = createBatch()
         batch.invoices[0].invoiceLicences[0].transactions[0].status = Transaction.statuses.chargeCreated
         transactionService.getById.resolves(batch)
-        result = await createChargeJob.handler(job)
+        await createChargeJob.handler(job)
       })
 
       test('the transaction is loaded within the context of its batch', async () => {
@@ -234,20 +228,6 @@ experiment('modules/billing/jobs/create-charge', () => {
 
       test('the transaction is never updated', async () => {
         expect(transactionService.updateWithChargeModuleResponse.called).to.be.false()
-      })
-
-      test('the batchService.cleanup method is called', async () => {
-        expect(batchService.cleanup.calledWith(
-          batchId
-        )).to.be.true()
-      })
-
-      test('the batch status is not changed', async () => {
-        expect(batchService.setStatus.called).to.be.false()
-      })
-
-      test('resolves with boolean to indicate if batch ready', async () => {
-        expect(result).to.equal(true)
       })
     })
 
@@ -266,7 +246,7 @@ experiment('modules/billing/jobs/create-charge', () => {
         }
         batch.status = Transaction.statuses.candidate
         transactionService.getById.resolves(batch)
-        result = await createChargeJob.handler(job)
+        await createChargeJob.handler(job)
       })
 
       test('the transaction is loaded within the context of its batch', async () => {
@@ -281,26 +261,6 @@ experiment('modules/billing/jobs/create-charge', () => {
 
       test('the transaction is never updated', async () => {
         expect(transactionService.updateWithChargeModuleResponse.called).to.be.true()
-      })
-    })
-
-    experiment('when there is an empty batch', () => {
-      beforeEach(async () => {
-        batchService.getTransactionStatusCounts.resolves({
-          charge_created: 0,
-          candidate: 0
-        })
-        result = await createChargeJob.handler(job)
-      })
-
-      test('the batchService.cleanup method is called', async () => {
-        expect(batchService.cleanup.calledWith(
-          batchId
-        )).to.be.true()
-      })
-
-      test('resolves with boolean to indicate batch is ready', async () => {
-        expect(result).to.equal(true)
       })
     })
 
@@ -331,13 +291,13 @@ experiment('modules/billing/jobs/create-charge', () => {
   })
 
   experiment('.onComplete', () => {
-    experiment('when a batch is not ready', () => {
+    experiment('when it is not the last of the create charge jobs', () => {
       beforeEach(async () => {
         const job = {
           data: {
-            batchId
-          },
-          returnvalue: false
+            batchId,
+            lastOfUs: false
+          }
         }
         await createChargeJob.onComplete(job, queueManager)
       })
@@ -355,13 +315,13 @@ experiment('modules/billing/jobs/create-charge', () => {
       })
     })
 
-    experiment('when a batch is ready', () => {
+    experiment('when it is the last of the create charge jobs', () => {
       beforeEach(async () => {
         const job = {
           data: {
-            batchId
-          },
-          returnvalue: true
+            batchId,
+            lastOfUs: true
+          }
         }
         await createChargeJob.onComplete(job, queueManager)
       })
@@ -370,21 +330,20 @@ experiment('modules/billing/jobs/create-charge', () => {
         expect(batchService.requestCMBatchGeneration.called).to.be.true()
       })
 
+      test('the batchService.cleanup method is called', async () => {
+        expect(batchService.cleanup.calledWith(batchId)).to.be.true()
+      })
+
       test('the next job is published', async () => {
-        expect(queueManager.add.calledWith(
-          'billing.refresh-totals', batchId
-        )).to.be.true()
+        expect(queueManager.add.calledWith('billing.refresh-totals', batchId)).to.be.true()
       })
     })
 
     experiment('when there is an error', () => {
       const job = {
         data: {
-          batchId
-        },
-        returnvalue: {
-          isReady: true,
-          isEmptyBatch: false
+          batchId,
+          lastOfUs: true
         }
       }
 
