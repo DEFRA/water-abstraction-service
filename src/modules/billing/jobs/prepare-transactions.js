@@ -1,7 +1,6 @@
 'use strict'
 
 const { partial } = require('lodash')
-const bluebird = require('bluebird')
 
 const JOB_NAME = 'billing.prepare-transactions'
 
@@ -80,10 +79,10 @@ const onComplete = async (job, queueManager) => {
       }
     } else {
       logger.info(`${billingTransactionIds.length} transactions produced for batch ${batchId} - creating charges`)
-      await bluebird.mapSeries(
-        billingTransactionIds,
-        billingTransactionId => queueManager.add(createChargeJobName, batchId, billingTransactionId)
-      )
+      for (let i = 0; i < billingTransactionIds.length; i++) {
+        const lastOfUs = i + 1 === billingTransactionIds.length
+        await queueManager.add(createChargeJobName, batchId, billingTransactionIds[i], lastOfUs)
+      }
     }
   } catch (err) {
     batchJob.logOnCompleteError(job, err)
