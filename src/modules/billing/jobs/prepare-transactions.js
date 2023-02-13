@@ -1,7 +1,6 @@
 'use strict'
 
 const { partial } = require('lodash')
-const bluebird = require('bluebird')
 
 const JOB_NAME = 'billing.prepare-transactions'
 
@@ -13,7 +12,6 @@ const { jobName: createChargeJobName } = require('./create-charge')
 const { jobName: refreshTotalsJobName } = require('./refresh-totals')
 
 const config = require('../../../../config')
-const { logger } = require('../../../logger')
 const supplementaryBillingService = require('../services/supplementary-billing-service')
 const licenceService = require('../services/licences-service')
 
@@ -39,7 +37,7 @@ const handler = async job => {
 
     // Supplementary processing handles credits/charges
     if (batch.isSupplementary()) {
-      logger.info(`Processing supplementary transactions ${job.name}`)
+      batchJob.logInfo(job, 'Processing supplementary transactions')
       await supplementaryBillingService.processBatch(batch.id)
     }
 
@@ -53,7 +51,7 @@ const handler = async job => {
       billingTransactionIds
     }
   } catch (err) {
-    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToPrepareTransactions)
+    batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToPrepareTransactions)
     throw err
   }
 }
@@ -65,25 +63,29 @@ const onComplete = async (job, queueManager) => {
 
     // If there's nothing to process, skip to cm refresh
     if (billingTransactionIds.length === 0) {
-      logger.info(`No transactions left to process for batch ${batchId}. Requesting CM batch generation...`)
+      batchJob.logInfo(job, `No transactions left to process for batch ${batchId}. Requesting CM batch generation...`)
 
       const numberOfTransactionsInBatch = await billingTransactionsRepo.findByBatchId(batchId)
 
       if (numberOfTransactionsInBatch.length === 0) {
-        logger.info(`Batch ${batchId} is empty - WRLS will mark is as Empty, and will not ask the Charging module to generate it.`)
+        batchJob.logInfo(job, `Batch ${batchId} is empty - do not request Charging module generate.`)
         await billingBatchesRepo.update(batchId, { status: BATCH_STATUS.empty })
         // Set "IncludeInSupplementaryBillingStatus" to 'no' for all licences in this batch
         await licenceService.updateIncludeInSupplementaryBillingStatusForEmptyBatch(batchId)
       } else {
+        batchJob.logInfo(job, `Batch ${batchId} not empty - requesting Charging module generate.`)
         await batchService.requestCMBatchGeneration(batchId)
         await queueManager.add(refreshTotalsJobName, batchId)
       }
     } else {
-      logger.info(`${billingTransactionIds.length} transactions produced for batch ${batchId} - creating charges`)
-      await bluebird.mapSeries(
-        billingTransactionIds,
-        billingTransactionId => queueManager.add(createChargeJobName, batchId, billingTransactionId)
+      batchJob.logInfo(
+        job,
+        `${billingTransactionIds.length} transactions produced for batch ${batchId} - creating charges`
       )
+      for (let i = 0; i < billingTransactionIds.length; i++) {
+        const lastOfUs = i + 1 === billingTransactionIds.length
+        await queueManager.add(createChargeJobName, batchId, billingTransactionIds[i], lastOfUs)
+      }
     }
   } catch (err) {
     batchJob.logOnCompleteError(job, err)

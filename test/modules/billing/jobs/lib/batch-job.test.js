@@ -43,6 +43,23 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
     })
   })
 
+  experiment('.logInfo', () => {
+    let job
+
+    beforeEach(async () => {
+      job = {
+        id: 'test-job-id'
+      }
+    })
+
+    test('create the expected message', async () => {
+      batchJob.logInfo(job, 'Is it safe?')
+
+      const [message] = logger.info.lastCall.args
+      expect(message).to.equal('Info: test-job-id - Is it safe?')
+    })
+  })
+
   experiment('.logHandlingError', () => {
     let job
     let error

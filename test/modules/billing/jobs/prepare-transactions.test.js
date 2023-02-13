@@ -193,11 +193,17 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
 
       test('adds a message to the queue for every transaction', async () => {
         expect(queueManager.add.callCount).to.equal(2)
+      })
+
+      test('the message for the first job is not flagged as the last one', async () => {
         expect(queueManager.add.firstCall.calledWith(
-          'billing.create-charge', BATCH_ID, data.transactions[0].billingTransactionId
+          'billing.create-charge', BATCH_ID, data.transactions[0].billingTransactionId, false
         )).to.be.true()
+      })
+
+      test('the message for the (second) last job is flagged as the last one', async () => {
         expect(queueManager.add.secondCall.calledWith(
-          'billing.create-charge', BATCH_ID, data.transactions[1].billingTransactionId
+          'billing.create-charge', BATCH_ID, data.transactions[1].billingTransactionId, true
         )).to.be.true()
       })
 
@@ -207,10 +213,9 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
     })
 
     experiment('when there is an error', () => {
-      let err
+      const err = new Error('oops')
 
       beforeEach(async () => {
-        err = new Error('oops')
         queueManager.add.rejects(err)
         await prepareTransactions.onComplete(job, queueManager)
       })

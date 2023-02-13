@@ -7,6 +7,10 @@ const logHandling = job => {
   logger.info(`Handling: ${job.id}`)
 }
 
+const logInfo = (job, msg) => {
+  logger.info(`Info: ${job.id} - ${msg}`)
+}
+
 const logOnComplete = job => {
   logger.info(`onComplete: ${job.id}`)
 }
@@ -40,6 +44,7 @@ const logHandlingErrorAndSetBatchStatus = async (job, err, errorCode) => {
   return err
 }
 
+exports.logInfo = logInfo
 exports.logHandling = logHandling
 exports.logHandlingError = logHandlingError
 exports.logOnComplete = logOnComplete
