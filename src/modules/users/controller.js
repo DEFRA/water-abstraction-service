@@ -45,7 +45,7 @@ const getCompanyLicences = (company, documentHeaders, licencesMap) => {
     .map(doc => ({
       documentId: doc.document_id,
       licenceRef: doc.system_external_id,
-      licenceHolder: doc.metadata.contacts[0].name ?? '',
+      licenceHolder: doc.metadata?.contacts?.[0].name ?? '',
       licence: licencesMap.get(doc.system_external_id)
     }))
 }
