@@ -348,7 +348,7 @@ experiment('modules/users/controller', () => {
           {
             documentId: 'lic_3_document_id',
             licenceRef: '03/456',
-            licenceHolder: 'Max Irrigation LH',
+            licenceHolder: '',
             licence: licences[2]
           }
         ])
