@@ -112,11 +112,7 @@ const getDocumentHeaderResponse = () => ({
       document_id: 'lic_3_document_id',
       system_external_id: '03/456',
       metadata: {
-        Name: 'Max Irrigation',
-        contacts: [
-          { name: 'Max Irrigation LH', role: 'Licence holder' },
-          { name: 'Max Irrigation Other', role: 'other role' }
-        ]
+        Name: 'Max Irrigation'
       },
       company_entity_id: 'max_irrigation_id'
     }
