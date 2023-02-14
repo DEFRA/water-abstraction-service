@@ -1,70 +1,38 @@
 'use strict'
 
-const { inRange } = require('lodash')
-
 const JOB_NAME = 'billing.create-charge'
 
 const batchService = require('../services/batch-service')
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch')
 const batchJob = require('./lib/batch-job')
-const helpers = require('./lib/helpers')
 const transactionsService = require('../services/transactions-service')
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs')
 const batchMapper = require('../mappers/batch')
 const Transaction = require('../../../lib/models/transaction')
 const { jobName: refreshTotalsJobName } = require('./refresh-totals')
 const config = require('../../../../config')
-const { logger } = require('../../../logger')
 
 const workerOptions = {
   concurrency: config.billing.createChargeJobConcurrency
 }
 
-const createMessage = (batchId, billingBatchTransactionId) => ([
+const createMessage = (batchId, billingBatchTransactionId, lastOfUs) => ([
   JOB_NAME,
   {
     batchId,
-    billingBatchTransactionId
+    billingBatchTransactionId,
+    lastOfUs
   },
   {
-    jobId: `${JOB_NAME}.${batchId}.${billingBatchTransactionId}`,
-    attempts: 6,
-    backoff: {
-      type: 'exponential',
-      delay: 5000
-    }
+    jobId: `${JOB_NAME}.${batchId}.${billingBatchTransactionId}`
   }
 ])
-
-const getStatus = err => err.statusCode ?? 0
-
-/**
- * Checks if the error is an HTTP client error (in range 400 - 499)
- * @param {Error} err
- * @return {Boolean}
- */
-const isClientError = err => inRange(getStatus(err), 400, 500)
-
-const updateBatchState = async batchId => {
-  const statuses = await batchService.getTransactionStatusCounts(batchId)
-
-  const candidate = statuses[Transaction.statuses.candidate] ?? 0
-  const isReady = candidate === 0
-
-  if (isReady) {
-    // Clean up batch
-    await batchService.cleanup(batchId)
-  }
-
-  return isReady
-}
 
 const getTransactionStatus = batch => batch.invoices?.[0].invoiceLicences[0].transactions[0].status
 
 const handler = async job => {
   batchJob.logHandling(job)
   const transactionId = job.data.billingBatchTransactionId
-  const batchId = job.data.batchId
 
   // Create batch model from loaded data
   // the batch contains all lower level related objects for pre-sroc
@@ -76,7 +44,7 @@ const handler = async job => {
     // Skip CM call if transaction is already processed
     const status = getTransactionStatus(batch) || batch.status
     if (status !== Transaction.statuses.candidate) {
-      return await updateBatchState(batchId)
+      return
     }
 
     // Map data to charge module transaction
@@ -88,18 +56,13 @@ const handler = async job => {
 
     // Update/remove our local transaction in water.billing_transactions
     await transactionsService.updateWithChargeModuleResponse(transactionId, response)
-
-    // Note: the await is needed to ensure any error is handled here
-    return await updateBatchState(batchId)
   } catch (err) {
     batchJob.logHandlingError(job, err)
 
-    // if error code >= 400 and < 500 set transaction status to error and continue
-    if (isClientError(err)) {
-      await transactionsService.setErrorStatus(transactionId)
-      return updateBatchState(batchId)
-    }
-    // throw error to retry
+    await transactionsService.setErrorStatus(transactionId)
+
+    // The exceptions thrown in a processor must be an Error object for BullMQ to work correctly.
+    // The onFailedHandler will only be called if we throw an Error
     throw err
   }
 }
@@ -109,10 +72,12 @@ const onComplete = async (job, queueManager) => {
 
   try {
     const { batchId } = job.data
-    const isReady = job.returnvalue
 
-    if (isReady) {
+    if (job.data.lastOfUs) {
+      batchJob.logInfo(job, 'Finished last create-charge. Now cleaning up and queuing refresh-totals')
       await batchService.requestCMBatchGeneration(batchId)
+
+      await batchService.cleanup(batchId)
       await queueManager.add(refreshTotalsJobName, batchId)
     }
   } catch (err) {
@@ -121,21 +86,7 @@ const onComplete = async (job, queueManager) => {
 }
 
 const onFailedHandler = async (job, err) => {
-  const batchId = job.data.batchId
-  const transactionId = job.data.billingBatchTransactionId
-
-  // On final attempt, error the batch and log
-  if (helpers.isFinalAttempt(job)) {
-    try {
-      logger.error(`Transaction with id ${transactionId} not generated in CM after ${job.attemptsMade} attempts, marking batch as errored ${batchId}`)
-      await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToCreateCharge)
-    } catch (error) {
-      logger.error(`Unable to set batch status ${batchId}`, error.stack)
-    }
-  } else {
-    // Do normal error logging
-    helpers.onFailedHandler(job, err)
-  }
+  batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToCreateCharge)
 }
 
 exports.handler = handler

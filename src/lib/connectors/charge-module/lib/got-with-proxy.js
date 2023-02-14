@@ -22,20 +22,37 @@ const beforeRequestHook = options => {
 }
 
 /**
- * Creates a got instance which is extended to include:
+ * Creates an extended Got instance
  *
- * - proxy settings to work on AWS environments
+ * The Got default options are updated to include:
+ *
  * - JSON response types (all the CM APIs have JSON responses)
+ * - Resolve with the response body only - this helps make the API more compatible with request which was used
+ *   previously
  * - how long to try before timing out the request
- * - to resolve with the response body only - this helps make the API
- *   more compatible with request which was used previously
+ * - what requests should be retried (more details inline)
+ * - proxy settings to support running in AWS environments
+ *
  */
 const gotWithProxy = got.extend({
   responseType: 'json',
   resolveBodyOnly: true,
   timeout: {
-    request: 5000
+    request: 10000
   },
+  // Got has a built in retry mechanism. We have found though you have to be careful with what gets retried. Our
+  // preference is to only retry in the event of a timeout on assumption the destination server might be busy but has
+  // a chance to succeed when attempted again
+  retry: {
+    // We ensure that the only network errors Got retries are timeout errors
+    errorCodes: ['ETIMEDOUT'],
+    // By default, Got does not retry POST requests. As we only retry timeouts there is no risk in retrying POST
+    // requests. So, we set methods to be Got's defaults plus 'POST'
+    methods: ['GET', 'POST', 'PUT', 'HEAD', 'DELETE', 'OPTIONS', 'TRACE'],
+    // The only status code we want to retry is 401 Unauthorized. We do not believe there is value in retrying others
+    statusCodes: [401]
+  },
+  mutableDefaults: true,
   hooks: {
     beforeRequest: [beforeRequestHook]
   }
