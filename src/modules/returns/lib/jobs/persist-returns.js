@@ -1,6 +1,6 @@
 'use strict'
 
-const { find, set } = require('lodash')
+const { set } = require('lodash')
 const eventsService = require('../../../../lib/services/events')
 const { logger } = require('../../../../logger')
 const returnsUpload = require('../../lib/returns-upload')
@@ -70,7 +70,7 @@ const persistReturn = async (validatedReturn, returnToSave) => {
  */
 const createMapper = allReturns => validatedReturn => {
   const { returnId } = validatedReturn
-  const returnToSave = find(allReturns, { returnId })
+  const returnToSave = allReturns.find(o => o.returnId === returnId)
   return persistReturn(validatedReturn, returnToSave)
 }
 

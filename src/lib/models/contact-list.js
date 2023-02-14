@@ -1,4 +1,4 @@
-const { find } = require('lodash')
+'use strict'
 
 const normaliseString = str => (str || '').trim().toLowerCase()
 
@@ -24,7 +24,7 @@ class ContactList {
    * @return {Contact}      - the contact (if found)
    */
   getByRole (role) {
-    return find(this.contacts, contact => compareRoles(contact.role, role))
+    return this.contacts.find(contact => compareRoles(contact.role, role))
   }
 
   /**

@@ -5,7 +5,7 @@
  */
 
 const Boom = require('@hapi/boom')
-const { find, set } = require('lodash')
+const { set } = require('lodash')
 const { throwIfError } = require('@envage/hapi-pg-rest-api')
 
 const eventFactory = require('../lib/event-factory')
@@ -76,7 +76,7 @@ const getUploadPreviewReturn = async (request, h) => {
   const { returnId } = request.params
 
   try {
-    const match = find(request.jsonData, { returnId })
+    const match = request.jsonData.find(o => o.returnId === returnId)
 
     if (!match) {
       throw Boom.notFound(`Return ${returnId} not found in upload`, request.params)

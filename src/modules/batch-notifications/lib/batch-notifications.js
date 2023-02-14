@@ -1,6 +1,5 @@
 'use strict'
 
-const { find } = require('lodash')
 const configs = require('../config')
 const eventsService = require('../../../lib/services/events')
 
@@ -17,7 +16,7 @@ const loadJobData = async (eventId) => {
   }
 
   // Load config
-  const config = find(configs, { messageType: event.subtype })
+  const config = configs.find(o => o.messageType === event.subtype)
   if (!config) {
     throw new Error(`Batch notification ${event.subtype} not found`)
   }

@@ -1,7 +1,6 @@
 'use strict'
 
 const { sentenceCase } = require('sentence-case')
-const { find } = require('lodash')
 
 // Import models
 const Contact = require('../contact')
@@ -16,9 +15,11 @@ const { createContact } = require('./contact')
  * @return {Object} the party for the current licence holder
  */
 const getLicenceHolderParty = currentVersion => {
-  return find(currentVersion.parties, (party) => {
+  const result = currentVersion.parties.find((party) => {
     return party.ID === currentVersion.ACON_APAR_ID
   })
+
+  return result
 }
 
 /**
@@ -28,9 +29,11 @@ const getLicenceHolderParty = currentVersion => {
  * @return {Object} the address for the current licence holder
  */
 const getLicenceHolderAddress = (currentVersion, licenceHolderParty) => {
-  return find(licenceHolderParty.contacts, (contact) => {
+  const result = licenceHolderParty.contacts.find((contact) => {
     return contact.AADD_ID === currentVersion.ACON_AADD_ID
   })
+
+  return result
 }
 
 const mapRole = role => sentenceCase(role.role_type.DESCR)

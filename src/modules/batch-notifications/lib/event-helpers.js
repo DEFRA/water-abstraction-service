@@ -1,6 +1,6 @@
 'use strict'
 
-const { find, set, uniq } = require('lodash')
+const { set, uniq } = require('lodash')
 const generateReference = require('../../../lib/reference-generator')
 const {
   EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING,
@@ -70,7 +70,7 @@ const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
  * @return {Number} of messages in the requested status
  */
 const getStatusCount = (statuses, status) => {
-  const foundStatus = find(statuses, { status })
+  const foundStatus = statuses.find(o => o.status === status)
   const count = foundStatus.count ?? 0
 
   return parseInt(count)

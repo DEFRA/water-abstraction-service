@@ -19,7 +19,7 @@
   }
 ]
  */
-const { chunk, flatMap, find, uniq, cond, negate, isEqual } = require('lodash')
+const { chunk, flatMap, uniq, cond, negate, isEqual } = require('lodash')
 
 const returnsConnector = require('../../../lib/connectors/returns')
 const documents = require('../../../lib/connectors/crm/documents')
@@ -63,7 +63,7 @@ const getDocuments = (returns) => {
 }
 
 /**
- * Gets a filter object which can be passed to lodash find to find a
+ * Gets a filter object which can be passed to find a
  * CRM document with the specified licence number
  * @param  {String} licenceNumber - the licence number to find
  * @return {Object} filter object
@@ -73,7 +73,7 @@ const getDocumentFilter = licenceNumber => ({
 })
 
 /**
- * Gets a filter object which can be passed to lodash find to find a
+ * Gets a filter object which can be passed to find a
  * CRM document with the specified licence number and company ID
  * @param  {String} licenceNumber - the licence number to find
  * @param {String} companyId - CRM company entity GUID
@@ -111,7 +111,7 @@ const validateReturnlines = (ret, context) => {
   }
 
   // Generate required lines specified by return header
-  const header = find(context.returns, { return_id: ret.returnId })
+  const header = context.returns.find(o => o.return_id === ret.returnId)
   const requiredLines = returnLines.getRequiredLines(
     header.start_date,
     header.end_date,
@@ -152,8 +152,10 @@ const validateLineFrequency = ret => {
  * @param  {Object} context - additional context data
  * @return {Boolean}         true if document was found
  */
-const validateLicence = (ret, context) =>
-  find(context.documents, getDocumentFilter(ret.licenceNumber))
+const validateLicence = (ret, context) => {
+  const externalId = getDocumentFilter(ret.licenceNumber)
+  return context.documents.find(o => o.system_external_id === externalId.system_external_id)
+}
 
 /**
  * Checks that the user's company matches that of the CRM document
@@ -161,8 +163,10 @@ const validateLicence = (ret, context) =>
  * @param  {Object} context - additional context data
  * @return {Boolean}         true if company matches
  */
-const validatePermission = (ret, context) =>
-  find(context.documents, getCompanyDocumentFilter(ret.licenceNumber, context.companyId))
+const validatePermission = (ret, context) => {
+  const result = getCompanyDocumentFilter(ret.licenceNumber, context.companyId)
+  return context.documents.find(o => o.system_external_id === result.system_external_id && o.company_entity_id === result.company_entity_id)
+}
 
 /**
  * Checks a return was found in the returns service for the uploaded return ID
@@ -170,8 +174,9 @@ const validatePermission = (ret, context) =>
  * @param  {Object} context - additional context data
  * @return {Boolean}         true if return found
  */
-const validateReturnExists = (ret, context) =>
-  find(context.returns, { return_id: ret.returnId })
+const validateReturnExists = (ret, context) => {
+  return context.returns.find(o => o.return_id === ret.returnId)
+}
 
 /**
  * Checks the return in the return service has 'due' status
@@ -180,7 +185,7 @@ const validateReturnExists = (ret, context) =>
  * @return {Boolean}         true if return is due
  */
 const validateReturnDue = (ret, context) => {
-  const match = find(context.returns, { return_id: ret.returnId })
+  const match = context.returns.find(o => o.return_id === ret.returnId)
   return match.status === 'due'
 }
 
