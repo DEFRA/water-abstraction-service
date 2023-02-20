@@ -248,7 +248,7 @@ const getReturnIds = returns => returns.map(ret => ret.returnId)
  */
 const mapReturnsData = (ret, returnsData) => {
   const { returnId } = ret
-  const match = returnsData.find(o => o.return_id === returnId)
+  const match = returnsData.find((o) => o.return_id === returnId)
   return {
     ...ret,
     dueDate: match.due_date

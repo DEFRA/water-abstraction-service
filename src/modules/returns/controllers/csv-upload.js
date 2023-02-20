@@ -76,7 +76,7 @@ const getUploadPreviewReturn = async (request, h) => {
   const { returnId } = request.params
 
   try {
-    const match = request.jsonData.find(o => o.returnId === returnId)
+    const match = request.jsonData.find((o) => o.returnId === returnId)
 
     if (!match) {
       throw Boom.notFound(`Return ${returnId} not found in upload`, request.params)

@@ -27,7 +27,7 @@ function getPreferredContact (contacts, rolePriority) {
       return acc
     }
 
-    return contacts.find(o => o.role === role)
+    return contacts.find((o) => o.role === role)
   }, null)
 }
 
@@ -41,7 +41,7 @@ function createSendList (licences, rolePriority) {
 
   licences.forEach(licence => {
     // Get relevant contacts
-    const licenceHolder = licence.contacts.find(o => o.role === 'licence_holder')
+    const licenceHolder = licence.contacts.find((o) => o.role === 'licence_holder')
 
     // Get preferred notification contact
     // In future this may need to support sending specific messages to differnet

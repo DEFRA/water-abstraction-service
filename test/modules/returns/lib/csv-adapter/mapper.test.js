@@ -159,7 +159,7 @@ experiment('returns CSV to JSON mapper', () => {
     })
 
     test('maps numbers into a return line with numeric quantity', async () => {
-      const line = result.find(o => o.endDate === '2019-04-06')
+      const line = result.find((o) => o.endDate === '2019-04-06')
       expect(line).to.equal({
         unit: 'm³',
         userUnit: 'm³',
@@ -172,7 +172,7 @@ experiment('returns CSV to JSON mapper', () => {
     })
 
     test('maps empty cell to a return line with a null quantity', async () => {
-      const line = result.find(o => o.endDate === '2019-04-13')
+      const line = result.find((o) => o.endDate === '2019-04-13')
       expect(line).to.equal({
         unit: 'm³',
         userUnit: 'm³',
@@ -185,7 +185,7 @@ experiment('returns CSV to JSON mapper', () => {
     })
 
     test('excludes cells containing "Do not edit" from the mapped lines', async () => {
-      const line = result.find(o => o.endDate === '2019-04-20')
+      const line = result.find((o) => o.endDate === '2019-04-20')
       expect(line).to.be.undefined()
     })
   })

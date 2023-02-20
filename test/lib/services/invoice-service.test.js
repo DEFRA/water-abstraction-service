@@ -414,12 +414,12 @@ experiment('modules/billing/services/invoiceService', () => {
       })
 
       test('has the correct transaction amount for transaction 1', async () => {
-        const transaction = invoice.invoiceLicences[0].transactions.find(o => o.externalId === IDS.transactions[0])
+        const transaction = invoice.invoiceLicences[0].transactions.find((o) => o.externalId === IDS.transactions[0])
         expect(transaction.value).to.equal(2345)
       })
 
       test('has the correct transaction amount for transaction 2', async () => {
-        const transaction = invoice.invoiceLicences[0].transactions.find(o => o.externalId === IDS.transactions[1])
+        const transaction = invoice.invoiceLicences[0].transactions.find((o) => o.externalId === IDS.transactions[1])
         expect(transaction.value).to.equal(10000)
       })
 
@@ -452,12 +452,12 @@ experiment('modules/billing/services/invoiceService', () => {
       })
 
       test('has the correct transaction amount for transaction 1', async () => {
-        const transaction = invoice.invoiceLicences[0].transactions.find(o => o.externalId === IDS.transactions[4])
+        const transaction = invoice.invoiceLicences[0].transactions.find((o) => o.externalId === IDS.transactions[4])
         expect(transaction.value).to.equal(100)
       })
 
       test('has the correct transaction amount for transaction 2', async () => {
-        const transaction = invoice.invoiceLicences[0].transactions.find(o => o.externalId === IDS.transactions[5])
+        const transaction = invoice.invoiceLicences[0].transactions.find((o) => o.externalId === IDS.transactions[5])
         expect(transaction.value).to.equal(-200)
       })
 
@@ -490,12 +490,12 @@ experiment('modules/billing/services/invoiceService', () => {
       })
 
       test('has the correct transaction amount for transaction 1', async () => {
-        const transaction = invoice.invoiceLicences[0].transactions.find(o => o.externalId === IDS.transactions[2])
+        const transaction = invoice.invoiceLicences[0].transactions.find((o) => o.externalId === IDS.transactions[2])
         expect(transaction.value).to.equal(400)
       })
 
       test('has the correct transaction amount for transaction 2', async () => {
-        const transaction = invoice.invoiceLicences[0].transactions.find(o => o.externalId === IDS.transactions[3])
+        const transaction = invoice.invoiceLicences[0].transactions.find((o) => o.externalId === IDS.transactions[3])
         expect(transaction.value).to.equal(123)
       })
 
@@ -567,12 +567,12 @@ experiment('modules/billing/services/invoiceService', () => {
         })
 
         test('has the correct transaction amount for transaction 1', async () => {
-          const transaction = invoice.invoiceLicences[0].transactions.find(o => o.externalId === IDS.transactions[0])
+          const transaction = invoice.invoiceLicences[0].transactions.find((o) => o.externalId === IDS.transactions[0])
           expect(transaction.value).to.equal(2345)
         })
 
         test('has the correct transaction amount for transaction 2', async () => {
-          const transaction = invoice.invoiceLicences[0].transactions.find(o => o.externalId === IDS.transactions[1])
+          const transaction = invoice.invoiceLicences[0].transactions.find((o) => o.externalId === IDS.transactions[1])
           expect(transaction.value).to.equal(10000)
         })
 

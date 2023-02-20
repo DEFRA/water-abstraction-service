@@ -70,7 +70,7 @@ const persistReturn = async (validatedReturn, returnToSave) => {
  */
 const createMapper = allReturns => validatedReturn => {
   const { returnId } = validatedReturn
-  const returnToSave = allReturns.find(o => o.returnId === returnId)
+  const returnToSave = allReturns.find((o) => o.returnId === returnId)
   return persistReturn(validatedReturn, returnToSave)
 }
 

@@ -98,7 +98,9 @@ const templateRandomiser = templateType => {
 
 const getRelevantRowData = (rows, reminderRef) => {
   const contactAndMessageType = reminderRef.substring(17) // remove 'returns_invitation' from beginning
-  return (rows.filter(row => row.message_ref.includes(contactAndMessageType)))[0]
+  const filteredRows = rows.filter((row) =>
+    row.message_ref.includes(contactAndMessageType))
+  return filteredRows[0]
 }
 
 const reminderSuffixMap = {

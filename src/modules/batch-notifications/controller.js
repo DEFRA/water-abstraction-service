@@ -24,7 +24,7 @@ const postPrepare = async (request, h) => {
 
   try {
     // Get message config based on message type
-    const config = configs.find(o => o.messageType === messageType)
+    const config = configs.find((o) => o.messageType === messageType)
 
     // Validate payload against schema defined in message config
     const { error } = config.schema.validate(data)

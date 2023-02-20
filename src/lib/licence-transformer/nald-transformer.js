@@ -27,9 +27,7 @@ class NALDTransformer extends BaseTransformer {
 
     const mostRecentVersionPurposes = data.data.purposes.filter(purpose => purpose.AABV_INCR_NO !== data.data.versions.sort((a, b) => parseInt(b.INCR_NO) - parseInt(a.INCR_NO)))
 
-    const licenceHolderParty = currentVersion.parties.find((party) => {
-      return party.ID === currentVersion.ACON_APAR_ID
-    })
+    const licenceHolderParty = currentVersion.parties.find((party) => party.ID === currentVersion.ACON_APAR_ID)
 
     const purposes = data.data.current_version
       ? data.data.current_version.purposes

@@ -36,7 +36,7 @@ const getReturnRequirements = returnsData => {
  */
 const mapReturnDataToModel = (returnData, returnRequirements) => {
   const externalId = getReturnRequirementExternalId(returnData)
-  const returnRequirement = returnRequirements.find(o => o.externalId === externalId)
+  const returnRequirement = returnRequirements.find((o) => o.externalId === externalId)
   return returnMapper.returnsServiceToModel(returnData, returnRequirement)
 }
 

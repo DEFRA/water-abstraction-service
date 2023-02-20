@@ -111,7 +111,7 @@ const validateReturnlines = (ret, context) => {
   }
 
   // Generate required lines specified by return header
-  const header = context.returns.find(o => o.return_id === ret.returnId)
+  const header = context.returns.find((o) => o.return_id === ret.returnId)
   const requiredLines = returnLines.getRequiredLines(
     header.start_date,
     header.end_date,
@@ -185,7 +185,7 @@ const validateReturnExists = (ret, context) => {
  * @return {Boolean}         true if return is due
  */
 const validateReturnDue = (ret, context) => {
-  const match = context.returns.find(o => o.return_id === ret.returnId)
+  const match = context.returns.find((o) => o.return_id === ret.returnId)
   return match.status === 'due'
 }
 
