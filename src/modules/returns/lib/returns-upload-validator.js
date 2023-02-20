@@ -154,7 +154,7 @@ const validateLineFrequency = ret => {
  */
 const validateLicence = (ret, context) => {
   const externalId = getDocumentFilter(ret.licenceNumber)
-  return context.documents.find(o => o.system_external_id === externalId.system_external_id)
+  return context.documents.find((o) => o.system_external_id === externalId.system_external_id)
 }
 
 /**
@@ -165,7 +165,7 @@ const validateLicence = (ret, context) => {
  */
 const validatePermission = (ret, context) => {
   const result = getCompanyDocumentFilter(ret.licenceNumber, context.companyId)
-  return context.documents.find(o => o.system_external_id === result.system_external_id && o.company_entity_id === result.company_entity_id)
+  return context.documents.find((o) => o.system_external_id === result.system_external_id && o.company_entity_id === result.company_entity_id)
 }
 
 /**
@@ -175,7 +175,7 @@ const validatePermission = (ret, context) => {
  * @return {Boolean}         true if return found
  */
 const validateReturnExists = (ret, context) => {
-  return context.returns.find(o => o.return_id === ret.returnId)
+  return context.returns.find((o) => o.return_id === ret.returnId)
 }
 
 /**

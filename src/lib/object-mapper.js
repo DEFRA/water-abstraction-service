@@ -89,7 +89,7 @@ class Mapper {
       }
 
       // Undefined values in the source are skipped
-      if (values.every(val => val === undefined)) {
+      if (values.every((val) => val === undefined)) {
         return acc
       }
 

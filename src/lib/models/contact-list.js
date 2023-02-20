@@ -24,7 +24,7 @@ class ContactList {
    * @return {Contact}      - the contact (if found)
    */
   getByRole (role) {
-    return this.contacts.find(contact => compareRoles(contact.role, role))
+    return this.contacts.find((contact) => compareRoles(contact.role, role))
   }
 
   /**

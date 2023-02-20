@@ -16,7 +16,7 @@ const loadJobData = async (eventId) => {
   }
 
   // Load config
-  const config = configs.find(o => o.messageType === event.subtype)
+  const config = configs.find((o) => o.messageType === event.subtype)
   if (!config) {
     throw new Error(`Batch notification ${event.subtype} not found`)
   }
