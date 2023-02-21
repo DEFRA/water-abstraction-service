@@ -1,6 +1,5 @@
 'use strict'
 
-const { isObject } = require('lodash')
 const User = require('../models/user')
 
 /**
@@ -16,7 +15,9 @@ const dbToModel = data => {
 
 const pojoToModel = dbToModel
 
-const modelToDb = model => isObject(model) ? model.toJSON() : null
+const modelToDb = (model) => {
+  return model instanceof Object ? model.toJSON() : null
+}
 
 exports.dbToModel = dbToModel
 exports.pojoToModel = pojoToModel

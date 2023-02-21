@@ -1,4 +1,5 @@
-const { isObject } = require('lodash')
+'use strict'
+
 const Boom = require('@hapi/boom')
 
 /**
@@ -11,8 +12,7 @@ const Boom = require('@hapi/boom')
  */
 const findOne = async (repository, id) => {
   const { primaryKey } = repository.config
-
-  const filter = isObject(id) ? id : { [primaryKey]: id }
+  const filter = id instanceof Object ? id : { [primaryKey]: id }
 
   let response
 

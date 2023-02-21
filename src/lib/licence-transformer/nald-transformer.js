@@ -4,7 +4,7 @@
  * Transforms NALD data into VML native format
  * @module lib/licence-transformer/nald-transformer
  */
-const { find, uniqBy } = require('lodash')
+const { uniqBy } = require('lodash')
 const { sentenceCase } = require('sentence-case')
 
 const BaseTransformer = require('./base-transformer')
@@ -27,9 +27,7 @@ class NALDTransformer extends BaseTransformer {
 
     const mostRecentVersionPurposes = data.data.purposes.filter(purpose => purpose.AABV_INCR_NO !== data.data.versions.sort((a, b) => parseInt(b.INCR_NO) - parseInt(a.INCR_NO)))
 
-    const licenceHolderParty = find(currentVersion.parties, (party) => {
-      return party.ID === currentVersion.ACON_APAR_ID
-    })
+    const licenceHolderParty = currentVersion.parties.find((party) => party.ID === currentVersion.ACON_APAR_ID)
 
     const purposes = data.data.current_version
       ? data.data.current_version.purposes
@@ -124,11 +122,11 @@ class NALDTransformer extends BaseTransformer {
   contactsFormatter (currentVersion, roles) {
     const contacts = []
 
-    const licenceHolderParty = find(currentVersion.parties, (party) => {
+    const licenceHolderParty = currentVersion.parties.find((party) => {
       return party.ID === currentVersion.ACON_APAR_ID
     })
 
-    const licenceHolderAddress = find(licenceHolderParty.contacts, (contact) => {
+    const licenceHolderAddress = licenceHolderParty.contacts.find((contact) => {
       return contact.AADD_ID === currentVersion.ACON_AADD_ID
     })
 
@@ -208,7 +206,8 @@ class NALDTransformer extends BaseTransformer {
       const periodStart = purpose.PERIOD_ST_DAY + '/' + purpose.PERIOD_ST_MONTH
       const periodEnd = purpose.PERIOD_END_DAY + '/' + purpose.PERIOD_END_MONTH
       // Find existing period
-      let period = find(periods, (item) => item.periodStart === periodStart && item.periodEnd === periodEnd)
+      let period = periods.find((item) => item.periodStart === periodStart && item.periodEnd === periodEnd)
+
       if (period) {
         if (!period.purposes.includes(purpose.purpose[0].purpose_tertiary.DESCR)) {
           period.purposes.push(purpose.purpose[0].purpose_tertiary.DESCR)
@@ -259,7 +258,7 @@ class NALDTransformer extends BaseTransformer {
      * @param {String} code - the condition code
      * @param {String} subCode - the sub-condition code
      * @param {String} purpose - the tertiary purpose description
-     * @return {Function} returns a predicate that can be used in lodash/find
+     * @return {Function} returns a predicate that can be used in find
      */
     const conditionMatcher = (code, subCode, purpose) => {
       return (item) => (code === item.code) && (subCode === item.subCode) && (purpose === item.purpose)
@@ -269,7 +268,7 @@ class NALDTransformer extends BaseTransformer {
      * Match a title within the display titles array
      * @param {String} code - the condition code
      * @param {String} subCode - the sub-condition code
-     * @return {Function} returns a predicate that can be used in lodash/find
+     * @return {Function} returns a predicate that can be used in find
      */
     const titleMatcher = (code, subCode) => {
       return (item) => (code === item.code) && (subCode === item.subCode)
@@ -278,7 +277,7 @@ class NALDTransformer extends BaseTransformer {
     /**
      * Match a point within the condition points array
      * @param {Object} point
-     * @return {Function} returns a predicate that can be used in lodash/find
+     * @return {Function} returns a predicate that can be used in find
      */
     const pointMatcher = (points) => {
       return (item) => item.points.join(',') === points.join(',')
@@ -306,9 +305,10 @@ class NALDTransformer extends BaseTransformer {
         } = purpose.purpose[0].purpose_tertiary
 
         // Condition wrapper
-        let cWrapper = find(conditionsArr, conditionMatcher(code, subCode, purposeText))
+        let cWrapper = conditionsArr.find(conditionMatcher(code, subCode, purposeText))
+
         if (!cWrapper) {
-          const titles = find(titleData, titleMatcher(code, subCode))
+          const titles = titleData.find(titleMatcher(code, subCode))
           cWrapper = {
             ...titles,
             code,
@@ -320,7 +320,7 @@ class NALDTransformer extends BaseTransformer {
         }
 
         // Points wrapper
-        let pWrapper = find(cWrapper.points, pointMatcher(points))
+        let pWrapper = cWrapper.points.find(pointMatcher(points))
         if (!pWrapper) {
           pWrapper = {
             points,

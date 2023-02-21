@@ -2,7 +2,7 @@
  * Transforms NALD data into VML native format
  * @module lib/licence-transformer/nald-transformer
  */
-const { find, uniqBy } = require('lodash')
+const { uniqBy } = require('lodash')
 const BaseTransformer = require('./base-transformer')
 const LicenceTitleLoader = require('./licence-title-loader')
 const licenceTitleLoader = new LicenceTitleLoader()
@@ -140,7 +140,7 @@ class CSVTransformer extends BaseTransformer {
      * @param {String} code - the condition code
      * @param {String} subCode - the sub-condition code
      * @param {String} purpose - the tertiary purpose description
-     * @return {Function} returns a predicate that can be used in lodash/find
+     * @return {Function} returns a predicate that can be used in find
      */
     const conditionMatcher = (code, subCode, purpose) => {
       return (item) => (code === item.code) && (subCode === item.subCode) && (purpose === item.purpose)
@@ -150,7 +150,7 @@ class CSVTransformer extends BaseTransformer {
      * Match a title within the display titles array
      * @param {String} code - the condition code
      * @param {String} subCode - the sub-condition code
-     * @return {Function} returns a predicate that can be used in lodash/find
+     * @return {Function} returns a predicate that can be used in find
      */
     const titleMatcher = (code, subCode) => {
       return (item) => (code === item.code) && (subCode === item.subCode)
@@ -159,7 +159,7 @@ class CSVTransformer extends BaseTransformer {
     /**
      * Match a point within the condition points array
      * @param {Object} point
-     * @return {Function} returns a predicate that can be used in lodash/find
+     * @return {Function} returns a predicate that can be used in find
      */
     const pointMatcher = (points) => {
       return (item) => item.points.join(',') === points.join(',')
@@ -179,15 +179,15 @@ class CSVTransformer extends BaseTransformer {
         }
 
         // Condition wrapper
-        let cWrapper = find(conditionsArr, conditionMatcher(code, subCode, purposeText))
+        let cWrapper = conditionsArr.find(conditionMatcher(code, subCode, purposeText))
         if (!cWrapper) {
-          const titles = find(titleData, titleMatcher(code, subCode))
+          const titles = titleData.find(titleMatcher(code, subCode))
           cWrapper = { ...titles, code, subCode, points: [], purpose: purposeText }
           conditionsArr.push(cWrapper)
         }
 
         // Points wrapper
-        let pWrapper = find(cWrapper.points, pointMatcher(points))
+        let pWrapper = cWrapper.points.find(pointMatcher(points))
         if (!pWrapper) {
           pWrapper = { points, conditions: [] }
           cWrapper.points.push(pWrapper)

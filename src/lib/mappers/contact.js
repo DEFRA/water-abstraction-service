@@ -1,6 +1,6 @@
 'use strict'
 
-const { omit, isObject } = require('lodash')
+const { omit } = require('lodash')
 const Contact = require('../models/contact-v2')
 
 const { createMapper } = require('../object-mapper')
@@ -57,7 +57,7 @@ const modelToCrm = contact => {
 }
 
 const pojoToModel = object => {
-  if (!isObject(object)) {
+  if (!(object instanceof Object)) {
     return null
   }
   const model = new Contact()

@@ -1,7 +1,7 @@
 'use strict'
 
 const moment = require('moment')
-const { sortBy, first, identity } = require('lodash')
+const { sortBy, identity } = require('lodash')
 
 const config = require('../../../../config')
 
@@ -22,7 +22,7 @@ const getSortedDates = arr => sortBy(
   m => m.unix()
 )
 
-const getMinDate = arr => first(getSortedDates(arr))
+const getMinDate = arr => getSortedDates(arr)[0]
 const getMaxDate = (arr) => {
   const sorted = getSortedDates(arr)
   return sorted[sorted.length - 1]

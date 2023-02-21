@@ -1,7 +1,6 @@
 'use strict'
 
 const { v4: uuid } = require('uuid')
-const { first } = require('lodash')
 
 const { MESSAGE_STATUS_DRAFT } = require('../../../lib/message-statuses')
 const notifyHelpers = require('../../../lib/notify-helpers')
@@ -99,7 +98,9 @@ const templateRandomiser = templateType => {
 
 const getRelevantRowData = (rows, reminderRef) => {
   const contactAndMessageType = reminderRef.substring(17) // remove 'returns_invitation' from beginning
-  return first(rows.filter(row => row.message_ref.includes(contactAndMessageType)))
+  const filteredRows = rows.filter((row) =>
+    row.message_ref.includes(contactAndMessageType))
+  return filteredRows[0]
 }
 
 const reminderSuffixMap = {

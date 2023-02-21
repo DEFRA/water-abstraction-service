@@ -9,7 +9,7 @@
 const returnRequirementsService = require('../return-requirements')
 const returnMapper = require('../../mappers/return')
 
-const { uniq, find } = require('lodash')
+const { uniq } = require('lodash')
 
 const getReturnRequirementExternalId = returnData => `${returnData.metadata.nald.regionCode}:${returnData.metadata.nald.formatId}`
 
@@ -36,7 +36,7 @@ const getReturnRequirements = returnsData => {
  */
 const mapReturnDataToModel = (returnData, returnRequirements) => {
   const externalId = getReturnRequirementExternalId(returnData)
-  const returnRequirement = find(returnRequirements, { externalId })
+  const returnRequirement = returnRequirements.find((o) => o.externalId === externalId)
   return returnMapper.returnsServiceToModel(returnData, returnRequirement)
 }
 

@@ -1,6 +1,6 @@
 'use strict'
 
-const { find, partialRight, pickBy } = require('lodash')
+const { partialRight, pickBy } = require('lodash')
 const pWaterfall = require('p-waterfall')
 
 const { logger } = require('../../logger')
@@ -113,7 +113,7 @@ const getInvoice = async context => {
  * @param {Object} context
  */
 const decorateInvoiceWithCRMData = (invoice, context) => {
-  const crmInvoiceAccount = find(context.crmInvoiceAccounts, { invoiceAccountId: invoice.invoiceAccount.id })
+  const crmInvoiceAccount = context.crmInvoiceAccounts.find((o) => o.invoiceAccountId === invoice.invoiceAccount.id)
 
   const properties = mappers.invoice.crmToModel(crmInvoiceAccount).pick(
     'address',
@@ -151,7 +151,7 @@ const mapToInvoices = async context => {
 const mapBillingAccountNameToInvoices = async context => {
   const invoices = []
   for (const billingInvoice of context.billingInvoices) {
-    const crmInvoiceAccount = find(context.crmInvoiceAccounts, { invoiceAccountId: billingInvoice.invoiceAccountId })
+    const crmInvoiceAccount = context.crmInvoiceAccounts.find((o) => o.invoiceAccountId === billingInvoice.invoiceAccountId)
     invoices.push({ ...billingInvoice, invoiceAccount: crmInvoiceAccount })
   }
   return invoices
