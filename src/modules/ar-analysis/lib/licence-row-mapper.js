@@ -1,5 +1,7 @@
+'use strict'
+
 const moment = require('moment')
-const { find, intersection } = require('lodash')
+const { intersection } = require('lodash')
 
 const inReviewFilter = action => action.payload.status === 'In review'
 const approvedFilter = action => action.payload.status === 'Approved'
@@ -29,7 +31,7 @@ const getFirstEditTimestamp = (actions) => {
  * @return {String} ISO 8601 timestamp
  */
 const getTimestamp = (actions, predicate) => {
-  const action = find(actions, predicate)
+  const action = actions.find(predicate)
   return action ? getActionTimestamp(action) : null
 }
 

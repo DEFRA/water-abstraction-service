@@ -5,13 +5,12 @@
  *         however the handling of nulls is different:
  *         by default nulls are mapped, with an option of ignoring them
  */
-
-const { identity, set, isUndefined, isFunction, isObject } = require('lodash')
+const { identity, set, isFunction } = require('lodash')
 
 const getSourceKeys = value => {
   if (Array.isArray(value)) {
     return value
-  } else if (isUndefined(value)) {
+  } else if (value === undefined) {
     return []
   }
   return [value]
@@ -41,7 +40,7 @@ class Mapper {
    */
   to (targetKey, ...args) {
     const mapper = isFunction(args[0]) ? args[0] : null
-    const options = isObject(args[args.length - 1]) ? args[args.length - 1] : {}
+    const options = args[args.length - 1] instanceof Object ? args[args.length - 1] : {}
 
     if (this._sourceKeys.length > 1 && !mapper) {
       throw new Error(`error mapping to .${targetKey}: when >1 source key, a mapper is required`)
@@ -90,7 +89,7 @@ class Mapper {
       }
 
       // Undefined values in the source are skipped
-      if (values.every(isUndefined)) {
+      if (values.every((val) => val === undefined)) {
         return acc
       }
 

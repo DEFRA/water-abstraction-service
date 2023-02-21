@@ -4,7 +4,7 @@ const moment = require('moment')
 const waterHelpers = require('@envage/water-abstraction-helpers')
 const { getReturnId } = waterHelpers.returns
 
-const { flatMap, uniq, find, intersection } = require('lodash')
+const { flatMap, uniq, intersection } = require('lodash')
 const libxmljs = require('libxmljs')
 
 const returnsConnector = require('../../../../lib/connectors/returns')
@@ -248,7 +248,7 @@ const getReturnIds = returns => returns.map(ret => ret.returnId)
  */
 const mapReturnsData = (ret, returnsData) => {
   const { returnId } = ret
-  const match = find(returnsData, { return_id: returnId })
+  const match = returnsData.find((o) => o.return_id === returnId)
   return {
     ...ret,
     dueDate: match.due_date

@@ -2,7 +2,6 @@
 
 const moment = require('moment')
 const Boom = require('@hapi/boom')
-const { isObject } = require('lodash')
 const documentsClient = require('../../../lib/connectors/crm/documents')
 const crmEntities = require('../../../lib/connectors/crm/entities')
 const { usersClient } = require('../../../lib/connectors/idm')
@@ -58,7 +57,7 @@ const throwIfUnauthorised = (documentHeader, companyId) => {
  * @return {Promise}                resolves with permit repo data
  */
 const getLicence = async (document, includeExpired, companyId) => {
-  const documentHeader = isObject(document)
+  const documentHeader = document instanceof Object
     ? document
     : await getDocumentHeader(document, includeExpired)
 

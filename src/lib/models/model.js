@@ -1,7 +1,5 @@
 'use strict'
 
-const { isObject } = require('lodash')
-
 const { assertId } = require('./validators')
 const { getDateTimeFromValue } = require('../dates')
 
@@ -70,7 +68,7 @@ class Model {
     return Object.keys(this).reduce((acc, key) => {
       const externalKey = key.replace('_', '')
       const value = this[externalKey]
-      acc[externalKey] = isObject(value) && value.toJSON ? value.toJSON() : value
+      acc[externalKey] = value instanceof Object && value.toJSON ? value.toJSON() : value
       return acc
     }, {})
   }

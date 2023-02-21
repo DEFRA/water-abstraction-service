@@ -1,3 +1,5 @@
+'use strict'
+
 /**
  * Gets a filtered list of licences together with all
  * attached contacts, from the CRM.
@@ -10,7 +12,6 @@
  */
 
 const Boom = require('@hapi/boom')
-const { find } = require('lodash')
 const sha1 = require('sha1')
 const { getDocumentContacts } = require('./connectors/crm/documents')
 
@@ -25,7 +26,8 @@ function getPreferredContact (contacts, rolePriority) {
     if (acc) {
       return acc
     }
-    return find(contacts, { role })
+
+    return contacts.find((o) => o.role === role)
   }, null)
 }
 
@@ -39,7 +41,7 @@ function createSendList (licences, rolePriority) {
 
   licences.forEach(licence => {
     // Get relevant contacts
-    const licenceHolder = find(licence.contacts, { role: 'licence_holder' })
+    const licenceHolder = licence.contacts.find((o) => o.role === 'licence_holder')
 
     // Get preferred notification contact
     // In future this may need to support sending specific messages to differnet

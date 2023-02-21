@@ -2,7 +2,6 @@
 
 const Boom = require('@hapi/boom')
 const { logger } = require('../../logger')
-const { find } = require('lodash')
 
 const configs = require('./config')
 
@@ -25,7 +24,7 @@ const postPrepare = async (request, h) => {
 
   try {
     // Get message config based on message type
-    const config = find(configs, { messageType })
+    const config = configs.find((o) => o.messageType === messageType)
 
     // Validate payload against schema defined in message config
     const { error } = config.schema.validate(data)

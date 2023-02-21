@@ -1,6 +1,6 @@
 'use strict'
 
-const { groupBy, mapValues, first } = require('lodash')
+const { groupBy, mapValues } = require('lodash')
 const helpers = require('@envage/water-abstraction-helpers')
 const { throwIfError } = require('@envage/hapi-pg-rest-api')
 const returnsService = require('../../../lib/connectors/returns')
@@ -82,7 +82,7 @@ const mapRecentReturns = (returns) => {
   const grouped = groupBy(returns, ret => ret.metadata.nald.regionCode)
 
   // Discard all but last item in each group
-  const filtered = mapValues(grouped, group => first(group))
+  const filtered = mapValues(grouped, group => group[0])
 
   // Return the values from each group as array
   return Object.values(filtered)
