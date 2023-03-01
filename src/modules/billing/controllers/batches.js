@@ -70,6 +70,18 @@ const postCreateBatch = async (request, h) => {
   }
 }
 
+const postRefreshBatch = async (request, h) => {
+  const { batchId } = request.params
+
+  try {
+    await request.queueManager.add(refreshTotalsJobName, batchId)
+
+    return h.response().code(204)
+  } catch (err) {
+    return mapErrorResponse(err)
+  }
+}
+
 /**
  * Get batch with region, and optionally include batch totals
  * @param {Boolean} request.query.totals - indicates that batch totals should be included in response
@@ -253,6 +265,7 @@ module.exports = {
   deleteBatch,
   postApproveBatch,
   postCreateBatch,
+  postRefreshBatch,
   deleteAllBillingData,
   postSetBatchStatusToCancel,
   postBatchBillableYears

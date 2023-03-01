@@ -46,6 +46,19 @@ const postCreateBatch = {
   }
 }
 
+const postRefreshBatch = {
+  method: 'POST',
+  path: `${BASE_PATH}/{batchId}/refresh`,
+  handler: controller.postRefreshBatch,
+  config: {
+    validate: {
+      params: Joi.object().keys({
+        batchId: Joi.string().uuid().required()
+      })
+    }
+  }
+}
+
 const getBatch = {
   method: 'GET',
   path: `${BASE_PATH}/{batchId}`,
@@ -301,6 +314,7 @@ module.exports = {
   postApproveBatch,
   postBatchBillableYears,
   postCreateBatch,
+  postRefreshBatch,
   postApproveReviewBatch,
   getBatchDownloadData,
   postSetBatchStatusToCancel,
