@@ -1,5 +1,5 @@
 const csvParser = require('../csv-adapter/csv-parser')
-const { camelCase, set, sortBy } = require('lodash')
+const { camelCase, sortBy } = require('lodash')
 const chargeVersionMapper = require('./chargeVersionMapper')
 const { jobName } = require('../../jobs/update-charge-information-to-json')
 const eventsService = require('../../../../lib/services/events')
@@ -22,7 +22,11 @@ const mapCsv = async (csvStr, user, event) => {
 
   const [headers, ...rows] = data
 
-  set(event.metadata, 'rows', rows.length)
+  if (!event.metadata) {
+    event.metadata = {}
+  }
+
+  event.metadata.rows = rows.length
   await eventsService.update(event)
 
   // Convert the fields in the csv rows into key value pairs with the csv headings as the keys converted to camel case.

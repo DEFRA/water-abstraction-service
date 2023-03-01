@@ -4,7 +4,6 @@ const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 const { expect } = require('@hapi/code')
 const Hoek = require('@hapi/hoek')
-const { set } = require('lodash')
 const { experiment, test, afterEach, beforeEach } = exports.lab = require('@hapi/lab').script()
 const returnsUploadValidator = require('../../../../src/modules/returns/lib/returns-upload-validator')
 
@@ -147,7 +146,7 @@ experiment('validate', () => {
     let returnData
     beforeEach(async () => {
       returnData = Hoek.clone([data.upload[4]])
-      set(returnData[0], 'lines', [])
+      returnData[0].lines = []
       returnData[0].meters.push({
         meterDetailsProvided: true,
         manufacturer: 'Test Meters Ltd',
@@ -162,7 +161,7 @@ experiment('validate', () => {
 
     test('fails validation if manufacturer is missing', async () => {
       const { ERR_METER_DETAILS } = returnsUploadValidator.uploadErrors
-      set(returnData[0], 'isNil', false)
+      returnData[0].isNil = false
       returnData[0].meters[0].manufacturer = ''
       const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId, true)
       expect(errors).to.equal([ERR_METER_DETAILS])
@@ -170,7 +169,7 @@ experiment('validate', () => {
 
     test('fails validation if serial number is missing', async () => {
       const { ERR_METER_DETAILS } = returnsUploadValidator.uploadErrors
-      set(returnData[0], 'isNil', false)
+      returnData[0].isNil = false
       returnData[0].meters[0].serialNumber = ''
       const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId, true)
       expect(errors).to.equal([ERR_METER_DETAILS])

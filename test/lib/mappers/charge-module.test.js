@@ -1,7 +1,6 @@
 'use strict'
 
 const { v4: uuid } = require('uuid')
-const { set } = require('lodash')
 
 const {
   experiment,
@@ -231,7 +230,8 @@ experiment('lib/mappers/charge-module', () => {
     experiment('when there are no contacts', () => {
       let result
       beforeEach(async () => {
-        result = await mapper.extractFAO(set(mockedInvoiceAccount, 'contact', null))
+        mockedInvoiceAccount.contact = null
+        result = await mapper.extractFAO(mockedInvoiceAccount)
       })
       test('responds with null', () => {
         expect(result).to.equal(null)

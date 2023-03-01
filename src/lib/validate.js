@@ -1,6 +1,5 @@
 'use strict'
 
-const { set } = require('lodash')
 const idmConnector = require('./connectors/idm')
 const User = require('./models/user')
 
@@ -20,11 +19,16 @@ const isUserInternal = user => user.application === 'water_admin'
  * @param {Object} user
  */
 const setUserOnRequest = (request, user) => {
-  set(request, 'defra.internalCallingUser', {
+  if (!request.defra) {
+    request.defra = {}
+  }
+
+  request.defra.internalCallingUser = {
     id: user.user_id,
     email: user.user_name
-  })
-  set(request, 'defra.internalCallingUserModel', new User(user.user_id, user.user_name))
+  }
+
+  request.defra.internalCallingUserModel = new User(user.user_id, user.user_name)
 }
 
 const createResponse = (isValid, data = {}) => ({
