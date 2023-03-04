@@ -147,7 +147,7 @@ const postRefreshBatch = async (request, h) => {
 
     return h.response().code(204)
   } catch (err) {
-    return mapErrorResponse(err)
+    return err
   }
 }
 
