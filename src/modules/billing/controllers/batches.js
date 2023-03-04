@@ -139,6 +139,18 @@ const deleteBatch = (request, h) => controller.deleteEntity(
   request.defra.internalCallingUser
 )
 
+const postRefreshBatch = async (request, h) => {
+  const { batchId } = request.params
+
+  try {
+    await request.queueManager.add(refreshTotalsJobName, batchId)
+
+    return h.response().code(204)
+  } catch (err) {
+    return err
+  }
+}
+
 const postApproveBatch = async request => {
   const { batch } = request.pre
   const { internalCallingUser } = request.defra
@@ -253,6 +265,7 @@ module.exports = {
   deleteBatch,
   postApproveBatch,
   postCreateBatch,
+  postRefreshBatch,
   deleteAllBillingData,
   postSetBatchStatusToCancel,
   postBatchBillableYears

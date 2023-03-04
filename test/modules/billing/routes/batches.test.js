@@ -397,6 +397,51 @@ experiment('modules/billing/routes', () => {
     })
   })
 
+  experiment('postRefreshBatch', () => {
+    let request
+    let server
+    let validBatchId
+
+    beforeEach(async () => {
+      server = await getServer(routes.postRefreshBatch)
+      validBatchId = uuid()
+
+      request = {
+        method: 'POST',
+        url: `/water/1.0/billing/batches/${validBatchId}/refresh`,
+        // NOTE: We do not set `auth:` in the real requests as it is our opinion testing if a user has billing rights
+        // is irrelevant for something we have built to be hit only by another service.
+        // But in these unit tests it's how the previous team bypassed setting the JWT auth token in each test. If we
+        // don't set the object the test breaks. Fixing _all_ the tests to do things properly is beyond the scope of
+        // this change.
+        auth: {
+          strategy: 'basic',
+          credentials: {
+            scope: []
+          }
+        },
+        headers: {}
+      }
+    })
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(200)
+    })
+
+    test('returns a 200 if unknown headers are passed', async () => {
+      request.headers['x-custom-header'] = '123'
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(200)
+    })
+
+    test('returns a 400 if the batch id is not a uuid', async () => {
+      request.url = request.url.replace(validBatchId, '123')
+      const response = await server.inject(request)
+      expect(response.statusCode).to.equal(400)
+    })
+  })
+
   experiment('postApproveBatch', () => {
     let request
     let server

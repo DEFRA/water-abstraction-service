@@ -166,6 +166,19 @@ const deleteBatch = {
   }
 }
 
+const postRefreshBatch = {
+  method: 'POST',
+  path: `${BASE_PATH}/{batchId}/refresh`,
+  handler: controller.postRefreshBatch,
+  config: {
+    validate: {
+      params: Joi.object().keys({
+        batchId: Joi.string().uuid().required()
+      })
+    }
+  }
+}
+
 const postApproveBatch = {
   method: 'POST',
   path: `${BASE_PATH}/{batchId}/approve`,
@@ -301,6 +314,7 @@ module.exports = {
   postApproveBatch,
   postBatchBillableYears,
   postCreateBatch,
+  postRefreshBatch,
   postApproveReviewBatch,
   getBatchDownloadData,
   postSetBatchStatusToCancel,
