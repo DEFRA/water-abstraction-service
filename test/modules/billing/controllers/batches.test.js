@@ -877,6 +877,44 @@ experiment('modules/billing/controller', () => {
     })
   })
 
+  experiment('.postRefreshBatch', () => {
+    let request
+
+    beforeEach(async () => {
+      request = {
+        params: {
+          batchId: 'test-batch-id'
+        },
+        queueManager: {
+          add: sandbox.stub().resolves()
+        }
+      }
+    })
+
+    test('publishes a new job to the message queue with the batch ID', async () => {
+      await controller.postRefreshBatch(request, h)
+
+      const [jobName, batchId] = request.queueManager.add.lastCall.args
+      expect(jobName).to.equal('billing.refresh-totals')
+      expect(batchId).to.equal(request.params.batchId)
+    })
+
+    test('returns a 204 response', async () => {
+      await controller.postRefreshBatch(request, h)
+
+      const [code] = hapiResponseStub.code.lastCall.args
+      expect(code).to.equal(204)
+    })
+
+    test('returns the error from the service if it fails', async () => {
+      const err = new Error('whoops')
+      request.queueManager.add.rejects(err)
+      const result = await controller.postRefreshBatch(request, h)
+
+      expect(result).to.equal(err)
+    })
+  })
+
   experiment('.postApproveBatch', () => {
     let request
     let batch
