@@ -70,18 +70,6 @@ const postCreateBatch = async (request, h) => {
   }
 }
 
-const postRefreshBatch = async (request, h) => {
-  const { batchId } = request.params
-
-  try {
-    await request.queueManager.add(refreshTotalsJobName, batchId)
-
-    return h.response().code(204)
-  } catch (err) {
-    return mapErrorResponse(err)
-  }
-}
-
 /**
  * Get batch with region, and optionally include batch totals
  * @param {Boolean} request.query.totals - indicates that batch totals should be included in response
@@ -150,6 +138,18 @@ const deleteBatch = (request, h) => controller.deleteEntity(
   request.pre.batch,
   request.defra.internalCallingUser
 )
+
+const postRefreshBatch = async (request, h) => {
+  const { batchId } = request.params
+
+  try {
+    await request.queueManager.add(refreshTotalsJobName, batchId)
+
+    return h.response().code(204)
+  } catch (err) {
+    return mapErrorResponse(err)
+  }
+}
 
 const postApproveBatch = async request => {
   const { batch } = request.pre

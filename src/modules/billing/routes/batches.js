@@ -46,19 +46,6 @@ const postCreateBatch = {
   }
 }
 
-const postRefreshBatch = {
-  method: 'POST',
-  path: `${BASE_PATH}/{batchId}/refresh`,
-  handler: controller.postRefreshBatch,
-  config: {
-    validate: {
-      params: Joi.object().keys({
-        batchId: Joi.string().uuid().required()
-      })
-    }
-  }
-}
-
 const getBatch = {
   method: 'GET',
   path: `${BASE_PATH}/{batchId}`,
@@ -176,6 +163,19 @@ const deleteBatch = {
     pre: [
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
+  }
+}
+
+const postRefreshBatch = {
+  method: 'POST',
+  path: `${BASE_PATH}/{batchId}/refresh`,
+  handler: controller.postRefreshBatch,
+  config: {
+    validate: {
+      params: Joi.object().keys({
+        batchId: Joi.string().uuid().required()
+      })
+    }
   }
 }
 
