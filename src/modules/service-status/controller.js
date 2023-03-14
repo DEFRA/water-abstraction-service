@@ -1,5 +1,6 @@
+'use strict'
+
 const { throwIfError } = require('@envage/hapi-pg-rest-api')
-const { camelCase } = require('lodash')
 
 const idmConnector = require('../../lib/connectors/idm')
 const crmServiceVersionConnector = require('../../lib/connectors/crm/service-version')
@@ -28,9 +29,20 @@ const getStatus = async () => {
 const mapDataPoints = (dataPoints, key) => {
   return dataPoints.reduce((acc, val) => {
     const objectKey = val.dimension ? `${val.dimension}_${val.datapoint}` : val.datapoint
-    acc[camelCase(objectKey)] = val[key]
+    acc[toCamelCase(objectKey)] = val[key]
     return acc
   }, {})
+}
+
+/* This regex is converting any string into Camel Case
+ * [^a-zA-Z0-9] is matching any character except those inside the square brackets.
+ * This could be a dash (-), space ( ), or underscore (_)
+ * +(.) is matching the first character after the dash, space or underscore.
+ * /g. Replaces all the global matches and not just the first match, so the whole string can be converted
+*/
+const toCamelCase = (key) => {
+  const result = key.toLowerCase()
+  return result.replace(/[^a-zA-Z0-9]+(.)/g, (match, char) => char.toUpperCase())
 }
 
 /**

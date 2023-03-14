@@ -2,11 +2,21 @@
 
 const notificationsController = require('../../controllers/notifications')
 const eventsController = require('../../controllers/events')
-const { mapKeys, camelCase } = require('lodash')
+const { mapKeys } = require('lodash')
 const Boom = require('@hapi/boom')
 const crmDocumentConnector = require('../../lib/connectors/crm/documents')
 
-const camelCaseKeys = obj => mapKeys(obj, (value, key) => camelCase(key))
+/* This regex is converting any string into Camel Case
+ * [^a-zA-Z0-9] is matching any character except those inside the square brackets.
+ * This could be a dash (-), space ( ), or underscore (_)
+ * +(.) is matching the first character after the dash, space or underscore.
+ * /g. Replaces all the global matches and not just the first match, so the whole string can be converted
+*/
+const toCamelCase = (key) => {
+  return key.replace(/[^a-zA-Z0-9]+(.)/g, (match, char) => char.toUpperCase())
+}
+
+const camelCaseKeys = obj => mapKeys(obj, (value, key) => toCamelCase(key))
 
 const getNotification = async id => {
   const result = await notificationsController.repository.find({ id })

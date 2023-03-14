@@ -1,5 +1,7 @@
+'use strict'
+
 const csvParser = require('../csv-adapter/csv-parser')
-const { camelCase, set, sortBy } = require('lodash')
+const { set, sortBy } = require('lodash')
 const chargeVersionMapper = require('./chargeVersionMapper')
 const { jobName } = require('../../jobs/update-charge-information-to-json')
 const eventsService = require('../../../../lib/services/events')
@@ -28,7 +30,7 @@ const mapCsv = async (csvStr, user, event) => {
   // Convert the fields in the csv rows into key value pairs with the csv headings as the keys converted to camel case.
   // Then sort by the licence number and group.
   const rowObjects = sortBy(
-    rows.map(mapToRowObject(headers.map(header => camelCase(header)))),
+    rows.map(mapToRowObject(headers.map(header => toCamelCase(header)))),
     ['licenceNumber', 'chargeReferenceDetailsChargeElementGroup']
   )
 
@@ -56,6 +58,17 @@ const mapCsv = async (csvStr, user, event) => {
     }
   }
   return chargeVersions
+}
+
+/* This regex is converting any string into Camel Case
+ * [^a-zA-Z0-9] is matching any character except those inside the square brackets.
+ * This could be a dash (-), space ( ), or underscore (_)
+ * +(.) is matching the first character after the dash, space or underscore.
+ * /g. Replaces all the global matches and not just the first match, so the whole string can be converted
+*/
+const toCamelCase = (key) => {
+  // const result = key.toLowerCase()
+  return key.replace(/[^a-zA-Z0-9]+(.)/g, (match, char) => char.toUpperCase())
 }
 
 exports.mapCsv = mapCsv
