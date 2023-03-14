@@ -73,7 +73,7 @@ module.exports = {
   // This config is used by water-abstraction-helpers and its use of Winston and Airbrake. Any use of `logger.info()`,
   // for example, is built on this config.
   logger: {
-    level: process.env.WRLS_LOG_LEVEL || 'info',
+    level: process.env.WRLS_LOG_LEVEL || 'warn',
     airbrakeKey: process.env.ERRBIT_KEY,
     airbrakeHost: process.env.ERRBIT_SERVER,
     airbrakeLevel: 'error'
