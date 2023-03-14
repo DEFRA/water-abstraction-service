@@ -1,7 +1,6 @@
 const Lab = require('@hapi/lab')
 const { experiment, test, beforeEach } = exports.lab = Lab.script()
 const { expect } = require('@hapi/code')
-const { set } = require('lodash')
 
 const { createReturnsFilter } = require('../../../../src/modules/companies/lib/returns')
 
@@ -33,7 +32,7 @@ experiment('createReturnsFilter', () => {
   })
 
   test('filters by start date if specified in the request', async () => {
-    set(request, 'query.startDate', '2018-04-01')
+    request.query.startDate = '2018-04-01'
     const result = createReturnsFilter(request, documents)
     expect(result).to.equal({
       ...baseFilter,
@@ -44,7 +43,7 @@ experiment('createReturnsFilter', () => {
   })
 
   test('filters by end date if specified in the request', async () => {
-    set(request, 'query.endDate', '2019-03-31')
+    request.query.endDate = '2019-03-31'
     const result = createReturnsFilter(request, documents)
     expect(result).to.equal({
       ...baseFilter,
@@ -55,7 +54,7 @@ experiment('createReturnsFilter', () => {
   })
 
   test('filters by summer return flag if specified in the request', async () => {
-    set(request, 'query.isSummer', true)
+    request.query.isSummer = true
     const result = createReturnsFilter(request, documents)
     expect(result).to.equal({
       ...baseFilter,
@@ -64,7 +63,7 @@ experiment('createReturnsFilter', () => {
   })
 
   test('filters by status if specified in the request', async () => {
-    set(request, 'query.status', 'due')
+    request.query.status = 'due'
     const result = createReturnsFilter(request, documents)
     expect(result).to.equal({
       ...baseFilter,
@@ -73,7 +72,7 @@ experiment('createReturnsFilter', () => {
   })
 
   test('filters to only include digital service returns if specified in the request', async () => {
-    set(request, 'query.excludeNaldReturns', true)
+    request.query.excludeNaldReturns = true
     const result = createReturnsFilter(request, documents)
     expect(result).to.equal({
       ...baseFilter,
@@ -84,8 +83,8 @@ experiment('createReturnsFilter', () => {
   })
 
   test('can merge multiple filter parameters on the same field', async () => {
-    set(request, 'query.endDate', '2019-03-31')
-    set(request, 'query.excludeNaldReturns', true)
+    request.query.endDate = '2019-03-31'
+    request.query.excludeNaldReturns = true
     const result = createReturnsFilter(request, documents)
     expect(result).to.equal({
       ...baseFilter,

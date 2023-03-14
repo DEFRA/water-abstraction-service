@@ -5,7 +5,6 @@ const licenceService = require('../../../lib/services/licences')
 const chargeVersionService = require('../../../lib/services/charge-versions')
 const errorEvent = require('../lib/error-event')
 const { logger } = require('../../../logger')
-const { set } = require('lodash')
 const saveJsonHelper = require('../save-json')
 const chargeVersionMapper = require('../../../lib/mappers/charge-version')
 const userMapper = require('../../../lib/mappers/user')
@@ -86,7 +85,7 @@ const handleUpdateChargeInformation = async job => {
       await helpers.updateEventStatus(event, statusMessage, JOB_NAME)
     }
 
-    set(event, 'status', chargeInformationUpload.uploadStatus.READY)
+    event.status = chargeInformationUpload.uploadStatus.READY
     return await eventsService.update(event)
   } catch (error) {
     logger.error('Creation and Update of Charge versions failed', error.stack, { eventId })

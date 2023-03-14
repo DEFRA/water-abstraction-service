@@ -1,5 +1,4 @@
 const eventsService = require('../../../../lib/services/events')
-const { set } = require('lodash')
 const { uploadStatus } = require('../returns-upload')
 
 /**
@@ -29,7 +28,13 @@ const createEventError = (error = {}) => {
  */
 const setEventError = (event, error) => {
   const eventError = createEventError(error)
-  set(event, 'metadata.error', eventError)
+
+  if (!event.metadata) {
+    event.metadata = {}
+  }
+
+  event.metadata.error = eventError
+
   event.status = uploadStatus.ERROR
   return eventsService.update(event)
 }

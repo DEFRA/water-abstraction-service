@@ -5,7 +5,6 @@
  */
 
 const Boom = require('@hapi/boom')
-const { set } = require('lodash')
 const { throwIfError } = require('@envage/hapi-pg-rest-api')
 
 const eventFactory = require('../lib/event-factory')
@@ -113,7 +112,12 @@ const applySubmitting = (event, data) => {
     error: null
   }))
 
-  set(event, 'metadata.returns', returns)
+  if (!event.metadata) {
+    event.metadata = {}
+  }
+
+  event.metadata.returns = returns
+
   event.status = uploadStatus.SUBMITTING
 
   return event

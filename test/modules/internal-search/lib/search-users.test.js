@@ -1,6 +1,5 @@
 const sinon = require('sinon')
 const Lab = require('@hapi/lab')
-const { set } = require('lodash')
 const { experiment, test, afterEach, beforeEach } = exports.lab = Lab.script()
 const { expect } = require('@hapi/code')
 
@@ -26,7 +25,8 @@ const getPagination = () => {
 
 const getExternalUser = () => {
   const user = getUser()
-  return set(user, 'role.scopes', ['external'])
+  user.role.scopes = ['external']
+  return user
 }
 
 experiment('getFilter', () => {

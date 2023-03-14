@@ -1,6 +1,6 @@
 'use strict'
 
-const { set, uniq } = require('lodash')
+const { uniq } = require('lodash')
 const generateReference = require('../../../lib/reference-generator')
 const {
   EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING,
@@ -52,9 +52,10 @@ const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
   const ev = await eventsService.findOne(eventId)
 
   // Update event details
-  set(ev, 'metadata.sent', 0)
-  set(ev, 'metadata.error', 0)
-  set(ev, 'metadata.recipients', recipientCount)
+  ev.metadata.sent = 0
+  ev.metadata.error = 0
+  ev.metadata.recipients = recipientCount
+
   ev.fromHash({
     status: EVENT_STATUS_PROCESSED,
     licences: uniq(licenceNumbers)
@@ -97,9 +98,9 @@ const refreshEventStatus = async (eventId) => {
 
   const isComplete = (sent + error) === ev.metadata.recipients
 
-  set(ev, 'status', isComplete ? EVENT_STATUS_COMPLETED : EVENT_STATUS_SENDING)
-  set(ev, 'metadata.sent', sent)
-  set(ev, 'metadata.error', error)
+  ev.status = isComplete ? EVENT_STATUS_COMPLETED : EVENT_STATUS_SENDING
+  ev.metadata.sent = sent
+  ev.metadata.error = error
 
   return eventsService.update(ev)
 }

@@ -6,7 +6,7 @@ const {
   test
 } = exports.lab = require('@hapi/lab').script()
 
-const { omit, set } = require('lodash')
+const { omit } = require('lodash')
 
 const config = require('../../../../config')
 const sinon = require('sinon')
@@ -147,7 +147,7 @@ experiment('.handler', () => {
     beforeEach(async () => {
       gaugingStations[0].hydrologyStationId = null
       gaugingStations[0].stationReference = 'some_station'
-      set(gaugingStationCSVRow, '[0]', '')
+      gaugingStationCSVRow[0] = ''
       refreshNewRecord()
       await gaugingStationsRepo.findAll.resolves(gaugingStations)
       await syncGaugingStationsJob.handler()
@@ -166,8 +166,8 @@ experiment('.handler', () => {
       gaugingStations[0].hydrologyStationId = null
       gaugingStations[0].stationReference = null
       gaugingStations[0].wiskiId = 'WiskiId'
-      set(gaugingStationCSVRow, '[0]', '')
-      set(gaugingStationCSVRow, '[1]', '')
+      gaugingStationCSVRow[0] = ''
+      gaugingStationCSVRow[1] = ''
       refreshNewRecord()
       gaugingStationsRepo.findAll.resolves(gaugingStations)
       await syncGaugingStationsJob.handler()
@@ -184,9 +184,10 @@ experiment('.handler', () => {
       gaugingStations[0].hydrologyStationId = null
       gaugingStations[0].stationReference = null
       gaugingStations[0].wiskiId = null
-      set(gaugingStationCSVRow, '[0]', '')
-      set(gaugingStationCSVRow, '[1]', '')
-      set(gaugingStationCSVRow, '[2]', '')
+      gaugingStationCSVRow[0] = ''
+      gaugingStationCSVRow[1] = ''
+      gaugingStationCSVRow[2] = ''
+
       refreshNewRecord()
       gaugingStationsRepo.findAll.resolves(gaugingStations)
       await syncGaugingStationsJob.handler()
