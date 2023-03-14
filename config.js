@@ -66,7 +66,8 @@ module.exports = {
   log: {
     // Credit to https://stackoverflow.com/a/323546/6117745 for how to handle
     // converting the env var to a boolean
-    logInTest: (String(process.env.LOG_IN_TEST) === 'true') || false
+    logInTest: (String(process.env.LOG_IN_TEST) === 'true') || false,
+    level: process.env.WRLS_LOG_LEVEL || 'warn'
   },
 
   // This config is used by water-abstraction-helpers and its use of Winston and Airbrake. Any use of `logger.info()`,
