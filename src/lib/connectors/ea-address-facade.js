@@ -2,7 +2,6 @@
 
 const { http } = require('@envage/water-abstraction-helpers')
 const config = require('../../../config')
-const { set } = require('lodash')
 const urlJoin = require('url-join')
 
 /**
@@ -18,7 +17,7 @@ const eaAddressFacadeRequest = (tail, options = {}) => {
     json: true,
     ...options
   }
-  set(requestOptions, 'qs.key', 'client1')
+  requestOptions.qs.key = 'client1'
   return http.request(requestOptions)
 }
 

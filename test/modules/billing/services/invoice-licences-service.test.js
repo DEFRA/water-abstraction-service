@@ -10,7 +10,6 @@ const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 const { v4: uuid } = require('uuid')
 
-const { set } = require('lodash')
 const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service')
 const batchService = require('../../../../src/modules/billing/services/batch-service')
 const licencesService = require('../../../../src/lib/services/licences')
@@ -266,11 +265,9 @@ experiment('modules/billing/services/invoice-licences-service', () => {
 
     experiment('when the batch is not ready', () => {
       beforeEach(async () => {
-        const billingInvoiceLicenceUnreadyBatch = set(
-          Hoek.clone(billingInvoiceLicence),
-          'billingInvoice.billingBatch.status',
-          Batch.BATCH_STATUS.processing
-        )
+        const billingInvoiceLicenceUnreadyBatch = Hoek.clone(billingInvoiceLicence)
+        billingInvoiceLicenceUnreadyBatch.billingInvoice.billingBatch.status = Batch.BATCH_STATUS.processing
+
         newRepos.billingInvoiceLicences.findOne.resolves(billingInvoiceLicenceUnreadyBatch)
         newRepos.billingInvoiceLicences.findCountByInvoiceId.resolves(2)
         chargeModuleBillRunConnector.getInvoiceTransactions.resolves(cmResponse)
@@ -285,11 +282,9 @@ experiment('modules/billing/services/invoice-licences-service', () => {
 
     experiment('when the invoice is a rebilling invoice', () => {
       beforeEach(async () => {
-        const billingInvoiceLicenceRebilling = set(
-          Hoek.clone(billingInvoiceLicence),
-          'billingInvoice.rebillingState',
-          'rebilling'
-        )
+        const billingInvoiceLicenceRebilling = Hoek.clone(billingInvoiceLicence)
+        billingInvoiceLicenceRebilling.billingInvoice.rebillingState = 'rebilling'
+
         newRepos.billingInvoiceLicences.findOne.resolves(billingInvoiceLicenceRebilling)
         newRepos.billingInvoiceLicences.findCountByInvoiceId.resolves(2)
         chargeModuleBillRunConnector.getInvoiceTransactions.resolves(cmResponse)

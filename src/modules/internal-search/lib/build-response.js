@@ -1,4 +1,4 @@
-const { set } = require('lodash')
+'use strict'
 
 /**
  * Build response object
@@ -10,13 +10,13 @@ const { set } = require('lodash')
 const buildResponse = (response, key, data) => {
   if (data && 'pagination' in data) {
     if (data.data.length) {
-      set(response, key, data.data)
-      set(response, 'pagination', data.pagination)
+      response[key] = data.data
+      response.pagination = data.pagination
     }
   } else if (data && data.length) {
-    set(response, key, data)
+    response[key] = data
   } else if (data && ['billingAccount'].includes(key)) {
-    set(response, key, data)
+    response[key] = data
   }
 }
 

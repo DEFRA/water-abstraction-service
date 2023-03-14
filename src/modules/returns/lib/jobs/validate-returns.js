@@ -1,3 +1,5 @@
+'use strict'
+
 const JOB_NAME = 'validate-uploaded-returns-data'
 const returnsUpload = require('../../lib/returns-upload')
 const eventsService = require('../../../../lib/services/events')
@@ -5,7 +7,6 @@ const errorEvent = require('./error-event')
 const { logger } = require('../../../../logger')
 const uploadValidator = require('../../lib/returns-upload-validator')
 const { mapMultipleReturn } = require('../../lib/upload-preview-mapper')
-const { set } = require('lodash')
 const s3 = require('../../../../lib/services/s3')
 
 /**
@@ -61,8 +62,13 @@ const handleValidateReturnsStart = async job => {
     await uploadJsonToS3(eventId, validated)
     const data = validated.map(mapMultipleReturn)
 
-    set(event, 'metadata.validationResults', getEventReturnData(data))
-    set(event, 'status', returnsUpload.uploadStatus.READY)
+    if (!event.metadata) {
+      event.metadata = {}
+    }
+
+    event.metadata.validationResults = getEventReturnData(data)
+
+    event.status = returnsUpload.uploadStatus.READY
 
     await eventsService.update(event)
   } catch (error) {

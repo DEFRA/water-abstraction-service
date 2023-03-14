@@ -1,6 +1,5 @@
 'use strict'
 
-const { set } = require('lodash')
 const eventsService = require('../../../../lib/services/events')
 const { logger } = require('../../../../logger')
 const returnsUpload = require('../../lib/returns-upload')
@@ -27,7 +26,7 @@ const createMessage = data => {
   ]
 }
 const updateEvent = (event, updatedReturns) => {
-  set(event, 'metadata.returns', updatedReturns)
+  event.metadata.returns = updatedReturns
   event.status = uploadStatus.SUBMITTED
   return eventsService.update(event)
 }

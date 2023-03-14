@@ -2,7 +2,6 @@
 
 const { assertDate, assertLicenceNumber } = require('../../../lib/models/validators')
 const licencesService = require('../../../lib/services/licences')
-const { set } = require('lodash')
 const documentsService = require('../../../lib/services/documents-service')
 const { billing } = require('../../../../config')
 const companiesService = require('../../../lib/services/companies-service')
@@ -129,7 +128,11 @@ const clearCache = () => {
 
 const updateEventStatus = async (event, statusMessage, jobName) => {
   logger.info(`${jobName}: ${statusMessage}`)
-  set(event.metadata, 'statusMessage', statusMessage)
+
+  if (!event.metadata) {
+    event.metadata = {}
+  }
+  event.metadata.statusMessage = statusMessage
   return eventsService.update(event)
 }
 
