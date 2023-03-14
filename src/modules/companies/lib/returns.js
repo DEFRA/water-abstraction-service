@@ -1,4 +1,4 @@
-'use strict'
+const { set } = require('lodash')
 
 /**
  * Creates a filter object to request returns from the returns service
@@ -26,20 +26,8 @@ const createReturnsFilter = (request, documents) => {
 
   return Object.keys(request.query).reduce((acc, queryParam) => {
     set(acc, filters[queryParam].key, filters[queryParam].value)
-
     return acc
   }, baseFilter)
-}
-
-const set = (obj, path, value) => {
-  const pathArray = Array.isArray(path) ? path : path.match(/([^[.\]])+/g)
-
-  pathArray.reduce((acc, key, i) => {
-    if (acc[key] === undefined) acc[key] = {}
-    if (i === pathArray.length - 1) acc[key] = value
-    return acc[key]
-  }, obj)
-  return obj
 }
 
 exports.createReturnsFilter = createReturnsFilter
