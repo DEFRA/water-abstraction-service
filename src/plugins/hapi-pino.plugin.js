@@ -31,7 +31,9 @@ const config = require('../../config.js')
  */
 const testOptions = () => {
   if (process.env.NODE_ENV !== 'test' || config.log.logInTest) {
-    return {}
+    return {
+      level: config.log.level
+    }
   }
 
   return {
