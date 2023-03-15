@@ -13,7 +13,7 @@ exports.setup = function (options, _seedLink) {
 }
 
 exports.up = function (db) {
-  const filePath = path.join(__dirname, 'sqls', '20230120140933-queued-batch-status-up.sql')
+  const filePath = path.join(__dirname, 'sqls', '20230315122011-remove-constraint-from-billing-transactions-up.sql')
   return new Promise(function (resolve, reject) {
     fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
       if (err) return reject(err)
@@ -28,7 +28,7 @@ exports.up = function (db) {
 }
 
 exports.down = function (db) {
-  const filePath = path.join(__dirname, 'sqls', '20230120140933-queued-batch-status-down.sql')
+  const filePath = path.join(__dirname, 'sqls', '20230315122011-remove-constraint-from-billing-transactions-down.sql')
   return new Promise(function (resolve, reject) {
     fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
       if (err) return reject(err)
