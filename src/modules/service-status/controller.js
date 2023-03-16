@@ -11,6 +11,7 @@ const permitConnector = require('../../lib/connectors/permit')
 const returnsConnector = require('../../lib/connectors/returns')
 const importConnector = require('../../lib/connectors/import')
 const jobsConnector = require('../../lib/connectors/import/jobs')
+const toCamelCase = require('../../lib/services/to-camel-case')
 
 const pkg = require('../../../package.json')
 
@@ -32,17 +33,6 @@ const mapDataPoints = (dataPoints, key) => {
     acc[toCamelCase(objectKey)] = val[key]
     return acc
   }, {})
-}
-
-/* This regex is converting any string into Camel Case
- * [^a-zA-Z0-9] is matching any character except those inside the square brackets.
- * This could be a dash (-), space ( ), or underscore (_)
- * +(.) is matching the first character after the dash, space or underscore.
- * /g. Replaces all the global matches and not just the first match, so the whole string can be converted
-*/
-const toCamelCase = (key) => {
-  const result = key.toLowerCase()
-  return result.replace(/[^a-zA-Z0-9]+(.)/g, (match, char) => char.toUpperCase())
 }
 
 /**

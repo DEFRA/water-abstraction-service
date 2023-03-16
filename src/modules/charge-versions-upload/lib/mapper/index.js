@@ -6,6 +6,7 @@ const chargeVersionMapper = require('./chargeVersionMapper')
 const { jobName } = require('../../jobs/update-charge-information-to-json')
 const eventsService = require('../../../../lib/services/events')
 const helpers = require('../helpers')
+const toCamelCase = require('../../../../lib/services/to-camel-case')
 
 const mapToRowObject = headers => row => row.reduce((acc, column, index) => {
   return { ...acc, [headers[index]]: column }
@@ -62,17 +63,6 @@ const mapCsv = async (csvStr, user, event) => {
     }
   }
   return chargeVersions
-}
-
-/* This regex is converting any string into Camel Case
- * [^a-zA-Z0-9] is matching any character except those inside the square brackets.
- * This could be a dash (-), space ( ), or underscore (_)
- * +(.) is matching the first character after the dash, space or underscore.
- * /g. Replaces all the global matches and not just the first match, so the whole string can be converted
-*/
-const toCamelCase = (key) => {
-  // const result = key.toLowerCase()
-  return key.replace(/[^a-zA-Z0-9]+(.)/g, (match, char) => char.toUpperCase())
 }
 
 exports.mapCsv = mapCsv

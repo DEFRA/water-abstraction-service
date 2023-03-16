@@ -1,16 +1,7 @@
 'use strict'
 
 const { reduce, isPlainObject } = require('lodash')
-
-/* This regex is converting any string into Camel Case
- * [^a-zA-Z0-9] is matching any character except those inside the square brackets.
- * This could be a dash (-), space ( ), or underscore (_)
- * +(.) is matching the first character after the dash, space or underscore.
- * /g. Replaces all the global matches and not just the first match, so the whole string can be converted
-*/
-const toCamelCase = (key) => {
-  return key.replace(/[^a-zA-Z0-9]+(.)/g, (match, char) => char.toUpperCase())
-}
+const toCamelCase = require('../lib/services/to-camel-case')
 
 const camelCaseObjectKeys = (data) => {
   return reduce(data, (acc, value, key) => {
