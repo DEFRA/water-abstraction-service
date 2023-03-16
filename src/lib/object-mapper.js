@@ -5,7 +5,7 @@
  *         however the handling of nulls is different:
  *         by default nulls are mapped, with an option of ignoring them
  */
-const { identity, set, isFunction } = require('lodash')
+const { identity, set } = require('lodash')
 
 const getSourceKeys = value => {
   if (Array.isArray(value)) {
@@ -39,7 +39,7 @@ class Mapper {
    * @param {Boolean} [options.mapNull]  can control if null is mapped per property
    */
   to (targetKey, ...args) {
-    const mapper = isFunction(args[0]) ? args[0] : null
+    const mapper = typeof args[0] === 'function' ? args[0] : null
     const options = args[args.length - 1] instanceof Object ? args[args.length - 1] : {}
 
     if (this._sourceKeys.length > 1 && !mapper) {
