@@ -1,6 +1,5 @@
 'use strict'
 
-const { omit } = require('lodash')
 const Contact = require('../models/contact-v2')
 
 const { createMapper } = require('../object-mapper')
@@ -41,7 +40,9 @@ const uiToModel = contactData => {
   }
   const contact = new Contact()
   contact.dataSource = contactData.source || Contact.DATA_SOURCE_TYPES.wrls
-  return contact.fromHash(omit(contactData, 'source'))
+  const contactDataOmit = { ...contactData }
+  delete contactDataOmit.source
+  return contact.fromHash(contactDataOmit)
 }
 
 /**
@@ -51,8 +52,9 @@ const uiToModel = contactData => {
  */
 const modelToCrm = contact => {
   const data = contact.toJSON()
+  delete data.fullName
   return {
-    ...omit(data, 'fullName')
+    ...data
   }
 }
 
