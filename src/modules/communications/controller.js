@@ -2,11 +2,12 @@
 
 const notificationsController = require('../../controllers/notifications')
 const eventsController = require('../../controllers/events')
-const { mapKeys, camelCase } = require('lodash')
+const { mapKeys } = require('lodash')
 const Boom = require('@hapi/boom')
 const crmDocumentConnector = require('../../lib/connectors/crm/documents')
+const toCamelCase = require('../../lib/services/to-camel-case')
 
-const camelCaseKeys = obj => mapKeys(obj, (value, key) => camelCase(key))
+const camelCaseKeys = obj => mapKeys(obj, (value, key) => toCamelCase(key))
 
 const getNotification = async id => {
   const result = await notificationsController.repository.find({ id })
