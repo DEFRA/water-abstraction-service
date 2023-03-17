@@ -1,10 +1,11 @@
 'use strict'
 
-const { reduce, isPlainObject, camelCase } = require('lodash')
+const { reduce, isPlainObject } = require('lodash')
+const toCamelCase = require('../lib/services/to-camel-case')
 
 const camelCaseObjectKeys = (data) => {
   return reduce(data, (acc, value, key) => {
-    acc[camelCase(key)] = camelCaseKeys(value)
+    acc[toCamelCase(key)] = camelCaseKeys(value)
 
     return acc
   }, {})

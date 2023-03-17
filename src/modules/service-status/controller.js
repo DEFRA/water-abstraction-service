@@ -1,5 +1,6 @@
+'use strict'
+
 const { throwIfError } = require('@envage/hapi-pg-rest-api')
-const { camelCase } = require('lodash')
 
 const idmConnector = require('../../lib/connectors/idm')
 const crmServiceVersionConnector = require('../../lib/connectors/crm/service-version')
@@ -10,6 +11,7 @@ const permitConnector = require('../../lib/connectors/permit')
 const returnsConnector = require('../../lib/connectors/returns')
 const importConnector = require('../../lib/connectors/import')
 const jobsConnector = require('../../lib/connectors/import/jobs')
+const toCamelCase = require('../../lib/services/to-camel-case')
 
 const pkg = require('../../../package.json')
 
@@ -28,7 +30,7 @@ const getStatus = async () => {
 const mapDataPoints = (dataPoints, key) => {
   return dataPoints.reduce((acc, val) => {
     const objectKey = val.dimension ? `${val.dimension}_${val.datapoint}` : val.datapoint
-    acc[camelCase(objectKey)] = val[key]
+    acc[toCamelCase(objectKey)] = val[key]
     return acc
   }, {})
 }
