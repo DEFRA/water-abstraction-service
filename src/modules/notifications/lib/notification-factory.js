@@ -1,12 +1,13 @@
+'use strict'
+
 const { logger } = require('../../../logger')
-const { identity } = require('lodash')
 
 const mapAddressLine = str => (str || '').trim()
 
 const formatAddress = contact => {
   // Format name
   const { salutation, forename, name, postcode } = contact
-  const fullName = [salutation, forename, name].filter(identity).join(' ')
+  const fullName = [salutation, forename, name].filter(a => a).join(' ')
 
   // Format address lines
   const addressLines = [
@@ -23,7 +24,7 @@ const formatAddress = contact => {
   // so we omit county as postcode is sufficient
   const finalAddressLines = addressLines
     .map(mapAddressLine)
-    .filter(identity)
+    .filter(a => a)
     .slice(0, 6)
 
   // Format personalisation with address lines and postcode

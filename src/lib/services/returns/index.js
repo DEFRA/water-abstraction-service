@@ -1,6 +1,6 @@
 'use strict'
 
-const { flatMap, identity } = require('lodash')
+const { flatMap } = require('lodash')
 const bluebird = require('bluebird')
 const moment = require('moment')
 
@@ -149,7 +149,7 @@ const getFilterStartDate = (document) => {
  */
 const getFilterEndDate = (document) => {
   const result = [document.dateRange.endDate, moment().format(DATE_FORMAT)]
-    .filter(identity)
+    .filter(a => a)
     .sort()
 
   return result[0]

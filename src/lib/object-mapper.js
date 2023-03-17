@@ -5,7 +5,7 @@
  *         however the handling of nulls is different:
  *         by default nulls are mapped, with an option of ignoring them
  */
-const { identity, set } = require('lodash')
+const { set } = require('lodash')
 
 const getSourceKeys = value => {
   if (Array.isArray(value)) {
@@ -49,7 +49,7 @@ class Mapper {
     this._rules.push({
       sourceKeys: this._sourceKeys,
       targetKey,
-      mapper: mapper || identity,
+      mapper: mapper || (a => a),
       options: Object.assign({}, this._options, options)
     })
     return this

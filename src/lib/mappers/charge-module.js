@@ -1,5 +1,5 @@
 'use strict'
-const { truncate, identity } = require('lodash')
+const { truncate } = require('lodash')
 const { combineAddressLines, getAddressObjectFromArray } = require('./lib/helpers')
 
 /**
@@ -56,7 +56,7 @@ const extractAddress = (address, fao = null) => {
     lines.push(`FAO ${fao}`)
   }
   const { addressLine1, addressLine2, addressLine3, addressLine4 } = address
-  const addressLines = [addressLine1, addressLine2, addressLine3, addressLine4].filter(identity)
+  const addressLines = [addressLine1, addressLine2, addressLine3, addressLine4].filter(a => a)
 
   lines.push(...addressLines)
 

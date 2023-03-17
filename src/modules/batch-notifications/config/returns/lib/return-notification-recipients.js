@@ -1,4 +1,4 @@
-const { uniq, flatMap, identity, groupBy } = require('lodash')
+const { uniq, flatMap, groupBy } = require('lodash')
 const {
   CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_RETURNS_AGENT,
   CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO
@@ -21,7 +21,7 @@ const getPreferredContacts = contactList => {
   return [
     contactList.getByRole(CONTACT_ROLE_LICENCE_HOLDER),
     ...contactList.getAllByRole(CONTACT_ROLE_RETURNS_TO)
-  ].filter(identity)
+  ].filter(a => a)
 }
 
 const mapGroupedRecipient = arr => ({

@@ -3,7 +3,6 @@
 const Model = require('./model')
 const validators = require('./validators')
 const Joi = require('joi')
-const { identity } = require('lodash')
 const { VALID_ADDRESS } = require('@envage/water-abstraction-helpers').validators
 
 const ADDRESS_SOURCE = {
@@ -46,13 +45,13 @@ const getSortKey = address => {
       address.addressLine2,
       address.addressLine3,
       address.addressLine4
-    ].filter(identity).map(zeroPad),
+    ].filter(a => a).map(zeroPad),
     address.town,
     address.county,
     address.postcode,
     address.country
   ].reverse()
-    .filter(identity)
+    .filter(a => a)
     .map(str => str.toUpperCase().replace(/ /, '_'))
     .join('_')
 }

@@ -1,6 +1,5 @@
 'use strict'
 
-const { identity } = require('lodash')
 const { titleCase } = require('title-case')
 
 const Model = require('./model')
@@ -47,7 +46,7 @@ const getTwoPartTariffTransactionDescription = transaction => {
   const { description } = transaction.chargeElement
 
   return [prefix, 'Part', purposeUseDescription, 'Charge', description]
-    .filter(identity)
+    .filter(a => a)
     .join(' ')
 }
 
