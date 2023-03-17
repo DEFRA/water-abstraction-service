@@ -1,6 +1,5 @@
 'use strict'
 
-const { uniq } = require('lodash')
 const generateReference = require('../../../lib/reference-generator')
 const {
   EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING,
@@ -58,7 +57,7 @@ const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
 
   ev.fromHash({
     status: EVENT_STATUS_PROCESSED,
-    licences: uniq(licenceNumbers)
+    licences: [...new Set(licenceNumbers)]
   })
 
   return eventsService.update(ev)

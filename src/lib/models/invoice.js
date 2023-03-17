@@ -1,6 +1,6 @@
 'use strict'
 
-const { uniq, flatMap } = require('lodash')
+const { flatMap } = require('lodash')
 
 const {
   assertIsInstanceOf, assertIsArrayOfType,
@@ -165,9 +165,9 @@ class Invoice extends Totals {
    * object associated with this invoice
    */
   getLicenceIds () {
-    return uniq(flatMap(this.invoiceLicences, invoiceLicence => {
+    return [...new Set(flatMap(this.invoiceLicences, invoiceLicence => {
       return invoiceLicence.licence.id
-    }))
+    }))]
   }
 
   /**

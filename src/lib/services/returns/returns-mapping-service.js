@@ -9,8 +9,6 @@
 const returnRequirementsService = require('../return-requirements')
 const returnMapper = require('../../mappers/return')
 
-const { uniq } = require('lodash')
-
 const getReturnRequirementExternalId = returnData => `${returnData.metadata.nald.regionCode}:${returnData.metadata.nald.formatId}`
 
 /**
@@ -21,7 +19,7 @@ const getReturnRequirementExternalId = returnData => `${returnData.metadata.nald
  */
 const getReturnRequirements = returnsData => {
   // Get a unique list of external IDs
-  const externalIds = uniq(returnsData.map(getReturnRequirementExternalId))
+  const externalIds = [...new Set(returnsData.map(getReturnRequirementExternalId))]
   const tasks = externalIds.map(returnRequirementsService.getReturnRequirementByExternalId)
   return Promise.all(tasks)
 }

@@ -19,7 +19,7 @@
   }
 ]
  */
-const { chunk, flatMap, uniq, cond, negate, isEqual } = require('lodash')
+const { chunk, flatMap, cond, negate, isEqual } = require('lodash')
 
 const returnsConnector = require('../../../lib/connectors/returns')
 const documents = require('../../../lib/connectors/crm/documents')
@@ -47,7 +47,7 @@ const uploadErrors = {
  * @return {Promise}           resolves with array of CRM documents
  */
 const getDocuments = (returns) => {
-  const licenceNumbers = uniq(returns.map(row => row.licenceNumber))
+  const licenceNumbers = [...new Set(returns.map(row => row.licenceNumber))]
   const filter = {
     'metadata->>IsCurrent': { $ne: 'false' },
     system_external_id: {
@@ -139,7 +139,7 @@ const validateLineFrequency = ret => {
   try {
     const { startDate, endDate, frequency } = ret
     const requiredLines = returnLines.getRequiredLines(startDate, endDate, frequency)
-    const returnTimePeriod = uniq(ret.lines.map(line => line.timePeriod))
+    const returnTimePeriod = [...new Set(ret.lines.map(line => line.timePeriod))]
     return isEqual(returnTimePeriod, [requiredLines[0].timePeriod])
   } catch (err) {
     return false

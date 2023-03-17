@@ -1,6 +1,5 @@
 'use strict'
 
-const { uniq } = require('lodash')
 const waterHelpers = require('@envage/water-abstraction-helpers')
 const { throwIfError } = require('@envage/hapi-pg-rest-api')
 const documents = require('../../../lib/connectors/crm/documents')
@@ -57,9 +56,9 @@ const getLicenceNumber = doc => doc.system_external_id
  * @returns {Map} map of Licence instances by licence number
  */
 const getLicencesMap = async response => {
-  const licenceNumbers = uniq(
+  const licenceNumbers = [...new Set(
     response.data.map(getLicenceNumber)
-  )
+  )]
   const licences = await licencesService.getLicencesByLicenceRefs(licenceNumbers)
   // Return as map
   return licences.reduce((map, licence) =>
