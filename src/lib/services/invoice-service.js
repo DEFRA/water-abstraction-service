@@ -1,9 +1,10 @@
 'use strict'
 
-const { partialRight, pickBy } = require('lodash')
+const { pickBy } = require('lodash')
 const pWaterfall = require('p-waterfall')
 
 const { logger } = require('../../logger')
+const partialRight = require('../../lib/partial-right')
 
 // Connectors
 const invoiceAccountsConnector = require('../connectors/crm-v2/invoice-accounts')
