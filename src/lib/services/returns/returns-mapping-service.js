@@ -19,6 +19,7 @@ const getReturnRequirementExternalId = returnData => `${returnData.metadata.nald
  */
 const getReturnRequirements = returnsData => {
   // Get a unique list of external IDs
+  // Create a new set to remove any duplicate values
   const externalIds = [...new Set(returnsData.map(getReturnRequirementExternalId))]
   const tasks = externalIds.map(returnRequirementsService.getReturnRequirementByExternalId)
   return Promise.all(tasks)

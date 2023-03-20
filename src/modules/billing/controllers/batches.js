@@ -173,6 +173,7 @@ const getBatchDownloadData = async request => {
   const { batch } = request.pre
   const invoices = await invoiceService.getInvoicesForBatchDownload(batch)
 
+  // Create a new set to remove duplicate values
   const chargeVersionIds = [...new Set(flatMap(invoices.map(invoice => {
     return flatMap(invoice.billingInvoiceLicences.map(invoiceLicence =>
       invoiceLicence.billingTransactions

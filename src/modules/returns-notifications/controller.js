@@ -19,6 +19,7 @@ const postPreviewReturnNotification = async (request, h) => {
   // Find all returns matching criteria
   const data = await returns.findAll(filter, sort, columns)
 
+  // Create a new set to remove any duplicate values
   const licenceRefs = [...new Set(data.map(item => item.licence_ref))]
 
   const licencesEndDates = await permitConnector.getLicenceEndDates(licenceRefs)

@@ -47,6 +47,7 @@ const uploadErrors = {
  * @return {Promise}           resolves with array of CRM documents
  */
 const getDocuments = (returns) => {
+  // Create a new set to remove any duplicate values
   const licenceNumbers = [...new Set(returns.map(row => row.licenceNumber))]
   const filter = {
     'metadata->>IsCurrent': { $ne: 'false' },
@@ -139,6 +140,7 @@ const validateLineFrequency = ret => {
   try {
     const { startDate, endDate, frequency } = ret
     const requiredLines = returnLines.getRequiredLines(startDate, endDate, frequency)
+    // Create a new set to remove any duplicate values
     const returnTimePeriod = [...new Set(ret.lines.map(line => line.timePeriod))]
     return isEqual(returnTimePeriod, [requiredLines[0].timePeriod])
   } catch (err) {

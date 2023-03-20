@@ -55,6 +55,7 @@ const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
   ev.metadata.error = 0
   ev.metadata.recipients = recipientCount
 
+  // Create a new set to remove duplicate values
   ev.fromHash({
     status: EVENT_STATUS_PROCESSED,
     licences: [...new Set(licenceNumbers)]

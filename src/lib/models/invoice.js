@@ -163,6 +163,7 @@ class Invoice extends Totals {
    * Get the licence ids for this invoice by inspecting
    * the Licence objects associated with each InvoiceLicence
    * object associated with this invoice
+   * Creating a new set to remove duplicate values
    */
   getLicenceIds () {
     return [...new Set(flatMap(this.invoiceLicences, invoiceLicence => {

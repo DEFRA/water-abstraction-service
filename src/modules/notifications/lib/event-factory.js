@@ -18,6 +18,7 @@ function getUniqueEntities (contactData) {
     })
   })
 
+  // Create a new set to remove any duplicate values
   return [...new Set(entities.filter(x => x))]
 }
 

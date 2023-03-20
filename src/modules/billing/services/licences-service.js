@@ -31,6 +31,7 @@ const mapItem = (licence, invoiceAccount) => ({
  */
 const getByBatchIdForTwoPartTariffReview = async batchId => {
   const data = await repos.licences.findByBatchIdForTwoPartTariffReview(batchId)
+  // Create a new set to remove duplicate values
   const uniqueIds = [...new Set(data.map(row => row.invoiceAccountId))]
   const invoiceAccounts = await invoiceAccountService.getByInvoiceAccountIds(uniqueIds)
   return data.map(licence => {

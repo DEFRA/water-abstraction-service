@@ -56,6 +56,7 @@ const getLicenceNumber = doc => doc.system_external_id
  * @returns {Map} map of Licence instances by licence number
  */
 const getLicencesMap = async response => {
+  // Create a new set to remove anu duplicate values
   const licenceNumbers = [...new Set(
     response.data.map(getLicenceNumber)
   )]

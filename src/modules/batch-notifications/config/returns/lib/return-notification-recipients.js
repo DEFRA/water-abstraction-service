@@ -24,6 +24,7 @@ const getPreferredContacts = contactList => {
   ].filter(identity)
 }
 
+// Create a new set to remove duplicate values
 const mapGroupedRecipient = arr => ({
   contact: arr[0].contact,
   licenceNumbers: [...new Set(arr.map(row => row.licenceNumber))],

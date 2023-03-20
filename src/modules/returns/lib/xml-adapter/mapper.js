@@ -183,6 +183,8 @@ const getPermitsFromXml = xmlDoc => xmlDoc.find('tns:Permit', options)
  */
 const getLicenceNumbersFromPermits = (permits) => {
   const licenceNumbers = permits.map(permit => getText(permit, 'tns:IrPermitNo'))
+
+  // Create new set to remove any duplicate values
   return [...new Set(licenceNumbers)]
 }
 

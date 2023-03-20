@@ -16,6 +16,7 @@ const notificationRecipients = require('./return-notification-recipients')
  */
 const getExcludeLicences = job => {
   const licenceNumbers = job.ev.metadata.options.excludeLicences ?? []
+  // Create a new set to remove any duplicate values
   return [...new Set(licenceNumbers)]
 }
 

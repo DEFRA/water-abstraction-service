@@ -10,6 +10,8 @@ const evt = require('../../../lib/event')
  */
 const getLicenceNumbers = (returns) => {
   const licenceNumbers = returns.map(row => row.licence_ref)
+
+  // Create a new set to remove any duplicate values
   return [...new Set(licenceNumbers)]
 }
 

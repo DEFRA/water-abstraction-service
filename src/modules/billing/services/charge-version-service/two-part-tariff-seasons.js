@@ -48,6 +48,7 @@ const getNALDTwoPartTariffSeasons = async row => {
   const filteredBillingVolumes = billingVolumes.filter(isApprovedNaldBillingVolume)
 
   // Get unique isSummer flags
+  // Create a new set to remove duplicate values
   const summerFlags = [...new Set(filteredBillingVolumes.map(getIsSummer))]
 
   // Map to return seasons

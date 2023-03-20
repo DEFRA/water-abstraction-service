@@ -96,6 +96,7 @@ const getLicenceDocumentReturns = async licence => {
  */
 const getIncompleteReturns = async request => {
   // Get unique list of upper-cased licence number strings
+  // Create a new set to remove any duplicate values
   const licenceNumbers = [...new Set(request.query.licenceNumbers)].map(toUpperCase)
 
   // Find licence service models
