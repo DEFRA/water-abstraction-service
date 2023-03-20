@@ -45,6 +45,7 @@ const mapDBToAgreements = row => {
     row.section127Agreement && createAgreement('S127'),
     row.section130Agreement && createAgreement(row.section130Agreement)
   ]
+  // Filter will filter out any falsey values
   return agreements.filter(a => a)
 }
 

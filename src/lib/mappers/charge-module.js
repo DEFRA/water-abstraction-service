@@ -56,6 +56,7 @@ const extractAddress = (address, fao = null) => {
     lines.push(`FAO ${fao}`)
   }
   const { addressLine1, addressLine2, addressLine3, addressLine4 } = address
+  // Filters out any falsey values
   const addressLines = [addressLine1, addressLine2, addressLine3, addressLine4].filter(a => a)
 
   lines.push(...addressLines)

@@ -144,6 +144,7 @@ const getFilterStartDate = (document) => {
 
 /**
  * Gets the earlier of: document end date, today's date
+ * Filter will filter out any falsey values
  * @param {Document} document
  * @return {String} date YYYY-MM-DD
  */

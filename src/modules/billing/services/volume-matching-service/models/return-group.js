@@ -88,6 +88,7 @@ class ReturnGroup {
       getErrorIfSome(this._returns, isReceivedStatus, ERROR_RECEIVED),
       getErrorIfSome(this._returns, isNotDueForBilling, ERROR_NOT_DUE_FOR_BILLING)
     ]
+    // Filter will filter out any falsey values
     return errors.filter(a => a).shift()
   }
 }

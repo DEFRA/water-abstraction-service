@@ -46,6 +46,7 @@ class Mapper {
       throw new Error(`error mapping to .${targetKey}: when >1 source key, a mapper is required`)
     }
 
+    // a => a will filter out any falsey values
     this._rules.push({
       sourceKeys: this._sourceKeys,
       targetKey,

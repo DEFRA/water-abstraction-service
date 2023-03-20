@@ -45,6 +45,7 @@ const getTwoPartTariffTransactionDescription = transaction => {
   const purposeUseDescription = getPurposeUseDescription(transaction.chargeElement.purposeUse)
   const { description } = transaction.chargeElement
 
+  // Filters out any falsey values
   return [prefix, 'Part', purposeUseDescription, 'Charge', description]
     .filter(a => a)
     .join(' ')

@@ -10,6 +10,7 @@ const getGaugingStationForUpdate = (station, gaugingStationsInDb) => {
   const stationInDbWithMatchingWiskiId = gaugingStationsInDb
     .find(eachStation => eachStation.wiskiId && eachStation.wiskiId === station.wiskiId)
 
+  // a => a will remove any falsey values
   return [stationInDbWithMatchingHydrologyGuid, stationInDbWithMatchingStationReference, stationInDbWithMatchingWiskiId]
     .map(res => res ? res.gaugingStationId : undefined).find(a => a)
 }

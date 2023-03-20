@@ -16,6 +16,7 @@ const DateRange = require('../../../lib/models/date-range')
  * @return {Array<Object>}
  */
 const getSortedDates = arr => sortBy(
+  // Filter will filter out any falsey values
   arr
     .filter(a => a)
     .map(value => moment(value)),

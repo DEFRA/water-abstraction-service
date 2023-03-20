@@ -34,7 +34,7 @@ const zeroPad = addressLine =>
  * Gets a string which can be used for sorting addresses
  * The address is reversed, normalized, and numeric parts in the
  * first 4 address lines are zero padded for consistent sorting
- *
+ * Filter will filter out any falsey values
  * @param {Address} address
  * @return {String}
  */

@@ -7,6 +7,7 @@ const mapAddressLine = str => (str || '').trim()
 const formatAddress = contact => {
   // Format name
   const { salutation, forename, name, postcode } = contact
+  // Filter will filter out any falsey values
   const fullName = [salutation, forename, name].filter(a => a).join(' ')
 
   // Format address lines
