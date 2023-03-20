@@ -1,8 +1,7 @@
 'use strict'
 
-const { partialRight } = require('lodash')
-
 const Batch = require('../../../../lib/models/batch')
+const partialRight = require('../../../../lib/partial-right')
 
 /**
  * Throws an error if the batch is not the provided status
