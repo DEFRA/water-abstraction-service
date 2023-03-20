@@ -10,7 +10,7 @@ const rp = require('request-promise-native').defaults({
 const { serviceRequest } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
 const urlJoin = require('url-join')
-const { isArray, flatMap } = require('lodash')
+const { flatMap } = require('lodash')
 
 const chunk = require('../../chunk.js')
 
@@ -122,7 +122,7 @@ client.getDocumentContacts = function (filter = {}) {
  * @return {Promise<Array>} array of document records decorated with contacts
  */
 client.getLicenceContacts = async licenceNumber => {
-  const licenceNumbers = isArray(licenceNumber) ? licenceNumber : [licenceNumber]
+  const licenceNumbers = Array.isArray(licenceNumber) ? licenceNumber : [licenceNumber]
   const filter = {
     regime_entity_id: config.crm.waterRegime,
     system_external_id: { $in: licenceNumbers }
