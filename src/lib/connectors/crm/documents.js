@@ -10,7 +10,9 @@ const rp = require('request-promise-native').defaults({
 const { serviceRequest } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
 const urlJoin = require('url-join')
-const { isArray, flatMap, chunk } = require('lodash')
+const { isArray, flatMap } = require('lodash')
+
+const chunk = require('../../chunk.js')
 
 // Create API client
 const client = new APIClient(rp, {

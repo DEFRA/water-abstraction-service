@@ -1,9 +1,11 @@
 'use strict'
 
-const { chunk, flatMap } = require('lodash')
+const { flatMap } = require('lodash')
 const urlJoin = require('url-join')
 const { serviceRequest } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
+
+const chunk = require('../../chunk.js')
 
 const getPluralisedUri = (...tail) => urlJoin(config.services.crm_v2, 'invoice-accounts', ...tail)
 const getSingularUri = (...tail) => urlJoin(config.services.crm_v2, 'invoice-account', ...tail)
