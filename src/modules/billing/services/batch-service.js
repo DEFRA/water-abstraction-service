@@ -1,12 +1,13 @@
 'use strict'
 
-const { partialRight, startCase } = require('lodash')
+const { startCase } = require('lodash')
 const Boom = require('@hapi/boom')
 const bluebird = require('bluebird')
 
 const mappers = require('../mappers')
 const { logger } = require('../../../logger')
 const queueManager = require('../../../lib/queue-manager')
+const partialRight = require('../../../lib/partial-right')
 
 // Constants
 const { BatchStatusError } = require('../lib/errors')
