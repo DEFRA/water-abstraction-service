@@ -38,4 +38,6 @@ function chunk (arrayToChunk, chunkSize) {
   return cache
 }
 
-module.exports = chunk
+module.exports = {
+  chunk
+}

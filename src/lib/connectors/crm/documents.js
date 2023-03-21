@@ -12,7 +12,7 @@ const config = require('../../../../config')
 const urlJoin = require('url-join')
 const { flatMap } = require('lodash')
 
-const chunk = require('../../chunk.js')
+const { chunk } = require('../../object-helpers.js')
 
 // Create API client
 const client = new APIClient(rp, {
