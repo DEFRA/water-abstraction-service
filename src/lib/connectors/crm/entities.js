@@ -2,7 +2,7 @@ const urlJoin = require('url-join')
 const { serviceRequest } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
 const helpers = require('@envage/water-abstraction-helpers')
-const partialRight = require('../../../lib/partial-right')
+const { partialRight } = require('../../../lib/object-helpers.js')
 
 const getEntityContent = async (entityId, pathTail) => {
   const url = `${config.services.crm}/entity/${entityId}/${pathTail}`

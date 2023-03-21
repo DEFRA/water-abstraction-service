@@ -7,7 +7,7 @@ const bluebird = require('bluebird')
 const mappers = require('../mappers')
 const { logger } = require('../../../logger')
 const queueManager = require('../../../lib/queue-manager')
-const partialRight = require('../../../lib/partial-right')
+const { partialRight } = require('../../../lib/object-helpers.js')
 
 // Constants
 const { BatchStatusError } = require('../lib/errors')

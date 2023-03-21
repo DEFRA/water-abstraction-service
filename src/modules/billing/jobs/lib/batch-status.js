@@ -1,7 +1,7 @@
 'use strict'
 
 const Batch = require('../../../../lib/models/batch')
-const partialRight = require('../../../../lib/partial-right')
+const { partialRight } = require('../../../../lib/object-helpers.js')
 
 /**
  * Throws an error if the batch is not the provided status

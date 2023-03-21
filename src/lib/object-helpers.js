@@ -38,6 +38,22 @@ function chunk (arrayToChunk, chunkSize) {
   return cache
 }
 
+/**
+ * Returns a new function with some arguments partially applied to the original function
+ * from the right.
+ *
+ * @param {Function} func - The function to partially apply arguments to.
+ * @param {...*} cachedArgs - The arguments to be partially applied to `func` from the right.
+ * @returns {Function} - A new function that takes an arbitrary number of arguments and
+ * applies them to `func` along with the `cachedArgs` array, using the spread operator.
+ */
+function partialRight (func, ...cachedArgs) {
+  return function (...args) {
+    return func(...args, ...cachedArgs)
+  }
+}
+
 module.exports = {
-  chunk
+  chunk,
+  partialRight
 }
