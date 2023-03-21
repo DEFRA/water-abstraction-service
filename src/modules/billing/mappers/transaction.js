@@ -240,6 +240,7 @@ const mapChargeModuleDate = str =>
  * @return {Object}
  */
 const mapAgreementsToChargeModule = transaction => {
+  // Sets a boolean based on whether at least one agreement with a section 130 code could be found
   const section130Agreement = ['S130U', 'S130S', 'S130T', 'S130W']
     .map(code => transaction.getAgreementByCode(code))
     .some(a => a)
