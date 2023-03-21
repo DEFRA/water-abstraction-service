@@ -11,7 +11,7 @@ const permitConnector = require('../../lib/connectors/permit')
 const returnsConnector = require('../../lib/connectors/returns')
 const importConnector = require('../../lib/connectors/import')
 const jobsConnector = require('../../lib/connectors/import/jobs')
-const toCamelCase = require('../../lib/services/to-camel-case')
+const { toCamelCase } = require('../../lib/object-helpers.js')
 
 const pkg = require('../../../package.json')
 

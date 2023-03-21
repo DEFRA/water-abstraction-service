@@ -53,7 +53,36 @@ function partialRight (func, ...cachedArgs) {
   }
 }
 
+/**
+ * Returns a modified version of the `key` parameter in camel case.
+ *
+ * @param {string} key - The string to be converted to camel case.
+ * @returns {string} - The modified string in camel case.
+ *
+ * [^a-zA-Z0-9]: Matches any character that is not a letter or number.
+ * +: Matches one or more of the previous character class
+ * (i.e., one or more non-alphanumeric characters).
+ * (.): Matches any letter or number that comes immediately after one or more
+ * non-alphanumeric characters. The parentheses capture this letter or number as a group.
+ *
+ * The g flag at the end of the regular expression makes the replace method replace
+ * all matches in the string, rather than just the first match.
+ */
+function toCamelCase (key) {
+  let result = key
+
+  if (key.includes('_') || key.includes('.') || key.includes(' ') || key.includes('-')) {
+    const lowercaseKey = key.toLowerCase()
+    result = lowercaseKey.replace(/[^a-zA-Z0-9]+(.)/g, function (match, char) {
+      return char.toUpperCase()
+    })
+  }
+
+  return result
+}
+
 module.exports = {
   chunk,
-  partialRight
+  partialRight,
+  toCamelCase
 }
