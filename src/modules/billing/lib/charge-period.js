@@ -1,7 +1,7 @@
 'use strict'
 
 const moment = require('moment')
-const { sortBy, identity } = require('lodash')
+const { sortBy } = require('lodash')
 
 const config = require('../../../../config')
 
@@ -16,8 +16,9 @@ const DateRange = require('../../../lib/models/date-range')
  * @return {Array<Object>}
  */
 const getSortedDates = arr => sortBy(
+  // Filter will filter out any falsey values
   arr
-    .filter(identity)
+    .filter(a => a)
     .map(value => moment(value)),
   m => m.unix()
 )

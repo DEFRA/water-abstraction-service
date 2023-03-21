@@ -2,7 +2,7 @@
 
 const moment = require('moment')
 const { titleCase } = require('title-case')
-const { identity, trim } = require('lodash')
+const { trim } = require('lodash')
 const helpers = require('@envage/water-abstraction-helpers').charging
 
 const DateRange = require('../../../lib/models/date-range')
@@ -45,7 +45,8 @@ const mapDBToAgreements = row => {
     row.section127Agreement && createAgreement('S127'),
     row.section130Agreement && createAgreement(row.section130Agreement)
   ]
-  return agreements.filter(identity)
+  // Filter will filter out any falsey values
+  return agreements.filter(a => a)
 }
 
 const doesVolumeMatchTransaction = (volume, transaction) => {
@@ -239,9 +240,10 @@ const mapChargeModuleDate = str =>
  * @return {Object}
  */
 const mapAgreementsToChargeModule = transaction => {
+  // Sets a boolean based on whether at least one agreement with a section 130 code could be found
   const section130Agreement = ['S130U', 'S130S', 'S130T', 'S130W']
     .map(code => transaction.getAgreementByCode(code))
-    .some(identity)
+    .some(a => a)
   const section126Agreement = transaction.getAgreementByCode('S126')
   return {
     section126Factor: section126Agreement ? section126Agreement.factor : 1,

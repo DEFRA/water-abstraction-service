@@ -1,4 +1,4 @@
-const { identity, startCase } = require('lodash')
+const { startCase } = require('lodash')
 
 const getGaugingStationForUpdate = (station, gaugingStationsInDb) => {
   const stationInDbWithMatchingHydrologyGuid = gaugingStationsInDb
@@ -10,8 +10,9 @@ const getGaugingStationForUpdate = (station, gaugingStationsInDb) => {
   const stationInDbWithMatchingWiskiId = gaugingStationsInDb
     .find(eachStation => eachStation.wiskiId && eachStation.wiskiId === station.wiskiId)
 
+  // a => a will find the first truthy value in the array
   return [stationInDbWithMatchingHydrologyGuid, stationInDbWithMatchingStationReference, stationInDbWithMatchingWiskiId]
-    .map(res => res ? res.gaugingStationId : undefined).find(identity)
+    .map(res => res ? res.gaugingStationId : undefined).find(a => a)
 }
 
 const gaugingStationsCSVHeaders = [

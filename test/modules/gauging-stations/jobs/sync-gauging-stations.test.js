@@ -6,8 +6,6 @@ const {
   test
 } = exports.lab = require('@hapi/lab').script()
 
-const { omit } = require('lodash')
-
 const config = require('../../../../config')
 const sinon = require('sinon')
 const moment = require('moment')
@@ -139,7 +137,7 @@ experiment('.handler', () => {
 
     test('updates the existing station', () => {
       expect(gaugingStationsRepo.update.lastCall.args[0]).to.equal('e041a36a-d62c-4446-9bb0-11e87bd1c3ba')
-      expect(omit(gaugingStationsRepo.update.lastCall.args[1], ['_gaugingStationId'])).to.equal(newRecord)
+      expect(gaugingStationsRepo.update.lastCall.args[1]).to.equal(newRecord)
     })
   })
 
@@ -157,7 +155,7 @@ experiment('.handler', () => {
     })
     test('updates the existing station', () => {
       expect(gaugingStationsRepo.update.lastCall.args[0]).to.equal('e041a36a-d62c-4446-9bb0-11e87bd1c3ba')
-      expect(omit(gaugingStationsRepo.update.lastCall.args[1], ['_gaugingStationId'])).to.equal(newRecord)
+      expect(gaugingStationsRepo.update.lastCall.args[1]).to.equal(newRecord)
     })
   })
 
@@ -175,7 +173,7 @@ experiment('.handler', () => {
     afterEach(() => sandbox.restore())
     test('updates the existing station', () => {
       expect(gaugingStationsRepo.update.lastCall.args[0]).to.equal('e041a36a-d62c-4446-9bb0-11e87bd1c3ba')
-      expect(omit(gaugingStationsRepo.update.lastCall.args[1], ['_gaugingStationId'])).to.equal(newRecord)
+      expect(gaugingStationsRepo.update.lastCall.args[1]).to.equal(newRecord)
     })
   })
   // When no properties match
@@ -194,7 +192,7 @@ experiment('.handler', () => {
     })
     afterEach(() => sandbox.restore())
     test('Creates a new station', () => {
-      expect(omit(gaugingStationsRepo.create.lastCall.args[0], ['_gaugingStationId'])).to.equal(newRecord)
+      expect(gaugingStationsRepo.create.lastCall.args[0]).to.equal(newRecord)
     })
   })
 })

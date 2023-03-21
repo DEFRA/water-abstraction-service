@@ -1,7 +1,5 @@
 'use strict'
 
-const { identity } = require('lodash')
-
 const validators = require('../../../../../lib/models/validators')
 const Return = require('../../../../../lib/models/return')
 const { RETURN_STATUS } = require('../../../../../lib/models/return')
@@ -90,7 +88,8 @@ class ReturnGroup {
       getErrorIfSome(this._returns, isReceivedStatus, ERROR_RECEIVED),
       getErrorIfSome(this._returns, isNotDueForBilling, ERROR_NOT_DUE_FOR_BILLING)
     ]
-    return errors.filter(identity).shift()
+    // Filter will filter out any falsey values
+    return errors.filter(a => a).shift()
   }
 }
 

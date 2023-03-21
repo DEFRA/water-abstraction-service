@@ -1,6 +1,6 @@
 'use strict'
 
-const { flatMap, identity } = require('lodash')
+const { flatMap } = require('lodash')
 const bluebird = require('bluebird')
 const moment = require('moment')
 
@@ -144,12 +144,13 @@ const getFilterStartDate = (document) => {
 
 /**
  * Gets the earlier of: document end date, today's date
+ * Filter will filter out any falsey values
  * @param {Document} document
  * @return {String} date YYYY-MM-DD
  */
 const getFilterEndDate = (document) => {
   const result = [document.dateRange.endDate, moment().format(DATE_FORMAT)]
-    .filter(identity)
+    .filter(a => a)
     .sort()
 
   return result[0]

@@ -1,4 +1,5 @@
-const { flatMap, identity, groupBy } = require('lodash')
+const { flatMap, groupBy } = require('lodash')
+
 const {
   CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_RETURNS_AGENT,
   CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO
@@ -18,10 +19,11 @@ const getPreferredContacts = contactList => {
     return returnsAgents.length ? returnsAgents : [primaryUser]
   }
   // Send letters to non-null NALD contacts
+  // Filter will filter out any falsey values
   return [
     contactList.getByRole(CONTACT_ROLE_LICENCE_HOLDER),
     ...contactList.getAllByRole(CONTACT_ROLE_RETURNS_TO)
-  ].filter(identity)
+  ].filter(a => a)
 }
 
 // Create a new set to remove duplicate values
