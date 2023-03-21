@@ -5,7 +5,6 @@ const Batch = require('../../../lib/models/batch')
 const { BatchStatusError } = require('../lib/errors')
 const licencesService = require('../../../lib/services/licences')
 const invoiceAccountService = require('../../../lib/services/invoice-accounts-service')
-const { uniq } = require('lodash')
 
 const mapItem = (licence, invoiceAccount) => ({
   licenceId: licence.licenceId,
@@ -32,7 +31,8 @@ const mapItem = (licence, invoiceAccount) => ({
  */
 const getByBatchIdForTwoPartTariffReview = async batchId => {
   const data = await repos.licences.findByBatchIdForTwoPartTariffReview(batchId)
-  const uniqueIds = uniq(data.map(row => row.invoiceAccountId))
+  // Create a new set to remove duplicate values
+  const uniqueIds = [...new Set(data.map(row => row.invoiceAccountId))]
   const invoiceAccounts = await invoiceAccountService.getByInvoiceAccountIds(uniqueIds)
   return data.map(licence => {
     const invoiceAccount = invoiceAccounts.find(invAcc => invAcc.id === licence.invoiceAccountId)

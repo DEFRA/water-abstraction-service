@@ -1,4 +1,4 @@
-const { uniq, flatMap, identity, groupBy } = require('lodash')
+const { flatMap, identity, groupBy } = require('lodash')
 const {
   CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_RETURNS_AGENT,
   CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO
@@ -24,10 +24,11 @@ const getPreferredContacts = contactList => {
   ].filter(identity)
 }
 
+// Create a new set to remove duplicate values
 const mapGroupedRecipient = arr => ({
   contact: arr[0].contact,
-  licenceNumbers: uniq(arr.map(row => row.licenceNumber)),
-  returnIds: uniq(flatMap(arr, row => row.returnIds))
+  licenceNumbers: [...new Set(arr.map(row => row.licenceNumber))],
+  returnIds: [...new Set(flatMap(arr, row => row.returnIds))]
 })
 
 const getRecipientList = returnContacts => {

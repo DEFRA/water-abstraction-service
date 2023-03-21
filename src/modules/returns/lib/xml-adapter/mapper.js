@@ -4,7 +4,7 @@ const moment = require('moment')
 const waterHelpers = require('@envage/water-abstraction-helpers')
 const { getReturnId } = waterHelpers.returns
 
-const { flatMap, uniq, intersection } = require('lodash')
+const { flatMap, intersection } = require('lodash')
 const libxmljs = require('libxmljs')
 
 const returnsConnector = require('../../../../lib/connectors/returns')
@@ -183,7 +183,9 @@ const getPermitsFromXml = xmlDoc => xmlDoc.find('tns:Permit', options)
  */
 const getLicenceNumbersFromPermits = (permits) => {
   const licenceNumbers = permits.map(permit => getText(permit, 'tns:IrPermitNo'))
-  return uniq(licenceNumbers)
+
+  // Create new set to remove any duplicate values
+  return [...new Set(licenceNumbers)]
 }
 
 const mapReturn = (returnXml, context) => {

@@ -1,6 +1,7 @@
+'use strict'
+
 const Joi = require('joi')
 const evt = require('../../../lib/event')
-const { uniq } = require('lodash')
 
 /**
  * Gets licence numbers from list of returns
@@ -9,7 +10,9 @@ const { uniq } = require('lodash')
  */
 const getLicenceNumbers = (returns) => {
   const licenceNumbers = returns.map(row => row.licence_ref)
-  return uniq(licenceNumbers)
+
+  // Create a new set to remove any duplicate values
+  return [...new Set(licenceNumbers)]
 }
 
 const getReturnIds = (returns) => {

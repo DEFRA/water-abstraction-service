@@ -1,5 +1,6 @@
+'use strict'
+
 const evt = require('../../../lib/event')
-const { uniq } = require('lodash')
 
 /**
  * Get a list of unique entities, including individals and companies,
@@ -17,7 +18,8 @@ function getUniqueEntities (contactData) {
     })
   })
 
-  return uniq(entities.filter(x => x))
+  // Create a new set to remove any duplicate values
+  return [...new Set(entities.filter(x => x))]
 }
 
 /**

@@ -1,7 +1,5 @@
 'use strict'
 
-const { uniq } = require('lodash')
-
 const { stringifyValues } = require('../../../../../lib/stringify-values')
 
 const { createNotificationData } = require('./create-notification-data')
@@ -18,7 +16,8 @@ const notificationRecipients = require('./return-notification-recipients')
  */
 const getExcludeLicences = job => {
   const licenceNumbers = job.ev.metadata.options.excludeLicences ?? []
-  return uniq(licenceNumbers)
+  // Create a new set to remove any duplicate values
+  return [...new Set(licenceNumbers)]
 }
 
 /**
