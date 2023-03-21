@@ -1,6 +1,5 @@
 'use strict'
 
-const { uniq } = require('lodash')
 const helpers = require('@envage/water-abstraction-helpers').charging
 
 const repos = require('../../../../lib/connectors/repos')
@@ -49,7 +48,8 @@ const getNALDTwoPartTariffSeasons = async row => {
   const filteredBillingVolumes = billingVolumes.filter(isApprovedNaldBillingVolume)
 
   // Get unique isSummer flags
-  const summerFlags = uniq(filteredBillingVolumes.map(getIsSummer))
+  // Create a new set to remove duplicate values
+  const summerFlags = [...new Set(filteredBillingVolumes.map(getIsSummer))]
 
   // Map to return seasons
   return createTwoPartTariffBatches(summerFlags.includes(true), summerFlags.includes(false))
