@@ -4,7 +4,7 @@
  * @module controller for returns APIs
  */
 const Boom = require('@hapi/boom')
-const { uniq, xor } = require('lodash')
+const { xor } = require('lodash')
 const bluebird = require('bluebird')
 
 const apiConnector = require('../lib/api-connector')
@@ -96,7 +96,8 @@ const getLicenceDocumentReturns = async licence => {
  */
 const getIncompleteReturns = async request => {
   // Get unique list of upper-cased licence number strings
-  const licenceNumbers = uniq(request.query.licenceNumbers).map(toUpperCase)
+  // Create a new set to remove any duplicate values
+  const licenceNumbers = [...new Set(request.query.licenceNumbers)].map(toUpperCase)
 
   // Find licence service models
   const licences = await licencesService.getLicencesByLicenceRefs(licenceNumbers)

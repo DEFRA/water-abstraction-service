@@ -2,7 +2,7 @@
 
 const Boom = require('@hapi/boom')
 
-const { flatMap, uniq } = require('lodash')
+const { flatMap } = require('lodash')
 const { jobStatus } = require('../lib/event')
 const { createBatchEvent } = require('../lib/batch-event')
 const controller = require('../../../lib/controller')
@@ -173,13 +173,14 @@ const getBatchDownloadData = async request => {
   const { batch } = request.pre
   const invoices = await invoiceService.getInvoicesForBatchDownload(batch)
 
-  const chargeVersionIds = uniq(flatMap(invoices.map(invoice => {
+  // Create a new set to remove duplicate values
+  const chargeVersionIds = [...new Set(flatMap(invoices.map(invoice => {
     return flatMap(invoice.billingInvoiceLicences.map(invoiceLicence =>
       invoiceLicence.billingTransactions
         .filter(transaction => !!transaction.chargeElement)
         .map(transaction => transaction.chargeElement.chargeVersionId)
     ))
-  })))
+  })))]
   const chargeVersions = await chargeVersionService.getManyByChargeVersionIds(chargeVersionIds)
   return { invoices, chargeVersions }
 }
