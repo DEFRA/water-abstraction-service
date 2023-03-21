@@ -1,5 +1,6 @@
 'use strict'
-const { chunk } = require('lodash')
+
+const chunk = require('../../chunk.js')
 
 /**
  * Function for combining address lines, when/if necessary

@@ -3,8 +3,9 @@ const moment = require('moment')
 const helpers = require('@envage/water-abstraction-helpers')
 const urlJoin = require('url-join')
 const { URL } = require('url')
-const { chunk, flatMap } = require('lodash')
+const { flatMap } = require('lodash')
 
+const chunk = require('../../lib/chunk.js')
 const DATE_FORMAT = 'YYYY-MM-DD'
 
 const config = require('../../../config')

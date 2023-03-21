@@ -1,5 +1,4 @@
 const Joi = require('joi')
-const { head } = require('lodash')
 const { throwIfError } = require('@envage/hapi-pg-rest-api')
 const apiClientFactory = require('./api-client-factory')
 const urlJoin = require('url-join')
@@ -42,7 +41,7 @@ usersClient.getUserByUsername = async (userName, application) => {
   })
 
   throwIfError(error)
-  return head(data)
+  return data[0]
 }
 
 usersClient.findOneById = async id => {

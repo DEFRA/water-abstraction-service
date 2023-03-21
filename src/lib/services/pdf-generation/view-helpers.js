@@ -1,11 +1,11 @@
 'use strict'
 
 const moment = require('moment')
-const { chunk } = require('lodash')
 const naldDates = require('@envage/water-abstraction-helpers').nald.dates
 
 const naldRegions = require('./data/nald-regions')
 const naldAreas = require('./data/nald-areas')
+const chunk = require('../../chunk.js')
 
 /**
  * Outputs the region name given the NALD region code

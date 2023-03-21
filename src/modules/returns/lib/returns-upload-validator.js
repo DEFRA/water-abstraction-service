@@ -19,10 +19,12 @@
   }
 ]
  */
-const { chunk, flatMap, cond, negate, isEqual } = require('lodash')
+
+const { flatMap, cond, negate, isEqual } = require('lodash')
 
 const returnsConnector = require('../../../lib/connectors/returns')
 const documents = require('../../../lib/connectors/crm/documents')
+const chunk = require('../../../lib/chunk.js')
 
 const returnLines = require('@envage/water-abstraction-helpers').returns.lines
 
