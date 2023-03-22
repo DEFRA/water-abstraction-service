@@ -1,0 +1,1 @@
+ALTER TABLE water.billing_invoice_licences ADD CONSTRAINT billing_invoice_licences_billing_invoice_id_fkey FOREIGN KEY (billing_invoice_id) REFERENCES water.billing_invoices(billing_invoice_id);
