@@ -1,8 +1,8 @@
 'use strict'
 
 /**
- * Use to break arrays up into 'chunks'
- * @module Chunk
+ * Collection of helper functions that allowed us to move away from Lodash
+ * @module ObjectHelpers
  */
 
 /**
