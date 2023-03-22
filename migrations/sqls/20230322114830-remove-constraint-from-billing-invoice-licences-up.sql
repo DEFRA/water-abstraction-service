@@ -1,0 +1,1 @@
+ALTER TABLE water.billing_invoice_licences DROP CONSTRAINT IF EXISTS billing_invoice_licences_billing_invoice_id_fkey;
