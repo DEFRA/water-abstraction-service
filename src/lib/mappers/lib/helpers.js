@@ -1,6 +1,6 @@
 'use strict'
 
-const chunk = require('../../chunk.js')
+const { chunk } = require('../../object-helpers.js')
 
 /**
  * Function for combining address lines, when/if necessary

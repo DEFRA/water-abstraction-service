@@ -5,7 +5,7 @@ const urlJoin = require('url-join')
 const { serviceRequest } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
 
-const chunk = require('../../chunk.js')
+const { chunk } = require('../../object-helpers.js')
 
 const getPluralisedUri = (...tail) => urlJoin(config.services.crm_v2, 'invoice-accounts', ...tail)
 const getSingularUri = (...tail) => urlJoin(config.services.crm_v2, 'invoice-account', ...tail)

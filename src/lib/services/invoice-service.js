@@ -4,7 +4,7 @@ const { pickBy } = require('lodash')
 const pWaterfall = require('p-waterfall')
 
 const { logger } = require('../../logger')
-const partialRight = require('../../lib/partial-right')
+const { partialRight } = require('../../lib/object-helpers.js')
 
 // Connectors
 const invoiceAccountsConnector = require('../connectors/crm-v2/invoice-accounts')

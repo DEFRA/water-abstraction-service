@@ -6,7 +6,7 @@ const chargeVersionMapper = require('./chargeVersionMapper')
 const { jobName } = require('../../jobs/update-charge-information-to-json')
 const eventsService = require('../../../../lib/services/events')
 const helpers = require('../helpers')
-const toCamelCase = require('../../../../lib/services/to-camel-case')
+const { toCamelCase } = require('../../../../lib/object-helpers.js')
 
 const mapToRowObject = headers => row => row.reduce((acc, column, index) => {
   return { ...acc, [headers[index]]: column }

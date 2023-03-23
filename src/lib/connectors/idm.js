@@ -6,7 +6,7 @@ const config = require('../../../config')
 const factory = require('./service-version-factory')
 const helpers = require('@envage/water-abstraction-helpers')
 const { v4: uuid } = require('uuid')
-const partialRight = require('../../lib/partial-right')
+const { partialRight } = require('../../lib/object-helpers.js')
 
 const usersClient = apiClientFactory.create(urlJoin(config.services.idm, 'user'))
 const kpiClient = apiClientFactory.create(urlJoin(config.services.idm, 'kpi'))

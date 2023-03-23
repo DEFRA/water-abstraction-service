@@ -5,7 +5,7 @@ const urlJoin = require('url-join')
 const { URL } = require('url')
 const { flatMap } = require('lodash')
 
-const chunk = require('../../lib/chunk.js')
+const { chunk } = require('../../lib/object-helpers.js')
 const DATE_FORMAT = 'YYYY-MM-DD'
 
 const config = require('../../../config')
