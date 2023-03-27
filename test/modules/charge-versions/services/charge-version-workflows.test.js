@@ -65,7 +65,7 @@ const createDocument = () => {
   return doc
 }
 
-experiment.only('modules/charge-versions/services/charge-version-workflows', () => {
+experiment('modules/charge-versions/services/charge-version-workflows', () => {
   let chargeVersionWorkflow, result
 
   beforeEach(async () => {
