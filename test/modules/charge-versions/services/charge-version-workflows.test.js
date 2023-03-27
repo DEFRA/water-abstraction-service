@@ -392,38 +392,63 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     beforeEach(async () => {
       approvingUser = new User(123, 'mail@example.com')
 
-      // New charge versions default to scheme 'alcs' in the constructor. So, we have to instantiate then update the
-      // scheme
-      const chargeVersion = new ChargeVersion(uuid())
-      chargeVersion.scheme = 'sroc'
-
       chargeVersionWorkflow = new ChargeVersionWorkflow(uuid())
       chargeVersionWorkflow.createdBy = new User(456, 'someone-else@example.com')
       chargeVersionWorkflow.licence = new Licence(uuid())
-      chargeVersionWorkflow.chargeVersion = chargeVersion
-
-      await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+      chargeVersionWorkflow.chargeVersion = new ChargeVersion(uuid())
     })
 
     test('the new charge version is persisted', async () => {
+      await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+
       expect(chargeVersionService.create.calledWith(
         chargeVersionWorkflow.chargeVersion
       )).to.be.true()
     })
 
     test('the licence is flagged for supplementary billing', async () => {
+      await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+
       expect(licencesService.flagForSupplementaryBilling.calledWith(
         chargeVersionWorkflow.licence.id
       )).to.be.true()
     })
 
     test('the approver of the new charge version is set', async () => {
+      await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+
       const [chargeVersion] = chargeVersionService.create.lastCall.args
       expect(chargeVersion.approvedBy).to.equal(approvingUser)
     })
 
     test('the workflow record is deleted', async () => {
+      await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+
       expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true()
+    })
+
+    experiment("and the charge version's scheme is 'alcs'", () => {
+      test('the licence is flagged for alcs supplementary billing', async () => {
+        await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+
+        expect(licencesService.flagForSupplementaryBilling.calledWith(
+          chargeVersionWorkflow.licence.id
+        )).to.be.true()
+      })
+    })
+
+    experiment("and the charge version's scheme is 'sroc'", () => {
+      beforeEach(() => {
+        chargeVersionWorkflow.chargeVersion.scheme = 'sroc'
+      })
+
+      test('the licence is flagged for sroc supplementary billing', async () => {
+        await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+
+        expect(licencesService.flagForSupplementaryBilling.calledWith(
+          chargeVersionWorkflow.licence.id
+        )).to.be.true()
+      })
     })
   })
   experiment('getLicenceHolderRole', () => {
