@@ -25,6 +25,7 @@ const data = {
     lapsedDate: '2020-02-03',
     revokedDate: null,
     includeInSupplementaryBilling: 'no',
+    includeInSrocSupplementaryBilling: false,
     regions: {
       historicalAreaCode: 'ABC',
       regionalChargeArea: 'Anglian'
@@ -56,6 +57,7 @@ experiment('modules/billing/mappers/licence', () => {
       expect(result.licenceNumber).to.equal(data.dbRow.licenceRef)
       expect(result.isWaterUndertaker).to.equal(data.dbRow.isWaterUndertaker)
       expect(result.includeInSupplementaryBilling).to.equal(data.dbRow.includeInSupplementaryBilling)
+      expect(result.includeInSrocSupplementaryBilling).to.equal(data.dbRow.includeInSrocSupplementaryBilling)
     })
 
     test('licence dates are mapped correctly', async () => {
