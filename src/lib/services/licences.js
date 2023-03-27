@@ -121,8 +121,13 @@ const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
  * Ensures the specified licence is included in the next supplementary bill run
  * @param {String} licenceId
  */
-const flagForSupplementaryBilling = licenceId =>
-  repos.licences.update(licenceId, { includeInSupplementaryBilling: INCLUDE_IN_SUPPLEMENTARY_BILLING.yes })
+const flagForSupplementaryBilling = (licenceId, scheme = 'alcs') => {
+  if (scheme === 'alcs') {
+    repos.licences.update(licenceId, { includeInSupplementaryBilling: INCLUDE_IN_SUPPLEMENTARY_BILLING.yes })
+  } else {
+    repos.licences.update(licenceId, { includeInSupplementaryBilling: INCLUDE_IN_SUPPLEMENTARY_BILLING.yes })
+  }
+}
 
 /**
  * Retrieves the invoices associated with a licence

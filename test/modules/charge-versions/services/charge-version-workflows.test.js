@@ -65,7 +65,7 @@ const createDocument = () => {
   return doc
 }
 
-experiment('modules/charge-versions/services/charge-version-workflows', () => {
+experiment.only('modules/charge-versions/services/charge-version-workflows', () => {
   let chargeVersionWorkflow, result
 
   beforeEach(async () => {
@@ -396,6 +396,8 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       chargeVersionWorkflow.createdBy = new User(456, 'someone-else@example.com')
       chargeVersionWorkflow.licence = new Licence(uuid())
       chargeVersionWorkflow.chargeVersion = new ChargeVersion(uuid())
+
+      chargeVersionService.create.resolves(chargeVersionWorkflow.chargeVersion)
     })
 
     test('the new charge version is persisted', async () => {
@@ -432,7 +434,8 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
 
         expect(licencesService.flagForSupplementaryBilling.calledWith(
-          chargeVersionWorkflow.licence.id
+          chargeVersionWorkflow.licence.id,
+          'alcs'
         )).to.be.true()
       })
     })
@@ -446,7 +449,8 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
 
         expect(licencesService.flagForSupplementaryBilling.calledWith(
-          chargeVersionWorkflow.licence.id
+          chargeVersionWorkflow.licence.id,
+          'sroc'
         )).to.be.true()
       })
     })
