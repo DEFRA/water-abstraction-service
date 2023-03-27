@@ -391,13 +391,17 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
     beforeEach(async () => {
       approvingUser = new User(123, 'mail@example.com')
+
+      // New charge versions default to scheme 'alcs' in the constructor. So, we have to instantiate then update the
+      // scheme
+      const chargeVersion = new ChargeVersion(uuid())
+      chargeVersion.scheme = 'sroc'
+
       chargeVersionWorkflow = new ChargeVersionWorkflow(uuid())
-      chargeVersionWorkflow.fromHash({
-        chargeVersion: new ChargeVersion(uuid()),
-        createdBy: new User(456, 'someone-else@example.com')
-      })
+      chargeVersionWorkflow.createdBy = new User(456, 'someone-else@example.com')
       chargeVersionWorkflow.licence = new Licence(uuid())
-      chargeVersionWorkflow.chargeVersion = new ChargeVersion(uuid())
+      chargeVersionWorkflow.chargeVersion = chargeVersion
+
       await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
     })
 
@@ -416,11 +420,6 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     test('the approver of the new charge version is set', async () => {
       const [chargeVersion] = chargeVersionService.create.lastCall.args
       expect(chargeVersion.approvedBy).to.equal(approvingUser)
-    })
-
-    test('the charging scheme of the new charge version is set', async () => {
-      const [chargeVersion] = chargeVersionService.create.lastCall.args
-      expect(chargeVersion.scheme).to.equal('alcs')
     })
 
     test('the workflow record is deleted', async () => {
