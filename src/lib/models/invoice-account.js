@@ -64,12 +64,12 @@ class InvoiceAccount extends Model {
    */
   get lastInvoiceAccountAddress () {
     const arr = this.invoiceAccountAddresses || []
-    const sorted = arr.sort((row) => {
+    arr.sort((row) => {
       const startDate = row.dateRange?.startDate ?? undefined
       return moment(startDate).unix()
     })
 
-    return sorted[sorted.length - 1]
+    return arr[arr.length - 1]
   }
 
   set dateRange (dateRange) {

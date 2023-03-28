@@ -203,9 +203,9 @@ const getPairGroupingKey = transaction => {
  * @return {Array<Object>}
  */
 const filterCancellingTransactions = transactions => {
-  const sorted = transactions.sort((a, b) => moment(a.dateCreated).unix() - moment(b.dateCreated).unix())
+  transactions.sort((a, b) => moment(a.dateCreated).unix() - moment(b.dateCreated).unix())
 
-  return sorted
+  return transactions
     .reduce((acc, transaction) => {
       const index = acc.findIndex(row => row.isCredit === !transaction.isCredit)
       index === -1 ? acc.push(transaction) : acc.splice(index, 1)

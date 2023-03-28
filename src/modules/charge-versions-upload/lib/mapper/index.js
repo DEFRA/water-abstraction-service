@@ -35,20 +35,16 @@ const mapCsv = async (csvStr, user, event) => {
   // Then sort by the licence number and group.
   const result = rows.map(mapToRowObject(headers.map(header => toCamelCase(header))))
 
+  // sorting the rows by licenceNumber first and then chargeReferenceDetailsChargeElementGroup
   const rowObjects = result.sort((a, b) => {
-    if (a.licenceNumber < b.licenceNumber) {
-      return -1
-    } else if (a.licenceNumber > b.licenceNumber) {
-      return 1
-    } else {
-      if (a.chargeReferenceDetailsChargeElementGroup < b.chargeReferenceDetailsChargeElementGroup) {
-        return -1
-      } else if (a.chargeReferenceDetailsChargeElementGroup > b.chargeReferenceDetailsChargeElementGroup) {
-        return 1
-      } else {
-        return 0
-      }
+    if (a.licenceNumber !== b.licenceNumber) {
+      return a.licenceNumber < b.licenceNumber ? -1 : 1
     }
+    if (a.chargeReferenceDetailsChargeElementGroup !== b.chargeReferenceDetailsChargeElementGroup) {
+      return a.chargeReferenceDetailsChargeElementGroup < b.chargeReferenceDetailsChargeElementGroup ? -1 : 1
+    }
+
+    return 0
   })
 
   const chargeVersions = []

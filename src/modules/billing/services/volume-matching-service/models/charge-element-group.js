@@ -256,7 +256,7 @@ class ChargeElementGroup {
       return a.getScore(season) - b.getScore(season)
     }
 
-    const sortedElements = elements.sort((a, b) => compareScores(a, b, returnSeason))
+    elements.sort((a, b) => compareScores(a, b, returnSeason))
 
     // Check return line falls in charge period
     if (isReturnLineStraddlingChargePeriodError(returnLine, chargePeriod)) {
@@ -264,7 +264,7 @@ class ChargeElementGroup {
     }
 
     // Group by purpose use
-    const groups = groupBy(sortedElements,
+    const groups = groupBy(elements,
       element => element.chargeElement.purposeUse.id
     )
 
