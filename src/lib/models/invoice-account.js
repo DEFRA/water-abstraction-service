@@ -1,7 +1,6 @@
 'use strict'
 
 const moment = require('moment')
-const { sortBy } = require('lodash')
 
 const { assertAccountNumber, assertIsInstanceOf, assertIsArrayOfType, assertDate } = require('./validators')
 const Model = require('./model')
@@ -65,10 +64,11 @@ class InvoiceAccount extends Model {
    */
   get lastInvoiceAccountAddress () {
     const arr = this.invoiceAccountAddresses || []
-    const sorted = sortBy(arr, row => {
+    const sorted = arr.sort((row) => {
       const startDate = row.dateRange?.startDate ?? undefined
       return moment(startDate).unix()
     })
+
     return sorted[sorted.length - 1]
   }
 

@@ -1,7 +1,6 @@
 'use strict'
 
 const csvParser = require('../csv-adapter/csv-parser')
-const { sortBy } = require('lodash')
 const chargeVersionMapper = require('./chargeVersionMapper')
 const { jobName } = require('../../jobs/update-charge-information-to-json')
 const eventsService = require('../../../../lib/services/events')
@@ -34,10 +33,23 @@ const mapCsv = async (csvStr, user, event) => {
 
   // Convert the fields in the csv rows into key value pairs with the csv headings as the keys converted to camel case.
   // Then sort by the licence number and group.
-  const rowObjects = sortBy(
-    rows.map(mapToRowObject(headers.map(header => toCamelCase(header)))),
-    ['licenceNumber', 'chargeReferenceDetailsChargeElementGroup']
-  )
+  const result = rows.map(mapToRowObject(headers.map(header => toCamelCase(header))))
+
+  const rowObjects = result.sort((a, b) => {
+    if (a.licenceNumber < b.licenceNumber) {
+      return -1
+    } else if (a.licenceNumber > b.licenceNumber) {
+      return 1
+    } else {
+      if (a.chargeReferenceDetailsChargeElementGroup < b.chargeReferenceDetailsChargeElementGroup) {
+        return -1
+      } else if (a.chargeReferenceDetailsChargeElementGroup > b.chargeReferenceDetailsChargeElementGroup) {
+        return 1
+      } else {
+        return 0
+      }
+    }
+  })
 
   const chargeVersions = []
   let groupByLicenceNumber = []

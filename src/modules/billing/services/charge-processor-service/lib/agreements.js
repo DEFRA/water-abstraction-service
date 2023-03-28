@@ -1,6 +1,6 @@
 'use strict'
 
-const { compact, groupBy, flatMap, sortBy } = require('lodash')
+const { compact, groupBy, flatMap } = require('lodash')
 const helpers = require('@envage/water-abstraction-helpers')
 const dateHelpers = require('./date-helpers')
 const DateRange = require('../../../../../lib/models/date-range')
@@ -50,10 +50,10 @@ const getAgreementsHistory =
 (chargePeriod, licenceAgreements) => {
   // Filter out agreements that are not S127/S130 as they don't affect charging
   // And sort by start date
-  const filteredAndSorted = sortBy(
-    licenceAgreements.filter(isBillingAgreement),
-    getLicenceAgreementStartDate
-  )
+
+  const filteredAndSorted = licenceAgreements
+    .filter(isBillingAgreement)
+    .sort((a, b) => new Date(getLicenceAgreementStartDate(a)) - new Date(getLicenceAgreementStartDate(b)))
 
   // Group by agreement type as each has its own timeline
   const groups = groupBy(filteredAndSorted, getPropertyKey)

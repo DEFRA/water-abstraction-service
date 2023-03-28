@@ -1,7 +1,7 @@
 'use strict'
 
 const Decimal = require('decimal.js-light')
-const { groupBy, sortBy, negate, flatMap } = require('lodash')
+const { groupBy, negate, flatMap } = require('lodash')
 
 const validators = require('../../../../../lib/models/validators')
 const Return = require('../../../../../lib/models/return')
@@ -251,7 +251,12 @@ class ChargeElementGroup {
 
     // Rank elements by score
     const { returnSeason } = this
-    const sortedElements = sortBy(elements, chargeElementContainer => chargeElementContainer.getScore(returnSeason))
+
+    const compareScores = (a, b, season) => {
+      return a.getScore(season) - b.getScore(season)
+    }
+
+    const sortedElements = elements.sort((a, b) => compareScores(a, b, returnSeason))
 
     // Check return line falls in charge period
     if (isReturnLineStraddlingChargePeriodError(returnLine, chargePeriod)) {

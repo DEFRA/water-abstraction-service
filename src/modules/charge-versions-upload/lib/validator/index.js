@@ -1,4 +1,6 @@
-const { sortBy, isEqual } = require('lodash')
+'use strict'
+
+const { isEqual } = require('lodash')
 const csvParser = require('../csv-adapter/csv-parser')
 const { csvFields } = require('./csvFields')
 const helpers = require('../helpers')
@@ -114,12 +116,32 @@ const validateGroups = async (rows, headings, jobName) => {
   const getStartDate = row => row[headings.indexOf('charge_information_start_date')]
 
   logger.info(`${jobName}: sorting rows`)
-  const sortedRows = sortBy(rows.map((row, index) => {
+
+  const mapped = rows.map((row, index) => {
     const licenceNumber = row[headings.indexOf('licence_number')]
     const chargeReferenceDetailsChargeElementGroup = row[headings.indexOf('charge_reference_details_charge_element_group')]
     const rowNumber = index + ROW_OFFSET
+
     return { licenceNumber, chargeReferenceDetailsChargeElementGroup, rowNumber, row }
-  }), ['licenceNumber', 'chargeReferenceDetailsChargeElementGroup'])
+  })
+
+  // Sorts the rows based on the licenceNumber and the chargeReferenceDetailsChargeElementGroup
+  const sortedRows = mapped.sort((a, b) => {
+    if (a.licenceNumber < b.licenceNumber) {
+      return -1
+    } else if (a.licenceNumber > b.licenceNumber) {
+      return 1
+    } else {
+      if (a.chargeReferenceDetailsChargeElementGroup < b.chargeReferenceDetailsChargeElementGroup) {
+        return -1
+      } else if (a.chargeReferenceDetailsChargeElementGroup > b.chargeReferenceDetailsChargeElementGroup) {
+        return 1
+      } else {
+        return 0
+      }
+    }
+  })
+
   return sortedRows.reduce((errors, current, rowIndex) => {
     if (rowIndex === 0) {
       return errors

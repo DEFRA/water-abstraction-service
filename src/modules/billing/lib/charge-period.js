@@ -1,7 +1,6 @@
 'use strict'
 
 const moment = require('moment')
-const { sortBy } = require('lodash')
 
 const config = require('../../../../config')
 
@@ -15,13 +14,14 @@ const DateRange = require('../../../lib/models/date-range')
  * @param {Array<String>} arr
  * @return {Array<Object>}
  */
-const getSortedDates = arr => sortBy(
+const getSortedDates = arr => {
   // Filter will filter out any falsey values
-  arr
+  const newArray = arr
     .filter(a => a)
-    .map(value => moment(value)),
-  m => m.unix()
-)
+    .map(value => moment(value))
+
+  return newArray.sort((a, b) => moment(a).unix() - moment(b).unix())
+}
 
 const getMinDate = arr => getSortedDates(arr)[0]
 const getMaxDate = (arr) => {

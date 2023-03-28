@@ -1,6 +1,5 @@
 'use strict'
 
-const { sortBy } = require('lodash')
 const moment = require('moment')
 const DATE_FORMAT = 'YYYY-MM-DD'
 
@@ -118,7 +117,9 @@ const getStartDate = chargeVersion => chargeVersion.dateRange.startDate
  */
 const refreshEndDates = chargeVersions => {
   const filtered = chargeVersions.filter(isCurrentChargeVersion)
-  const sorted = sortBy(filtered, getStartDate)
+  const sorted = filtered.sort((a, b) => {
+    return new Date(getStartDate(a)) - new Date(getStartDate(b))
+  })
 
   return sorted.map((chargeVersion, i, arr) => {
     const isLast = i === arr.length - 1
