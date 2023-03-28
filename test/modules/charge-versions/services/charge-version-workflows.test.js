@@ -391,40 +391,68 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
     beforeEach(async () => {
       approvingUser = new User(123, 'mail@example.com')
+
       chargeVersionWorkflow = new ChargeVersionWorkflow(uuid())
-      chargeVersionWorkflow.fromHash({
-        chargeVersion: new ChargeVersion(uuid()),
-        createdBy: new User(456, 'someone-else@example.com')
-      })
+      chargeVersionWorkflow.createdBy = new User(456, 'someone-else@example.com')
       chargeVersionWorkflow.licence = new Licence(uuid())
       chargeVersionWorkflow.chargeVersion = new ChargeVersion(uuid())
-      await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+
+      chargeVersionService.create.resolves(chargeVersionWorkflow.chargeVersion)
     })
 
     test('the new charge version is persisted', async () => {
+      await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+
       expect(chargeVersionService.create.calledWith(
         chargeVersionWorkflow.chargeVersion
       )).to.be.true()
     })
 
     test('the licence is flagged for supplementary billing', async () => {
+      await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+
       expect(licencesService.flagForSupplementaryBilling.calledWith(
         chargeVersionWorkflow.licence.id
       )).to.be.true()
     })
 
     test('the approver of the new charge version is set', async () => {
+      await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+
       const [chargeVersion] = chargeVersionService.create.lastCall.args
       expect(chargeVersion.approvedBy).to.equal(approvingUser)
     })
 
-    test('the charging scheme of the new charge version is set', async () => {
-      const [chargeVersion] = chargeVersionService.create.lastCall.args
-      expect(chargeVersion.scheme).to.equal('alcs')
+    test('the workflow record is deleted', async () => {
+      await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+
+      expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true()
     })
 
-    test('the workflow record is deleted', async () => {
-      expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true()
+    experiment("and the charge version's scheme is 'alcs'", () => {
+      test('the licence is flagged for alcs supplementary billing', async () => {
+        await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+
+        expect(licencesService.flagForSupplementaryBilling.calledWith(
+          chargeVersionWorkflow.licence.id,
+          'alcs'
+        )).to.be.true()
+      })
+    })
+
+    experiment("and the charge version's scheme is 'sroc'", () => {
+      beforeEach(() => {
+        chargeVersionWorkflow.chargeVersion.scheme = 'sroc'
+      })
+
+      test('the licence is flagged for sroc supplementary billing', async () => {
+        await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
+
+        expect(licencesService.flagForSupplementaryBilling.calledWith(
+          chargeVersionWorkflow.licence.id,
+          'sroc'
+        )).to.be.true()
+      })
     })
   })
   experiment('getLicenceHolderRole', () => {

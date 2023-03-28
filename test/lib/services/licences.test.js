@@ -303,15 +303,26 @@ experiment('src/lib/services/licences', () => {
   experiment('.flagForSupplementaryBilling', () => {
     const licenceId = 'test-id'
 
-    beforeEach(async () => {
-      await licencesService.flagForSupplementaryBilling(licenceId)
+    experiment('when the scheme is alcs (or left as the default)', () => {
+      test('calls the .update method on the repo', async () => {
+        await licencesService.flagForSupplementaryBilling(licenceId)
+
+        expect(repos.licences.update.calledWith(
+          licenceId,
+          { includeInSupplementaryBilling: 'yes' }
+        )).to.be.true()
+      })
     })
 
-    test('calls the .update method on the repo', async () => {
-      expect(repos.licences.update.calledWith(
-        licenceId,
-        { includeInSupplementaryBilling: 'yes' }
-      )).to.be.true()
+    experiment('when the scheme is sroc', () => {
+      test('calls the .update method on the repo', async () => {
+        await licencesService.flagForSupplementaryBilling(licenceId, 'sroc')
+
+        expect(repos.licences.update.calledWith(
+          licenceId,
+          { includeInSrocSupplementaryBilling: true }
+        )).to.be.true()
+      })
     })
   })
 

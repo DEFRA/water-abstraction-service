@@ -36,7 +36,8 @@ const dbToModelMapper = createMapper()
     'expiredDate',
     'lapsedDate',
     'revokedDate',
-    'includeInSupplementaryBilling'
+    'includeInSupplementaryBilling',
+    'includeInSrocSupplementaryBilling'
   )
   .map('regions').to('historicalArea', dbToHistoricalArea)
   .map('regions').to('regionalChargeArea', dbToRegionalChargeArea)

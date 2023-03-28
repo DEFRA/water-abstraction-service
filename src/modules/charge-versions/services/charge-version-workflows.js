@@ -229,7 +229,7 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
   const persistedChargeVersion = await chargeVersionService.create(chargeVersion)
 
   // flag for supplementary billing
-  await licencesService.flagForSupplementaryBilling(chargeVersionWorkflow.licence.id)
+  licencesService.flagForSupplementaryBilling(chargeVersionWorkflow.licence.id, persistedChargeVersion.scheme)
 
   // Delete the charge version workflow record as it is no longer needed
   await deleteOne(chargeVersionWorkflow, false)
