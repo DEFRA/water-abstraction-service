@@ -52,8 +52,12 @@ const getAgreementsHistory =
   // And sort by start date
 
   const filteredAndSorted = licenceAgreements
-    .filter(isBillingAgreement)
-    .sort((a, b) => new Date(getLicenceAgreementStartDate(a)) - new Date(getLicenceAgreementStartDate(b)))
+    .filter((licenceAgreement) => {
+      return isBillingAgreement(licenceAgreement)
+    })
+    .sort((a, b) => {
+      return new Date(getLicenceAgreementStartDate(a)) - new Date(getLicenceAgreementStartDate(b))
+    })
 
   // Group by agreement type as each has its own timeline
   const groups = groupBy(filteredAndSorted, getPropertyKey)
