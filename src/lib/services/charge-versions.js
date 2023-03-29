@@ -124,11 +124,6 @@ const refreshEndDates = chargeVersions => {
       return new Date(getStartDate(a)) - new Date(getStartDate(b))
     })
 
-  // const filteredAndSorted = chargeVersions.filter(isCurrentChargeVersion)
-  // filteredAndSorted.sort((a, b) => {
-  //   return new Date(getStartDate(a)) - new Date(getStartDate(b))
-  // })
-
   return filteredAndSorted.map((chargeVersion, i, arr) => {
     const isLast = i === arr.length - 1
     chargeVersion.dateRange.endDate = isLast
