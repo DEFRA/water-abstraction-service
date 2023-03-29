@@ -169,7 +169,7 @@ const processFinancialYear = async (batch, financialYear) => {
     chargeVersion => processChargeVersionFinancialYear(batch, financialYear, existingTPTBatches, chargeVersion)
   )
 
-  return chargeVersionYears.flatMap(n => n)
+  return chargeVersionYears.flat(Infinity)
 }
 
 /**
