@@ -88,9 +88,9 @@ const updateDeMinimis = (ids, isDeMinimis) =>
 const getInvoiceTransactions = invoice =>
   invoice.invoiceLicences.map(
     invoiceLicence => invoiceLicence.transactions
-  ).flatMap(n => n)
+  ).flat(Infinity)
 
-const getBatchTransactions = batch => batch.invoices.map(getInvoiceTransactions).flatMap(n => n)
+const getBatchTransactions = batch => batch.invoices.map(getInvoiceTransactions).flat(Infinity)
 
 const getTransactionId = transaction => transaction.id
 

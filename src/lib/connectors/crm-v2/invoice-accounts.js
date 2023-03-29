@@ -26,7 +26,7 @@ const getInvoiceAccountsByIds = async ids => {
   // Get batches
   const results = await Promise.all(idBatches.map(getBatch))
 
-  return results.flatMap(n => n)
+  return results.flat(Infinity)
 }
 
 /**

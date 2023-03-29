@@ -63,7 +63,7 @@ const getMeterDetails = (ret) => {
     .get('tns:FullReturnStructure', options)
     .find('tns:MeterUsage', options)
 
-  return meterUsage.map(meter => {
+  return meterUsage.flatMap(meter => {
     if (!wasMeterUsed(meter)) return []
 
     return {
@@ -72,7 +72,7 @@ const getMeterDetails = (ret) => {
       meterDetailsProvided: true,
       multiplier: 1
     }
-  }).flatMap(n => n)
+  })
 }
 
 const wasMeterUsed = (meterUsage) => {

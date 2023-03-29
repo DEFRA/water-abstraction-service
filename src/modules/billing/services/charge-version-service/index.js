@@ -185,7 +185,7 @@ const createForBatch = async batch => {
     financialYearEnding => processFinancialYear(batch, new FinancialYear(financialYearEnding))
   )
 
-  return chargeVersionYears.flatMap(n => n)
+  return chargeVersionYears.flat(Infinity)
 }
 
 exports.createForBatch = createForBatch

@@ -39,7 +39,7 @@ const fetchReturns = async (licenceNumber, financialYear) => {
   const data = await Promise.all(tasks)
 
   // Return as single flat array
-  return data.flatMap(n => n)
+  return data.flat(Infinity)
 }
 
 /**

@@ -300,7 +300,7 @@ const batchProcess = async (arr, batchSize, iteratee, ...params) => {
   const batches = chunk(arr, batchSize)
   const tasks = batches.map(batch => iteratee(batch, ...params))
   const results = await Promise.all(tasks)
-  return results.flatMap(n => n)
+  return results.flat(Infinity)
 }
 
 /**

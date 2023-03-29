@@ -65,9 +65,10 @@ const getAgreementsHistory =
     const arr = acc
       .map(row => helpers.charging.dateRangeSplitter(row, history, key))
 
-    const flattened = arr.flatMap(n => n)
+    const flattened = arr.flat(Infinity)
 
-    return flattened.map(dateHelpers.applyEffectiveDates)
+    return flattened.map(transactionDates => dateHelpers.applyEffectiveDates(transactionDates)
+    )
   }, [chargePeriod.toJSON()])
 
   // Map to a simple structure

@@ -323,7 +323,7 @@ const createTransactions = (chargeVersionYear, billingVolumes) => {
   const transactions = history.map(period =>
     createTransactionsForPeriod(chargeVersionYear, period, billingVolumes))
 
-  return transactions.flatMap(n => n)
+  return transactions.flat(Infinity)
 }
 
 exports.createTransactions = createTransactions

@@ -344,7 +344,7 @@ class ChargeElementGroup {
     const isSummer = this.returnSeason === RETURN_SEASONS.summer
     const billingVolumes = this._chargeElementContainers.map(
       chargeElementContainer => chargeElementContainer.billingVolumes
-    ).flatMap(n => n)
+    ).flat(Infinity)
     return billingVolumes
       .filter(billingVolume => billingVolume.isSummer === isSummer)
       .map(billingVolume => billingVolume.setVolumeFromCalculatedVolume())

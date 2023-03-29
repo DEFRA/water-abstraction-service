@@ -175,7 +175,7 @@ client.getDocumentsByLicenceNumbers = async (licenceNumbers, includeExpired = fa
     })
   )
 
-  return documentBatches.flatMap(n => n)
+  return documentBatches.flat(Infinity)
 }
 
 module.exports = client

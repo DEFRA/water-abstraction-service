@@ -55,7 +55,7 @@ const getActiveReturns = async returnIds => {
     returnIdBatches.map(getActiveReturnsChunk)
   )
 
-  return returnsBatches.flatMap(n => n)
+  return returnsBatches.flat(Infinity)
 }
 
 /**

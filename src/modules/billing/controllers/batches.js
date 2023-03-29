@@ -176,16 +176,16 @@ const getBatchDownloadData = async request => {
   // Define an array of unique charge version IDS
   const chargeVersionIds = [...new Set(
     // Map over the invoice array and return an array of charge version IDs
-    invoices.map(invoice => {
+    invoices.flatMap(invoice => {
       // Get an array of billing invoice licences and filter out transactions
-      const filtered = invoice.billingInvoiceLicences.map(invoiceLicence =>
+      const filtered = invoice.billingInvoiceLicences.flatMap(invoiceLicence =>
         invoiceLicence.billingTransactions
           .filter(transaction => !!transaction.chargeElement)
-          .map(transaction => transaction.chargeElement.chargeVersionId)
+          .flatMap(transaction => transaction.chargeElement.chargeVersionId)
       )
       // Return a flattened array of charge version IDs
-      return filtered.flatMap(n => n)
-    }).flatMap(n => n)
+      return filtered
+    })
   )]
 
   const chargeVersions = await chargeVersionService.getManyByChargeVersionIds(chargeVersionIds)

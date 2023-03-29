@@ -67,7 +67,7 @@ const getGroupTwoPartTariffStatuses = chargeElementGroups => {
     })
   )
 
-  return codes.flatMap(n => n)
+  return codes.flat(Infinity)
 }
 
 const getGroupAllocatedVolumes = chargeElementGroup => {

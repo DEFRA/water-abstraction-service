@@ -222,7 +222,7 @@ const filterCancellingTransactions = transactions => {
 const getNonCancellingTransactions = transactions => {
   const pairGroups = groupBy(transactions, getPairGroupingKey)
   const filteredGroups = mapValues(pairGroups, filterCancellingTransactions)
-  return Object.values(filteredGroups).flatMap(n => n)
+  return Object.values(filteredGroups).flat(Infinity)
 }
 
 /**
@@ -298,7 +298,7 @@ const processBatch = (batchId, transactions) => {
   }
 
   // Convert data structure back to a flat array of transactions
-  return Object.values(transactionGroups).map(getTransactions).flatMap(n => n)
+  return Object.values(transactionGroups).map(getTransactions).flat(Infinity)
 }
 
 exports.processBatch = processBatch
