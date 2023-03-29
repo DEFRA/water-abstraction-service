@@ -2,7 +2,6 @@
 
 const Boom = require('@hapi/boom')
 
-const { flatMap } = require('lodash')
 const { jobStatus } = require('../lib/event')
 const { createBatchEvent } = require('../lib/batch-event')
 const controller = require('../../../lib/controller')
@@ -174,15 +173,21 @@ const getBatchDownloadData = async request => {
   const invoices = await invoiceService.getInvoicesForBatchDownload(batch)
 
   // Create a new set to remove duplicate values
-  const chargeVersionIds = [...new Set(flatMap(invoices.map(invoice => {
-    const filtered = invoice.billingInvoiceLicences.map(invoiceLicence =>
-      invoiceLicence.billingTransactions
-        .filter(transaction => !!transaction.chargeElement)
-        .map(transaction => transaction.chargeElement.chargeVersionId)
-    )
+  // Define an array of unique charge version IDS
+  const chargeVersionIds = [...new Set(
+    // Map over the invoice array and return an array of charge version IDs
+    invoices.map(invoice => {
+      // Get an array of billing invoice licences and filter out transactions
+      const filtered = invoice.billingInvoiceLicences.map(invoiceLicence =>
+        invoiceLicence.billingTransactions
+          .filter(transaction => !!transaction.chargeElement)
+          .map(transaction => transaction.chargeElement.chargeVersionId)
+      )
+      // Return a flattened array of charge version IDs
+      return filtered.flatMap(n => n)
+    }).flatMap(n => n)
+  )]
 
-    return filtered.flatMap(n => n)
-  })))]
   const chargeVersions = await chargeVersionService.getManyByChargeVersionIds(chargeVersionIds)
   return { invoices, chargeVersions }
 }

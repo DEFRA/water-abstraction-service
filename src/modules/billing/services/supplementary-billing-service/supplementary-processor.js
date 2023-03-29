@@ -7,7 +7,7 @@
  * changes are needed
  */
 
-const { groupBy, negate, flatMap, mapValues, sortBy } = require('lodash')
+const { groupBy, negate, mapValues, sortBy } = require('lodash')
 const moment = require('moment')
 const Decimal = require('decimal.js-light')
 
@@ -222,7 +222,7 @@ const filterCancellingTransactions = transactions => {
 const getNonCancellingTransactions = transactions => {
   const pairGroups = groupBy(transactions, getPairGroupingKey)
   const filteredGroups = mapValues(pairGroups, filterCancellingTransactions)
-  return flatMap(Object.values(filteredGroups))
+  return Object.values(filteredGroups).flatMap(n => n)
 }
 
 /**
@@ -298,9 +298,7 @@ const processBatch = (batchId, transactions) => {
   }
 
   // Convert data structure back to a flat array of transactions
-  return flatMap(
-    Object.values(transactionGroups).map(getTransactions)
-  )
+  return Object.values(transactionGroups).map(getTransactions).flatMap(n => n)
 }
 
 exports.processBatch = processBatch
