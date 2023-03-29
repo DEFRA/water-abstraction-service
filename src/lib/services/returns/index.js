@@ -1,6 +1,5 @@
 'use strict'
 
-const { flatMap } = require('lodash')
 const bluebird = require('bluebird')
 const moment = require('moment')
 
@@ -40,7 +39,7 @@ const fetchReturns = async (licenceNumber, financialYear) => {
   const data = await Promise.all(tasks)
 
   // Return as single flat array
-  return flatMap(data)
+  return data.flatMap(n => n)
 }
 
 /**

@@ -175,11 +175,13 @@ const getBatchDownloadData = async request => {
 
   // Create a new set to remove duplicate values
   const chargeVersionIds = [...new Set(flatMap(invoices.map(invoice => {
-    return flatMap(invoice.billingInvoiceLicences.map(invoiceLicence =>
+    const filtered = invoice.billingInvoiceLicences.map(invoiceLicence =>
       invoiceLicence.billingTransactions
         .filter(transaction => !!transaction.chargeElement)
         .map(transaction => transaction.chargeElement.chargeVersionId)
-    ))
+    )
+
+    return filtered.flatMap(n => n)
   })))]
   const chargeVersions = await chargeVersionService.getManyByChargeVersionIds(chargeVersionIds)
   return { invoices, chargeVersions }

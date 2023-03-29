@@ -1,6 +1,6 @@
 'use strict'
 
-const { compact, groupBy, flatMap, sortBy } = require('lodash')
+const { compact, groupBy, sortBy } = require('lodash')
 const helpers = require('@envage/water-abstraction-helpers')
 const dateHelpers = require('./date-helpers')
 const DateRange = require('../../../../../lib/models/date-range')
@@ -65,7 +65,9 @@ const getAgreementsHistory =
     const arr = acc
       .map(row => helpers.charging.dateRangeSplitter(row, history, key))
 
-    return flatMap(arr).map(dateHelpers.applyEffectiveDates)
+    const flattened = arr.flatMap(n => n)
+
+    return flattened.map(dateHelpers.applyEffectiveDates)
   }, [chargePeriod.toJSON()])
 
   // Map to a simple structure

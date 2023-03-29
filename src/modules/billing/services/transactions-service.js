@@ -4,7 +4,6 @@ const Transaction = require('../../../lib/models/transaction')
 const { logger } = require('../../../logger')
 const newRepos = require('../../../lib/connectors/repos')
 const mappers = require('../mappers')
-const { flatMap } = require('lodash')
 const { TRANSACTION_TYPE } = require('../../../lib/models/charge-version-year')
 const moment = require('moment')
 /**
@@ -87,13 +86,11 @@ const updateDeMinimis = (ids, isDeMinimis) =>
   newRepos.billingTransactions.update(ids, { isDeMinimis }, false)
 
 const getInvoiceTransactions = invoice =>
-  flatMap(
-    invoice.invoiceLicences.map(
-      invoiceLicence => invoiceLicence.transactions
-    )
-  )
+  invoice.invoiceLicences.map(
+    invoiceLicence => invoiceLicence.transactions
+  ).flatMap(n => n)
 
-const getBatchTransactions = batch => flatMap(batch.invoices.map(getInvoiceTransactions))
+const getBatchTransactions = batch => batch.invoices.map(getInvoiceTransactions).flatMap(n => n)
 
 const getTransactionId = transaction => transaction.id
 
