@@ -81,8 +81,26 @@ function toCamelCase (key) {
   return result
 }
 
+/**
+ * Truncates a string to a specified length, adding an ellipsis at the end to
+ * indicate that the string has been shortened.
+ *
+ * @param {string} string - The string to be truncated.
+ * @param {number} length - The maximum length to the truncated string.
+ * @returns {string} - The truncated string.
+ */
+
+function truncate (string, length) {
+  if (string.length > length) {
+    return string.slice(0, (length - 3)) + '...'
+  } else {
+    return string
+  }
+}
+
 module.exports = {
   chunk,
   partialRight,
-  toCamelCase
+  toCamelCase,
+  truncate
 }
