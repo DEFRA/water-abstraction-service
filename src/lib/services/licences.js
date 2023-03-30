@@ -110,8 +110,8 @@ const updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = async (regi
 const updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = async (regionId, dateCreated) => repos.licences.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate(
   regionId,
   dateCreated,
-  INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
-  INCLUDE_IN_SUPPLEMENTARY_BILLING.no
+  true,
+  false
 )
 
 /**
