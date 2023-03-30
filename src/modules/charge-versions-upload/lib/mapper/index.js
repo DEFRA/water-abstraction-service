@@ -1,7 +1,6 @@
 'use strict'
 
 const csvParser = require('../csv-adapter/csv-parser')
-const { sortBy } = require('lodash')
 const chargeVersionMapper = require('./chargeVersionMapper')
 const { jobName } = require('../../jobs/update-charge-information-to-json')
 const eventsService = require('../../../../lib/services/events')
@@ -11,6 +10,20 @@ const { toCamelCase } = require('../../../../lib/object-helpers.js')
 const mapToRowObject = headers => row => row.reduce((acc, column, index) => {
   return { ...acc, [headers[index]]: column }
 }, {})
+
+// sorting the rows by licenceNumber first and then chargeReferenceDetailsChargeElementGroup
+const sortBy = (row) => {
+  return row.sort((a, b) => {
+    if (a.licenceNumber !== b.licenceNumber) {
+      return a.licenceNumber < b.licenceNumber ? -1 : 1
+    }
+    if (a.chargeReferenceDetailsChargeElementGroup !== b.chargeReferenceDetailsChargeElementGroup) {
+      return a.chargeReferenceDetailsChargeElementGroup < b.chargeReferenceDetailsChargeElementGroup ? -1 : 1
+    }
+
+    return 0
+  })
+}
 
 /**
  * Maps a CSV file in string form to an array of return objects
@@ -34,10 +47,8 @@ const mapCsv = async (csvStr, user, event) => {
 
   // Convert the fields in the csv rows into key value pairs with the csv headings as the keys converted to camel case.
   // Then sort by the licence number and group.
-  const rowObjects = sortBy(
-    rows.map(mapToRowObject(headers.map(header => toCamelCase(header)))),
-    ['licenceNumber', 'chargeReferenceDetailsChargeElementGroup']
-  )
+  const mappedRows = rows.map(mapToRowObject(headers.map(header => toCamelCase(header))))
+  const rowObjects = sortBy(mappedRows)
 
   const chargeVersions = []
   let groupByLicenceNumber = []
