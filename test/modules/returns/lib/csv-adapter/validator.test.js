@@ -2,7 +2,6 @@
 
 const { expect } = require('@hapi/code')
 const { experiment, test } = exports.lab = require('@hapi/lab').script()
-const { partial } = require('lodash')
 const csvSchemaValidation = require('../../../../../src/modules/returns/lib/csv-adapter/validator')
 const { stringify } = require('csv-stringify/sync')
 
@@ -48,16 +47,16 @@ const getValidSingleLicenceReturn = () => ([
 
 const setRecords = (rowIndex, records, value) => (records[rowIndex][1] = value)
 
-const setLicenceNumber = partial(setRecords, 0)
-const setReturnReference = partial(setRecords, 1)
-const setNilReturn = partial(setRecords, 4)
-const setMeterUsed = partial(setRecords, 5)
-const setMeterMake = partial(setRecords, 6)
-const setMeterSerialNumber = partial(setRecords, 7)
-const setFirstVolume = partial(setRecords, 8)
-const setSecondVolume = partial(setRecords, 9)
-const setThirdVolume = partial(setRecords, 10)
-const setReturnId = partial(setRecords, 11)
+const setLicenceNumber = setRecords.bind(null, 0)
+const setReturnReference = setRecords.bind(null, 1)
+const setNilReturn = setRecords.bind(null, 4)
+const setMeterUsed = setRecords.bind(null, 5)
+const setMeterMake = setRecords.bind(null, 6)
+const setMeterSerialNumber = setRecords.bind(null, 7)
+const setFirstVolume = setRecords.bind(null, 8)
+const setSecondVolume = setRecords.bind(null, 9)
+const setThirdVolume = setRecords.bind(null, 10)
+const setReturnId = setRecords.bind(null, 11)
 
 experiment('csv-schema-validation', () => {
   test('handles inconsistent record lengths', async () => {

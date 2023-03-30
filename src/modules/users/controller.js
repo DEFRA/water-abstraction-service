@@ -2,7 +2,6 @@
 
 const idmConnector = require('../../lib/connectors/idm')
 const Boom = require('@hapi/boom')
-const { partial } = require('lodash')
 const crmEntitiesConnector = require('../../lib/connectors/crm/entities')
 const crmDocumentsConnector = require('../../lib/connectors/crm/documents')
 const idmUserRolesConnector = require('../../lib/connectors/idm/user-roles')
@@ -132,10 +131,15 @@ const createInternalUserEvent = (type, callingUser, newUser) => {
   })
   return event.save(auditEvent)
 }
-
-const createNewUserEvent = partial(createInternalUserEvent, 'new-user')
-const deleteUserEvent = partial(createInternalUserEvent, 'delete-user')
-const updateUserRolesEvent = partial(createInternalUserEvent, 'update-user-roles')
+/**
+ * Create a new function that calls `createInternalUserEvent` with `*task*-user`
+ * as the first argument. The `bind` method is used to set `null` as the `this` value
+ * for the new function, meaning that the new function will have no `this` context
+ * when called
+ */
+const createNewUserEvent = createInternalUserEvent.bind(null, 'new-user')
+const deleteUserEvent = createInternalUserEvent.bind(null, 'delete-user')
+const updateUserRolesEvent = createInternalUserEvent.bind(null, 'update-user-roles')
 
 const createIdmUser = (email, crmEntityId) => {
   return idmConnector.usersClient.createUser(
