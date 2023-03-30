@@ -7,7 +7,7 @@
  * changes are needed
  */
 
-const { groupBy, negate, flatMap, mapValues, sortBy } = require('lodash')
+const { groupBy, negate, flatMap, mapValues } = require('lodash')
 const moment = require('moment')
 const Decimal = require('decimal.js-light')
 
@@ -203,12 +203,17 @@ const getPairGroupingKey = transaction => {
  * @return {Array<Object>}
  */
 const filterCancellingTransactions = transactions => {
-  return sortBy(transactions, transaction => moment(transaction.dateCreated).unix())
+  const sortedTransactions = [...transactions]
+    .sort((a, b) => {
+      return moment(a.dateCreated).unix() - moment(b.dateCreated).unix()
+    })
     .reduce((acc, transaction) => {
       const index = acc.findIndex(row => row.isCredit === !transaction.isCredit)
       index === -1 ? acc.push(transaction) : acc.splice(index, 1)
       return acc
     }, [])
+
+  return sortedTransactions
 }
 
 /**

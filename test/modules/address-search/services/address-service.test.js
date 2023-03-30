@@ -26,6 +26,16 @@ experiment('modules/application-state/controller', () => {
         city: 'Testington',
         postcode: 'TT1 1TT',
         country: 'United Kingdom'
+      },
+      {
+        uprn: '12345',
+        organisation: 'Made Up',
+        premises: 'Made Up',
+        street_address: 'Made Up',
+        locality: 'Country vale',
+        city: 'Testington',
+        postcode: 'TT1 1TT',
+        country: 'United Kingdom'
       }]
     })
   })
@@ -34,7 +44,7 @@ experiment('modules/application-state/controller', () => {
     sandbox.restore()
   })
 
-  experiment('.getAddresses', () => {
+  experiment('.getAddressesByPostcode', () => {
     let result
 
     beforeEach(async () => {
@@ -45,8 +55,13 @@ experiment('modules/application-state/controller', () => {
       expect(eaAddressFacadeApi.getAddressesByPostcode.calledWith('TT1 1TT'))
     })
 
+    test('sorts the addresses', async () => {
+      expect(result.data[0].addressLine1).to.equal('Made Up')
+      expect(result.data[1].addressLine1).to.equal('Big Co')
+    })
+
     test('resolves with mapped addresses in { data } envelope', async () => {
-      expect(result.data).to.be.an.array().length(1)
+      expect(result.data).to.be.an.array().length(2)
       expect(result.data[0] instanceof Address).to.be.true()
     })
   })
