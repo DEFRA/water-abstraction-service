@@ -1,5 +1,5 @@
 const moment = require('moment')
-const { flatMap, compact } = require('lodash')
+const { compact } = require('lodash')
 const DATE_FORMAT = 'YYYY-MM-DD'
 
 // preferred format for dates is D MMMM YYYY, but some applications
@@ -7,25 +7,25 @@ const DATE_FORMAT = 'YYYY-MM-DD'
 // with the unexpected formats without risking potential
 // crossovers between formats such at DD/MM/YYYY and MM/DD/YYYY
 // by using a sample of potential separators.
-const GDS_DATE_FORMATS = flatMap([
+const GDS_DATE_FORMATS = [
   ['D', 'MMMM', 'YYYY'],
   ['D', 'MMM', 'YYYY'],
   ['D', 'MM', 'YYYY'],
   ['D', 'MMMM', 'YY'],
   ['D', 'MMM', 'YY'],
   ['D', 'MM', 'YY']
-], date => ([
+].flatMap(date => ([
   date.join(' '),
   date.join('/'),
   date.join('-')
 ]))
 
-const GDS_MONTH_FORMATS = flatMap([
+const GDS_MONTH_FORMATS = [
   ['MMMM', 'YYYY'],
   ['MMM', 'YYYY'],
   ['MMMM', 'YY'],
   ['MMM', 'YY']
-], date => ([
+].flatMap(date => ([
   date.join(' '),
   date.join('-')
 ]))
