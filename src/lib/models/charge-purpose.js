@@ -1,7 +1,5 @@
 'use strict'
 
-const { max } = require('lodash')
-
 const Model = require('./model')
 const AbstractionPeriod = require('./abstraction-period')
 const DateRange = require('./date-range')
@@ -74,7 +72,13 @@ class ChargePurpose extends Model {
    * @return {Number}
    */
   get maxAnnualQuantity () {
-    return max([this.billableAnnualQuantity, this.authorisedAnnualQuantity])
+    if (typeof this.billableAnnualQuantity === 'undefined' || this.billableAnnualQuantity < 0) {
+      return this.authorisedAnnualQuantity
+    } else if (typeof this.authorisedAnnualQuantity === 'undefined' || this.authorisedAnnualQuantity < 0) {
+      return this.billableAnnualQuantity
+    } else {
+      return Math.max(this.billableAnnualQuantity, this.authorisedAnnualQuantity)
+    }
   }
 
   /**
