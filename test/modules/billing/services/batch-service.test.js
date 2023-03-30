@@ -125,6 +125,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatus').resolves()
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForSentBatch').resolves()
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForBatchCreatedDate').resolves()
+    sandbox.stub(licencesService, 'updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate').resolves()
     sandbox.stub(licencesService, 'flagForSupplementaryBilling').resolves()
 
     sandbox.stub(chargeModuleBillRunConnector, 'create').resolves()
@@ -484,7 +485,8 @@ experiment('modules/billing/services/batch-service', () => {
         externalId: uuid(),
         dateCreated: '2020-01-09T16:23:24.753Z',
         type: 'supplementary',
-        region: { id: 'test-regioin-id' }
+        region: { id: 'test-regioin-id' },
+        scheme: 'alcs'
       }
 
       internalCallingUser = {
@@ -494,21 +496,23 @@ experiment('modules/billing/services/batch-service', () => {
     })
 
     experiment('when the approval succeeds', () => {
-      beforeEach(async () => {
-        await batchService.approveBatch(batch, internalCallingUser)
-      })
-
       test('approves the batch at the charge module', async () => {
+        await batchService.approveBatch(batch, internalCallingUser)
+
         const [externalId] = chargeModuleBillRunConnector.approve.lastCall.args
         expect(externalId).to.equal(batch.externalId)
       })
 
       test('sends the batch at the charge module', async () => {
+        await batchService.approveBatch(batch, internalCallingUser)
+
         const [externalId] = chargeModuleBillRunConnector.send.lastCall.args
         expect(externalId).to.equal(batch.externalId)
       })
 
       test('creates an event showing the calling user successfully approved the batch', async () => {
+        await batchService.approveBatch(batch, internalCallingUser)
+
         const [savedEvent] = eventService.create.lastCall.args
         expect(savedEvent.issuer).to.equal(internalCallingUser.email)
         expect(savedEvent.type).to.equal('billing-batch:approve')
@@ -517,16 +521,36 @@ experiment('modules/billing/services/batch-service', () => {
         expect(savedEvent.metadata.batch).to.equal(batch)
       })
 
-      test('updates the include in supplementary billing status for the licences with an updated date <= batch created date', async () => {
-        const [regionId, batchCreatedDate] = licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate.lastCall.args
-        expect(regionId).to.equal(batch.region.id)
-        expect(batchCreatedDate).to.equal(batch.dateCreated)
-      })
-
       test('resets the invoice rebilling flags', async () => {
+        await batchService.approveBatch(batch, internalCallingUser)
+
         expect(invoiceService.resetIsFlaggedForRebilling.calledWith(
           batch.id
         )).to.be.true()
+      })
+
+      experiment('when the billing batch is for SROC', () => {
+        beforeEach(() => {
+          batch.scheme = 'sroc'
+        })
+
+        test('updates the include in SROC supplementary billing status for the licences with an updated date <= batch created date', async () => {
+          await batchService.approveBatch(batch, internalCallingUser)
+
+          const [regionId, batchCreatedDate] = licencesService.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate.lastCall.args
+          expect(regionId).to.equal(batch.region.id)
+          expect(batchCreatedDate).to.equal(batch.dateCreated)
+        })
+      })
+
+      experiment('when the billing batch is for PRESROC', () => {
+        test('updates the include in supplementary billing status for the licences with an updated date <= batch created date', async () => {
+          await batchService.approveBatch(batch, internalCallingUser)
+
+          const [regionId, batchCreatedDate] = licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate.lastCall.args
+          expect(regionId).to.equal(batch.region.id)
+          expect(batchCreatedDate).to.equal(batch.dateCreated)
+        })
       })
     })
 

@@ -107,6 +107,13 @@ const updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = async (regi
   INCLUDE_IN_SUPPLEMENTARY_BILLING.no
 )
 
+const updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = async (regionId, dateCreated) => repos.licences.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate(
+  regionId,
+  dateCreated,
+  INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
+  INCLUDE_IN_SUPPLEMENTARY_BILLING.no
+)
+
 /**
  * Fetches the invoice accounts associated with a licence using the licence ref and date as input.
  * @todo move to invoice accounts service
@@ -233,6 +240,7 @@ exports.getLicenceAccountsByRefAndDate = getLicenceAccountsByRefAndDate
 exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementaryBillingStatus
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch
 exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate
+exports.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate
 exports.flagForSupplementaryBilling = flagForSupplementaryBilling
 exports.getLicenceInvoices = getLicenceInvoices
 exports.getLicencesByInvoiceAccountId = getLicencesByInvoiceAccountId
