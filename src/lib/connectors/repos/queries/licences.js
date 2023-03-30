@@ -31,6 +31,26 @@ const updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = `
 `
 
 /**
+ * Updates the `include_in_sroc_supplementary_billing` flag for licences marked for SROC supplementary billing
+ *
+ * When a supplementary bill run gets approved (sent in the Charging Module) the legacy service updates the flag
+ * on all licences that were marked for processing. It needs to do it by date because you can have licences flagged
+ * that don't end up in the bill run, and with no other mechanism for knowing they were looked at this is what you
+ * are left with.
+ *
+ * We've only seen this and its partner version above used when setting the field from false to true. But we've kept
+ * the current pattern of supporting going the over way as we can't be 100% sure!
+ */
+const updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = `
+  update water.licences l
+  set include_in_sroc_supplementary_billing = :to
+  where l.date_updated <= :batchCreatedDate
+    and l.region_id = :regionId
+    and l.licence_id not in (select licence_id from water.charge_version_workflows where date_deleted is null)
+    and l.include_in_supplementary_billing = :from
+`
+
+/**
  * Updates the include_in_supplementary_billing value in the
  * water licences table from a value to a value for a given batch
  */
@@ -42,19 +62,19 @@ const updateIncludeInSupplementaryBillingStatusForBatch = `
       join water.billing_batch_charge_version_years y
         on b.billing_batch_id = y.billing_batch_id
       join water.charge_versions cv
-        on y.charge_version_id = cv.charge_version_id      
+        on y.charge_version_id = cv.charge_version_id
   where l.licence_ref = cv.licence_ref
   and b.billing_batch_id = :batchId
   and b.batch_type = 'supplementary'
   and l.include_in_supplementary_billing = :from
   and l.licence_id in (
     select il.licence_id
-    from 
-      water.billing_invoice_licences il 
+    from
+      water.billing_invoice_licences il
         join water.billing_invoices i
-          on il.billing_invoice_id = i.billing_invoice_id 
+          on il.billing_invoice_id = i.billing_invoice_id
     where i.billing_batch_id = :batchId
-    ); 
+    );
 `
 
 const getLicencesByInvoiceAccount = `
@@ -65,6 +85,7 @@ and cv.status='current'
 `
 
 exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate
+exports.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate
 exports.updateIncludeInSupplementaryBillingStatusForBatch = updateIncludeInSupplementaryBillingStatusForBatch
 exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview
 exports.getLicencesByInvoiceAccount = getLicencesByInvoiceAccount
