@@ -20,7 +20,7 @@
 ]
  */
 
-const { flatMap, cond, negate, isEqual } = require('lodash')
+const { flatMap, cond, negate } = require('lodash')
 
 const returnsConnector = require('../../../lib/connectors/returns')
 const documents = require('../../../lib/connectors/crm/documents')
@@ -122,10 +122,7 @@ const validateReturnlines = (ret, context) => {
   )
 
   // Check if the supplied return lines are identical to those in header
-  return isEqual(
-    requiredLines.map(getLineDateRange),
-    ret.lines.map(getLineDateRange)
-  )
+  return JSON.stringify(requiredLines.map(getLineDateRange)) === JSON.stringify(ret.lines.map(getLineDateRange))
 }
 
 /**
@@ -144,7 +141,8 @@ const validateLineFrequency = ret => {
     const requiredLines = returnLines.getRequiredLines(startDate, endDate, frequency)
     // Create a new set to remove any duplicate values
     const returnTimePeriod = [...new Set(ret.lines.map(line => line.timePeriod))]
-    return isEqual(returnTimePeriod, [requiredLines[0].timePeriod])
+
+    return String(returnTimePeriod) === String([requiredLines[0].timePeriod])
   } catch (err) {
     return false
   }

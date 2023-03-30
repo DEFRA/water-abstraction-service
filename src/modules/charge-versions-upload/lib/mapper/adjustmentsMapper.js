@@ -1,4 +1,5 @@
-const { isEqual } = require('lodash')
+'use strict'
+
 const { parseFactor, parseBool } = require('../helpers')
 
 const getAdjustments = data => {
@@ -12,15 +13,14 @@ const getAdjustments = data => {
   }
 
   // Return Empty adjustments if there are no adjustments
+  const isFalseyOrNull = (value) => {
+    return value === false || value === null
+  }
 
-  return isEqual(adjustments, {
-    s126: null,
-    s127: false,
-    s130: false,
-    charge: null,
-    winter: false,
-    aggregate: null
-  })
+  const checkObjectProperties = (obj) => {
+    return Object.keys(obj).every((key) => isFalseyOrNull(obj[key]))
+  }
+  return checkObjectProperties(adjustments)
     ? {}
     : adjustments
 }

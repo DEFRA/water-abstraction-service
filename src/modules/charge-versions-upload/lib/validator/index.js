@@ -1,9 +1,9 @@
 'use strict'
 
-const { isEqual } = require('lodash')
 const csvParser = require('../csv-adapter/csv-parser')
 const { csvFields } = require('./csvFields')
 const helpers = require('../helpers')
+const Hoek = require('@hapi/hoek')
 const { logger } = require('../../../../logger')
 
 const ROW_OFFSET = 2 // Takes into account the header row and the row index starting from 0
@@ -148,10 +148,10 @@ const validateGroups = async (rows, headings, jobName) => {
 
     if (current.chargeReferenceDetailsChargeElementGroup === previous.chargeReferenceDetailsChargeElementGroup) {
       if (current.chargeReferenceDetailsChargeElementGroup === 'A') {
-        if (isEqual(currentCategoryDetails, previousCategoryDetails)) {
+        if (Hoek.deepEqual(currentCategoryDetails, previousCategoryDetails)) {
           categoryErrors = [`Row ${previous.rowNumber}, has the same licence and references as row ${current.rowNumber} and both are in group A`]
         }
-      } else if (!isEqual(currentCategoryDetails, previousCategoryDetails)) {
+      } else if (!(Hoek.deepEqual(currentCategoryDetails, previousCategoryDetails))) {
         categoryErrors = Object.keys(currentCategoryDetails).reduce((differences, heading) => {
           if (currentCategoryDetails[heading] === previousCategoryDetails[heading]) {
             return differences
