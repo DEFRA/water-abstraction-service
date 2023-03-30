@@ -1,4 +1,4 @@
-const { flatMap, groupBy } = require('lodash')
+const { groupBy } = require('lodash')
 
 const {
   CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_RETURNS_AGENT,
@@ -30,11 +30,11 @@ const getPreferredContacts = contactList => {
 const mapGroupedRecipient = arr => ({
   contact: arr[0].contact,
   licenceNumbers: [...new Set(arr.map(row => row.licenceNumber))],
-  returnIds: [...new Set(flatMap(arr, row => row.returnIds))]
+  returnIds: [...new Set(arr.flatMap(row => row.returnIds))]
 })
 
 const getRecipientList = returnContacts => {
-  const recipients = flatMap(returnContacts, row =>
+  const recipients = returnContacts.flatMap(row =>
     getPreferredContacts(row.contacts).map(contact => ({
       contact,
       licenceNumber: row.licenceNumber,

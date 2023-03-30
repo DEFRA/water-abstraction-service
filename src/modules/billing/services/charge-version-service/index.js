@@ -1,6 +1,6 @@
 'use strict'
 
-const { range, flatMap } = require('lodash')
+const { range } = require('lodash')
 const bluebird = require('bluebird')
 
 const repos = require('../../../../lib/connectors/repos')
@@ -169,7 +169,7 @@ const processFinancialYear = async (batch, financialYear) => {
     chargeVersion => processChargeVersionFinancialYear(batch, financialYear, existingTPTBatches, chargeVersion)
   )
 
-  return flatMap(chargeVersionYears)
+  return chargeVersionYears.flat(Infinity)
 }
 
 /**
@@ -185,7 +185,7 @@ const createForBatch = async batch => {
     financialYearEnding => processFinancialYear(batch, new FinancialYear(financialYearEnding))
   )
 
-  return flatMap(chargeVersionYears)
+  return chargeVersionYears.flat(Infinity)
 }
 
 exports.createForBatch = createForBatch

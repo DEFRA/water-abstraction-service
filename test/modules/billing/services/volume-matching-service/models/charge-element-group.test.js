@@ -4,7 +4,6 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 const { expect } = require('@hapi/code')
 
 const { v4: uuid } = require('uuid')
-const { flatMap } = require('lodash')
 
 const ChargeElementContainer = require('../../../../../../src/modules/billing/services/volume-matching-service/models/charge-element-container')
 const ChargeElementGroup = require('../../../../../../src/modules/billing/services/volume-matching-service/models/charge-element-group')
@@ -67,7 +66,8 @@ const getGroupTwoPartTariffStatuses = chargeElementGroups => {
       return billingVolume.twoPartTariffStatus
     })
   )
-  return flatMap(codes)
+
+  return codes.flat(Infinity)
 }
 
 const getGroupAllocatedVolumes = chargeElementGroup => {

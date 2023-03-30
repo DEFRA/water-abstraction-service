@@ -1,7 +1,7 @@
 'use strict'
 
 const Decimal = require('decimal.js-light')
-const { groupBy, negate, flatMap } = require('lodash')
+const { groupBy, negate } = require('lodash')
 
 const validators = require('../../../../../lib/models/validators')
 const Return = require('../../../../../lib/models/return')
@@ -347,9 +347,9 @@ class ChargeElementGroup {
    */
   toBillingVolumes () {
     const isSummer = this.returnSeason === RETURN_SEASONS.summer
-    const billingVolumes = flatMap(this._chargeElementContainers.map(
+    const billingVolumes = this._chargeElementContainers.map(
       chargeElementContainer => chargeElementContainer.billingVolumes
-    ))
+    ).flat(Infinity)
     return billingVolumes
       .filter(billingVolume => billingVolume.isSummer === isSummer)
       .map(billingVolume => billingVolume.setVolumeFromCalculatedVolume())

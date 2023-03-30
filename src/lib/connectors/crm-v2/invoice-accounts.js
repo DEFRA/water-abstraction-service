@@ -1,6 +1,5 @@
 'use strict'
 
-const { flatMap } = require('lodash')
 const urlJoin = require('url-join')
 const { serviceRequest } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
@@ -26,7 +25,8 @@ const getInvoiceAccountsByIds = async ids => {
   const idBatches = chunk(ids, 24)
   // Get batches
   const results = await Promise.all(idBatches.map(getBatch))
-  return flatMap(results)
+
+  return results.flat(Infinity)
 }
 
 /**
