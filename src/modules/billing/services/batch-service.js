@@ -197,7 +197,6 @@ const approveBatch = async (batch, internalCallingUser) => {
       // invoices sent in this batch for the relevant region.
       await transactionsService.updateIsCredited(batch.region.id)
 
-
       if (batch.scheme === 'alcs') {
         await licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(
           batch.region.id,
