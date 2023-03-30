@@ -4,7 +4,7 @@ const moment = require('moment')
 const waterHelpers = require('@envage/water-abstraction-helpers')
 const { getReturnId } = waterHelpers.returns
 
-const { flatMap, intersection } = require('lodash')
+const { intersection } = require('lodash')
 const libxmljs = require('libxmljs')
 
 const returnsConnector = require('../../../../lib/connectors/returns')
@@ -63,7 +63,7 @@ const getMeterDetails = (ret) => {
     .get('tns:FullReturnStructure', options)
     .find('tns:MeterUsage', options)
 
-  return flatMap(meterUsage.map(meter => {
+  return meterUsage.flatMap(meter => {
     if (!wasMeterUsed(meter)) return []
 
     return {
@@ -72,7 +72,7 @@ const getMeterDetails = (ret) => {
       meterDetailsProvided: true,
       multiplier: 1
     }
-  }))
+  })
 }
 
 const wasMeterUsed = (meterUsage) => {
@@ -227,7 +227,7 @@ const mapReturn = (returnXml, context) => {
  * @return {Array} list of returns
  */
 const mapPermits = (permits, context) => {
-  return flatMap(permits, permit => {
+  return permits.flatMap(permit => {
     const licenceNumber = getText(permit, 'tns:IrPermitNo')
     const returns = permit.find('tns:Return', options)
     return returns.map(ret => mapReturn(ret, { ...context, licenceNumber }))

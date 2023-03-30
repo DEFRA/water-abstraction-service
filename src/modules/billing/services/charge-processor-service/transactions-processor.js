@@ -1,7 +1,5 @@
 'use strict'
 
-const { flatMap } = require('lodash')
-
 const MomentRange = require('moment-range')
 const moment = MomentRange.extendMoment(require('moment'))
 
@@ -325,7 +323,7 @@ const createTransactions = (chargeVersionYear, billingVolumes) => {
   const transactions = history.map(period =>
     createTransactionsForPeriod(chargeVersionYear, period, billingVolumes))
 
-  return flatMap(transactions)
+  return transactions.flat(Infinity)
 }
 
 exports.createTransactions = createTransactions

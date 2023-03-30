@@ -10,7 +10,6 @@ const rp = require('request-promise-native').defaults({
 const { serviceRequest } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
 const urlJoin = require('url-join')
-const { flatMap } = require('lodash')
 
 const { chunk } = require('../../object-helpers.js')
 
@@ -176,7 +175,7 @@ client.getDocumentsByLicenceNumbers = async (licenceNumbers, includeExpired = fa
     })
   )
 
-  return flatMap(documentBatches)
+  return documentBatches.flat(Infinity)
 }
 
 module.exports = client
