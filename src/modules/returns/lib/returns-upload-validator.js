@@ -20,7 +20,7 @@
 ]
  */
 
-const { flatMap, cond, negate } = require('lodash')
+const { cond, negate } = require('lodash')
 
 const returnsConnector = require('../../../lib/connectors/returns')
 const documents = require('../../../lib/connectors/crm/documents')
@@ -298,7 +298,7 @@ const batchProcess = async (arr, batchSize, iteratee, ...params) => {
   const batches = chunk(arr, batchSize)
   const tasks = batches.map(batch => iteratee(batch, ...params))
   const results = await Promise.all(tasks)
-  return flatMap(results)
+  return results.flat(Infinity)
 }
 
 /**

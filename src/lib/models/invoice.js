@@ -1,7 +1,5 @@
 'use strict'
 
-const { flatMap } = require('lodash')
-
 const {
   assertIsInstanceOf, assertIsArrayOfType,
   assertIsNullableInstanceOf, assertIsBoolean,
@@ -154,7 +152,7 @@ class Invoice extends Totals {
    * object associated with this invoice
    */
   getLicenceNumbers () {
-    return flatMap(this.invoiceLicences, invoiceLicence => {
+    return this.invoiceLicences.flatMap(invoiceLicence => {
       return invoiceLicence.licence.licenceNumber
     })
   }
@@ -166,7 +164,7 @@ class Invoice extends Totals {
    * Creating a new set to remove duplicate values
    */
   getLicenceIds () {
-    return [...new Set(flatMap(this.invoiceLicences, invoiceLicence => {
+    return [...new Set(this.invoiceLicences.flatMap(invoiceLicence => {
       return invoiceLicence.licence.id
     }))]
   }
