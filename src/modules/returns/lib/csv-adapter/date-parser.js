@@ -1,5 +1,6 @@
+'use strict'
+
 const moment = require('moment')
-const { compact } = require('lodash')
 const DATE_FORMAT = 'YYYY-MM-DD'
 
 // preferred format for dates is D MMMM YYYY, but some applications
@@ -51,7 +52,8 @@ const getDateFrequency = date => {
     const m = parsers[timePeriod](date)
     return m.isValid() ? { timePeriod, moment: m } : null
   })
-  return compact(result)[0]
+
+  return result.filter(x => !!x)[0]
 }
 
 /**
