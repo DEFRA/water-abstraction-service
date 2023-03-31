@@ -191,12 +191,22 @@ const approveBatch = async (batch, internalCallingUser) => {
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch)
     await invoiceService.resetIsFlaggedForRebilling(batch.id)
 
-    // if it is a supplementary batch mark all the
-    // old transactions in previous batches that was credited back in new invoices sent in this batch
-    // for the relevant region.
     if (batch.type === BATCH_TYPE.supplementary) {
+      // if it is a supplementary batch mark all the old transactions in previous batches that was credited back in new
+      // invoices sent in this batch for the relevant region.
       await transactionsService.updateIsCredited(batch.region.id)
-      await licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(batch.region.id, batch.dateCreated)
+
+      if (batch.scheme === 'alcs') {
+        await licencesService.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate(
+          batch.region.id,
+          batch.dateCreated
+        )
+      } else {
+        await licencesService.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate(
+          batch.region.id,
+          batch.dateCreated
+        )
+      }
     }
 
     return batch
