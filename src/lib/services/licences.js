@@ -90,6 +90,13 @@ const updateIncludeInSupplementaryBillingStatusForSentBatch = async batchId => {
  * Sets the water.licences.include_in_supplementary_billing value
  * from yes to no based on the region and batch created date
  *
+ * NOTE: Logically, if you know the batch you would update the flag for those licences linked to it. The problem is a
+ * licence might be flagged for inclusion but end up not being included. The billing process might calculate the
+ * billable days as 0, or the debit line gets cancelled out by a credit in a supplementary bill run.
+ *
+ * Least, that is the issue we think the previous team were trying to tackle with this way of resetting the flags
+ * when a bill run gets approved (only place this is called).
+ *
  * @param {String} regionId
  * @param {Date} dateCreated
  */
@@ -98,6 +105,13 @@ const updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = async (regi
   dateCreated,
   INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
   INCLUDE_IN_SUPPLEMENTARY_BILLING.no
+)
+
+const updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = async (regionId, dateCreated) => repos.licences.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate(
+  regionId,
+  dateCreated,
+  true,
+  false
 )
 
 /**
@@ -226,6 +240,7 @@ exports.getLicenceAccountsByRefAndDate = getLicenceAccountsByRefAndDate
 exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementaryBillingStatus
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch
 exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate
+exports.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate
 exports.flagForSupplementaryBilling = flagForSupplementaryBilling
 exports.getLicenceInvoices = getLicenceInvoices
 exports.getLicencesByInvoiceAccountId = getLicencesByInvoiceAccountId

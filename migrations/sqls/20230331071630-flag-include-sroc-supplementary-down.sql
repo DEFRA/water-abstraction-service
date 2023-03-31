@@ -1,0 +1,3 @@
+-- We do not have a rollback for this migration. The only one we could provide would be to set
+-- include_in_sroc_supplementary_billing to false for all licences. But as we would not know when the rollback would
+-- be applied we may revert ones that were done after the up migration was run.

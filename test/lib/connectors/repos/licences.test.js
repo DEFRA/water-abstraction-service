@@ -232,6 +232,37 @@ experiment('lib/connectors/repos/licences.js', () => {
     })
   })
 
+  experiment('.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate', () => {
+    let batchCreatedDate
+    let regionId
+
+    beforeEach(async () => {
+      batchCreatedDate = moment()
+      regionId = uuid()
+      await licencesRepo.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate(
+        regionId,
+        batchCreatedDate,
+        'from-value',
+        'to-value'
+      )
+    })
+
+    test('uses the expected SQL query', async () => {
+      const [query] = bookshelf.knex.raw.lastCall.args
+      expect(query).to.equal(licenceQueries.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate)
+    })
+
+    test('passes the expected params to the query', async () => {
+      const [, params] = bookshelf.knex.raw.lastCall.args
+      expect(params).to.equal({
+        regionId,
+        batchCreatedDate: batchCreatedDate.toISOString(),
+        from: 'from-value',
+        to: 'to-value'
+      })
+    })
+  })
+
   experiment('.findByBatchIdForTwoPartTariffReview', () => {
     beforeEach(async () => {
       await licencesRepo.findByBatchIdForTwoPartTariffReview('batch-id')
