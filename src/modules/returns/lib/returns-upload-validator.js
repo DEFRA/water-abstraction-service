@@ -29,6 +29,7 @@ const { chunk } = require('../../../lib/object-helpers.js')
 const returnLines = require('@envage/water-abstraction-helpers').returns.lines
 
 const schema = require('../schema.js')
+const Hoek = require('@hapi/hoek')
 
 const uploadErrors = {
   ERR_LICENCE_NOT_FOUND: 'The licence number could not be found',
@@ -121,8 +122,16 @@ const validateReturnlines = (ret, context) => {
     header.returns_frequency
   )
 
-  // Check if the supplied return lines are identical to those in header
-  return JSON.stringify(requiredLines.map(getLineDateRange)) === JSON.stringify(ret.lines.map(getLineDateRange))
+  const mappedRequiredLines = requiredLines.map((line) => {
+    return getLineDateRange(line)
+  })
+
+  const mappedReturnLines = ret.lines.map((line) => {
+    return getLineDateRange(line)
+  })
+
+  // // Check if the supplied return lines are identical to those in header
+  return Hoek.deepEqual(mappedRequiredLines, mappedReturnLines)
 }
 
 /**
@@ -142,7 +151,7 @@ const validateLineFrequency = ret => {
     // Create a new set to remove any duplicate values
     const returnTimePeriod = [...new Set(ret.lines.map(line => line.timePeriod))]
 
-    return String(returnTimePeriod) === String([requiredLines[0].timePeriod])
+    return Hoek.deepEqual(returnTimePeriod, [requiredLines[0].timePeriod])
   } catch (err) {
     return false
   }

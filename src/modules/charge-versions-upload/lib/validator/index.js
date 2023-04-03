@@ -151,7 +151,7 @@ const validateGroups = async (rows, headings, jobName) => {
         if (Hoek.deepEqual(currentCategoryDetails, previousCategoryDetails)) {
           categoryErrors = [`Row ${previous.rowNumber}, has the same licence and references as row ${current.rowNumber} and both are in group A`]
         }
-      } else if (!(Hoek.deepEqual(currentCategoryDetails, previousCategoryDetails))) {
+      } else if (!Hoek.deepEqual(currentCategoryDetails, previousCategoryDetails)) {
         categoryErrors = Object.keys(currentCategoryDetails).reduce((differences, heading) => {
           if (currentCategoryDetails[heading] === previousCategoryDetails[heading]) {
             return differences

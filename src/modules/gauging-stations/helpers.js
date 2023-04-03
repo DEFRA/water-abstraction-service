@@ -44,11 +44,16 @@ const abstractionPeriodInObjectParser = inputObject => {
     // For each item in the abstractionPeriod subobject...
     for (const [key, value] of Object.entries(inputObject.abstractionPeriod)) {
       // Take the first letter of the item's label, and make it uppercase. Then bung 'abstractionPeriod' in front of it
-      replicatedObject[`abstractionPeriod${(key[0]).toUpperCase}${key.slice(1)}`] = value
+      const upperKey = capitalizeFirstLetter(key)
+      replicatedObject[`abstractionPeriod${upperKey}`] = value
     }
     return replicatedObject
   }
   return replicatedObject
+}
+
+const capitalizeFirstLetter = (string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
 const measurementPoint = data => {
