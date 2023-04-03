@@ -1,7 +1,6 @@
 'use strict'
 
 const moment = require('moment')
-const { maxBy } = require('lodash')
 const abstractionHelpers = require('@envage/water-abstraction-helpers')
 
 const { mapQuantity, mapUnit, getStartDate, mapUsability } = abstractionHelpers.returns.mappers
@@ -59,7 +58,11 @@ const getWeekdayHistogram = (lines) => {
     return acc
   }, initial)
 
-  const max = maxBy(Object.values(days), day => day.freq)
+  const daysArr = Object.values(days)
+  let max = null
+  if (daysArr.length > 0) {
+    max = daysArr.reduce((prev, curr) => prev.freq > curr.freq ? prev : curr)
+  }
 
   return max.day
 }

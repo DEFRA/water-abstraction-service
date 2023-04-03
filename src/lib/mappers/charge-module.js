@@ -1,6 +1,6 @@
 'use strict'
-const { truncate } = require('lodash')
 const { combineAddressLines, getAddressObjectFromArray } = require('./lib/helpers')
+const { truncate } = require('../object-helpers.js')
 
 /**
  * @module maps service models to charge module expected schema
@@ -68,7 +68,7 @@ const extractAddress = (address, fao = null) => {
   const response = {}
 
   for (const [key, value] of Object.entries(parsedAddress)) {
-    response[key] = truncate(value, { length: 240 })
+    response[key] = truncate(value, 240)
   }
 
   let line6 = ''
@@ -82,9 +82,9 @@ const extractAddress = (address, fao = null) => {
     }
   }
 
-  response.addressLine5 = truncate(address.town, { length: 60 })
-  response.addressLine6 = truncate(line6, { length: 60 })
-  response.postcode = truncate(address.postcode, { length: 60 })
+  response.addressLine5 = truncate(address.town, 60)
+  response.addressLine6 = truncate(line6, 60)
+  response.postcode = truncate(address.postcode, 60)
 
   return response
 }
