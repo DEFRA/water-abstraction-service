@@ -91,11 +91,11 @@ function toCamelCase (key) {
  */
 
 function truncate (string, length) {
-  if (string.length > length) {
+  if (string?.length > length) {
     return string.slice(0, (length - 3)) + '...'
-  } else {
-    return string
   }
+
+  return string
 }
 
 module.exports = {

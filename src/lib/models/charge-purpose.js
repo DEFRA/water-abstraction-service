@@ -76,9 +76,9 @@ class ChargePurpose extends Model {
       return this.authorisedAnnualQuantity
     } else if (typeof this.authorisedAnnualQuantity === 'undefined' || this.authorisedAnnualQuantity < 0) {
       return this.billableAnnualQuantity
-    } else {
-      return Math.max(this.billableAnnualQuantity, this.authorisedAnnualQuantity)
     }
+
+    return Math.max(this.billableAnnualQuantity, this.authorisedAnnualQuantity)
   }
 
   /**
