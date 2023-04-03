@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 'use strict'
-const { truncate } = require('lodash')
 
 const { createMapper } = require('../object-mapper')
 const camelCaseKeys = require('../camel-case-keys')
 const helpers = require('./lib/helpers')
+const { truncate } = require('../object-helpers')
 
 const ChargeCategory = require('../models/charge-category')
 
@@ -27,7 +27,7 @@ const csvToModel = data => {
     reference,
     description,
     subsistenceCharge: parseInt(subsistence_charge),
-    shortDescription: truncate(short_description, { length: 150 }),
+    shortDescription: truncate(short_description, 150),
     minVolume: parseInt(min_volume),
     maxVolume: parseInt(max_volume),
     isTidal: is_tidal,
