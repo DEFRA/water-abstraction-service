@@ -1,6 +1,5 @@
 'use strict'
 
-const { pickBy } = require('lodash')
 const pWaterfall = require('p-waterfall')
 
 const { logger } = require('../../logger')
@@ -124,7 +123,14 @@ const decorateInvoiceWithCRMData = (invoice, context) => {
     'company'
   )
 
-  return invoice.fromHash(pickBy(properties))
+  return invoice.fromHash(removeFalseyValues(properties))
+}
+
+const removeFalseyValues = (object) => {
+  // Convert the object into an array of key-value pairs, then filter out any entires with falsey values
+  const entries = Object.entries(object).filter(([_, value]) => !!value)
+  // Convert the filtered array of key-value pairs back into an object
+  return Object.fromEntries(entries)
 }
 
 /**
