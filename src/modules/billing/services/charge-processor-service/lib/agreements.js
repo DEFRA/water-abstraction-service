@@ -28,7 +28,8 @@ const mapAgreement = licenceAgreement => ({
 })
 
 const mapHistoryRow = row => {
-  const agreements = [row.section127Agreement, row.section130Agreement].filter(x => !!x)
+  const agreements = [row.section127Agreement, row.section130Agreement]
+    .filter(x => x)
     .map(row => row.section127Agreement || row.section130Agreement)
 
   return {

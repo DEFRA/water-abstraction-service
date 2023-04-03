@@ -112,7 +112,7 @@ class Licence extends Model {
    * @return {String|null}
    */
   get endDate () {
-    const dates = [this.expiredDate, this.lapsedDate, this.revokedDate].filter(x => !!x)
+    const dates = [this.expiredDate, this.lapsedDate, this.revokedDate].filter(x => x)
     dates.sort((a, b) => Date.parse(a) - Date.parse(b))
     return dates[0] || null
   }

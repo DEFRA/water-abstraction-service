@@ -53,7 +53,7 @@ const getDateFrequency = date => {
     return m.isValid() ? { timePeriod, moment: m } : null
   })
 
-  return result.filter(x => !!x)[0]
+  return result.filter(x => x)[0]
 }
 
 /**
