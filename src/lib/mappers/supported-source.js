@@ -1,6 +1,6 @@
 'use strict'
-const { truncate } = require('lodash')
 const camelCaseKeys = require('../camel-case-keys')
+const { truncate } = require('../object-helpers.js')
 
 const { createMapper } = require('../object-mapper')
 const helpers = require('./lib/helpers')
@@ -21,8 +21,8 @@ const csvToModel = data => {
   return supportedSource.fromHash({
     reference,
     order,
-    name: truncate(name, { length: 255 }),
-    region: truncate(region, { length: 255 })
+    name: truncate(name, 255),
+    region: truncate(region, 255)
   })
 }
 
