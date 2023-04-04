@@ -132,7 +132,7 @@ const validateHeadings = records => {
     return acc
   }, [])
 
-  return errors.filter(x => !!x)
+  return errors.filter(x => x)
 }
 
 /**
@@ -237,7 +237,7 @@ const validateLicences = licences => {
     return acc
   }, [])
 
-  return flatten(errors.filter(x => !!x))
+  return flatten(errors.filter(x => x))
 }
 
 const validate = async csv => {

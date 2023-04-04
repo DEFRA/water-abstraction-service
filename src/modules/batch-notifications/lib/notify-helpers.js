@@ -7,7 +7,7 @@
  * @return {Array}
  */
 const reduceAddressLines = lines => {
-  const compacted = lines.filter(x => !!x)
+  const compacted = lines.filter(x => x)
   let index = 1
   while (compacted.length > 6) {
     const newLine = compacted.slice(index, index + 2).join(', ')

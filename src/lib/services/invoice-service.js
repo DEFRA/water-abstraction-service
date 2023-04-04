@@ -128,7 +128,7 @@ const decorateInvoiceWithCRMData = (invoice, context) => {
 
 const removeFalseyValues = (object) => {
   // Convert the object into an array of key-value pairs, then filter out any entires with falsey values
-  const entries = Object.entries(object).filter(([_, value]) => !!value)
+  const entries = Object.entries(object).filter(([_, value]) => value)
   // Convert the filtered array of key-value pairs back into an object
   return Object.fromEntries(entries)
 }
