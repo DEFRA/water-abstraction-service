@@ -1,11 +1,12 @@
 'use strict'
 
-const { groupBy, mapValues } = require('lodash')
+const { mapValues } = require('lodash')
 const helpers = require('@envage/water-abstraction-helpers')
 const { throwIfError } = require('@envage/hapi-pg-rest-api')
 const returnsService = require('../../../lib/connectors/returns')
 const documents = require('../../../lib/connectors/crm/documents')
 const { isReturnId } = require('./query-parser')
+const { groupBy } = require('../../../lib/object-helpers')
 
 /**
  * Maps single return

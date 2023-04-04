@@ -7,7 +7,7 @@
  * changes are needed
  */
 
-const { groupBy, negate, mapValues } = require('lodash')
+const { negate, mapValues } = require('lodash')
 
 const moment = require('moment')
 const Decimal = require('decimal.js-light')
@@ -16,6 +16,7 @@ const hashers = require('../../../../lib/hash')
 const { actions } = require('./constants')
 
 const { isNaldTransaction } = require('../../lib/charge-period')
+const { groupBy } = require('../../../../lib/object-helpers')
 
 /**
  * Gets a grouping key for the given transaction - this is to allow

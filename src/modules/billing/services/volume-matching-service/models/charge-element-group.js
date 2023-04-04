@@ -1,7 +1,7 @@
 'use strict'
 
 const Decimal = require('decimal.js-light')
-const { groupBy, negate } = require('lodash')
+const { negate } = require('lodash')
 
 const validators = require('../../../../../lib/models/validators')
 const Return = require('../../../../../lib/models/return')
@@ -9,6 +9,7 @@ const ReturnLine = require('../../../../../lib/models/return-line')
 const PurposeUse = require('../../../../../lib/models/purpose-use')
 const DateRange = require('../../../../../lib/models/date-range')
 const FinancialYear = require('../../../../../lib/models/financial-year')
+const { groupBy } = require('../../../../../lib/object-helpers')
 
 const ChargeElementContainer = require('./charge-element-container')
 
