@@ -17,10 +17,16 @@ const getAdjustments = data => {
     aggregate: parseFactor(data.chargeReferenceDetailsAggregateFactor)
   }
 
-  const checkObjectProperties = (obj) => {
-    return Object.keys(obj).every((key) => isFalseyOrNull(obj[key]))
-  }
-  return checkObjectProperties(adjustments)
+  // const checkObjectProperties = (obj) => {
+  //   return Object.keys(obj).every((key) => isFalseyOrNull(obj[key]))
+  // }
+  // return checkObjectProperties(adjustments)
+  //   ? {}
+  //   : adjustments
+
+  const noAdjustmentsToReturn = Object.keys(adjustments).every((key) => isFalseyOrNull(adjustments[key]))
+
+  return noAdjustmentsToReturn
     ? {}
     : adjustments
 }

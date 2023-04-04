@@ -130,7 +130,7 @@ const validateReturnlines = (ret, context) => {
     return getLineDateRange(line)
   })
 
-  // // Check if the supplied return lines are identical to those in header
+  // Check if the supplied return lines are identical to those in header
   return Hoek.deepEqual(mappedRequiredLines, mappedReturnLines)
 }
 
