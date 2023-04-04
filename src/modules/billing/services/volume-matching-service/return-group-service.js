@@ -1,10 +1,10 @@
 'use strict'
 
 const validators = require('../../../../lib/models/validators')
+const { groupBy } = require('../../../../lib/object-helpers')
 
 // Services
 const returnsService = require('../../../../lib/services/returns')
-const { groupBy } = require('../../../../lib/object-helpers')
 
 // Models
 const FinancialYear = require('../../../../lib/models/financial-year')
