@@ -1,19 +1,20 @@
 'use strict'
 
-const { mapValues } = require('lodash')
-
 /**
  * Stringifies array/object data for writing to DB
  * @param  {Object} data - row data
  * @return {Object}      - row data with arrays/objects stringified
  */
 const stringifyValues = data => {
-  const result = mapValues(data, (value, key) => {
+  const result = {}
+  for (const key in data) {
+    const value = data[key]
     if (value instanceof Object) {
-      return JSON.stringify(value)
+      result[key] = JSON.stringify(value)
+    } else {
+      result[key] = value
     }
-    return value
-  })
+  }
 
   return result
 }
