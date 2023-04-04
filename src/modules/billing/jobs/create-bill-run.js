@@ -1,5 +1,7 @@
 'use strict'
 
+const { partial } = require('lodash')
+
 const JOB_NAME = 'billing.create-bill-run'
 
 const batchService = require('../services/batch-service')
@@ -10,7 +12,7 @@ const helpers = require('./lib/helpers')
 const { jobName: populateBatchChargeVersionJobName } = require('./populate-batch-charge-versions')
 const { jobName: rebillingJobName } = require('./rebilling')
 
-const createMessage = helpers.createMessage.bind(null, JOB_NAME)
+const createMessage = partial(helpers.createMessage, JOB_NAME)
 
 const getNextJobName = batchType => batchType === BATCH_TYPE.supplementary
   ? rebillingJobName

@@ -1,5 +1,7 @@
 'use strict'
 
+const { partial } = require('lodash')
+
 const JOB_NAME = 'billing.populate-batch-charge-versions'
 
 const batchService = require('../services/batch-service')
@@ -12,7 +14,7 @@ const batchJob = require('./lib/batch-job')
 const { jobName: processChargeVersionsJobName } = require('./process-charge-versions')
 const { jobName: twoPartTariffMatchingJobName } = require('./two-part-tariff-matching')
 
-const createMessage = helpers.createMessage.bind(null, JOB_NAME)
+const createMessage = partial(helpers.createMessage, JOB_NAME)
 
 const handler = async job => {
   batchJob.logHandling(job)

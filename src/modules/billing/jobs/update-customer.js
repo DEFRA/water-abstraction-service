@@ -1,5 +1,6 @@
 'use strict'
 
+const { partial } = require('lodash')
 const chargeModuleCustomersConnector = require('../../../lib/connectors/charge-module/customers')
 const { jobNames } = require('../../../lib/constants')
 const JOB_NAME = jobNames.updateCustomerAccount
@@ -21,7 +22,7 @@ const messageInitialiser = (jobName, invoiceAccountId) => ([
   }
 ])
 
-const createMessage = messageInitialiser.bind(null, JOB_NAME)
+const createMessage = partial(messageInitialiser, JOB_NAME)
 
 const handler = async job => {
   try {
