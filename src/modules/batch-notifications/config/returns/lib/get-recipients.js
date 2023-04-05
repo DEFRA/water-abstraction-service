@@ -49,7 +49,7 @@ const getRecipients = async (data) => {
 
       // Stringify object for writing to the DB
       for (const [key, value] of Object.entries(scheduledNotification)) {
-        rowData[key] = (value instanceof Object) ? JSON.stringify(value) : value
+        rowData[key] = value instanceof Object ? JSON.stringify(value) : value
       }
 
       await scheduledNotifications.repository.create(rowData)

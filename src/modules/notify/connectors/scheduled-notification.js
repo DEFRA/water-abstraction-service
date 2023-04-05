@@ -8,8 +8,8 @@ const { findOne } = require('../../../lib/repository-helpers')
 const mapObjectToNotification = (data) => {
   const snakeCaseData = snakeCaseKeys(data)
   const dataStringify = {}
-  for (const data in snakeCaseData) {
-    dataStringify[data] = Array.isArray(snakeCaseData[data]) ? JSON.stringify(snakeCaseData[data]) : snakeCaseData[data]
+  for (const [key, value] of Object.entries(snakeCaseData)) {
+    dataStringify[key] = Array.isArray(value) ? JSON.stringify(value) : value
   }
 
   return dataStringify
