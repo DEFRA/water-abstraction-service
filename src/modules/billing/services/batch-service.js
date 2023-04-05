@@ -267,13 +267,11 @@ const cleanup = async batchId => {
   await newRepos.billingInvoices.deleteEmptyByBatchId(batchId)
 }
 
-const capitalizeFirstLetter = (string) => {
-  return string.charAt(0).toUpperCase() + string.slice(1)
-}
-
 const getErrMsgForBatchErr = (batch, regionId) => {
+  const capitalizeFirstLetter = batch.type.charAt(0).toUpperCase() + batch.type.slice(1)
+
   return batch.status === BATCH_STATUS.sent
-    ? `${capitalizeFirstLetter(batch.type)} batch already sent for: region ${regionId}, financial year ${batch.endYear.yearEnding}, isSummer ${batch.isSummer}`
+    ? `${capitalizeFirstLetter} batch already sent for: region ${regionId}, financial year ${batch.endYear.yearEnding}, isSummer ${batch.isSummer}`
     : `Batch already live for region ${regionId}`
 }
 
