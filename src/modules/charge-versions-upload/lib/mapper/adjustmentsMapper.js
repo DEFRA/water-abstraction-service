@@ -1,5 +1,11 @@
-const { isEqual } = require('lodash')
+'use strict'
+
 const { parseFactor, parseBool } = require('../helpers')
+
+// Return Empty adjustments if there are no adjustments
+const isFalseyOrNull = (value) => {
+  return value === false || value === null
+}
 
 const getAdjustments = data => {
   const adjustments = {
@@ -11,16 +17,9 @@ const getAdjustments = data => {
     aggregate: parseFactor(data.chargeReferenceDetailsAggregateFactor)
   }
 
-  // Return Empty adjustments if there are no adjustments
+  const noAdjustmentsToReturn = Object.keys(adjustments).every((key) => isFalseyOrNull(adjustments[key]))
 
-  return isEqual(adjustments, {
-    s126: null,
-    s127: false,
-    s130: false,
-    charge: null,
-    winter: false,
-    aggregate: null
-  })
+  return noAdjustmentsToReturn
     ? {}
     : adjustments
 }

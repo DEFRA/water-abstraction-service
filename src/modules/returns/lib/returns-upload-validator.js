@@ -20,7 +20,7 @@
 ]
  */
 
-const { cond, negate, isEqual } = require('lodash')
+const { cond, negate } = require('lodash')
 
 const returnsConnector = require('../../../lib/connectors/returns')
 const documents = require('../../../lib/connectors/crm/documents')
@@ -29,6 +29,7 @@ const { chunk } = require('../../../lib/object-helpers.js')
 const returnLines = require('@envage/water-abstraction-helpers').returns.lines
 
 const schema = require('../schema.js')
+const Hoek = require('@hapi/hoek')
 
 const uploadErrors = {
   ERR_LICENCE_NOT_FOUND: 'The licence number could not be found',
@@ -121,11 +122,16 @@ const validateReturnlines = (ret, context) => {
     header.returns_frequency
   )
 
+  const mappedRequiredLines = requiredLines.map((line) => {
+    return getLineDateRange(line)
+  })
+
+  const mappedReturnLines = ret.lines.map((line) => {
+    return getLineDateRange(line)
+  })
+
   // Check if the supplied return lines are identical to those in header
-  return isEqual(
-    requiredLines.map(getLineDateRange),
-    ret.lines.map(getLineDateRange)
-  )
+  return Hoek.deepEqual(mappedRequiredLines, mappedReturnLines)
 }
 
 /**
@@ -144,7 +150,8 @@ const validateLineFrequency = ret => {
     const requiredLines = returnLines.getRequiredLines(startDate, endDate, frequency)
     // Create a new set to remove any duplicate values
     const returnTimePeriod = [...new Set(ret.lines.map(line => line.timePeriod))]
-    return isEqual(returnTimePeriod, [requiredLines[0].timePeriod])
+
+    return Hoek.deepEqual(returnTimePeriod, [requiredLines[0].timePeriod])
   } catch (err) {
     return false
   }

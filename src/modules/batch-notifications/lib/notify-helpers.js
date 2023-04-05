@@ -1,4 +1,4 @@
-const { compact } = require('lodash')
+'use strict'
 
 /**
  * Reduces the number of address lines to 6 (the max in Notify)
@@ -7,7 +7,7 @@ const { compact } = require('lodash')
  * @return {Array}
  */
 const reduceAddressLines = lines => {
-  const compacted = compact(lines)
+  const compacted = lines.filter(x => x)
   let index = 1
   while (compacted.length > 6) {
     const newLine = compacted.slice(index, index + 2).join(', ')

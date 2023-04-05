@@ -1,5 +1,5 @@
 'use strict'
-const { compact, orderBy } = require('lodash')
+
 const moment = require('moment')
 const Model = require('./model')
 const { assertLicenceNumber, assertIsInstanceOf, assertDate, assertNullableDate, assertIsArrayOfType } = require('./validators')
@@ -112,9 +112,9 @@ class Licence extends Model {
    * @return {String|null}
    */
   get endDate () {
-    const dates = compact([this.expiredDate, this.lapsedDate, this.revokedDate])
-    const sorted = orderBy(dates, date => moment(date).unix())
-    return sorted[0] || null
+    const dates = [this.expiredDate, this.lapsedDate, this.revokedDate].filter(x => x)
+    dates.sort((a, b) => Date.parse(a) - Date.parse(b))
+    return dates[0] || null
   }
 
   /**
@@ -135,11 +135,9 @@ class Licence extends Model {
       { key: 'lapsedDate', date: this.lapsedDate },
       { key: 'revokedDate', date: this.revokedDate }
     ]
-
-    const sortedDates = orderBy(
-      dates.filter(row => !!row.date),
-      row => moment(row.date).unix()
-    )
+    const sortedDates = dates
+      .filter(row => !!row.date)
+      .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))
 
     return sortedDates[0] ? sortedDates[0].key : null
   }
