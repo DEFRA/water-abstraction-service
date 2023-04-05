@@ -1,6 +1,5 @@
 const { expect } = require('@hapi/code')
 const { experiment, test } = exports.lab = require('@hapi/lab').script()
-const { mapValues } = require('lodash')
 
 const Contact = require('../../../src/lib/models/contact')
 
@@ -75,6 +74,14 @@ experiment('Contact model', () => {
       postcode: 'TT1 1TT'
     }
 
+    const lowerCaseData = {
+      initials: 'j',
+      name: 'doe',
+      firstName: 'john',
+      addressLine1: 'daisy farm',
+      postcode: 'tt1 1tt'
+    }
+
     test('should generate an ID', async () => {
       const contactA = new Contact(data)
       const id = contactA.generateId()
@@ -84,7 +91,7 @@ experiment('Contact model', () => {
 
     test('should generate the same ID for identical contacts - case insensitive', async () => {
       const contactA = new Contact(data)
-      const contactB = new Contact(mapValues(data, str => str.toLowerCase()))
+      const contactB = new Contact(lowerCaseData)
       expect(contactA.generateId()).to.equal(contactB.generateId())
     })
 

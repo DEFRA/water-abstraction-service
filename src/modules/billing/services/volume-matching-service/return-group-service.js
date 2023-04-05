@@ -1,8 +1,7 @@
 'use strict'
 
-const { groupBy } = require('lodash')
-
 const validators = require('../../../../lib/models/validators')
+const { groupBy } = require('../../../../lib/object-helpers')
 
 // Services
 const returnsService = require('../../../../lib/services/returns')

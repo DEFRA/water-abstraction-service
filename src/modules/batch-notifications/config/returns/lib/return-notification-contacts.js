@@ -1,10 +1,9 @@
 'use strict'
 
-const { groupBy } = require('lodash')
 const returnsConnector = require('../../../../../lib/connectors/returns')
 const documentsConnector = require('../../../../../lib/connectors/crm/documents')
 const { createContacts } = require('../../../../../lib/models/factory/crm-contact-list')
-const { chunk } = require('../../../../../lib/object-helpers.js')
+const { chunk, groupBy } = require('../../../../../lib/object-helpers.js')
 
 const groupReturnsByLicenceNumber = returns => groupBy(returns, ret => ret.licence_ref)
 

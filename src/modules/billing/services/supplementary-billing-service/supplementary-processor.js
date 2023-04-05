@@ -7,7 +7,7 @@
  * changes are needed
  */
 
-const { groupBy, negate, mapValues } = require('lodash')
+const { negate } = require('lodash')
 
 const moment = require('moment')
 const Decimal = require('decimal.js-light')
@@ -16,6 +16,7 @@ const hashers = require('../../../../lib/hash')
 const { actions } = require('./constants')
 
 const { isNaldTransaction } = require('../../lib/charge-period')
+const { groupBy } = require('../../../../lib/object-helpers')
 
 /**
  * Gets a grouping key for the given transaction - this is to allow
@@ -227,7 +228,11 @@ const filterCancellingTransactions = transactions => {
  */
 const getNonCancellingTransactions = transactions => {
   const pairGroups = groupBy(transactions, getPairGroupingKey)
-  const filteredGroups = mapValues(pairGroups, filterCancellingTransactions)
+  const filteredGroups = {}
+  for (const group in pairGroups) {
+    filteredGroups[group] = filterCancellingTransactions(pairGroups[group])
+  }
+
   return Object.values(filteredGroups).flat(Infinity)
 }
 
@@ -294,10 +299,11 @@ const processBatch = (batchId, transactions) => {
   const validTransactions = transactions.filter(isValidTransaction)
 
   // Group transactions
-  const transactionGroups = mapValues(
-    groupBy(validTransactions, getGroupingKey),
-    groupTransactions => mapTransactionGroup(batchId, groupTransactions)
-  )
+  const transactionGroups = {}
+  const groups = groupBy(validTransactions, getGroupingKey)
+  for (const group in groups) {
+    transactionGroups[group] = mapTransactionGroup(batchId, groups[group])
+  }
 
   for (const key in transactionGroups) {
     processTransactionGroup(batchId, transactionGroups[key])
