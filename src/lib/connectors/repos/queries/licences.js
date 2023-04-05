@@ -47,7 +47,7 @@ const updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = `
   where l.date_updated <= :batchCreatedDate
     and l.region_id = :regionId
     and l.licence_id not in (select licence_id from water.charge_version_workflows where date_deleted is null)
-    and l.include_in_supplementary_billing = :from
+    and l.include_in_sroc_supplementary_billing = :from
 `
 
 /**
