@@ -1,4 +1,4 @@
-const { groupBy } = require('lodash')
+const { groupBy } = require('../../../../../lib/object-helpers')
 
 const {
   CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_RETURNS_AGENT,

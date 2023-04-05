@@ -1,8 +1,9 @@
 'use strict'
 
 const Decimal = require('decimal.js-light')
-const { groupBy, negate } = require('lodash')
+const { negate } = require('lodash')
 
+const { groupBy } = require('../../../../../lib/object-helpers')
 const validators = require('../../../../../lib/models/validators')
 const Return = require('../../../../../lib/models/return')
 const ReturnLine = require('../../../../../lib/models/return-line')
