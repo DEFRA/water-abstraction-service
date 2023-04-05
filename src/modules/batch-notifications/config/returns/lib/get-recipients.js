@@ -1,7 +1,5 @@
 'use strict'
 
-const { stringifyValues } = require('../../../../../lib/stringify-values')
-
 const { createNotificationData } = require('./create-notification-data')
 const scheduledNotifications = require('../../../../../controllers/notifications')
 const { logger } = require('../../../../../logger')
@@ -47,7 +45,13 @@ const getRecipients = async (data) => {
 
     if (contact) {
       const scheduledNotification = await createNotificationData(data.ev, contact, context)
-      const rowData = stringifyValues(scheduledNotification)
+      const rowData = {}
+
+      // Stringify object for writing to the DB
+      for (const [key, value] of Object.entries(scheduledNotification)) {
+        rowData[key] = (value instanceof Object) ? JSON.stringify(value) : value
+      }
+
       await scheduledNotifications.repository.create(rowData)
 
       recipientCount++
