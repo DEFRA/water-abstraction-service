@@ -1,10 +1,9 @@
 'use strict'
 
-const { groupBy } = require('lodash')
-
 const helpers = require('@envage/water-abstraction-helpers')
 const dateHelpers = require('./date-helpers')
 const DateRange = require('../../../../../lib/models/date-range')
+const { groupBy } = require('../../../../../lib/object-helpers')
 
 // filter out agreements if they have been deleted
 const isBillingAgreement = licenceAgreement =>

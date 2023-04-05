@@ -98,9 +98,31 @@ function truncate (string, length) {
   return string
 }
 
+/**
+ * Groups the elements of an array based on a key selector function.
+ *
+ * @param {Array} array - The array to group.
+ * @param {Function} keyFn - A function that takes an array element as input
+ *  and returns the key used to group the element.
+ * @returns {Object} An object whose keys are the unique group keys and whose values
+ *  are arrays of elements that belong to that group
+ */
+const groupBy = (array, keySelector) => {
+  const groups = {}
+  array.forEach(item => {
+    const key = keySelector(item)
+    if (!groups[key]) {
+      groups[key] = []
+    }
+    groups[key].push(item)
+  })
+  return groups
+}
+
 module.exports = {
   chunk,
   partialRight,
   toCamelCase,
-  truncate
+  truncate,
+  groupBy
 }

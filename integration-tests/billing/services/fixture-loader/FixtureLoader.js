@@ -7,7 +7,6 @@
 
 const YAML = require('yamljs')
 const path = require('path')
-const { mapValues } = require('lodash')
 const { getFinancialDateRange } = require('../lib/financial-date-range')
 const moment = require('moment')
 const { v4: uuid } = require('uuid')
@@ -171,7 +170,11 @@ class FixtureLoader {
     for (const config of data) {
       // Pre-process field data to include references to previously inserted models
       // Models are processed sequentially
-      const data = mapValues(config.fields, val => mapValue(val, _refs))
+
+      const data = {}
+      for (const field of config.fields) {
+        data[field] = mapValue(config.fields[field], _refs)
+      }
 
       // Create new model using adapter
       const model = await this._adapter.create(config, data)

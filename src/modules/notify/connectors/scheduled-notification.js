@@ -2,14 +2,19 @@
 
 const Boom = require('@hapi/boom')
 const scheduledNotification = require('../../../controllers/notifications').repository
-const { mapValues } = require('lodash')
 const snakeCaseKeys = require('snakecase-keys')
 const { findOne } = require('../../../lib/repository-helpers')
 
 const stringifyArray = (value) => Array.isArray(value) ? JSON.stringify(value) : value
 
 const mapObjectToNotification = (data) => {
-  return mapValues(snakeCaseKeys(data), stringifyArray)
+  const snakeCaseData = snakeCaseKeys(data)
+  const dataStringify = {}
+  for (const data in snakeCaseData) {
+    dataStringify[data] = stringifyArray(snakeCaseData[data])
+  }
+
+  return dataStringify
 }
 
 /**

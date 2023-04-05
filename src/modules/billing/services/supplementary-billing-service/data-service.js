@@ -1,7 +1,5 @@
 'use strict'
 
-const { groupBy } = require('lodash')
-
 // Models
 const Transaction = require('../../../../lib/models/transaction')
 
@@ -12,6 +10,8 @@ const invoiceLicencesService = require('../invoice-licences-service')
 const transactionService = require('../transactions-service')
 
 const { actions } = require('./constants')
+
+const { groupBy } = require('../../../../lib/object-helpers')
 
 /**
  * These are the keys we wish to pick from the source
