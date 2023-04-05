@@ -1,4 +1,4 @@
-const { startCase } = require('lodash')
+'use strict'
 
 const getGaugingStationForUpdate = (station, gaugingStationsInDb) => {
   const stationInDbWithMatchingHydrologyGuid = gaugingStationsInDb
@@ -43,8 +43,9 @@ const abstractionPeriodInObjectParser = inputObject => {
   if (inputObject.abstractionPeriod) {
     // For each item in the abstractionPeriod subobject...
     for (const [key, value] of Object.entries(inputObject.abstractionPeriod)) {
-      // Take the first letter of the item's label, and make it uppercase. Then bung 'abstractionPeriod' in front of it
-      replicatedObject[`abstractionPeriod${startCase(key[0])}${key.slice(1)}`] = value
+      // Take the first letter of the item's label, and make it uppercase. Then bung 'abstractionPeriod' in front of it.
+      const upperKey = key.charAt(0).toUpperCase() + key.slice(1)
+      replicatedObject[`abstractionPeriod${upperKey}`] = value
     }
     return replicatedObject
   }

@@ -4,8 +4,6 @@ const contactsService = require('./contacts-service')
 const invoiceAccountsService = require('./invoice-accounts-service')
 const invoiceAccountAddressesService = require('./invoice-account-addresses-service')
 
-const { reverse } = require('lodash')
-
 const entitiesConfig = {
   Address: addressService.deleteAddress,
   Company: companiesService.deleteCompany,
@@ -17,7 +15,8 @@ const entitiesConfig = {
 }
 
 const deleteEntities = async entities => {
-  for (const entity of reverse(entities)) {
+  const reversedEntities = entities.reverse()
+  for (const entity of reversedEntities) {
     await entitiesConfig[entity.constructor.name](entity)
   }
 }

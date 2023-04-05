@@ -1,7 +1,5 @@
 'use strict'
 
-const { compact } = require('lodash')
-
 const helpers = require('@envage/water-abstraction-helpers')
 const dateHelpers = require('./date-helpers')
 const DateRange = require('../../../../../lib/models/date-range')
@@ -29,7 +27,8 @@ const mapAgreement = licenceAgreement => ({
 })
 
 const mapHistoryRow = row => {
-  const agreements = compact([row.section127Agreement, row.section130Agreement])
+  const agreements = [row.section127Agreement, row.section130Agreement]
+    .filter(x => x)
     .map(row => row.section127Agreement || row.section130Agreement)
 
   return {
