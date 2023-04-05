@@ -1,7 +1,5 @@
 'use strict'
 
-const { isFinite } = require('lodash')
-
 const Model = require('./model')
 const ReturnLine = require('./return-line')
 
@@ -62,7 +60,7 @@ class ReturnVersion extends Model {
    */
   getReturnLinesForBilling (chargePeriod, abstractionPeriod) {
     return this._returnLines
-      .filter(returnLine => isFinite(returnLine.volume) && returnLine.volume > 0)
+      .filter(returnLine => Number.isFinite(returnLine.volume) && returnLine.volume > 0)
       .filter(returnLine => abstractionPeriod.isDateRangeOverlapping(returnLine.dateRange))
       .filter(returnLine => returnLine.dateRange.overlaps(chargePeriod))
   }

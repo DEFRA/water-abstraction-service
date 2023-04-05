@@ -1,6 +1,6 @@
 'use strict'
 
-const { flatten, compact, times } = require('lodash')
+const { flatten, times } = require('lodash')
 
 const waterHelpers = require('@envage/water-abstraction-helpers')
 const { returnIDRegex, parseReturnId } = waterHelpers.returns
@@ -132,7 +132,7 @@ const validateHeadings = records => {
     return acc
   }, [])
 
-  return compact(errors)
+  return errors.filter(x => x)
 }
 
 /**
@@ -237,7 +237,7 @@ const validateLicences = licences => {
     return acc
   }, [])
 
-  return flatten(compact(errors))
+  return flatten(errors.filter(x => x))
 }
 
 const validate = async csv => {
