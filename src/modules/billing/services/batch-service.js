@@ -1,6 +1,5 @@
 'use strict'
 
-const { startCase } = require('lodash')
 const Boom = require('@hapi/boom')
 const bluebird = require('bluebird')
 
@@ -268,10 +267,13 @@ const cleanup = async batchId => {
   await newRepos.billingInvoices.deleteEmptyByBatchId(batchId)
 }
 
-const getErrMsgForBatchErr = (batch, regionId) =>
-  batch.status === BATCH_STATUS.sent
-    ? `${startCase(batch.type)} batch already sent for: region ${regionId}, financial year ${batch.endYear.yearEnding}, isSummer ${batch.isSummer}`
+const getErrMsgForBatchErr = (batch, regionId) => {
+  const capitalizeFirstLetter = batch.type.charAt(0).toUpperCase() + batch.type.slice(1)
+
+  return batch.status === BATCH_STATUS.sent
+    ? `${capitalizeFirstLetter} batch already sent for: region ${regionId}, financial year ${batch.endYear.yearEnding}, isSummer ${batch.isSummer}`
     : `Batch already live for region ${regionId}`
+}
 
 /**
  * Creates batch locally and on CM, responds with Batch service model
