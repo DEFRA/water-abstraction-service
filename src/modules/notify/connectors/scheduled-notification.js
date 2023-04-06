@@ -5,13 +5,11 @@ const scheduledNotification = require('../../../controllers/notifications').repo
 const snakeCaseKeys = require('snakecase-keys')
 const { findOne } = require('../../../lib/repository-helpers')
 
-const stringifyArray = (value) => Array.isArray(value) ? JSON.stringify(value) : value
-
 const mapObjectToNotification = (data) => {
   const snakeCaseData = snakeCaseKeys(data)
   const dataStringify = {}
-  for (const data in snakeCaseData) {
-    dataStringify[data] = stringifyArray(snakeCaseData[data])
+  for (const [key, value] of Object.entries(snakeCaseData)) {
+    dataStringify[key] = Array.isArray(value) ? JSON.stringify(value) : value
   }
 
   return dataStringify
