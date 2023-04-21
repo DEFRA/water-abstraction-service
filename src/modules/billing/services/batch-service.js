@@ -287,7 +287,6 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
   let fromFinancialYearEnding, scheme
   if (batchType !== 'annual') {
     scheme = 'alcs'
-    toFinancialYearEnding = _alcsToFinancialYearEndingCheck(toFinancialYearEnding)
     if (batchType === 'supplementary') {
       fromFinancialYearEnding = config.billing.alcsEndYear - (config.billing.supplementaryYears + (config.billing.alcsEndYear - toFinancialYearEnding))
     } else {
@@ -306,6 +305,8 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
     err.output.payload.batch = batch
     throw err
   }
+
+  toFinancialYearEnding = scheme === 'alcs' ? _alcsToFinancialYearEnding(toFinancialYearEnding) : toFinancialYearEnding
 
   const { billingBatchId } = await newRepos.billingBatches.create({
     status: Batch.BATCH_STATUS.queued,
@@ -328,7 +329,7 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
  *
  * @returns {number} the financial year ending to use
  */
-function _alcsToFinancialYearEndingCheck (selectedFinancialYearEnding) {
+function _alcsToFinancialYearEnding (selectedFinancialYearEnding) {
   if (selectedFinancialYearEnding > config.billing.alcsEndYear) {
     return config.billing.alcsEndYear
   }
