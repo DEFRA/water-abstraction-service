@@ -297,6 +297,8 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
     fromFinancialYearEnding = toFinancialYearEnding
   }
 
+  toFinancialYearEnding = scheme === 'alcs' ? _alcsToFinancialYearEnding(toFinancialYearEnding) : toFinancialYearEnding
+
   const batch = await getExistingOrDuplicateSentBatch(regionId, batchType, toFinancialYearEnding, isSummer, scheme)
 
   if (batch) {
@@ -305,8 +307,6 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
     err.output.payload.batch = batch
     throw err
   }
-
-  toFinancialYearEnding = scheme === 'alcs' ? _alcsToFinancialYearEnding(toFinancialYearEnding) : toFinancialYearEnding
 
   const { billingBatchId } = await newRepos.billingBatches.create({
     status: Batch.BATCH_STATUS.queued,
