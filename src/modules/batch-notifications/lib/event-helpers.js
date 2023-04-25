@@ -72,7 +72,11 @@ const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
  */
 const getStatusCount = (statuses, status) => {
   const foundStatus = statuses.find((o) => o.status === status)
-  const count = foundStatus.count ?? 0
+
+  // Statuses only contains results if there is a scheduled_notification with that status linked to the event. So, this
+  // method may be asked for the count of notifications with a status of 'sent' but `statuses` contains no result for
+  // 'sent'. In this case find() will return `undefined` which is why we need optional chaining.
+  const count = foundStatus?.count ?? 0
 
   return parseInt(count)
 }
