@@ -224,10 +224,12 @@ experiment('batch notifications event helpers', () => {
           )
         })
 
-        test('should not update the event', async () => {
+        test("updates the event with a status of 'sending'", async () => {
           await refreshEventStatus('testId')
 
-          expect(eventsService.update.callCount).to.equal(0)
+          const [ev] = eventsService.update.lastCall.args
+
+          expect(ev.status).to.equal(EVENT_STATUS_SENDING)
         })
       })
 
@@ -243,10 +245,12 @@ experiment('batch notifications event helpers', () => {
           )
         })
 
-        test('should not update the event', async () => {
+        test("updates the event with a status of 'completed'", async () => {
           await refreshEventStatus('testId')
 
-          expect(eventsService.update.callCount).to.equal(0)
+          const [ev] = eventsService.update.lastCall.args
+
+          expect(ev.status).to.equal(EVENT_STATUS_COMPLETED)
         })
       })
     })
