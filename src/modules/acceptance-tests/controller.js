@@ -105,7 +105,7 @@ const postSetupFromYaml = async (request, h) => {
     const loader = setLoader.createSetLoader()
     // Load YAML files in series
     await bluebird.mapSeries(createYamlSet(key),
-      ({ service, file, config }) => loader.load(service, file, config)
+      ({ service, file, config: repeatConfig }) => loader.load(service, file, repeatConfig)
     )
 
     return h.response().code(204)
