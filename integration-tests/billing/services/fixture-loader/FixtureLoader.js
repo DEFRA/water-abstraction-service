@@ -155,33 +155,32 @@ class FixtureLoader {
   /**
    * Load fixtures from specified YAML file
    * @param {String} yamlFile
-   * @param {Object} config
+   * @param {Object} repeatConfig
    * @return {Promise<Array>} created Bookshelf models
    */
-  async load (yamlFile, config) {
+  async load (yamlFile, repeatConfig) {
     const file = path.resolve(this._dir, yamlFile)
-    const data = applyConfig(YAML.load(file), config)
+    const records = applyConfig(YAML.load(file), repeatConfig)
     const { _refs } = this
 
-    if (config) {
-      console.log(data)
+    if (repeatConfig) {
+      console.log(records)
     }
 
-    for (const config of data) {
+    for (const record of records) {
       // Pre-process field data to include references to previously inserted models
       // Models are processed sequentially
-
-      const data = {}
-      for (const field of config.fields) {
-        data[field] = mapValue(config.fields[field], _refs)
+      const recordMappedData = {}
+      for (const field in record.fields) {
+        recordMappedData[field] = mapValue(record.fields[field], _refs)
       }
 
       // Create new model using adapter
-      const model = await this._adapter.create(config, data)
+      const model = await this._adapter.create(record, recordMappedData)
 
       // Store in refs
-      if (config.ref) {
-        this.setRef(config.ref, model)
+      if (record.ref) {
+        this.setRef(record.ref, model)
       }
 
       this._models.push(model)

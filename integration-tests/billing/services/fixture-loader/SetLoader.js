@@ -40,15 +40,15 @@ class SetLoader {
    *
    * @param {String} name
    * @param {String} yamlFile
-   * @param {Object} config
+   * @param {Object} repeatConfig
    * @returns {Promise}
    */
-  async load (name, yamlFile, config) {
+  async load (name, yamlFile, repeatConfig) {
     const loader = this.get(name)
 
     await loader
       .addRefs(this._refs)
-      .load(yamlFile, config)
+      .load(yamlFile, repeatConfig)
 
     // Update refs
     this._refs = loader.getRefs()
