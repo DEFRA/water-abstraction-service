@@ -47,6 +47,11 @@ const mapTransaction = (transactionMap, cmTransaction, scheme) => {
     delete srocTransaction.value
     delete srocTransaction.isCompensationCharge
 
+    const grossValuesCalculated = {
+      ...cmTransaction.calculation.WRLSChargingResponse.decisionPoints,
+      supportedSourceCharge: cmTransaction.calculation.WRLSChargingResponse.supportedSourceCharge
+    }
+
     return {
       ...(srocTransaction),
       scheme: 'sroc',
@@ -57,7 +62,7 @@ const mapTransaction = (transactionMap, cmTransaction, scheme) => {
       calcS127Factor: srocTransaction.calcS127Factor ? (srocTransaction.calcS127Factor.trim()).split('x')[1] || null : null,
       calcS130Factor: srocTransaction.calcS130Factor ? (srocTransaction.calcS130Factor.trim()).split('x')[1] || null : null,
       calcWinterDiscountFactor: srocTransaction.calcWinterDiscountFactor ? (srocTransaction.calcWinterDiscountFactor.trim()).split('x')[1] || null : null,
-      grossValuesCalculated: cmTransaction.calculation.WRLSChargingResponse.decisionPoints
+      grossValuesCalculated
     }
   } else {
     const transaction = transactionMap.has(cmTransaction.id)
