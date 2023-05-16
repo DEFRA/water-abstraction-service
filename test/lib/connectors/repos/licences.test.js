@@ -232,33 +232,22 @@ experiment('lib/connectors/repos/licences.js', () => {
     })
   })
 
-  experiment('.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate', () => {
-    let batchCreatedDate
-    let regionId
-
+  experiment('.updateIncludeInSrocSupplementaryBillingStatusForBatch', () => {
     beforeEach(async () => {
-      batchCreatedDate = moment()
-      regionId = uuid()
-      await licencesRepo.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate(
-        regionId,
-        batchCreatedDate,
-        'from-value',
-        'to-value'
+      await licencesRepo.updateIncludeInSrocSupplementaryBillingStatusForBatch(
+        'test-batch-id'
       )
     })
 
     test('uses the expected SQL query', async () => {
       const [query] = bookshelf.knex.raw.lastCall.args
-      expect(query).to.equal(licenceQueries.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate)
+      expect(query).to.equal(licenceQueries.updateIncludeInSrocSupplementaryBillingStatusForBatch)
     })
 
     test('passes the expected params to the query', async () => {
       const [, params] = bookshelf.knex.raw.lastCall.args
       expect(params).to.equal({
-        regionId,
-        batchCreatedDate: batchCreatedDate.toISOString(),
-        from: 'from-value',
-        to: 'to-value'
+        batchId: 'test-batch-id'
       })
     })
   })
