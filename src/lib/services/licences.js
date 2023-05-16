@@ -107,11 +107,8 @@ const updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = async (regi
   INCLUDE_IN_SUPPLEMENTARY_BILLING.no
 )
 
-const updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = async (regionId, dateCreated) => repos.licences.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate(
-  regionId,
-  dateCreated,
-  true,
-  false
+const updateIncludeInSrocSupplementaryBillingStatusForBatch = async (batchId) => repos.licences.updateIncludeInSrocSupplementaryBillingStatusForBatch(
+  batchId
 )
 
 /**
@@ -240,7 +237,7 @@ exports.getLicenceAccountsByRefAndDate = getLicenceAccountsByRefAndDate
 exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementaryBillingStatus
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch
 exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate
-exports.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate
+exports.updateIncludeInSrocSupplementaryBillingStatusForBatch = updateIncludeInSrocSupplementaryBillingStatusForBatch
 exports.flagForSupplementaryBilling = flagForSupplementaryBilling
 exports.getLicenceInvoices = getLicenceInvoices
 exports.getLicencesByInvoiceAccountId = getLicencesByInvoiceAccountId

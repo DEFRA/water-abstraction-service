@@ -117,21 +117,16 @@ const updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = (regionId, 
 }
 
 /**
- * For all licences where the created date is less than the batch created date update the
- * include_in_sroc_supplementary_billing value to a new value where the current
- * value is equal to the 'from' parameter value.
+ * Set include_in_sroc_supplementary_billing to false for all licences linked to the billing batch specified
  *
- * @param {String} regionId
- * @param {Date} batchCreatedDate
- * @param {String} from The status value to move from (enum water.include_in_supplementary_billing)
- * @param {String} to The status value to move to (enum water.include_in_supplementary_billing)
+ * @param {String} batchId The billing batch ID
  */
-const updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = (regionId, batchCreatedDate, from, to) => {
-  const params = { batchCreatedDate: batchCreatedDate.toISOString(), from, to, regionId }
+const updateIncludeInSrocSupplementaryBillingStatusForBatch = (batchId) => {
+  const params = { batchId }
 
   return bookshelf
     .knex
-    .raw(queries.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate, params)
+    .raw(queries.updateIncludeInSrocSupplementaryBillingStatusForBatch, params)
 }
 
 /**
@@ -155,4 +150,4 @@ exports.update = update
 exports.updateIncludeLicenceInSupplementaryBilling = updateIncludeLicenceInSupplementaryBilling
 exports.updateIncludeInSupplementaryBillingStatusForBatch = updateIncludeInSupplementaryBillingStatusForBatch
 exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate
-exports.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate
+exports.updateIncludeInSrocSupplementaryBillingStatusForBatch = updateIncludeInSrocSupplementaryBillingStatusForBatch

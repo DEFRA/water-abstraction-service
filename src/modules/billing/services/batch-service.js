@@ -202,10 +202,7 @@ const approveBatch = async (batch, internalCallingUser) => {
           batch.dateCreated
         )
       } else {
-        await licencesService.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate(
-          batch.region.id,
-          batch.dateCreated
-        )
+        await licencesService.updateIncludeInSrocSupplementaryBillingStatusForBatch(batch.id)
       }
     }
 
