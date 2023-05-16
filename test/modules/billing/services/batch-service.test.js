@@ -125,7 +125,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatus').resolves()
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForSentBatch').resolves()
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForBatchCreatedDate').resolves()
-    sandbox.stub(licencesService, 'updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate').resolves()
+    sandbox.stub(licencesService, 'updateIncludeInSrocSupplementaryBillingStatusForBatch').resolves()
     sandbox.stub(licencesService, 'flagForSupplementaryBilling').resolves()
 
     sandbox.stub(chargeModuleBillRunConnector, 'create').resolves()
@@ -537,9 +537,8 @@ experiment('modules/billing/services/batch-service', () => {
         test('updates the include in SROC supplementary billing status for the licences with an updated date <= batch created date', async () => {
           await batchService.approveBatch(batch, internalCallingUser)
 
-          const [regionId, batchCreatedDate] = licencesService.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate.lastCall.args
-          expect(regionId).to.equal(batch.region.id)
-          expect(batchCreatedDate).to.equal(batch.dateCreated)
+          const [batchId] = licencesService.updateIncludeInSrocSupplementaryBillingStatusForBatch.lastCall.args
+          expect(batchId).to.equal(batch.id)
         })
       })
 
