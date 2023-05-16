@@ -38,16 +38,20 @@ const updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = `
  * that don't end up in the bill run, and with no other mechanism for knowing they were looked at this is what you
  * are left with.
  *
- * We've only seen this and its partner version above used when setting the field from false to true. But we've kept
- * the current pattern of supporting going the over way as we can't be 100% sure!
+ * In water-abstraction-system we have ensured those which don't make it to the bill run are handled at the end of the
+ * bill run creation process. This means we can run a query which unflags only those licences connected to the bill
+ * run.
+ *
+ * This avoids situations where, for example, the NALD import runs and updates the licence record causing it's
+ * date_updated to be later than the bill runs date_created (the basis for the legacy query).
  */
-const updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = `
-  update water.licences l
-  set include_in_sroc_supplementary_billing = :to
-  where l.date_updated <= :batchCreatedDate
-    and l.region_id = :regionId
-    and l.licence_id not in (select licence_id from water.charge_version_workflows where date_deleted is null)
-    and l.include_in_sroc_supplementary_billing = :from
+const updateIncludeInSrocSupplementaryBillingStatusForBatch = `
+  UPDATE water.licences l
+  SET include_in_sroc_supplementary_billing = FALSE
+  FROM water.billing_invoice_licences bil
+  INNER JOIN water.billing_invoices bi ON bi.billing_invoice_id = bil.billing_invoice_id
+  WHERE l.licence_id = bil.licence_id
+    AND bi.billing_batch_id = :batchId
 `
 
 /**
@@ -85,7 +89,7 @@ and cv.status='current'
 `
 
 exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate
-exports.updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSrocSupplementaryBillingStatusForBatchCreatedDate
+exports.updateIncludeInSrocSupplementaryBillingStatusForBatch = updateIncludeInSrocSupplementaryBillingStatusForBatch
 exports.updateIncludeInSupplementaryBillingStatusForBatch = updateIncludeInSupplementaryBillingStatusForBatch
 exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview
 exports.getLicencesByInvoiceAccount = getLicencesByInvoiceAccount
