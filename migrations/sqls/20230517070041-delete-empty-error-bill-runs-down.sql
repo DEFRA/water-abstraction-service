@@ -1,1 +1,0 @@
--- We do not have a rollback for this migration.
