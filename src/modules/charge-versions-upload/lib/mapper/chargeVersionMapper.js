@@ -1,4 +1,3 @@
-
 const { SCHEME } = require('../../../../lib/models/constants')
 const chargeElementMapper = require('./chargeElementMapper')
 const changeReasonMapper = require('./changeReasonMapper')

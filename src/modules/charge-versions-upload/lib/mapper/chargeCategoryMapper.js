@@ -1,4 +1,3 @@
-
 const chargeCategoryService = require('../../../../lib/services/charge-category')
 const { parseBool } = require('../helpers')
 

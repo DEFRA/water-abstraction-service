@@ -1,4 +1,3 @@
-
 const Model = require('./model')
 const validators = require('./validators')
 
