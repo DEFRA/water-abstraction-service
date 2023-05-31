@@ -1,4 +1,3 @@
-
 const createReturn = data => ({
   startDate: '2017-11-01',
   endDate: '2018-10-31',

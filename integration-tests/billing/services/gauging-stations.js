@@ -1,4 +1,3 @@
-
 const { bookshelf } = require('../../../src/lib/connectors/bookshelf')
 const queries = require('./queries/gauging-stations')
 

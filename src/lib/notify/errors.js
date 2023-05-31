@@ -1,4 +1,3 @@
-
 class MessageTypeError extends Error {
   constructor (message) {
     super(message)
