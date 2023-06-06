@@ -33,3 +33,25 @@
     application: 'water_admin'
     roles: []
     groups: ['super']
+
+- ref: $billingDataUser
+  model: User
+  fields:
+    user_name: 'acceptance-test.internal.billing_and_data@defra.gov.uk'
+    password: 'P@55word'
+    reset_required: 0
+    application: 'water_admin'
+    bad_logins: 0
+    enabled: true
+    user_data: >
+      {
+        "source": "acceptance-test-setup"
+      }
+
+- ref: $billingDataUserRoles
+  model: Roles
+  fields:
+    userId: $billingDataUser.user_id
+    application: 'water_admin'
+    roles: []
+    groups: ['billing_and_data']
