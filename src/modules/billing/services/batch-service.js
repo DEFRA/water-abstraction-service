@@ -434,6 +434,9 @@ const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = n
       await invoiceService.updateInvoice(originalBillingInvoiceId, changes)
       // delete the rebill and reversal invoices
       await bluebird.mapSeries([rebillingInvoice, invoice], invoiceRow => deleteInvoicesWithRelatedData(batch, invoiceRow))
+    } else {
+      // delete the normal invoice
+      await deleteInvoicesWithRelatedData(batch, invoice)
     }
     return batch
   } catch (err) {
