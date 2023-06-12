@@ -1392,6 +1392,32 @@ experiment('modules/billing/services/batch-service', () => {
           expect(newRepos.billingInvoices.findOne.calledWith(billingInvoiceId)).to.be.true()
         })
 
+        test('deletes the charge module transactions in the bill run with matching customer number and financial year starting', async () => {
+          expect(chargeModuleBillRunConnector.deleteInvoiceFromBillRun.calledWith(
+            batch.externalId, billingInvoiceExternalId
+          )).to.be.true()
+        })
+
+        test('deletes associated charge version years from batch', async () => {
+          expect(newRepos.billingBatchChargeVersionYears.deleteByInvoiceId.calledWith(billingInvoiceId)).to.be.true()
+        })
+
+        test('deletes associated billing volumes from batch', async () => {
+          expect(newRepos.billingVolumes.deleteByBatchAndInvoiceId.calledWith(batch.id, billingInvoiceId)).to.be.true()
+        })
+
+        test('deletes associated transactions from batch', async () => {
+          expect(newRepos.billingTransactions.deleteByInvoiceId.calledWith(billingInvoiceId)).to.be.true()
+        })
+
+        test('deletes associated invoice licences from batch', async () => {
+          expect(newRepos.billingInvoiceLicences.deleteByInvoiceId.calledWith(billingInvoiceId)).to.be.true()
+        })
+
+        test('deletes invoice from batch', async () => {
+          expect(newRepos.billingInvoices.delete.calledWith(billingInvoiceId)).to.be.true()
+        })
+
         experiment('when the invoice is a rebilling invoice', () => {
           experiment('when the originalInvoiceId = originalInvoice.id then', () => {
             beforeEach(async () => {
@@ -1429,45 +1455,47 @@ experiment('modules/billing/services/batch-service', () => {
             })
 
             test('deletes associated charge version years from batch', async () => {
-              expect(newRepos.billingBatchChargeVersionYears.deleteByInvoiceId.callCount).to.equal(2)
+              expect(newRepos.billingBatchChargeVersionYears.deleteByInvoiceId.callCount).to.equal(3)
             })
 
             test('deletes associated billing volumes from batch', async () => {
-              expect(newRepos.billingVolumes.deleteByBatchAndInvoiceId.callCount).to.equal(2)
+              expect(newRepos.billingVolumes.deleteByBatchAndInvoiceId.callCount).to.equal(3)
             })
 
             test('deletes associated transactions from batch', async () => {
-              expect(newRepos.billingTransactions.deleteByInvoiceId.callCount).to.equal(2)
+              expect(newRepos.billingTransactions.deleteByInvoiceId.callCount).to.equal(3)
             })
 
             test('deletes associated invoice licences from batch', async () => {
-              expect(newRepos.billingInvoiceLicences.deleteByInvoiceId.callCount).to.equal(2)
+              expect(newRepos.billingInvoiceLicences.deleteByInvoiceId.callCount).to.equal(3)
             })
 
             test('deletes invoice from batch', async () => {
-              expect(newRepos.billingInvoices.delete.callCount).to.equal(2)
+              expect(newRepos.billingInvoices.delete.callCount).to.equal(3)
             })
           })
         })
       })
 
       experiment('when the invoice is found and there is an error errors', () => {
-        let originalBillingInvoiceId, rebillInvoiceId
-
         beforeEach(async () => {
-          originalBillingInvoiceId = uuid()
-          rebillInvoiceId = uuid()
-
           newRepos.billingInvoices.findOne.resolves({
-            originalBillingInvoiceId,
-            originalBillingInvoice: { billingInvoiceId: originalBillingInvoiceId },
+            billingInvoiceId: uuid(),
+            invoiceAccountNumber: 'A12345678A',
+            financialYearEnding: 2020,
+            billingBatch: {
+              externalId: batch.externalId
+            },
+            linkedBillingInvoices: [],
+            originalBillingInvoiceId: null,
             rebillingState: null
           })
+          newRepos.billingTransactions.findByBatchId.resolves([])
           chargeModuleBillRunConnector.deleteInvoiceFromBillRun.rejects(new Error('oh no!'))
         })
 
         test('the batch is set to error status with the correct code', async () => {
-          const func = () => batchService.deleteBatchInvoice(batch, invoiceId, originalBillingInvoiceId, rebillInvoiceId)
+          const func = () => batchService.deleteBatchInvoice(batch, invoiceId)
           await expect(func()).to.reject()
           expect(newRepos.billingBatches.update.calledWith(
             batch.id, { status: Batch.BATCH_STATUS.error, errorCode: Batch.BATCH_ERROR_CODE.failedToDeleteInvoice }
@@ -1475,7 +1503,7 @@ experiment('modules/billing/services/batch-service', () => {
         })
 
         test('the error is rethrown', async () => {
-          const func = () => batchService.deleteBatchInvoice(batch, invoiceId, originalBillingInvoiceId, rebillInvoiceId)
+          const func = () => batchService.deleteBatchInvoice(batch, invoiceId)
           const err = await expect(func()).to.reject()
           expect(err.message).to.equal('oh no!')
         })
