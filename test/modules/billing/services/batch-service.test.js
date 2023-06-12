@@ -1418,11 +1418,6 @@ experiment('modules/billing/services/batch-service', () => {
           expect(newRepos.billingInvoices.delete.calledWith(billingInvoiceId)).to.be.true()
         })
 
-        test('updates the include in supplementary billing status to yes', async () => {
-          const [LicenceIdArg] = licencesService.flagForSupplementaryBilling.lastCall.args
-          expect(LicenceIdArg).to.equal(licenceId)
-        })
-
         experiment('when the invoice is a rebilling invoice', () => {
           experiment('when the originalInvoiceId = originalInvoice.id then', () => {
             beforeEach(async () => {

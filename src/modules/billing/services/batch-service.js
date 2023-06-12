@@ -377,17 +377,6 @@ const getSentTptBatchesForFinancialYearAndRegion = async (financialYear, region)
 }
 
 /**
-   * Updates each licence in the invoice so that the includeInSupplementaryBilling
-   * value is 'yes'
-   *
-   * @param {Object<Invoice>} invoice The invoice containing the licences to update
-   */
-const updateInvoiceLicencesForSupplementaryReprocessing = async invoice => {
-  const licenceIds = invoice.getLicenceIds()
-  return Promise.all(licenceIds.map(licenceId => licencesService.flagForSupplementaryBilling(licenceId)))
-}
-
-/**
  * deletes all the transactions, invoice licences, invoices, charge version years and charge module data for an invoice
  * @param {object} batch the billig batch object - must contain external id
  * @param {Invoice} invoice water service invoice instance
@@ -448,9 +437,6 @@ const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = n
     } else {
       // delete the normal invoice
       await deleteInvoicesWithRelatedData(batch, invoice)
-      // update the include in supplementary billing status
-      const invoiceModel = mappers.invoice.dbToModel(invoice)
-      await updateInvoiceLicencesForSupplementaryReprocessing(invoiceModel)
     }
     return batch
   } catch (err) {
