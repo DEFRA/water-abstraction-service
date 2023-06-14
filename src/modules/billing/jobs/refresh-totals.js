@@ -44,8 +44,20 @@ const handler = async job => {
   // Check the batch isn't empty
   const numberOfTransactionsInBatch = await billingTransactionsRepo.findByBatchId(batchId)
   if (numberOfTransactionsInBatch.length === 0) {
-    logger.info(`Batch ${batchId} is empty - WRLS will mark is as Empty, and will not ask the Charging module to generate it.`)
-    await billingBatchesRepo.update(batchId, { status: BATCH_STATUS.empty })
+    logger.info(
+      `Batch ${batchId} is empty - WRLS will mark is as Empty, and will not ask the Charging module to generate it.`
+    )
+    await billingBatchesRepo.update(
+      batchId,
+      {
+        status: BATCH_STATUS.empty,
+        invoiceCount: null,
+        creditNoteCount: null,
+        netTotal: null,
+        invoiceValue: null,
+        creditNoteValue: null
+      }
+    )
   } else {
     // Check CM batch in "generated" or "billed" status
     // This indicates that our job is done and can move onto refreshing invoices

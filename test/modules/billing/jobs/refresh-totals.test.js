@@ -111,6 +111,25 @@ experiment('modules/billing/jobs/refresh-totals', () => {
       })
     })
 
+    experiment('when the batch is empty', () => {
+      beforeEach(async () => {
+        billingTransactionsRepo.findByBatchId.resolves([])
+        await refreshTotals.handler(job)
+      })
+
+      test('logs an info message', async () => {
+        expect(batchJob.logHandling.calledWith(job)).to.be.true()
+      })
+
+      test('updates the billing batch record', async () => {
+        expect(billingBatchesRepo.update.called).to.be.true()
+      })
+
+      test('no error is logged', async () => {
+        expect(batchJob.logHandlingError.called).to.be.false()
+      })
+    })
+
     experiment('when the batch is not "processing"', () => {
       beforeEach(async () => {
         batch.status = Batch.BATCH_STATUS.error
