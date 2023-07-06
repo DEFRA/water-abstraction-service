@@ -20,4 +20,4 @@
   Our best guess is that something failed during the import of this return. In testing we have found simply deleting
   the problem returns.returns record resolves the issue.
 */
-DELETE FROM returns.returns WHERE returns.return_id = 'v1:1:6/33/48/*G/0033:10053879:2018-04-01:2019-03-31'
+DELETE FROM "returns"."returns" WHERE returns.return_id = 'v1:1:6/33/48/*G/0033:10053879:2018-04-01:2019-03-31'
