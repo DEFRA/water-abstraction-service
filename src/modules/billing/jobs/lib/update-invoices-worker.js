@@ -49,7 +49,9 @@ const mapTransaction = (transactionMap, cmTransaction, scheme) => {
 
     const grossValuesCalculated = {
       ...cmTransaction.calculation.WRLSChargingResponse.decisionPoints,
-      supportedSourceCharge: cmTransaction.calculation.WRLSChargingResponse.supportedSourceCharge
+      baselineCharge: cmTransaction.calculation.WRLSChargingResponse.baselineCharge,
+      supportedSourceCharge: cmTransaction.calculation.WRLSChargingResponse.supportedSourceCharge,
+      waterCompanyCharge: cmTransaction.calculation.WRLSChargingResponse.waterCompanyCharge
     }
 
     return {
