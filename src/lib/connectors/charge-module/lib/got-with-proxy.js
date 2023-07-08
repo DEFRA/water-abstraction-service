@@ -47,8 +47,8 @@ const gotWithProxy = got.extend({
     // We ensure that the only network errors Got retries are timeout errors
     errorCodes: ['ETIMEDOUT'],
     // By default, Got does not retry POST requests. As we only retry timeouts there is no risk in retrying POST
-    // requests. So, we set methods to be Got's defaults plus 'POST'
-    methods: ['GET', 'POST', 'PUT', 'HEAD', 'DELETE', 'OPTIONS', 'TRACE'],
+    // requests. So, we set methods to be Got's defaults plus 'PATCH' and 'POST'
+    methods: ['GET', 'PATCH', 'POST', 'PUT', 'HEAD', 'DELETE', 'OPTIONS', 'TRACE'],
     // The only status code we want to retry is 401 Unauthorized. We do not believe there is value in retrying others
     statusCodes: [401]
   },
