@@ -938,11 +938,18 @@ experiment('modules/billing/controller', () => {
           batch
         },
         queueManager: {
-          add: sandbox.stub().resolves()
+          add: sandbox.stub().resolves(),
+          remove: sandbox.stub().resolves()
         }
       }
 
       await controller.postApproveBatch(request, h)
+    })
+
+    test('removes any previous approve job entry for this batch from the message queue', async () => {
+      const [jobName, jobId] = request.queueManager.remove.lastCall.args
+      expect(jobName).to.equal('billing.approve-batch')
+      expect(jobId).to.equal(`billing.approve-batch.${batch.id}`)
     })
 
     test('publishes a new job to the message queue with the batch ID', async () => {
