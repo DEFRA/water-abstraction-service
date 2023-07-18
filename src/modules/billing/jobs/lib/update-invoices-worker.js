@@ -54,10 +54,17 @@ const mapTransaction = (transactionMap, cmTransaction, scheme) => {
       waterCompanyCharge: cmTransaction.calculation.WRLSChargingResponse.waterCompanyCharge
     }
 
+    // If the CM transaction has a clientId then this is the billingTransactionId of our transaction record. If it
+    // doesn't have a clientId (which happens if one isn't set when creating the transaction, eg. if it was created by
+    // the CM during reissuing) then we need to take the CM transaction's id and pull the matching record from
+    // transactionMap (which is indexed by those CM transaction ids). We can then read the id value of the record, which
+    // (confusingly!) is the field that the billingTransactionId has been mapped to.
+    const billingTransactionId = cmTransaction.clientId ?? transactionMap.get(cmTransaction.id).id
+
     return {
       ...(srocTransaction),
+      billingTransactionId,
       scheme: 'sroc',
-      billingTransactionId: cmTransaction.clientId,
       netAmount: cmTransaction.chargeValue,
       chargeType: cmTransaction.compensationCharge ? 'compensation' : 'standard',
       calcS126Factor: srocTransaction.calcS126Factor ? (srocTransaction.calcS126Factor.trim()).split('x')[1] || null : null,
