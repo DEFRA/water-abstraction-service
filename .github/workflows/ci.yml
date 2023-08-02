@@ -101,7 +101,7 @@ jobs:
 
       - name: Database migrations
         run: |
-          npm run migrate
+          npm run migrate 1> /dev/null
 
       # This includes an extra run step. The sonarcloud analysis will be run in a docker container with the current
       # folder mounted as `/github/workspace`. The problem is when the lcov.info file is generated it will reference the
