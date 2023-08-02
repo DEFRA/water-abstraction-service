@@ -186,8 +186,8 @@ const setErrorStatus = async (batchId, errorCode) => {
 
 const approveBatch = async (batch, internalCallingUser) => {
   try {
-    // await chargeModuleBillRunConnector.approve(batch.externalId)
-    // await chargeModuleBillRunConnector.send(batch.externalId)
+    await chargeModuleBillRunConnector.approve(batch.externalId)
+    await chargeModuleBillRunConnector.send(batch.externalId)
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch)
     await invoiceService.resetIsFlaggedForRebilling(batch.id)
 
