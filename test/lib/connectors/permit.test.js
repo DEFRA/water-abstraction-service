@@ -161,7 +161,7 @@ experiment('connectors/permit', () => {
     test('calls the expected URL', async () => {
       await permit.getServiceVersion()
       const [url] = serviceRequest.get.lastCall.args
-      expect(url).to.endWith('/status')
+      expect(url).to.endWith('/health/info')
     })
   })
 
