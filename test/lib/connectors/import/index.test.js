@@ -28,7 +28,7 @@ experiment('connectors/import', () => {
     test('calls the expected URL', async () => {
       await importConnector.getServiceVersion()
       const [url] = serviceRequest.get.lastCall.args
-      expect(url).to.endWith('/status')
+      expect(url).to.endWith('/health/info')
     })
   })
 

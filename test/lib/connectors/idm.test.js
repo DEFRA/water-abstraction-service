@@ -130,7 +130,7 @@ experiment('connectors/idm', () => {
     test('calls the expected URL', async () => {
       await idmConnector.getServiceVersion()
       const [url] = helpers.serviceRequest.get.lastCall.args
-      expect(url).to.endWith('/status')
+      expect(url).to.endWith('/health/info')
     })
   })
 

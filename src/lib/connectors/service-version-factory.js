@@ -14,7 +14,7 @@ const { URL } = require('url')
  */
 const create = (endPointUrl) => async () => {
   const urlParts = new URL(endPointUrl)
-  const url = urlJoin(urlParts.protocol, urlParts.host, 'status')
+  const url = urlJoin(urlParts.protocol, urlParts.host, 'health/info')
   const response = await serviceRequest.get(url)
   return response.version
 }

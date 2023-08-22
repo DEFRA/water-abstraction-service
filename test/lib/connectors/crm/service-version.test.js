@@ -27,7 +27,7 @@ experiment('connectors/crm/service-version', () => {
     test('calls the expected URL', async () => {
       await serviceVersionConnector.getServiceVersion()
       const [url] = serviceRequest.get.lastCall.args
-      expect(url).to.endWith('/status')
+      expect(url).to.endWith('/health/info')
     })
   })
 })
