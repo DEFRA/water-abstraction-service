@@ -10,9 +10,6 @@ const taskConfigRoutes = require('../controllers/task-config')
 const moduleRoutes = require('../modules/routes')
 const arAnalysisLicencesRoutes = require('../controllers/ar-analysis-licences')
 
-const pkg = require('../../package.json')
-const { version } = pkg
-
 module.exports = [
   ...sessionRoutes,
   ...eventsRoutes,
@@ -24,7 +21,7 @@ module.exports = [
   {
     method: 'GET',
     path: '/status',
-    handler: () => ({ version }),
+    handler: () => ({ status: 'alive' }),
     config: { auth: false, description: 'Check service status' }
   }
 ]
