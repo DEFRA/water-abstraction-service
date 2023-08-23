@@ -1,3 +1,5 @@
+'use strict'
+
 const { server, start } = require('../../index-background')
 
 const { experiment, test, beforeEach, before } = exports.lab = require('@hapi/lab').script()
@@ -19,7 +21,7 @@ experiment('/status (background)', () => {
     expect(response.statusCode).to.equal(200)
   })
 
-  test('responds with an object containing the application version', async () => {
-    expect(response.result.version).to.match(/\d*\.\d*\.\d*/g)
+  test('responds with an object containing the application status', async () => {
+    expect(response.result.status).to.equal('alive')
   })
 })
