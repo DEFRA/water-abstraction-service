@@ -86,7 +86,7 @@ const getCurrentDueReturns = async (excludeLicences, returnCycle) => {
 
 const getServiceVersion = async () => {
   const urlParts = new URL(config.services.returns)
-  const url = urlJoin(urlParts.protocol, urlParts.host, 'status')
+  const url = urlJoin(urlParts.protocol, urlParts.host, 'health/info')
   const response = await helpers.serviceRequest.get(url)
   return response.version
 }
