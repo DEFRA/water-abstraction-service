@@ -154,16 +154,6 @@ const postApproveBatch = async request => {
   const { batch } = request.pre
   const { internalCallingUser } = request.defra
   try {
-    // If a previous attempt to send the bill run has been tried but errored the logic in
-    // src/modules/billing/services/batch-service.js approveBatch() will reset the status of the bill run back to READY.
-    // We have found that subsequent attempts to send the bill run cause it to become 'stuck' This is because it seems
-    // the failed job is left in the queue. As the job ID is based on the billing batch ID when we add further approve
-    // jobs for this bill run BullMQ is ignoring them. It sees them as duplicates because they have the same key as a
-    // job already in the queue.
-    //
-    // To allow further attempts to happen we added a `remove()` method to the QueueManager which allows us to remove
-    // specific jobs. (originated with WATER-4055)
-    await request.queueManager.remove(approveBatchJobName, `${approveBatchJobName}.${batch.id}`)
     await request.queueManager.add(approveBatchJobName, batch.id, internalCallingUser)
     // set the batch status to processing
     return batchService.setStatus(batch.id, BATCH_STATUS.sending)
