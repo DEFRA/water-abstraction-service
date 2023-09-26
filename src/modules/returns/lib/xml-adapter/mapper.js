@@ -76,7 +76,7 @@ const getMeterDetails = (ret) => {
 }
 
 const wasMeterUsed = (meterUsage) => {
-  return meterUsage.attr('WasMeterUsed').value() === 'Y'
+  return meterUsage.getAttribute('WasMeterUsed').value() === 'Y'
 }
 
 const getOverallReadingType = (ret) => {
