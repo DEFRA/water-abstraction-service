@@ -145,38 +145,6 @@ experiment('lib/queue-manager/queue-manager', () => {
     })
   })
 
-  experiment('.remove', () => {
-    beforeEach(async () => {
-      queueManager.register(job)
-    })
-
-    experiment('when given a job name that matches to an existing queue', () => {
-      experiment('and BullMQ can remove the job', () => {
-        beforeEach(() => {
-          queueStub.remove = sandbox.stub().resolves(0)
-        })
-
-        test('returns 0', async () => {
-          const result = await queueManager.remove(job.jobName, 'job.id')
-
-          expect(result).to.equal(0)
-        })
-      })
-
-      experiment('and BullMQ can NOT remove the job', () => {
-        beforeEach(() => {
-          queueStub.remove = sandbox.stub().resolves(1)
-        })
-
-        test('returns 1', async () => {
-          const result = await queueManager.remove(job.jobName, 'job.id')
-
-          expect(result).to.equal(1)
-        })
-      })
-    })
-  })
-
   experiment('.deleteKeysByPattern', () => {
     let ev, result
     const pattern = 'foo*'
