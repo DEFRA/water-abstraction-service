@@ -48,8 +48,8 @@ const onFailedHandler = async (job, err) => {
   // jobs for this bill run BullMQ is ignoring them. It sees them as duplicates because they have the same key as a
   // job already in the queue.
   //
-  // To allow further attempts to happen we have added a 'remove()' method to the job if it fails. This will clear the
-  // que and allow a new job with the same ID to be processed.
+  // To allow further attempts to happen we call 'remove()' on the job if it fails. This will remove the
+  // the job from the queue and allow a new job with the same ID to be processed.
   logger.error(`Job ${job.name} ${job.id} failed`, err.stack)
   await job.remove()
 }
