@@ -104,28 +104,6 @@ class QueueManager {
     return this
   }
 
-  /**
-   * Removes the given job from the queue
-   *
-   * Added when we discovered a scenario where a failed approve batch job was still in the queue. Because the job
-   * ID is based on the billing batch ID any additional requests to try the job again were failing because BullMQ
-   * was interpreting them as duplicates.
-   *
-   * So, we added this to the QueueManager in the event we need to ensure the queue is empty of any existing jobs to
-   * allow us to try it again.
-   *
-   * @param {String} jobName - identifies the queue to remove the job from
-   * @param {String} jobId  - ID of the job. Most jobs will specify this in their `createMessage()` function
-   *
-   * @returns {Number} 1 if it managed to remove the job or 0 if the job or any of its dependencies were locked.
-   */
-  async remove (jobName, jobId) {
-    const jobContainer = this._queues.get(jobName)
-    const result = await jobContainer.queue.remove(jobId)
-
-    return result
-  }
-
   async _cleanQueue (name) {
     try {
       logger.info(`Cleaning queue ${name}`)
