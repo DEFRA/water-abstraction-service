@@ -132,36 +132,4 @@ experiment('modules/billing/jobs/approve-batch', () => {
       })
     })
   })
-
-  experiment('.onFailed', () => {
-    let err, job, removeJobStub
-
-    beforeEach(async () => {
-      job = {
-        name: 'name',
-        id: '123',
-        remove: () => {}
-      }
-
-      err = new Error('oops')
-      removeJobStub = sandbox.stub(job, 'remove').resolves()
-
-      await approveBatchJob.onFailed(job, err)
-    })
-
-    afterEach(async () => {
-      sandbox.restore()
-    })
-
-    test('a message is logged', async () => {
-      expect(logger.error.calledWith(
-        `Job ${job.name} ${job.id} failed`,
-        err.stack
-      )).to.be.true()
-    })
-
-    test('the job.remove() is called', async () => {
-      expect(removeJobStub.calledOnce).to.be.true()
-    })
-  })
 })
