@@ -8,13 +8,17 @@ const { logger } = require('../../../logger')
 const { jobName: refreshTotalsJobName } = require('./refresh-totals')
 
 const createMessage = (batchId, user) => ([
+// We set `removeOnComplete` to 500 to briefly retain completed bill run jobs, preventing duplicate bill runs,
+// while `removeOnFail` is set to true to prevent bill runs from becoming stuck on the queue, allowing for re-runs.
   JOB_NAME,
   {
     batchId,
     user
   },
   {
-    jobId: `${JOB_NAME}.${batchId}`
+    jobId: `${JOB_NAME}.${batchId}`,
+    removeOnComplete: 500,
+    removeOnFail: true
   }
 ])
 
