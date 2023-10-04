@@ -76,6 +76,7 @@ async function sendNotification (queueManager, taskConfig, issuer, contactData, 
   // Schedule messages for sending
   for (const row of contactData) {
     const n = await notificationFactory(row, taskConfig, e)
+    n.notificationType = taskConfig.task_config_id
 
     try {
       await enqueue(queueManager, n)
