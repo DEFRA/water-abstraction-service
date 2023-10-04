@@ -1,0 +1,1 @@
+ALTER TABLE water.scheduled_notification DROP COLUMN notification_type
