@@ -49,7 +49,8 @@ function validateEnqueueOptions (options, now = new Date()) {
     companyEntityId: Joi.string().guid().allow(null),
     eventId: Joi.string().guid(),
     metadata: JoiCustomisedToAcceptStringAsObject.objectOrStringifiedObject(),
-    messageType: Joi.string().valid('letter', 'email', 'sms')
+    messageType: Joi.string().valid('letter', 'email', 'sms'),
+    notificationType: Joi.number().integer().optional()
   })
 
   return schema.validate(options)
