@@ -66,7 +66,7 @@ async function prepareNotification (filter, taskConfig, params, context = {}) {
  * @param {Array} contactData - data from prepare step above
  * @param {String} ref - unique reference for this message batch
  */
-async function sendNotification (queueManager, taskConfig, issuer, contactData, ref) {
+async function sendNotification (queueManager, taskConfig, issuer, contactData, ref, uniqueJobId) {
   // Create event
   const e = eventFactory(issuer, taskConfig, contactData, ref)
   await evt.save(e)
@@ -74,12 +74,15 @@ async function sendNotification (queueManager, taskConfig, issuer, contactData, 
   logger.info(`Sending notification reference ${e.referenceCode} ID ${e.eventId}`)
 
   // Schedule messages for sending
+  let rowCount = 0
   for (const row of contactData) {
+    rowCount++
     const n = await notificationFactory(row, taskConfig, e)
     n.notificationType = taskConfig.task_config_id
+    const rowJobId = uniqueJobId + rowCount
 
     try {
-      await enqueue(queueManager, n)
+      await enqueue(queueManager, rowJobId, n)
     } catch (error) {
       logger.error('Error sending notification', error.stack)
     }

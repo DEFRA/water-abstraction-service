@@ -53,11 +53,11 @@ async function postPreview (request, reply) {
  * @param {Number} request.payload.taskConfigId - the ID of the notification task in the task_config table
  */
 async function postSend (request, reply) {
-  const { filter, taskConfigId, params, sender } = request.payload
+  const { filter, taskConfigId, params, sender, uniqueJobId } = request.payload
   const taskConfig = await taskConfigLoader(taskConfigId)
   const ref = generateReference(taskConfig.config.prefix)
   const data = await prepareNotification(filter, taskConfig, params, { ref })
-  await sendNotification(request.queueManager, taskConfig, sender, data, ref)
+  await sendNotification(request.queueManager, taskConfig, sender, data, ref, uniqueJobId)
   return { error: null, data }
 }
 

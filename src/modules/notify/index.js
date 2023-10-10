@@ -15,12 +15,12 @@ const notifySend = require('./lib/notify-send')
 /**
  * @param {Object} row - row data
  */
-async function scheduleSendEvent (queueManager, row) {
+async function scheduleSendEvent (queueManager, row, rowJobId) {
   // Give email/SMS higher priority than letter
   const priority = row.message_type === 'letter' ? LOW_PRIORITY : HIGH_PRIORITY
 
   const options = {
-    singletonKey: row.id,
+    singletonKey: rowJobId,
     priority,
     expireIn: '1 day'
   }
@@ -49,7 +49,7 @@ const getNotifyPreview = async (data) => {
  * a preview is generated and stored in scheduled_notification table
  * For PDF messages, this does not happen
  */
-const enqueue = async (queueManager, options = {}) => {
+const enqueue = async (queueManager, rowJobId, options = {}) => {
   const { value: data, error } = validateEnqueueOptions(options)
 
   if (error) {
@@ -63,7 +63,7 @@ const enqueue = async (queueManager, options = {}) => {
   const dbRow = await createFromObject(row)
 
   // Schedules send event
-  scheduleSendEvent(queueManager, dbRow)
+  scheduleSendEvent(queueManager, dbRow, rowJobId)
 
   // Return row data
   return { data: dbRow }
