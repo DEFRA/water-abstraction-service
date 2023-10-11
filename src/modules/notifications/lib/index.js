@@ -80,6 +80,7 @@ async function sendNotification (queueManager, taskConfig, issuer, contactData, 
     const n = await notificationFactory(row, taskConfig, e)
     n.notificationType = taskConfig.task_config_id
     const rowJobId = uniqueJobId + rowCount
+    n.jobId = rowJobId
 
     try {
       await enqueue(queueManager, rowJobId, n)
