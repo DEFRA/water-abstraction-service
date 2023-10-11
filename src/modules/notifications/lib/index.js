@@ -76,10 +76,10 @@ async function sendNotification (queueManager, taskConfig, issuer, contactData, 
   // Schedule messages for sending
   let rowCount = 0
   for (const row of contactData) {
-    rowCount++
     const n = await notificationFactory(row, taskConfig, e)
     n.notificationType = taskConfig.task_config_id
-    const rowJobId = uniqueJobId + rowCount
+    const rowJobId = `${uniqueJobId}${rowCount}`
+    rowCount++
     n.jobId = rowJobId
 
     try {
