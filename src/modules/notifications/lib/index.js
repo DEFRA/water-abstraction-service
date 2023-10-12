@@ -83,7 +83,7 @@ async function sendNotification (queueManager, taskConfig, issuer, contactData, 
     n.jobId = rowJobId
 
     try {
-      await enqueue(queueManager, rowJobId, n)
+      await enqueue(queueManager, n, rowJobId)
     } catch (error) {
       logger.error('Error sending notification', error.stack)
     }
