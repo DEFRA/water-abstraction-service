@@ -20,6 +20,14 @@ const assertEventIsValid = (eventId, ev, issuer) => {
     throw new errors.UnauthorizedError(`Event ${eventId} issuer does not match that supplied`)
   }
 }
+/**
+ * Completing a separate check for the status as sending
+ * If true it is because there is duplicate requests sharing the same event ID, possibly due to double-clicking
+ * In this case we do not want it to error.
+ */
+const assertEventIsDuplicate = (event) => {
+  return event.status === EVENT_STATUS_SENDING
+}
 
 /**
  * Sends the processed notification with the requested event Id
@@ -29,6 +37,10 @@ const assertEventIsValid = (eventId, ev, issuer) => {
  */
 const send = async (eventId, issuer) => {
   const event = await eventsService.findOne(eventId)
+
+  if (assertEventIsDuplicate(event)) {
+    return event
+  }
 
   assertEventIsValid(eventId, event, issuer)
 
