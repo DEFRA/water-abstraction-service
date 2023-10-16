@@ -74,16 +74,14 @@ async function sendNotification (queueManager, taskConfig, issuer, contactData, 
   logger.info(`Sending notification reference ${e.referenceCode} ID ${e.eventId}`)
 
   // Schedule messages for sending
-  let rowCount = 0
-  for (const row of contactData) {
+  for (const [i, row] of contactData.entries()) {
     const n = await notificationFactory(row, taskConfig, e)
     n.notificationType = taskConfig.task_config_id
-    const rowJobId = `${uniqueJobId}${rowCount}`
-    rowCount++
+    const rowJobId = `${uniqueJobId}${i}`
     n.jobId = rowJobId
 
     try {
-      await enqueue(queueManager, n, rowJobId)
+      await enqueue(queueManager, n)
     } catch (error) {
       logger.error('Error sending notification', error.stack)
     }

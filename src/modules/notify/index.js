@@ -49,7 +49,7 @@ const getNotifyPreview = async (data) => {
  * a preview is generated and stored in scheduled_notification table
  * For PDF messages, this does not happen
  */
-const enqueue = async (queueManager, options = {}, rowJobId) => {
+const enqueue = async (queueManager, options = {}) => {
   const { value: data, error } = validateEnqueueOptions(options)
 
   if (error) {
@@ -63,7 +63,7 @@ const enqueue = async (queueManager, options = {}, rowJobId) => {
   const dbRow = await createFromObject(row)
 
   // Schedules send event
-  scheduleSendEvent(queueManager, dbRow, rowJobId)
+  scheduleSendEvent(queueManager, dbRow, options.jobId)
 
   // Return row data
   return { data: dbRow }
