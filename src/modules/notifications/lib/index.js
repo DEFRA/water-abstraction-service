@@ -77,8 +77,7 @@ async function sendNotification (queueManager, taskConfig, issuer, contactData, 
   for (const [i, row] of contactData.entries()) {
     const n = await notificationFactory(row, taskConfig, e)
     n.notificationType = taskConfig.task_config_id
-    const rowJobId = `${uniqueJobId}${i}`
-    n.jobId = rowJobId
+    n.jobId = `${uniqueJobId}${i}`
 
     try {
       await enqueue(queueManager, n)
