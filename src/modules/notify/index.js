@@ -15,12 +15,12 @@ const notifySend = require('./lib/notify-send')
 /**
  * @param {Object} row - row data
  */
-async function scheduleSendEvent (queueManager, row) {
+async function scheduleSendEvent (queueManager, row, rowJobId) {
   // Give email/SMS higher priority than letter
   const priority = row.message_type === 'letter' ? LOW_PRIORITY : HIGH_PRIORITY
 
   const options = {
-    singletonKey: row.id,
+    singletonKey: rowJobId,
     priority,
     expireIn: '1 day'
   }
@@ -63,7 +63,7 @@ const enqueue = async (queueManager, options = {}) => {
   const dbRow = await createFromObject(row)
 
   // Schedules send event
-  scheduleSendEvent(queueManager, dbRow)
+  scheduleSendEvent(queueManager, dbRow, options.jobId)
 
   // Return row data
   return { data: dbRow }
