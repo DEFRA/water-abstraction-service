@@ -37,7 +37,8 @@ const schema = Joi.object({
     }).unknown().allow(null).required(),
     returns: Joi.array().items(Joi.object({
       returnId: Joi.string().regex(returnIDRegex).required()
-    }).unknown()).required()
+    }).unknown()).required(),
+    uniqueJobId: Joi.string()
   }))
 })
 
