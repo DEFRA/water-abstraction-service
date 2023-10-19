@@ -33,13 +33,15 @@ const postPrepare = async (request, h) => {
       throw Boom.badRequest('Invalid payload', error)
     }
 
-    // Check if the event record already exists with the same unique job id
-    const eventAlreadyExists = await checkEventRecordExists(data.forms[0].uniqueJobId)
+    // Check if the event record already exists with the same unique job id paper returns only
+    if (messageType === 'paperReturnForms') {
+      const event = await existingEventRecord(data.forms[0].uniqueJobId)
 
-    if (eventAlreadyExists) {
-      return {
-        error: null,
-        data: mapObjectToNew(eventAlreadyExists[0])
+      if (event) {
+        return {
+          error: null,
+          data: event
+        }
       }
     }
 
@@ -65,15 +67,14 @@ const postPrepare = async (request, h) => {
   }
 }
 
-const mapObjectToNew = ({ event_id }) => ({ id: event_id })
-
-const checkEventRecordExists = async (uniqueJobId) => {
-  const record = await bookshelf
+const existingEventRecord = async (uniqueJobId) => {
+  const results = await bookshelf
     .knex('events')
+    .select('event_id as id')
     .withSchema('water')
     .whereRaw("metadata->'options'->'forms'->0->'uniqueJobId'->>0 = ?", [uniqueJobId])
 
-  return record.length === 0 ? false : record
+  return results[0]
 }
 
 /**
