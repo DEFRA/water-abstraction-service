@@ -5,11 +5,12 @@ const { logger } = require('../../logger')
 
 const configs = require('./config')
 
+const { bookshelf } = require('../../lib/connectors/bookshelf')
 const eventsService = require('../../lib/services/events')
-const sendBatch = require('./lib/send-batch')
-const mapErrorResponse = require('../../lib/map-error-response')
-const scheduledNotificationsService = require('../../lib/services/scheduled-notifications')
 const getRecipients = require('./lib/jobs/get-recipients')
+const mapErrorResponse = require('../../lib/map-error-response')
+const sendBatch = require('./lib/send-batch')
+const scheduledNotificationsService = require('../../lib/services/scheduled-notifications')
 
 const getByEventId = async (request, h) => scheduledNotificationsService.getByEventId(request.query.eventId)
 
@@ -32,6 +33,18 @@ const postPrepare = async (request, h) => {
       throw Boom.badRequest('Invalid payload', error)
     }
 
+    // Check if the event record already exists with the same unique job id paper returns only
+    if (messageType === 'paperReturnForms') {
+      const event = await existingEventRecord(data.forms[0].uniqueJobId)
+
+      if (event) {
+        return {
+          error: null,
+          data: event
+        }
+      }
+    }
+
     // Create and persist event
     let ev = await config.createEvent(issuer, config, data)
     ev = await eventsService.create(ev)
@@ -52,6 +65,16 @@ const postPrepare = async (request, h) => {
       data: null
     }).code(code)
   }
+}
+
+const existingEventRecord = async (uniqueJobId) => {
+  const results = await bookshelf
+    .knex('events')
+    .select('event_id as id')
+    .withSchema('water')
+    .whereRaw("metadata->'options'->'forms'->0->'uniqueJobId'->>0 = ?", [uniqueJobId])
+
+  return results[0]
 }
 
 /**
