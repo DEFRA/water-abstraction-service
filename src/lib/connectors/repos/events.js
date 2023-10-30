@@ -30,10 +30,6 @@ const update = async (id, changes) => {
   return result.toJSON()
 }
 
-const getMostRecentReturnsInvitationByLicence = async licenceRef => {
-  return bookshelf.knex.raw(queries.getMostRecentReturnInvitation, { licenceRef })
-}
-
 const getKPIReturnsMonthlyData = () => {
   return bookshelf.knex.raw(queries.getKPIReturnsMonthlyData)
 }
@@ -68,7 +64,6 @@ const findNotificationCategories = () =>
 exports.create = create
 exports.update = update
 exports.findOne = findOne
-exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitationByLicence
 exports.getKPIReturnsMonthlyData = getKPIReturnsMonthlyData
 exports.getKPILicenceNamesData = getKPILicenceNamesData
 exports.findNotifications = findNotifications
