@@ -1,6 +1,6 @@
 /* This query is deleting a bad licence data that has a carriage return at the end of it */
 
-DELETE FROM crm_v2.document_roles WHERE document_id IN (
+DELETE FROM "crm_v2".document_roles WHERE document_id IN (
   SELECT document_id FROM crm_v2.documents WHERE document_ref LIKE 'NW/072/0417/002/R01' || CHR(13)
 );
 
