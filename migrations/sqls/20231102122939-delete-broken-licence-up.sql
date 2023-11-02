@@ -1,6 +1,6 @@
 -- crm_v2
 DELETE FROM crm_v2.document_roles dr WHERE dr.document_id IN (
-  SELECT document_id FROM crm_v2.documents d WHERE d.document_ref LIKE 'NW/072/0417/002/R01' || CHR(13);
+  SELECT document_id FROM crm_v2.documents d WHERE d.document_ref LIKE 'NW/072/0417/002/R01' || CHR(13)
 );
 
 DELETE FROM crm_v2.documents d WHERE d.document_ref LIKE 'NW/072/0417/002/R01' || CHR(13);
@@ -39,7 +39,7 @@ DELETE FROM water.return_requirement_purposes rrp WHERE rrp.return_requirement_i
   )
 );
 
-DELETE FROM water.return_requirements WHERE rr.return_version_id IN (
+DELETE FROM water.return_requirements rr WHERE rr.return_version_id IN (
   SELECT return_version_id FROM water.return_versions rv WHERE rv.licence_id IN(
     SELECT licence_id FROM water.licences l WHERE l.licence_ref LIKE 'NW/072/0417/002/R01' || CHR(13)
   )
