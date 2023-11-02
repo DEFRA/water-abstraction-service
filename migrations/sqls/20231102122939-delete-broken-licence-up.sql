@@ -29,7 +29,7 @@ DELETE FROM water.licence_version_purposes WHERE licence_version_id IN (
 
 DELETE FROM water.licence_versions WHERE licence_id IN (
   SELECT licence_id FROM water.licences WHERE licence_ref LIKE 'NW/072/0417/002/R01' || CHR(13)
-)
+);
 
 DELETE FROM water.return_requirement_purposes WHERE return_requirement_id IN (
   SELECT return_requirement_id  FROM water.return_requirements WHERE return_version_id IN (
