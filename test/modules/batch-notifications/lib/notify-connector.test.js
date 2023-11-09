@@ -19,16 +19,20 @@ const ScheduledNotification = require('../../../../src/lib/models/scheduled-noti
 const messageId = uuid()
 
 const createScheduledNotification = (overrides = {}) => {
-  return new ScheduledNotification().fromHash({
+  const defaultValues = {
     id: messageId,
     messageType: 'letter',
     recipient: 'mail@example.com',
-    messageRef: 'returns_invitation_letter',
+    messageRef: 'returns_invitation_licence_holder_letter',
     personalisation: {
       address_line_1: 'address',
       address_line_5: 'postcode'
     }
-  })
+  }
+
+  const notification = new ScheduledNotification().fromHash(Object.assign({}, defaultValues, overrides))
+
+  return notification
 }
 
 experiment('batch notifications notify connector', () => {
@@ -71,7 +75,7 @@ experiment('batch notifications notify connector', () => {
   experiment('getNotifyTemplate', () => {
     test('gets the notify template to use for returns invitation', async () => {
       const result = notifyConnector._getNotifyTemplate(message)
-      expect(result).to.equal('d31d05d3-66fe-4203-8626-22e63f9bccd6')
+      expect(result).to.equal('4fe80aed-c5dd-44c3-9044-d0289d635019')
     })
   })
 
@@ -122,7 +126,7 @@ experiment('batch notifications notify connector', () => {
       await notifyConnector._sendLetter(client, message)
       expect(client.sendLetter.callCount).to.equal(1)
       const [templateId, options] = client.sendLetter.lastCall.args
-      expect(templateId).to.equal('d31d05d3-66fe-4203-8626-22e63f9bccd6')
+      expect(templateId).to.equal('4fe80aed-c5dd-44c3-9044-d0289d635019')
       expect(options).to.equal({
         personalisation: message.personalisation
       })
@@ -136,10 +140,12 @@ experiment('batch notifications notify connector', () => {
 
   experiment('sendEmail', () => {
     test('sends email using Notify client', async () => {
+      const message = createScheduledNotification({ messageRef: 'returns_invitation_primary_user_email' })
+
       await notifyConnector._sendEmail(client, message)
       expect(client.sendEmail.callCount).to.equal(1)
       const [templateId, recipient, options] = client.sendEmail.lastCall.args
-      expect(templateId).to.equal('d31d05d3-66fe-4203-8626-22e63f9bccd6')
+      expect(templateId).to.equal('2fa7fc83-4df1-4f52-bccf-ff0faeb12b6f')
       expect(recipient).to.equal('mail@example.com')
       expect(options).to.equal({
         personalisation: message.personalisation

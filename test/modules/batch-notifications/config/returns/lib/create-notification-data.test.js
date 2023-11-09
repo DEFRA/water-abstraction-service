@@ -2,18 +2,14 @@ const { expect } = require('@hapi/code')
 const {
   beforeEach,
   experiment,
-  test,
-  afterEach
+  test
 } = exports.lab = require('@hapi/lab').script()
 
-const sinon = require('sinon')
-const sandbox = sinon.createSandbox()
 const { v4: uuid } = require('uuid')
 
 const createNotificationData = require('../../../../../../src/modules/batch-notifications/config/returns/lib/create-notification-data')
 const Contact = require('../../../../../../src/lib/models/contact')
 const { MESSAGE_STATUS_DRAFT } = require('../../../../../../src/modules/batch-notifications/lib/message-statuses')
-const events = require('../../../../../../src/lib/services/events')
 const Event = require('../../../../../../src/lib/models/event')
 
 const eventId = uuid()
@@ -34,14 +30,6 @@ const createEvent = () => {
 }
 
 experiment('modules/batch-notifications/config/return-invitation/create-notification-data', () => {
-  beforeEach(async () => {
-    sandbox.stub(events, 'getMostRecentReturnsInvitationByLicence')
-  })
-
-  afterEach(async () => {
-    sandbox.restore()
-  })
-
   experiment('_getReturnPersonalisation', () => {
     test('gets return cycle personalisation fields', async () => {
       const event = createEvent()
@@ -110,11 +98,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       test('the correct message type is used', async () => {
         expect(result.message_type).to.equal('letter')
         expect(result.recipient).to.equal('n/a')
-        expect(result.message_ref).to.startWith('returns_invitation_licence_holder_letter')
-      })
-
-      test('the message ref is one of random BI templates', async () => {
-        expect(result.message_ref).to.part.include(createNotificationData.BI_TEMPLATES)
+        expect(result.message_ref).to.equal('returns_invitation_licence_holder_letter')
       })
 
       test('contains the correct personalisation fields', async () => {
@@ -143,11 +127,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       test('the correct message type is used', async () => {
         expect(result.message_type).to.equal('letter')
         expect(result.recipient).to.equal('n/a')
-        expect(result.message_ref).to.startWith('returns_invitation_returns_to_letter')
-      })
-
-      test('the message ref is one of random BI templates', async () => {
-        expect(result.message_ref).to.part.include(createNotificationData.BI_TEMPLATES)
+        expect(result.message_ref).to.equal('returns_invitation_returns_to_letter')
       })
 
       test('contains the correct personalisation fields', async () => {
@@ -176,11 +156,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       test('the correct message type is used', async () => {
         expect(result.message_type).to.equal('email')
         expect(result.recipient).to.equal('mail@example.com')
-        expect(result.message_ref).to.startWith('returns_invitation_primary_user_email')
-      })
-
-      test('the message ref is one of random BI templates', async () => {
-        expect(result.message_ref).to.part.include(createNotificationData.BI_TEMPLATES)
+        expect(result.message_ref).to.equal('returns_invitation_primary_user_email')
       })
 
       test('contains the correct personalisation fields', async () => {
@@ -201,11 +177,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       test('the correct message type is used', async () => {
         expect(result.message_type).to.equal('email')
         expect(result.recipient).to.equal('mail@example.com')
-        expect(result.message_ref).to.startWith('returns_invitation_returns_agent_email')
-      })
-
-      test('the message ref is one of random BI templates', async () => {
-        expect(result.message_ref).to.part.include(createNotificationData.BI_TEMPLATES)
+        expect(result.message_ref).to.equal('returns_invitation_returns_agent_email')
       })
 
       test('contains the correct personalisation fields', async () => {
@@ -220,90 +192,35 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
     experiment('selects the correct return reminder template', () => {
       let contact
       beforeEach(async () => {
-        contact = createContact(Contact.CONTACT_ROLE_PRIMARY_USER)
         ev.subtype = 'returnReminder'
       })
 
-      test('when invitation template was "moral_suasion"', async () => {
-        const templateData = {
-          rows: [{ message_ref: 'returns_invitation_primary_user_email_moral_suasion' }],
-          rowCount: 1
-        }
-        events.getMostRecentReturnsInvitationByLicence.resolves(templateData)
-        result = await createNotificationData.createNotificationData(ev, contact, context)
-        const reminderSuffix = createNotificationData._reminderSuffixMap.moral_suasion
-
-        expect(result.message_ref).to.equal(`returns_reminder_primary_user_email_${reminderSuffix}`)
-      })
-
-      test('when invitation template was "social_norm"', async () => {
-        const templateData = {
-          rows: [{ message_ref: 'returns_invitation_primary_user_email_social_norm' }],
-          rowCount: 1
-        }
-        events.getMostRecentReturnsInvitationByLicence.resolves(templateData)
-        result = await createNotificationData.createNotificationData(ev, contact, context)
-        const reminderSuffix = createNotificationData._reminderSuffixMap.social_norm
-
-        expect(result.message_ref).to.equal(`returns_reminder_primary_user_email_${reminderSuffix}`)
-      })
-
-      test('when invitation template was "formality"', async () => {
-        const templateData = {
-          rows: [{ message_ref: 'returns_invitation_primary_user_email_formality' }],
-          rowCount: 1
-        }
-        events.getMostRecentReturnsInvitationByLicence.resolves(templateData)
-        result = await createNotificationData.createNotificationData(ev, contact, context)
-        const reminderSuffix = createNotificationData._reminderSuffixMap.formality
-
-        expect(result.message_ref).to.equal(`returns_reminder_primary_user_email_${reminderSuffix}`)
-      })
-
-      test('when invitation template was "control"', async () => {
-        const templateData = {
-          rows: [{ message_ref: 'returns_invitation_primary_user_email_control' }],
-          rowCount: 1
-        }
-        events.getMostRecentReturnsInvitationByLicence.resolves(templateData)
+      test('when the contact has "licence holder" role', async () => {
+        contact = createContact(Contact.CONTACT_ROLE_LICENCE_HOLDER)
         result = await createNotificationData.createNotificationData(ev, contact, context)
 
-        expect(result.message_ref).to.equal('returns_reminder_primary_user_email_control')
+        expect(result.message_ref).to.equal('returns_reminder_licence_holder_letter')
       })
 
-      test('template defaults to "control" when invitation template not found', async () => {
-        events.getMostRecentReturnsInvitationByLicence.resolves({ rows: [], rowCount: 0 })
+      test('when the contact has "returns to" role', async () => {
+        contact = createContact(Contact.CONTACT_ROLE_RETURNS_TO)
         result = await createNotificationData.createNotificationData(ev, contact, context)
-        expect(result.message_ref).to.equal('returns_reminder_primary_user_email_control')
+
+        expect(result.message_ref).to.equal('returns_reminder_returns_to_letter')
       })
 
-      experiment('handles multiple invitation templates', () => {
-        test('selects the appropriate template when available', async () => {
-          contact = createContact(Contact.CONTACT_ROLE_LICENCE_HOLDER)
-          const templateData = {
-            rows: [
-              { message_ref: 'returns_invitation_returns_to_letter_formality' },
-              { message_ref: 'returns_invitation_licence_holder_letter_moral_suasion' }],
-            rowCount: 2
-          }
-          events.getMostRecentReturnsInvitationByLicence.resolves(templateData)
-          result = await createNotificationData.createNotificationData(ev, contact, context)
-          const reminderSuffix = createNotificationData._reminderSuffixMap.moral_suasion
+      test('when the contact has "primary user" role', async () => {
+        contact = createContact(Contact.CONTACT_ROLE_PRIMARY_USER)
+        result = await createNotificationData.createNotificationData(ev, contact, context)
 
-          expect(result.message_ref).to.equal(`returns_reminder_licence_holder_letter_${reminderSuffix}`)
-        })
+        expect(result.message_ref).to.equal('returns_reminder_primary_user_email')
+      })
 
-        test('selects control if matching template not found', async () => {
-          const templateData = {
-            rows: [
-              { message_ref: 'returns_invitation_licence_holder_letter_formality' },
-              { message_ref: 'returns_invitation_returns_to_letter_moral_suasion' }],
-            rowCount: 2
-          }
-          events.getMostRecentReturnsInvitationByLicence.resolves(templateData)
-          result = await createNotificationData.createNotificationData(ev, contact, context)
-          expect(result.message_ref).to.equal('returns_reminder_primary_user_email_control')
-        })
+      test('when the contact has "returns agent" role', async () => {
+        contact = createContact(Contact.CONTACT_ROLE_RETURNS_AGENT)
+        result = await createNotificationData.createNotificationData(ev, contact, context)
+
+        expect(result.message_ref).to.equal('returns_reminder_returns_agent_email')
       })
     })
   })

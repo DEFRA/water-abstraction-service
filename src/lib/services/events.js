@@ -52,10 +52,6 @@ const updateStatus = async (eventId, status) => {
   return eventMapper.dbToModel(result)
 }
 
-const getMostRecentReturnsInvitationByLicence = async licenceRef => {
-  return repo.events.getMostRecentReturnsInvitationByLicence(licenceRef)
-}
-
 const nullIfEmpty = (arr = []) => arr.length ? arr : null
 
 const getKPIReturnsMonthly = async () => {
@@ -108,7 +104,6 @@ exports.create = create
 exports.findOne = findOne
 exports.update = update
 exports.updateStatus = updateStatus
-exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitationByLicence
 exports.getKPIReturnsMonthly = getKPIReturnsMonthly
 exports.getKPILicenceNames = getKPILicenceNames
 exports.getNotificationEvents = getNotificationEvents
