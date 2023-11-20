@@ -25,7 +25,6 @@ module.exports = [
   ...Object.values(require('./notify/routes')),
   ...Object.values(require('./pdf-notifications/routes')),
   ...Object.values(require('./regions/routes')),
-  ...Object.values(require('./reporting/routes')),
   ...Object.values(require('./returns/routes')),
   ...Object.values(require('./returns-notifications/routes')),
   ...Object.values(require('./service-status/routes')),
