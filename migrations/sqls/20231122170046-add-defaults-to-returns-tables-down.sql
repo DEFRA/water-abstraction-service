@@ -1,0 +1,7 @@
+ALTER TABLE returns.returns ALTER COLUMN regime DROP DEFAULT;
+
+ALTER TABLE returns.returns ALTER COLUMN licence_type DROP DEFAULT;
+
+ALTER TABLE returns.lines ALTER COLUMN substance DROP DEFAULT;
+
+ALTER TABLE returns.lines ALTER COLUMN unit DROP DEFAULT;
