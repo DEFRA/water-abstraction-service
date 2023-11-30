@@ -13,14 +13,32 @@ const { HIGH_PRIORITY, LOW_PRIORITY } = require('../../lib/priorities')
 const notifySend = require('./lib/notify-send')
 
 /**
+ * Adds a notify send job to the queue
+ *
+ * This note focuses on the `rowJobId`. This param was added to be used as the singletonKey, which is eventually
+ * combined with the job name to give the job it's unique ID when added to the queue.
+ *
+ * `rowJobId` was part of changes intended to prevent multiple requests for the same task getting on the queue, i.e.
+ * someone double clicking a button.
+ *
+ * It solved the problem for stuff handled by `src/modules/notifications`. But we overlooked `src/modules/notify` and
+ * `src/modules/returns-notifications` all of which call `enqueue()` with an options object that does not contain
+ * a `jobId:` property.
+ *
+ * So, now we use `rowJobId` if present else we revert to `row.id` which is what the code was doing before our changes
+ * (which broke things!)
+ *
+ * Properly preventing duplicate requests sending emails is just something that will have to wait until we rebuild
+ * email sending in water-abstraction-system.
+ *
  * @param {Object} row - row data
  */
-async function scheduleSendEvent (queueManager, row, rowJobId) {
+async function scheduleSendEvent (queueManager, row, rowJobId = null) {
   // Give email/SMS higher priority than letter
   const priority = row.message_type === 'letter' ? LOW_PRIORITY : HIGH_PRIORITY
 
   const options = {
-    singletonKey: rowJobId,
+    singletonKey: rowJobId ?? row.id,
     priority,
     expireIn: '1 day'
   }
