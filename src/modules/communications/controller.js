@@ -54,7 +54,7 @@ const formatEvent = evt => {
 }
 
 const getLicenceDocuments = async licenceNumbers => {
-  const documents = await crmDocumentConnector.getDocumentsByLicenceNumbers(licenceNumbers)
+  const documents = await crmDocumentConnector.getDocumentsByLicenceNumbers(licenceNumbers, true)
 
   if (!documents.length) {
     throw Boom.notFound(`No document found for ${licenceNumbers.join()}`)
