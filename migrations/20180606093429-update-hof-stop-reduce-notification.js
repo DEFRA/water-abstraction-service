@@ -18,7 +18,6 @@ const runQuery = (db, sqlName) => {
     fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
       if (err) return reject(err)
 
-      console.log('received data: ' + data)
       resolve(data)
     })
   }).then(function (data) {
