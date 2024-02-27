@@ -1,6 +1,5 @@
 'use strict'
 
-const Bluebird = require('bluebird')
 const { difference } = require('lodash')
 
 // Models
@@ -132,21 +131,31 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
   }
 }
 
-process.on('message', async data => {
-  try {
-    const invoices = await invoiceService.getInvoicesForBatch(data.batch, { includeTransactions: true })
-    process.send('Started updating invoices')
-    const returnableMaps = invoiceMaps(invoices, data.cmResponse)
-    process.send('returnableMaps are now built')
-    return Bluebird.each(returnableMaps.cm, async ([key, cmInvoice]) => {
-      const invoice = returnableMaps.wrls.get(key)
-      if (invoice) {
-        const cmTransactions = await getAllCmTransactionsForInvoice(
-          data.batch.externalId,
-          cmInvoice.id
-        )
+async function updateInvoices (job, logger) {
+  const startTime = process.hrtime.bigint()
 
-        process.send(`Found ${cmTransactions.length} transactions to process from the CM for invoice ${invoice.id}`)
+  logger.info(`onHandler: ${job.id} - started update of invoices from CHA`)
+
+  const { batch, cmResponse } = job.data
+  const invoices = await invoiceService.getInvoicesForBatch(batch, { includeTransactions: true })
+  const returnableMaps = invoiceMaps(invoices, cmResponse)
+
+  // We set the batch size and number of billing accounts here rather than determine them for every iteration of the
+  // loop. It's a very minor nod towards performance.
+  const batchSize = 10
+  const cmInvoices = [...returnableMaps.cm]
+  const cmInvoiceCount = cmInvoices.length
+
+  for (let i = 0; i < cmInvoiceCount; i += batchSize) {
+    const invoicesToProcess = cmInvoices.slice(i, i + batchSize)
+
+    const processes = invoicesToProcess.map(async ([key, cmInvoice]) => {
+      const invoice = returnableMaps.wrls.get(key)
+
+      if (invoice) {
+        const cmTransactions = await getAllCmTransactionsForInvoice(batch.externalId, cmInvoice.id)
+
+        logger.info(`onHandler: ${job.id} - Found ${cmTransactions.length} transactions to process from the CM for invoice ${invoice.id}`)
         // Populate invoice model with updated CM data
         invoice.fromHash(
           invoiceMapper.cmToPojo(cmInvoice, cmTransactions)
@@ -154,10 +163,29 @@ process.on('message', async data => {
 
         // Persist invoice and transactions to DB
         await invoiceService.updateInvoiceModel(invoice)
-        await updateTransactions(invoice, cmTransactions, data.batch.scheme)
+        return updateTransactions(invoice, cmTransactions, batch.scheme)
       }
     })
-  } catch (e) {
-    process.send({ error: e })
+
+    await Promise.all(processes)
   }
-})
+
+  const { timeTakenMs, timeTakenSs } = _calculateTimeTaken(startTime)
+  logger.info(`onHandler: ${job.id} - completed update of invoices from CHA (${timeTakenMs}ms / ${timeTakenSs}s)`)
+}
+
+function _calculateTimeTaken (startTime) {
+  const endTime = process.hrtime.bigint()
+  const timeTakenNs = endTime - startTime
+  const timeTakenMs = timeTakenNs / 1000000n
+  const timeTakenSs = timeTakenMs / 1000n
+
+  return {
+    timeTakenMs,
+    timeTakenSs
+  }
+}
+
+module.exports = {
+  updateInvoices
+}
