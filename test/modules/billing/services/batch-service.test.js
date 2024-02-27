@@ -849,9 +849,9 @@ experiment('modules/billing/services/batch-service', () => {
         })
       })
 
-      test('the batch is updated correctly with "ready" status', async () => {
+      test('the batch is updated correctly with "processing" status', async () => {
         expect(newRepos.billingBatches.update.calledWith(BATCH_ID, {
-          status: Batch.BATCH_STATUS.ready,
+          status: Batch.BATCH_STATUS.processing,
           invoiceCount,
           creditNoteCount,
           invoiceValue,
