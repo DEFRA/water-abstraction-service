@@ -131,7 +131,7 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
   }
 }
 
-async function updateInvoices (job, logger) {
+async function updateInvoices (job) {
   const startTime = process.hrtime.bigint()
 
   logger.info(`onHandler: ${job.id} - started update of invoices from CHA`)

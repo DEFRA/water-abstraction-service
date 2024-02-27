@@ -21,7 +21,7 @@ const createMessage = data => ([
 ])
 
 const handler = async job => {
-  await UpdateInvoicesWorker.updateInvoices(job, logger)
+  await UpdateInvoicesWorker.updateInvoices(job)
 }
 
 const onComplete = async (job) => {
