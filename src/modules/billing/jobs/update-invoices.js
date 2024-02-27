@@ -1,60 +1,44 @@
 'use strict'
 
-const fork = require('child_process').fork
+// const fork = require('child_process').fork
 const { v4: uuid } = require('uuid')
 
 // Utils
-const batchJob = require('./lib/batch-job')
-const config = require('../../../../config')
-const helpers = require('./lib/helpers')
+const batchService = require('../services/batch-service.js')
 const { logger } = require('../../../logger')
+const UpdateInvoicesWorker = require('./lib/update-invoices-worker.js')
 
 // Constants
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch')
 const JOB_NAME = 'billing.update-invoices'
 
-let child
-if (config.isBackground) {
-  child = fork('./src/modules/billing/jobs/lib/update-invoices-worker.js')
-}
-
 const createMessage = data => ([
   JOB_NAME,
   data,
   {
-    jobId: `${JOB_NAME}.${data.batch.id}.${uuid()}`,
-    attempts: 10,
-    backoff: {
-      type: 'exponential',
-      delay: 5000
-    }
+    jobId: `${JOB_NAME}.${data.batch.id}.${uuid()}`
   }
 ])
 
 const handler = async job => {
-  try {
-    // Create the worker.
-    child.on('message', msg => {
-      if (msg.error) {
-        logger.error(msg.error)
-      } else {
-        logger.info('Update-invoices child process: ', msg)
-      }
-    })
-    return child.send(job.data)
-  } catch (err) {
-    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary)
-    throw err
-  }
+  await UpdateInvoicesWorker.updateInvoices(job, logger)
 }
 
-const onComplete = async job => batchJob.logOnComplete(job)
+const onComplete = async (job) => {
+  logger.info(`onComplete: ${job.id}`)
+  await batchService.setStatus(job.data.batch.id, 'ready')
+}
+
+const onFailed = async (job, err) => {
+  logger.error(`onFailed: ${job.id} - ${err.message}`, err.stack)
+  await batchService.setErrorStatus(job.data.batch.id, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary)
+}
 
 module.exports = {
   jobName: JOB_NAME,
   createMessage,
   handler,
-  onFailed: helpers.onFailedHandler,
+  onFailed,
   onComplete,
   workerOptions: {
     maxStalledCount: 3,
