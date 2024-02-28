@@ -20,17 +20,22 @@ const createMessage = data => ([
 ])
 
 const handler = async job => {
-  await UpdateInvoicesWorker.updateInvoices(job)
+  const { id: batchId } = job.data.batch
+
+  try {
+    await UpdateInvoicesWorker.updateInvoices(job)
+    await batchService.setStatus(batchId, 'ready')
+  } catch (error) {
+    await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary)
+  }
 }
 
 const onComplete = async (job) => {
   logger.info(`onComplete: ${job.id}`)
-  await batchService.setStatus(job.data.batch.id, 'ready')
 }
 
 const onFailed = async (job, err) => {
   logger.error(`onFailed: ${job.id} - ${err.message}`, err.stack)
-  await batchService.setErrorStatus(job.data.batch.id, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary)
 }
 
 module.exports = {
@@ -40,9 +45,7 @@ module.exports = {
   onFailed,
   onComplete,
   workerOptions: {
-    maxStalledCount: 3,
-    stalledInterval: 120000,
-    lockDuration: 120000,
-    lockRenewTime: 120000 / 2
+    lockDuration: 3600000,
+    lockRenewTime: 3600000 / 2
   }
 }
