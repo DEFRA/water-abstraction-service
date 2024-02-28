@@ -3,5 +3,6 @@ exports.jobNames = {
   findUpdatedInvoiceAccounts: 'billing.find-update-invoice-accounts',
   updateInvoice: 'billing.update-invoice',
   updateInvoices: 'billing.update-invoices',
+  updateInvoiceReferences: 'billing.update-invoice-references',
   updateWithCMSummary: 'billing.update-with-cm-summary'
 }

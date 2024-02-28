@@ -64,8 +64,15 @@ const handler = async job => {
     if (!['generated', 'billed', 'billing_not_required'].includes(cmBatch.status)) {
       throw new StateError(`CM bill run summary not ready for batch ${batchId}`)
     }
-    // Update batch with totals/bill run ID from charge module
-    const isSuccess = await cmRefreshService.updateBatch(batchId)
+
+    // Default to update the invoices and transactions after generating a bill run
+    let nextJobName = 'billing.update-invoices'
+    if (cmBatch.status !== 'generated') {
+      // Else we need to update the invoices with their transactions references
+      nextJobName = 'billing.update-invoice-references'
+    }
+
+    const isSuccess = await cmRefreshService.updateBatchReferences(batchId, nextJobName)
 
     if (!isSuccess) {
       throw new StateError(`CM bill run summary not ready for batch ${batchId}`)
