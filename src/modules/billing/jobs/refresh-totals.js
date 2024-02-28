@@ -23,12 +23,7 @@ const createMessage = batchId => ([
     batchId
   },
   {
-    jobId: `${JOB_NAME}.${batchId}.${uuid()}`,
-    attempts: 10,
-    backoff: {
-      type: 'exponential',
-      delay: 5000
-    }
+    jobId: `${JOB_NAME}.${batchId}.${uuid()}`
   }
 ])
 
@@ -72,7 +67,7 @@ const handler = async job => {
       nextJobName = 'billing.update-invoice-references'
     }
 
-    const isSuccess = await cmRefreshService.updateBatchReferences(batchId, nextJobName)
+    const isSuccess = await cmRefreshService.updateBatch(batchId, nextJobName)
 
     if (!isSuccess) {
       throw new StateError(`CM bill run summary not ready for batch ${batchId}`)
