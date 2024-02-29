@@ -869,9 +869,9 @@ experiment('modules/billing/services/batch-service', () => {
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse)
       })
 
-      test('the batch is updated correctly with "sent" status', async () => {
+      test('the batch is updated correctly with "sending" status', async () => {
         expect(newRepos.billingBatches.update.calledWith(BATCH_ID, {
-          status: Batch.BATCH_STATUS.sent,
+          status: Batch.BATCH_STATUS.sending,
           invoiceCount,
           creditNoteCount,
           invoiceValue,
