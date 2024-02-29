@@ -74,6 +74,11 @@ experiment('modules/billing/jobs/refresh-totals', () => {
       expect(data).to.equal({ batchId: BATCH_ID })
 
       expect(options.jobId).to.startWith(`billing.refresh-totals.${BATCH_ID}.`)
+      expect(options.attempts).to.equal(10)
+      expect(options.backoff).to.equal({
+        type: 'exponential',
+        delay: 5000
+      })
     })
   })
 
