@@ -226,7 +226,7 @@ experiment('modules/billing/services/cm-refresh-service', () => {
       })
 
       test('a NotFoundError is thrown', async () => {
-        const func = () => cmRefreshService.updateBatch(batchId)
+        const func = () => cmRefreshService.updateBatch(batchId, 'billing.update-invoices')
         const err = await expect(func()).to.reject()
         expect(err.name).to.equal('NotFoundError')
       })
@@ -237,7 +237,7 @@ experiment('modules/billing/services/cm-refresh-service', () => {
         batch = createBatch()
         batchService.getBatchById.resolves(batch)
         cmBillRunsConnector.get.resolves(cmResponses.batchSummary.generating)
-        result = await cmRefreshService.updateBatch(batchId)
+        result = await cmRefreshService.updateBatch(batchId, 'billing.update-invoices')
       })
 
       test('the correct batch is retrieved from the batch service', async () => {
@@ -274,7 +274,7 @@ experiment('modules/billing/services/cm-refresh-service', () => {
           invoiceService.getInvoicesForBatch.resolves(invoices)
 
           cmBillRunsConnector.get.resolves(cmResponses.batchSummary.ready)
-          result = await cmRefreshService.updateBatch(batchId)
+          result = await cmRefreshService.updateBatch(batchId, 'billing.update-invoices')
         })
 
         test('the correct batch is retrieved from the batch service', async () => {
@@ -298,7 +298,7 @@ experiment('modules/billing/services/cm-refresh-service', () => {
           batchSummary.billRun.invoices[0].rebilledType = 'C'
           batchSummary.billRun.invoices[1].rebilledType = 'R'
           cmBillRunsConnector.get.resolves(batchSummary)
-          result = await cmRefreshService.updateBatch(batchId)
+          result = await cmRefreshService.updateBatch(batchId, 'billing.update-invoices')
         })
 
         test('the correct batch is retrieved from the batch service', async () => {

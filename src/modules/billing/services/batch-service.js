@@ -481,7 +481,7 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
   const cmCompletedStatuses = ['billed', 'billing_not_required']
 
   const batch = await newRepos.billingBatches.findOne(batchId)
-  const status = cmCompletedStatuses.includes(cmStatus) && batch.status !== 'cancel' ? Batch.BATCH_STATUS.sent : Batch.BATCH_STATUS.processing
+  const status = cmCompletedStatuses.includes(cmStatus) && batch.status !== 'cancel' ? Batch.BATCH_STATUS.sending : Batch.BATCH_STATUS.processing
 
   // Get transaction count in local DB
   // if 0, the batch will be set to "empty" status

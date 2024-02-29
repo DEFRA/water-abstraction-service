@@ -16,6 +16,7 @@ const billingRefreshTotals = require('../../modules/billing/jobs/refresh-totals'
 const billingTwoPartTariffMatching = require('../../modules/billing/jobs/two-part-tariff-matching')
 const billingUpdateCustomerAccount = require('../../modules/billing/jobs/update-customer')
 const billingUpdateInvoices = require('../../modules/billing/jobs/update-invoices')
+const billingUpdateInvoiceReferences = require('../../modules/billing/jobs/update-invoice-references.js')
 const chargeInformationUploadStart = require('../../modules/charge-versions-upload/jobs/update-charge-information-start')
 const chargeInformationUploadToJson = require('../../modules/charge-versions-upload/jobs/update-charge-information-to-json')
 const gaugingStationsCopyLicenceGaugingStationsFromDigitise = require('../../modules/gauging-stations/jobs/sync-licence-gauging-stations-from-digitise')
@@ -88,6 +89,7 @@ class JobRegistrationService {
       billingTwoPartTariffMatching,
       billingUpdateCustomerAccount,
       billingUpdateInvoices,
+      billingUpdateInvoiceReferences,
       chargeInformationUploadStart,
       chargeInformationUploadToJson,
       gaugingStationsCopyLicenceGaugingStationsFromDigitise,
