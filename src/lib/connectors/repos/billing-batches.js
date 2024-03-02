@@ -24,7 +24,6 @@ const findOne = async (id) => {
 const findPage = async (page, pageSize) => {
   const result = await BillingBatch
     .forge()
-    .where('status', '<>', 'cancel')
     .orderBy('date_created', 'DESC')
     .fetchPage({
       page,
