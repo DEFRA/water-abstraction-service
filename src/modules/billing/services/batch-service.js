@@ -103,6 +103,8 @@ const getExistingAndDuplicateBatchesForRegion = async (regionId, batchType, toFi
  */
 const getExistingOrDuplicateSentBatch = async (regionId, batchType, toFinancialYearEnding, isSummer, scheme) => {
   const { existingBatch, duplicateSentBatch } = await getExistingAndDuplicateBatchesForRegion(regionId, batchType, toFinancialYearEnding, isSummer, scheme)
+  console.log('🚀 ~ getExistingOrDuplicateSentBatch ~ duplicateSentBatch:', duplicateSentBatch)
+  console.log('🚀 ~ getExistingOrDuplicateSentBatch ~ existingBatch:', existingBatch)
 
   // supplementary batches can be run multiple times for the same region, year and season
   if (batchType === BATCH_TYPE.supplementary) return existingBatch
@@ -299,6 +301,7 @@ const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
   const batch = await getExistingOrDuplicateSentBatch(regionId, batchType, toFinancialYearEnding, isSummer, scheme)
 
   if (batch) {
+    console.log('🚀 ~ batch-service ~ create ~ batch:', batch)
     const err = Boom.conflict(getErrMsgForBatchErr(batch, regionId))
     err.reformat()
     err.output.payload.batch = batch

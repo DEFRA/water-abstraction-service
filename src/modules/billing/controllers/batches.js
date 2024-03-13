@@ -36,6 +36,7 @@ const YEARS_TO_GO_BACK_FOR_UNSENT_BATCHES = 3
  */
 const postCreateBatch = async (request, h) => {
   const { userEmail, regionId, batchType, financialYearEnding, isSummer } = request.payload
+  console.log('🚀 ~ postCreateBatch ~ request.payload:', request.payload)
 
   try {
     // create a new entry in the batch table
