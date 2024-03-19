@@ -412,6 +412,8 @@ const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = n
   // Set batch status back to 'processing'
   await setStatus(batch.id, Batch.BATCH_STATUS.processing)
   try {
+    await _flagLicencesForSupplementaryBilling(invoice.billingInvoiceLicences, batch.scheme)
+
     if (rebillInvoiceId && originalBillingInvoiceId) {
       // find the original Invoice and rebilling invoice (reversal of resissue)
       const originalInvoice = invoice.originalBillingInvoice
@@ -438,6 +440,7 @@ const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = n
       // delete the normal invoice
       await deleteInvoicesWithRelatedData(batch, invoice)
     }
+
     return batch
   } catch (err) {
     await setErrorStatus(batch.id, Batch.BATCH_ERROR_CODE.failedToDeleteInvoice)
@@ -514,6 +517,12 @@ const requestCMBatchGeneration = async batchId => {
   const transactionCount = await getBatchTransactionCount(batch.id)
   if (transactionCount > 0) {
     await chargeModuleBillRunConnector.generate(batch.externalId)
+  }
+}
+
+const _flagLicencesForSupplementaryBilling = async (billingInvoiceLicences, scheme) => {
+  for (const billingInvoiceLicence of billingInvoiceLicences) {
+    licencesService.flagForSupplementaryBilling(billingInvoiceLicence.licenceId, scheme)
   }
 }
 
