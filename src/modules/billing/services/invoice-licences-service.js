@@ -56,7 +56,7 @@ const deleteByInvoiceLicenceId = async invoiceLicenceId => {
   await validateInvoiceLicenceIsDeletable(billingInvoiceLicence)
 
   // Validation complete
-  const { billingBatchId: batchId } = billingInvoiceLicence.billingInvoice.billingBatch
+  const { billingBatchId: batchId, scheme } = billingInvoiceLicence.billingInvoice.billingBatch
 
   try {
     // Set batch to "processing" status while processing takes place
@@ -67,7 +67,7 @@ const deleteByInvoiceLicenceId = async invoiceLicenceId => {
     await deleteWRLSInvoiceLicence(invoiceLicenceId)
 
     // Flag for supplementary billing
-    await licencesService.flagForSupplementaryBilling(billingInvoiceLicence.licenceId)
+    await licencesService.flagForSupplementaryBilling(billingInvoiceLicence.licenceId, scheme)
 
     // Publish refresh totals job
     return queueManager.getQueueManager().add(refreshTotalsJob.jobName, batchId)
