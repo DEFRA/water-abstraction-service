@@ -1282,7 +1282,11 @@ experiment('modules/billing/services/batch-service', () => {
       test('throws a NotFoundError if the original invoice is not found', async () => {
         const originalBillingInvoiceId = 'dfedb43e-379a-427e-97b9-41f5185fdbb6'
         const rebillInvoiceId = uuid()
-        newRepos.billingInvoices.findOne.resolves({ billingInvoiceId: uuid(), originalBillingInvoice: null })
+        newRepos.billingInvoices.findOne.resolves({
+          billingInvoiceId: uuid(),
+          originalBillingInvoice: null,
+          billingInvoiceLicences: []
+        })
         const func = () => batchService.deleteBatchInvoice(batch, invoiceId, originalBillingInvoiceId, rebillInvoiceId)
         const err = await expect(func()).to.reject()
         expect(err.message).to.equal('Original Invoice dfedb43e-379a-427e-97b9-41f5185fdbb6 not found')
@@ -1294,7 +1298,8 @@ experiment('modules/billing/services/batch-service', () => {
         const rebillInvoiceId = 'dfedb43e-379a-427e-97b9-41f5185fdec6'
         newRepos.billingInvoices.findOne.onCall(0).resolves({
           billingInvoiceId: uuid(),
-          originalBillingInvoice: { billingInvoiceId: uuid() }
+          originalBillingInvoice: { billingInvoiceId: uuid() },
+          billingInvoiceLicences: []
         })
         const func = () => batchService.deleteBatchInvoice(batch, invoiceId, originalBillingInvoiceId, rebillInvoiceId)
         const err = await expect(func()).to.reject()
@@ -1488,7 +1493,8 @@ experiment('modules/billing/services/batch-service', () => {
             },
             linkedBillingInvoices: [],
             originalBillingInvoiceId: null,
-            rebillingState: null
+            rebillingState: null,
+            billingInvoiceLicences: []
           })
           newRepos.billingTransactions.findByBatchId.resolves([])
           chargeModuleBillRunConnector.deleteInvoiceFromBillRun.rejects(new Error('oh no!'))
