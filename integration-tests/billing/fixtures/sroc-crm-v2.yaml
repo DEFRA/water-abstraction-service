@@ -180,7 +180,7 @@
 - ref: $invoiceAccount01
   model: InvoiceAccount
   fields:
-    invoiceAccountNumber: A00000001A
+    invoiceAccountNumber: A99999991A
     startDate: '2022-04-01'
     endDate: null
     companyId: $company01.companyId
@@ -189,7 +189,7 @@
 - ref: $invoiceAccount02
   model: InvoiceAccount
   fields:
-    invoiceAccountNumber: A00000002A
+    invoiceAccountNumber: A99999992A
     startDate: '2019-01-01'
     endDate: null
     companyId: $company02.companyId
@@ -198,7 +198,7 @@
 - ref: $invoiceAccount03
   model: InvoiceAccount
   fields:
-    invoiceAccountNumber: A00000003A
+    invoiceAccountNumber: A99999993A
     startDate: '2015-01-01'
     endDate: null
     companyId: $company03.companyId
@@ -207,7 +207,7 @@
 - ref: $invoiceAccount04
   model: InvoiceAccount
   fields:
-    invoiceAccountNumber: A00000004A
+    invoiceAccountNumber: A99999994A
     startDate: '2022-04-01'
     endDate: null
     companyId: $company04.companyId
