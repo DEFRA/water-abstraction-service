@@ -403,7 +403,7 @@
       }
     }
   ],
-  "sroc-billing-data": [
+  "sroc-billing-current": [
     {
       "service": "idm",
       "file": "sroc-users.yaml"
@@ -431,6 +431,52 @@
     {
       "service": "water",
       "file": "sroc-charge-info.yaml"
+    },
+    {
+      "service": "water",
+      "file": "sroc-annual-bill-run.yaml",
+      "config": {
+        "fromFinancialYearEnding": "$currentFromFinancialYearEnding",
+        "toFinancialYearEnding": "$currentToFinancialYearEnding"
+      }
+    }
+  ],
+  "sroc-billing-previous": [
+    {
+      "service": "idm",
+      "file": "sroc-users.yaml"
+    },
+    {
+      "service": "water",
+      "file": "sroc-purposes.yaml"
+    },
+    {
+      "service": "permits",
+      "file": "sroc-permits.yaml"
+    },
+    {
+      "service": "crmV1",
+      "file": "sroc-crm-v1.yaml"
+    },
+    {
+      "service": "crmV2",
+      "file": "sroc-crm-v2.yaml"
+    },
+    {
+      "service": "water",
+      "file": "sroc-licences.yaml"
+    },
+    {
+      "service": "water",
+      "file": "sroc-charge-info.yaml"
+    },
+    {
+      "service": "water",
+      "file": "sroc-annual-bill-run.yaml",
+      "config": {
+        "fromFinancialYearEnding": "$previousFromFinancialYearEnding",
+        "toFinancialYearEnding": "$previousToFinancialYearEnding"
+      }
     }
   ]
 }

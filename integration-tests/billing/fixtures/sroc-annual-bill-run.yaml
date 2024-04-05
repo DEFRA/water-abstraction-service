@@ -1,0 +1,12 @@
+- ref: $annualBatch
+  model: BillingBatch
+  fields:
+    regionId: $region.regionId
+    batchType: annual
+    fromFinancialYearEnding: '$$[fromFinancialYearEnding]'
+    toFinancialYearEnding: '$$[toFinancialYearEnding]'
+    scheme: 'sroc'
+    status: sent
+    isSummer: false
+    source: wrls
+    metadata: { source: "acceptance-test-setup" }

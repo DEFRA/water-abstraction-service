@@ -45,6 +45,11 @@ const calcValue = (value, index = 0, startDate = '01-04-2022') => {
 
   const previousYearsLessIndexFinancialDateRange = getFinancialDateRange(previousYearsDateLessIndex)
 
+  const currentBillingPeriod = getFinancialDateRange(new Date())
+  const previousBillingPeriod = getFinancialDateRange(new Date())
+  previousBillingPeriod.startDate.subtract(1, 'year')
+  previousBillingPeriod.endDate.subtract(1, 'year')
+
   switch (value) {
     case '$previousYearsDateLessIndex': {
       return previousYearsDateLessIndex.format('YYYY-MM-DD')
@@ -57,6 +62,18 @@ const calcValue = (value, index = 0, startDate = '01-04-2022') => {
     }
     case '$previousYearLessIndex': {
       return previousYearsLessIndexFinancialDateRange.endDate.year()
+    }
+    case '$currentFromFinancialYearEnding': {
+      return currentBillingPeriod.startDate.year()
+    }
+    case '$currentToFinancialYearEnding': {
+      return currentBillingPeriod.endDate.year()
+    }
+    case '$previousFromFinancialYearEnding': {
+      return previousBillingPeriod.startDate.year()
+    }
+    case '$previousToFinancialYearEnding': {
+      return previousBillingPeriod.endDate.year()
     }
     case '$annualInvoice': return `TEST00${index}1`
     case '$2PT2Invoice': return `TEST00${index}2`
