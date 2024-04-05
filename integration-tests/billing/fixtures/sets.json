@@ -441,6 +441,7 @@
       }
     }
   ],
+  "sroc-billing-previous": [
     {
       "service": "idm",
       "file": "sroc-users.yaml"
@@ -468,6 +469,14 @@
     {
       "service": "water",
       "file": "sroc-charge-info.yaml"
+    },
+    {
+      "service": "water",
+      "file": "sroc-annual-bill-run.yaml",
+      "config": {
+        "fromFinancialYearEnding": "$previousFromFinancialYearEnding",
+        "toFinancialYearEnding": "$previousToFinancialYearEnding"
+      }
     }
   ]
 }
