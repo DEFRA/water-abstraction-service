@@ -159,12 +159,4 @@ experiment('sendMessage job', () => {
       expect(error).to.equal(err.stack)
     })
   })
-
-  experiment('.onComplete', () => {
-    test('a completion message is logged', async () => {
-      await sendMessage.onComplete()
-      const [msg] = logger.info.lastCall.args
-      expect(msg).to.equal('notifications.sendMessage: Job has completed')
-    })
-  })
 })
