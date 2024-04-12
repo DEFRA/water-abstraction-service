@@ -6,7 +6,6 @@ const refreshEvent = require('../../modules/batch-notifications/lib/jobs/refresh
 const sendMessage = require('../../modules/batch-notifications/lib/jobs/send-message')
 
 // Billing
-const checkForUpdatedInvoiceAccounts = require('../../modules/billing/jobs/check-for-updated-invoice-accounts')
 const customerFileRefresh = require('../../modules/billing//jobs/customer-file-refresh')
 const syncChargeCategories = require('../../modules/billing/jobs/sync-charge-categories')
 
@@ -29,7 +28,6 @@ class StartUpJobsService {
   }
 
   static async _billingJobs (queueManager) {
-    queueManager.add(checkForUpdatedInvoiceAccounts.jobName)
     queueManager.add(customerFileRefresh.jobName)
     queueManager.add(syncChargeCategories.jobName)
   }
