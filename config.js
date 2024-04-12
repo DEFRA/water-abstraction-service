@@ -51,8 +51,7 @@ module.exports = {
       requestEvent: 60000, // 1 minute
       checkStatus: 15000, // 15 seconds
       sendMessages: 15000 // 15 seconds
-    },
-    checkForUpdatedInvoiceAccounts: process.env.WRLS_CRON_CHECK_FOR_UPDATED_INVOICE_ACCOUNTS || '0 */12 * * *'
+    }
   },
 
   jwt: {
