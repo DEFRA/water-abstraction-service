@@ -22,7 +22,6 @@ const chargeInformationUploadToJson = require('../../modules/charge-versions-upl
 const gaugingStationsCopyLicenceGaugingStationsFromDigitise = require('../../modules/gauging-stations/jobs/sync-licence-gauging-stations-from-digitise')
 const gaugingStationsCopyLvpcFromDigitise = require('../../modules/gauging-stations/jobs/sync-licence-version-purpose-conditions-from-digitise')
 const gaugingStationsSyncFromCsv = require('../../modules/gauging-stations/jobs/sync-gauging-stations')
-const licenceNotInChargeVersionWorkflow = require('../../modules/charge-versions/jobs/licence-not-in-charge-version-workflow')
 const newLicenceVersion = require('../../modules/charge-versions/jobs/create-charge-version-workflows')
 const notificationsCheckStatus = require('../../modules/batch-notifications/lib/jobs/check-status')
 const notificationsGetRecipients = require('../../modules/batch-notifications/lib/jobs/get-recipients')
@@ -95,7 +94,6 @@ class JobRegistrationService {
       gaugingStationsCopyLicenceGaugingStationsFromDigitise,
       gaugingStationsCopyLvpcFromDigitise,
       gaugingStationsSyncFromCsv,
-      licenceNotInChargeVersionWorkflow,
       newLicenceVersion,
       notificationsCheckStatus,
       notificationsGetRecipients,
