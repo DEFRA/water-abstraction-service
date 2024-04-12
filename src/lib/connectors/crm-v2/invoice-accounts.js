@@ -59,15 +59,6 @@ const createInvoiceAccountAddress = (invoiceAccountId, invoiceAccountAddress) =>
   return serviceRequest.post(url, { body: invoiceAccountAddress })
 }
 
-/**
- * Fetches invoice account IDs where the entities hashes do not match
- *
- */
-const fetchInvoiceAccountsWithUpdatedEntities = () => {
-  const url = getPluralisedUri('recently-updated')
-  return serviceRequest.get(url)
-}
-
 const getInvoiceAccountByRef = ref => serviceRequest.get(getSingularUri(), { qs: { ref } })
 
 const updateInvoiceAccountsWithCustomerFileReference = (fileReference, exportedAt, exportedCustomers) => {
@@ -86,6 +77,5 @@ exports.deleteInvoiceAccount = deleteInvoiceAccount
 exports.createInvoiceAccountAddress = createInvoiceAccountAddress
 exports.getInvoiceAccountById = getInvoiceAccountById
 exports.getInvoiceAccountsByIds = getInvoiceAccountsByIds
-exports.fetchInvoiceAccountsWithUpdatedEntities = fetchInvoiceAccountsWithUpdatedEntities
 exports.getInvoiceAccountByRef = getInvoiceAccountByRef
 exports.updateInvoiceAccountsWithCustomerFileReference = updateInvoiceAccountsWithCustomerFileReference

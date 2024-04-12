@@ -167,26 +167,6 @@ experiment('lib/connectors/crm-v2/invoice-accounts', () => {
     })
   })
 
-  experiment('fetchInvoiceAccountsWithUpdatedEntities', () => {
-    const ref = 'Y00000000A'
-    let response
-
-    beforeEach(async () => {
-      serviceRequest.get.resolves({ invoiceAccountId: 'test-id-1' })
-      response = await invoiceAccountConnector.getInvoiceAccountByRef(ref)
-    })
-
-    test('makes a request to the expected URL', async () => {
-      const [url, qs] = serviceRequest.get.lastCall.args
-      expect(url).to.equal('http://test.defra/invoice-account')
-      expect(qs).to.equal({ qs: { ref } })
-    })
-
-    test('returns the result from the crm', async () => {
-      expect(response).to.equal({ invoiceAccountId: 'test-id-1' })
-    })
-  })
-
   experiment('updateInvoiceAccountsWithCustomerFileReference', () => {
     const fileRef = 'SomeFile'
     const exportedAt = '2010-10-10'
