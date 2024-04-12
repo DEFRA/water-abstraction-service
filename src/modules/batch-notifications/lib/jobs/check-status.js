@@ -50,10 +50,13 @@ const handleCheckStatus = async messageId => {
 }
 
 const handler = async job => {
-  logger.info(`Handling: ${JOB_NAME}:${job.id}`)
   try {
     const batch = await queries.getNotifyStatusChecks()
-    logger.info(`Checking notify statuses - ${batch.length} item(s) found`)
+
+    if (batch.length > 0) {
+      logger.info(`Checking notify statuses - ${batch.length} item(s) found`)
+    }
+
     await Promise.all((batch.map(({ id }) => handleCheckStatus(id))))
   } catch (err) {
     logger.error(`Error handling: ${job.id}`, err.stack, job.data)
@@ -64,13 +67,8 @@ const onFailed = async (job, err) => {
   logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
-const onComplete = async () => {
-  logger.info(`${JOB_NAME}: Job has completed`)
-}
-
 exports.handler = handler
 exports.onFailed = onFailed
-exports.onComplete = onComplete
 exports.jobName = JOB_NAME
 exports.createMessage = createMessage
 exports.hasScheduler = true
