@@ -23,6 +23,8 @@ const createMessage = () => {
 
 const handleRefreshEvent = async eventId => {
   try {
+    logger.info(`Refreshing notify message event: ${eventId}`)
+
     await eventHelpers.refreshEventStatus(eventId)
   } catch (err) {
     logger.error('Error refreshing batch message event', err.stack, { eventId })
@@ -30,10 +32,13 @@ const handleRefreshEvent = async eventId => {
 }
 
 const handler = async job => {
-  logger.info(`Handling: ${JOB_NAME}:${job.id}`)
   try {
     const batch = await queries.getSendingEvents()
-    logger.info(`Refreshing notify message events - ${batch.length} item(s) found`)
+
+    if (batch.length > 0) {
+      logger.info(`Refreshing notify message events - ${batch.length} item(s) found`)
+    }
+
     await Promise.all((batch.map(({ event_id: id }) => handleRefreshEvent(id))))
   } catch (err) {
     logger.error(`Error handling: ${job.id}`, err.stack)
@@ -44,13 +49,8 @@ const onFailed = async (job, err) => {
   logger.error(`${JOB_NAME}: Job has failed`, err.stack)
 }
 
-const onComplete = async () => {
-  logger.info(`${JOB_NAME}: Job has completed`)
-}
-
 exports.handler = handler
 exports.onFailed = onFailed
-exports.onComplete = onComplete
 exports.jobName = JOB_NAME
 exports.createMessage = createMessage
 exports.hasScheduler = true
