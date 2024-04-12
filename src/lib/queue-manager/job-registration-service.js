@@ -6,7 +6,6 @@ const billingCreateBillRun = require('../../modules/billing/jobs/create-bill-run
 const billingCreateCharge = require('../../modules/billing/jobs/create-charge')
 const billingCustomerFileRefresh = require('../../modules/billing/jobs/customer-file-refresh')
 const billingDeleteErroredBatch = require('../../modules/billing/jobs/delete-errored-batch')
-const billingFindUpdateInvoiceAccounts = require('../../modules/billing/jobs/check-for-updated-invoice-accounts')
 const billingPopulateBatchChargeVersions = require('../../modules/billing/jobs/populate-batch-charge-versions')
 const billingPrepareTransactions = require('../../modules/billing/jobs/prepare-transactions')
 const billingProcessChargeVersions = require('../../modules/billing/jobs/process-charge-versions')
@@ -77,7 +76,6 @@ class JobRegistrationService {
       billingCreateCharge,
       billingCustomerFileRefresh,
       billingDeleteErroredBatch,
-      billingFindUpdateInvoiceAccounts,
       billingPopulateBatchChargeVersions,
       billingPrepareTransactions,
       billingProcessChargeVersions,
