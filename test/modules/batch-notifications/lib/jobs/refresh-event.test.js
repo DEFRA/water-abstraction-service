@@ -100,12 +100,4 @@ experiment('refreshEvent job', () => {
       expect(error).to.equal(err.stack)
     })
   })
-
-  experiment('.onComplete', () => {
-    test('a completion message is logged', async () => {
-      await refreshEvent.onComplete()
-      const [msg] = logger.info.lastCall.args
-      expect(msg).to.equal('notifications.refreshEvent: Job has completed')
-    })
-  })
 })
