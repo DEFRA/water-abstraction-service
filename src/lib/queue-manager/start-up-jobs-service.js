@@ -19,7 +19,6 @@ class StartUpJobsService {
   static go (queueManager) {
     this._batchNotificationsJobs(queueManager)
     this._billingJobs(queueManager)
-    this._chargeVersionsJobs(queueManager)
     this._gaugingStationJobs(queueManager)
   }
 
