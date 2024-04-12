@@ -10,9 +10,6 @@ const checkForUpdatedInvoiceAccounts = require('../../modules/billing/jobs/check
 const customerFileRefresh = require('../../modules/billing//jobs/customer-file-refresh')
 const syncChargeCategories = require('../../modules/billing/jobs/sync-charge-categories')
 
-// Charge versions
-const licenceNotInChargeVersionWorkflow = require('../../modules/charge-versions/jobs/licence-not-in-charge-version-workflow')
-
 // Gauging Stations
 const syncGaugingStations = require('../../modules/gauging-stations/jobs/sync-gauging-stations')
 const syncLicenceGaugingStationsFromDigitise = require('../../modules/gauging-stations/jobs/sync-licence-gauging-stations-from-digitise')
@@ -22,7 +19,6 @@ class StartUpJobsService {
   static go (queueManager) {
     this._batchNotificationsJobs(queueManager)
     this._billingJobs(queueManager)
-    this._chargeVersionsJobs(queueManager)
     this._gaugingStationJobs(queueManager)
   }
 
@@ -36,10 +32,6 @@ class StartUpJobsService {
     queueManager.add(checkForUpdatedInvoiceAccounts.jobName)
     queueManager.add(customerFileRefresh.jobName)
     queueManager.add(syncChargeCategories.jobName)
-  }
-
-  static async _chargeVersionsJobs (queueManager) {
-    queueManager.add(licenceNotInChargeVersionWorkflow.jobName)
   }
 
   static async _gaugingStationJobs (queueManager) {

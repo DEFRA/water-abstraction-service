@@ -35,7 +35,6 @@ experiment('lib/queue-manager/start-up-jobs-service', () => {
 
       expect(queueManager.add.calledWith('notifications.checkStatus')).to.be.true()
       expect(queueManager.add.calledWith('billing.find-update-invoice-accounts')).to.be.true()
-      expect(queueManager.add.calledWith('licence-not-in-charge-version-workflow')).to.be.true()
       expect(queueManager.add.calledWith('gauging-stations.copy-licence-gauging-stations-from-digitise')).to.be.true()
     })
   })
