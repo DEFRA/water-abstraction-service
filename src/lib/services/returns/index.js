@@ -206,7 +206,9 @@ const getReturnsWithContactsForLicence = async (licenceNumber) => {
 }
 
 const getReturnsForLicence = async (licenceNumber, page, perPage) => {
+  console.log('🚀 ~ getDocumentReturns ~ licenceNumber:', licenceNumber)
   const { data, pagination } = await apiConnector.getReturnsForLicence(licenceNumber, page, perPage)
+  console.log('🚀 ~ getReturnsForLicence ~ data:', data)
 
   return {
     data: await returnsMappingService.mapReturnsToModels(data),

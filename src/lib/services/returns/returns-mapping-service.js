@@ -5,6 +5,8 @@
  *         to Return service models
  */
 
+const { logger } = require('../../../logger.js')
+
 // Services
 const returnRequirementsService = require('../return-requirements')
 const returnMapper = require('../../mappers/return')
@@ -35,7 +37,16 @@ const getReturnRequirements = returnsData => {
  */
 const mapReturnDataToModel = (returnData, returnRequirements) => {
   const externalId = getReturnRequirementExternalId(returnData)
-  const returnRequirement = returnRequirements.find((o) => o.externalId === externalId)
+
+  let returnRequirement
+
+  try {
+    returnRequirement = returnRequirements.find((o) => o.externalId === externalId)
+    // returnRequirement = returnRequirements.find((o) => o.externalId === externalId)
+  } catch (error) {
+    logger.error('Error finding return requirement in mapping service', error.stack)
+  }
+
   return returnMapper.returnsServiceToModel(returnData, returnRequirement)
 }
 
