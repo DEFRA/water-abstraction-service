@@ -8,8 +8,6 @@ const apiConnector = require('../../connectors/returns')
  * @param {Object} cycle
  */
 const getReturnsForLicenceInCycle = (licenceNumber, cycle) => {
-  console.log('🚀 ~ getReturnsForLicenceInCycle ~ cycle:', cycle)
-  console.log('🚀 ~ getReturnsForLicenceInCycle ~ licenceNumber:', licenceNumber)
   const filter = {
     licence_ref: licenceNumber,
     status: {
