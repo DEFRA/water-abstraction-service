@@ -42,7 +42,6 @@ const mapReturnDataToModel = (returnData, returnRequirements) => {
 
   try {
     returnRequirement = returnRequirements.find((o) => o.externalId === externalId)
-    // returnRequirement = returnRequirements.find((o) => o.externalId === externalId)
   } catch (error) {
     logger.error(`Error finding return requirement ${externalId} in mapping service`, error.stack)
   }
