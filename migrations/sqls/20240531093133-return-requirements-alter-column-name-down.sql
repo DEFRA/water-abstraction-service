@@ -1,0 +1,2 @@
+ALTER TABLE water.return_requirements
+RENAME COLUMN fifty_six_exception TO fixty_six_exception
