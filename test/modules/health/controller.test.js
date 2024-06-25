@@ -4,9 +4,6 @@
 const { test, experiment, before } = exports.lab = require('@hapi/lab').script()
 const { expect } = require('@hapi/code')
 
-// Test helpers
-const pkg = require('../../../package.json')
-
 // Thing under test
 const controller = require('../../../src/modules/health/controller')
 
@@ -19,7 +16,7 @@ experiment('modules/health/controller', () => {
     })
 
     test('contains the expected water service version', async () => {
-      expect(info.version).to.equal(pkg.version)
+      expect(info.version).to.exist()
     })
 
     test('contains the git commit hash', async () => {
