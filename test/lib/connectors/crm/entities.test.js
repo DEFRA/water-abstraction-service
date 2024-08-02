@@ -11,7 +11,6 @@ experiment('lib/connectors/crm/entities', () => {
   beforeEach(async () => {
     sandbox.stub(serviceRequest, 'get').resolves({})
     sandbox.stub(serviceRequest, 'post').resolves({})
-    sandbox.stub(serviceRequest, 'delete').resolves({})
   })
 
   afterEach(async () => {

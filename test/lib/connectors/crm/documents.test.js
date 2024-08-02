@@ -11,7 +11,6 @@ experiment('lib/connectors/crm/documents', () => {
   beforeEach(async () => {
     sandbox.stub(serviceRequest, 'get').resolves({})
     sandbox.stub(serviceRequest, 'patch').resolves({})
-    sandbox.stub(serviceRequest, 'delete').resolves({})
     sandbox.stub(documentsConnector, 'updateOne').resolves({})
     sandbox.stub(documentsConnector, 'findAll').resolves()
   })
