@@ -11,7 +11,6 @@ experiment('lib/connectors/crm/documents', () => {
   beforeEach(async () => {
     sandbox.stub(serviceRequest, 'get').resolves({})
     sandbox.stub(serviceRequest, 'patch').resolves({})
-    sandbox.stub(serviceRequest, 'delete').resolves({})
     sandbox.stub(documentsConnector, 'updateOne').resolves({})
     sandbox.stub(documentsConnector, 'findAll').resolves()
   })
@@ -44,15 +43,6 @@ experiment('lib/connectors/crm/documents', () => {
       const [url, options] = serviceRequest.get.lastCall.args
       expect(url).to.equal(expectedUrl)
       expect(JSON.parse(options.qs.filter).includeExpired).to.be.true()
-    })
-  })
-
-  experiment('.deleteAcceptanceTestData', () => {
-    test('makes a delete request to the expected url', async () => {
-      await documentsConnector.deleteAcceptanceTestData()
-
-      const [url] = serviceRequest.delete.lastCall.args
-      expect(url).to.equal(`${config.services.crm}/acceptance-tests/documents`)
     })
   })
 

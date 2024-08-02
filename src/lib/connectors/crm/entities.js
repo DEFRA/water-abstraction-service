@@ -1,4 +1,3 @@
-const urlJoin = require('url-join')
 const { serviceRequest } = require('@envage/water-abstraction-helpers')
 const config = require('../../../../config')
 const helpers = require('@envage/water-abstraction-helpers')
@@ -127,12 +126,3 @@ exports.getEntityVerifications = getEntityVerifications
 
 exports.getOrCreateInternalUserEntity = getOrCreateInternalUserEntity
 exports.updateEntityEmail = updateEntityEmail
-
-if (!config.isProduction) {
-  exports.deleteAcceptanceTestData = async () => {
-    const CRMV1URL = urlJoin(config.services.crm, 'acceptance-tests/entities')
-    const CRMV2URL = urlJoin(config.services.crm_v2, 'test-data')
-    await serviceRequest.delete(CRMV2URL)
-    return serviceRequest.delete(CRMV1URL)
-  }
-}

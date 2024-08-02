@@ -19,7 +19,6 @@ experiment('connectors/returns', () => {
   beforeEach(async () => {
     sandbox.stub(config.services, 'returns').value('http://test.defra/returns/1.0')
     sandbox.stub(helpers.serviceRequest, 'get').resolves()
-    sandbox.stub(helpers.serviceRequest, 'delete').resolves()
   })
 
   afterEach(async () => {
@@ -161,15 +160,6 @@ experiment('connectors/returns', () => {
     test('excludes licences from the result set when licences are excluded', async () => {
       const response = await returns.getCurrentDueReturns(['01/123', '03/456'], '2019-03-31')
       expect(response).to.equal([{ licence_ref: '02/345' }])
-    })
-  })
-
-  experiment('.deleteAcceptanceTestData', () => {
-    test('makes a delete request to the expected url', async () => {
-      await returns.deleteAcceptanceTestData()
-
-      const [url] = helpers.serviceRequest.delete.lastCall.args
-      expect(url).to.equal(`${config.services.returns}/acceptance-tests`)
     })
   })
 

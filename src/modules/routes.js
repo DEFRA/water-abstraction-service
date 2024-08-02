@@ -1,5 +1,4 @@
 module.exports = [
-  ...Object.values(require('./acceptance-tests/routes')),
   ...Object.values(require('./address-search/routes')),
   ...Object.values(require('./addresses/routes')),
   ...Object.values(require('./application-state/routes')),
