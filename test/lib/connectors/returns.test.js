@@ -19,7 +19,6 @@ experiment('connectors/returns', () => {
   beforeEach(async () => {
     sandbox.stub(config.services, 'returns').value('http://test.defra/returns/1.0')
     sandbox.stub(helpers.serviceRequest, 'get').resolves()
-    sandbox.stub(helpers.serviceRequest, 'delete').resolves()
   })
 
   afterEach(async () => {
