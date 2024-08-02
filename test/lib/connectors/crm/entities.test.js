@@ -278,15 +278,6 @@ experiment('lib/connectors/crm/entities', () => {
       })
     })
   })
-
-  experiment('.deleteAcceptanceTestData', () => {
-    test('makes a delete request to the expected url', async () => {
-      await entitiesConnector.deleteAcceptanceTestData()
-
-      const [url] = serviceRequest.delete.lastCall.args
-      expect(url).to.equal(`${config.services.crm}/acceptance-tests/entities`)
-    })
-  })
 })
 
 experiment('updateEntityEmail', () => {

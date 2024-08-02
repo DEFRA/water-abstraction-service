@@ -1,6 +1,5 @@
 'use strict'
 
-const urlJoin = require('url-join')
 const moment = require('moment')
 
 const helpers = require('@envage/water-abstraction-helpers')
@@ -123,16 +122,7 @@ licences.getWaterLicencesThatHaveGaugingStationLinkagesThatNeedToBeCopiedFromDig
   return licences.findAll(filter, null, ['licence_id', 'licence_ref', 'licence_data_value'])
 }
 
-const deleteAcceptanceTestData = () => {
-  const url = urlJoin(config.services.permits, 'acceptance-tests')
-  return helpers.serviceRequest.delete(url)
-}
-
 exports.licences = licences
 exports.getLicenceRegionCodes = getLicenceRegionCodes
 exports.getLicenceEndDates = getLicenceEndDates
 exports.getServiceVersion = factory.create(config.services.permits)
-
-if (!config.isProduction) {
-  exports.deleteAcceptanceTestData = deleteAcceptanceTestData
-}

@@ -47,15 +47,6 @@ experiment('lib/connectors/crm/documents', () => {
     })
   })
 
-  experiment('.deleteAcceptanceTestData', () => {
-    test('makes a delete request to the expected url', async () => {
-      await documentsConnector.deleteAcceptanceTestData()
-
-      const [url] = serviceRequest.delete.lastCall.args
-      expect(url).to.equal(`${config.services.crm}/acceptance-tests/documents`)
-    })
-  })
-
   experiment('.setLicenceName', () => {
     test('makes a update request to the expected url', async () => {
       await documentsConnector.setLicenceName('doc-id', 'name')

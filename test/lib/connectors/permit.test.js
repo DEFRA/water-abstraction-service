@@ -165,15 +165,6 @@ experiment('connectors/permit', () => {
     })
   })
 
-  experiment('.deleteAcceptanceTestData', () => {
-    test('makes a delete request to the expected url', async () => {
-      await permit.deleteAcceptanceTestData()
-
-      const [url] = serviceRequest.delete.lastCall.args
-      expect(url).to.equal(`${config.services.permits}acceptance-tests`)
-    })
-  })
-
   experiment('getWaterLicencesThatHaveConditionsThatNeedToBeCopiedFromDigitise', () => {
     let result
     beforeEach(async () => {

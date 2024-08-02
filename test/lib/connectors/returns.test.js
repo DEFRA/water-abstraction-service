@@ -164,15 +164,6 @@ experiment('connectors/returns', () => {
     })
   })
 
-  experiment('.deleteAcceptanceTestData', () => {
-    test('makes a delete request to the expected url', async () => {
-      await returns.deleteAcceptanceTestData()
-
-      const [url] = helpers.serviceRequest.delete.lastCall.args
-      expect(url).to.equal(`${config.services.returns}/acceptance-tests`)
-    })
-  })
-
   experiment('.getReturnsForLicence', () => {
     beforeEach(async () => {
       sandbox.stub(returns.returns, 'findAll').resolves({})

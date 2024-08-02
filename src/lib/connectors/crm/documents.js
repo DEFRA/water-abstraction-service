@@ -135,13 +135,6 @@ client.getDocumentUsers = async documentId => {
   return serviceRequest.get(url)
 }
 
-if (!config.isProduction) {
-  client.deleteAcceptanceTestData = () => {
-    const url = urlJoin(config.services.crm, 'acceptance-tests/documents')
-    return serviceRequest.delete(url)
-  }
-}
-
 /**
    * Set licence name
    * @param {String} documentId - the CRM document ID identifying the permit

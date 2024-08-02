@@ -91,11 +91,6 @@ const getServiceVersion = async () => {
   return response.version
 }
 
-const deleteAcceptanceTestData = () => {
-  const url = urlJoin(config.services.returns, 'acceptance-tests')
-  return helpers.serviceRequest.delete(url)
-}
-
 const getReturnsForLicence = async (licenceNumber, startDate, endDate) => {
   const filter = {
     licence_ref: licenceNumber,
@@ -170,11 +165,6 @@ exports.getCurrentDueReturns = getCurrentDueReturns
 exports.getServiceVersion = getServiceVersion
 exports.getReturnsForLicence = getReturnsForLicence
 exports.getLinesForReturn = getLinesForReturn
-
-if (!config.isProduction) {
-  exports.deleteAcceptanceTestData = deleteAcceptanceTestData
-}
-
 exports.getReturnsCyclesReport = getReturnsCyclesReport
 exports.getReturnCycleById = getReturnCycleById
 exports.getReturnCycleReturns = getReturnCycleReturns
