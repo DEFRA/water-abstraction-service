@@ -105,8 +105,6 @@ const persist = async chargeVersion => {
   )
   persistedChargeVersion.chargeElements = await Promise.all(tasks)
 
-  console.log('Charge Version', persistedChargeVersion)
-  console.log('AHHHH Im in service!!!!')
   await system.flagSupplementaryBilling(persistedChargeVersion.id)
 
   // Here we can add the system endpoint

@@ -8,7 +8,6 @@ const { serviceRequest } = require('@envage/water-abstraction-helpers')
  * @return {Promise}
  */
 const flagSupplementaryBilling = (chargeVersionId) => {
-  console.log('Charge Version Id :', chargeVersionId)
   const url = `${config.services.system}/licences/supplementary-flag`
   const options = {
     body: {
