@@ -5,6 +5,7 @@ const DATE_FORMAT = 'YYYY-MM-DD'
 
 // Repos
 const chargeVersionRepo = require('../connectors/repos/charge-versions')
+const system = require('../connectors/system/supplementary-billing.js')
 const chargeVersionMapper = require('../mappers/charge-version')
 
 const noteRepo = require('../connectors/repos/notes')
@@ -104,6 +105,11 @@ const persist = async chargeVersion => {
   )
   persistedChargeVersion.chargeElements = await Promise.all(tasks)
 
+  console.log('Charge Version', persistedChargeVersion)
+  console.log('AHHHH Im in service!!!!')
+  await system.flagSupplementaryBilling(persistedChargeVersion.id)
+
+  // Here we can add the system endpoint
   return persistedChargeVersion
 }
 
