@@ -107,7 +107,6 @@ const persist = async chargeVersion => {
 
   await system.flagSupplementaryBilling(persistedChargeVersion.id)
 
-  // Here we can add the system endpoint
   return persistedChargeVersion
 }
 
