@@ -105,7 +105,7 @@ const persist = async chargeVersion => {
   )
   persistedChargeVersion.chargeElements = await Promise.all(tasks)
 
-  await system.flagSupplementaryBilling(persistedChargeVersion.id)
+  system.flagSupplementaryBilling(persistedChargeVersion.id)
 
   return persistedChargeVersion
 }
