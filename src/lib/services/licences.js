@@ -160,7 +160,6 @@ const getLicenceInvoices = async (licenceId, page = 1, perPage = 10) => {
     temp.invoice = invoiceMapper.dbToModel(row.billingInvoice)
     temp.batch = batchMapper.dbToModel(row.billingInvoice.billingBatch)
 
-    console.log(JSON.stringify(temp.invoice))
     return temp
   })
   return { data: mappedInvoices, pagination: invoices.pagination }
