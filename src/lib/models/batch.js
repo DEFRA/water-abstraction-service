@@ -44,7 +44,6 @@ const BATCH_ERROR_CODE = {
 const BATCH_TYPE = {
   annual: 'annual',
   supplementary: 'supplementary',
-  tptSupplementary: 'tpt_supplementary',
   twoPartTariff: 'two_part_tariff'
 }
 
