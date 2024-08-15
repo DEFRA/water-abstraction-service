@@ -14,7 +14,8 @@ const idm = require('../../../src/lib/connectors/idm')
 const crmEntities = require('../../../src/lib/connectors/crm/entities')
 const notifications = require('../../../src/lib/notifications/emails')
 const { logger } = require('../../../src/logger')
-const event = require('../../../src/lib/event')
+// const event = require('../../../src/lib/event')
+const Event = require('../../../src/lib/services/events.js')
 
 const userId = 123
 const email = 'mail@example.com'
@@ -34,7 +35,7 @@ experiment('change email controller', () => {
     sandbox.stub(notifications, 'sendEmailAddressInUseNotification')
     sandbox.stub(crmEntities, 'updateEntityEmail')
     sandbox.stub(logger, 'error')
-    sandbox.stub(event, 'save')
+    sandbox.stub(Event, 'create')
   })
 
   afterEach(async () => sandbox.restore())
@@ -178,23 +179,24 @@ experiment('change email controller', () => {
 
     test('logs event for audit', async () => {
       await controller.postSecurityCode(request, h)
-      const e = event.save.lastCall.args[0]
+      const e = Event.create.lastCall.args[0]
 
       expect(e.type).to.equal('user-account')
       expect(e.subtype).to.equal('email-change')
       expect(e.issuer).to.equal('old@example.com')
-      expect(e.entities).to.equal([entityId])
+      expect(e.entities).to.equal([{ entityId }])
       expect(e.metadata).to.equal({
         oldEmail: 'old@example.com',
         newEmail: email,
         userId
       })
+      expect(e.status).to.equal('completed')
     })
 
     test('responds with event', async () => {
       const result = await controller.postSecurityCode(request, h)
       expect(result.error).to.equal(null)
-      expect(result.data.eventId).to.be.a.string()
+      expect(result.data.type).to.equal('user-account')
     })
 
     test('throws non-http errors', async () => {
