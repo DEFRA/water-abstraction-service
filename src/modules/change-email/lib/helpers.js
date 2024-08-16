@@ -1,22 +1,25 @@
-const { v4: uuid } = require('uuid')
-const event = require('../../../lib/event')
+const Event = require('../../../lib/models/event.js')
 
 /**
  * create event object to be inserted into event log
  */
 const createEventObject = (userName, entityId, newEmail, userId) => {
-  return event.create({
-    eventId: uuid(),
+  const ev = new Event()
+
+  ev.fromHash({
     type: 'user-account',
     subtype: 'email-change',
     issuer: userName,
-    entities: [entityId],
+    entities: [{ entityId }],
     metadata: {
       oldEmail: userName,
       newEmail,
       userId
-    }
+    },
+    status: 'completed'
   })
+
+  return ev
 }
 
 exports.createEventObject = createEventObject
