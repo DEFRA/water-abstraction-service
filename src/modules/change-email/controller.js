@@ -1,6 +1,6 @@
 'use strict'
 
-const event = require('../../lib/event')
+const Events = require('../../lib/services/events.js')
 const idm = require('../../lib/connectors/idm')
 const crmEntities = require('../../lib/connectors/crm/entities')
 const changeEmailHelpers = require('./lib/helpers')
@@ -90,9 +90,8 @@ const postSecurityCode = async (request, h) => {
     await crmEntities.updateEntityEmail(entityId, newEmail)
 
     const evt = changeEmailHelpers.createEventObject(oldEmail, entityId, newEmail, userId)
-    await event.save(evt)
 
-    // const result = await event.repo.create(evt);
+    await Events.create(evt)
     return { data: evt, error: null }
   } catch (err) {
     return errorHandler(err, h)
