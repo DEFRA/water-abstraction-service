@@ -14,7 +14,6 @@ const idm = require('../../../src/lib/connectors/idm')
 const crmEntities = require('../../../src/lib/connectors/crm/entities')
 const notifications = require('../../../src/lib/notifications/emails')
 const { logger } = require('../../../src/logger')
-// const event = require('../../../src/lib/event')
 const Event = require('../../../src/lib/services/events.js')
 
 const userId = 123
