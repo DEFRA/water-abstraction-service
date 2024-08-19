@@ -22,7 +22,7 @@
 BEGIN;
 
 CREATE TABLE water.mod_logs (
-	id uuid DEFAULT gen_random_uuid() NOT NULL,
+	id uuid PRIMARY KEY DEFAULT public.gen_random_uuid(),
 	external_id varchar NOT NULL,
 	event_code varchar NOT NULL,
 	event_description varchar NOT NULL,
@@ -43,7 +43,6 @@ CREATE TABLE water.mod_logs (
 	return_version_id uuid NULL,
 	created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	updated_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	CONSTRAINT mod_logs_pkey PRIMARY KEY (id),
 	CONSTRAINT uniq_mod_log_external_id UNIQUE (external_id)
 );
 
