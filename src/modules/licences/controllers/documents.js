@@ -66,7 +66,7 @@ const getLicence = async (document, includeExpired, companyId) => {
   }
 
   throwIfUnauthorised(documentHeader, companyId)
-
+  // TODO: permit used here
   const licenceResponse = await permitClient.licences.findMany({
     licence_id: documentHeader.system_internal_id,
     licence_type_id: typeId,
