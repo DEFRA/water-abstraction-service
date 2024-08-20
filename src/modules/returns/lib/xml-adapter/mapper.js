@@ -263,6 +263,7 @@ const mapXml = async (xmlStr, user, today) => {
   // Stage 1 - get licence numbers and region codes
   const permits = getPermitsFromXml(xmlDoc)
   const licenceNumbers = getLicenceNumbersFromPermits(permits)
+  // TODO: permit used here
   const licenceRegionCodes = await permitConnector.getLicenceRegionCodes(licenceNumbers)
 
   // Stage 2 - do basic mapping of XML data to returns

@@ -88,6 +88,7 @@ const updateLicenceRow = async (licenceRef) => {
  */
 const updateAllLicences = async () => {
   const filter = getLicenceTypeFilter(abstractionReform)
+  // TODO: used here - ar analysis
   const results = await permit.licences.findAll(filter, {}, ['licence_ref'])
   for (const row of results) {
     const { licence_ref: licenceNumber } = row

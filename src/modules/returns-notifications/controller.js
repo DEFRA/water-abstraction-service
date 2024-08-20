@@ -21,7 +21,7 @@ const postPreviewReturnNotification = async (request, h) => {
 
   // Create a new set to remove any duplicate values
   const licenceRefs = [...new Set(data.map(item => item.licence_ref))]
-
+  // TODO: permit used here
   const licencesEndDates = await permitConnector.getLicenceEndDates(licenceRefs)
 
   return {

@@ -131,6 +131,7 @@ const getPermitCount = async () => {
     licence_regime_id: 1,
     licence_type_id: 8
   }
+  // TODO: permit used here
   return getCount(permitConnector.licences, filter)
 }
 
@@ -139,6 +140,7 @@ const getVersions = async () => {
     waterService: pkg.version,
     idm: await idmConnector.getServiceVersion(),
     crm: await crmServiceVersionConnector.getServiceVersion(),
+    // TODO: permit used here
     permit: await permitConnector.getServiceVersion(),
     returns: await returnsConnector.getServiceVersion(),
     import: await importConnector.getServiceVersion()
