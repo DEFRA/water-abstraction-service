@@ -1,4 +1,20 @@
-/* Replace with your SQL commands */
+/*
+  Add new sources and points table and update existing points tables
+
+  After adding `return_requirement_points` and `licence_version_purpose_points` we thought we could limit our changes
+  to just hold the point information against the relevant records and be able to migrate all existing functionality to
+  use this new data rather than the points information embedded in the `permit.licence` JSONB blob.
+
+  However, we realised that some areas of the legacy UI also display the water sources for a licence. These are linked
+  to points in NALD and not encompassed by our current solution.
+
+  So, we've needed to iterate our solution to more closely match NALD. We'll create and populate a `sources` reference
+  table. We'll also create a new `points` table that will be updated by a change to the water-abstraction-import app.
+  Sources will then be linked to points as part of that.
+
+  The final step is to update our existing `return_requirement_points` and `licence_version_purpose_points` tables to
+  link to the new `points` table rather than store the point information directly.
+ */
 BEGIN;
 
 CREATE TABLE water.sources (

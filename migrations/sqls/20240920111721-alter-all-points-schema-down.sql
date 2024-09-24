@@ -1,4 +1,4 @@
-/* Replace with your SQL commands */
+/* Revert change made to the schema */
 BEGIN;
 
 ALTER TABLE IF EXISTS water.licence_version_purpose_points DROP COLUMN point_id;
