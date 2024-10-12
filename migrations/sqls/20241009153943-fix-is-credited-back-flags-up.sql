@@ -45,10 +45,8 @@
   This appears to be an ongoing issue. In line with our policy of simple fixes or else migration, we'll have to wait
   until we have an opportunity to replace the PRESROC billing engine.
 
-  Till then, this migration runs two queries.
-
-  - the first will set to false `is_credited_back` on transactions that don't appear in `source_transaction_id`
-  - the second will set to true `is_credited_back` on transaction that _do_ appear in `source_transaction_id`
+  Till then, this migration runs a query to fix the first issue. It sets to false `is_credited_back` on transactions
+  that don't appear in `source_transaction_id`
  */
 
 -- Set false any transactions flagged as `is_credited_back` that do not appear in `source_transaction_id`
@@ -65,37 +63,4 @@ WHERE
     WHERE
       bt.is_credited_back = TRUE
       AND bt2.source_transaction_id IS NULL
-  );
-
--- Set true any transactions not flagged as `is_credited_back` but do appear in `source_transaction_id`. This normally
--- is applied when a bill run is 'sent'. So, we limit the fix only to those transactions linked to 'sent' bill runs. It
--- is also only where a new credit was created based on a historic debit.
-UPDATE water.billing_transactions SET is_credited_back = TRUE
-WHERE
-  billing_transaction_id IN (
-    SELECT
-      bt.billing_transaction_id
-    FROM
-      water.billing_transactions bt
-    INNER JOIN
-      water.billing_invoice_licences bil
-      ON bil.billing_invoice_licence_id  = bt.billing_invoice_licence_id
-    INNER JOIN
-      water.billing_invoices bi
-      ON bi.billing_invoice_id = bil.billing_invoice_id
-    INNER JOIN
-      water.billing_batches bb
-      ON bb.billing_batch_id = bi.billing_batch_id
-    WHERE
-      bb.status = 'sent'
-      AND bt.is_credited_back = FALSE
-      AND EXISTS (
-        SELECT 1
-        FROM
-          water.billing_transactions bt2
-        WHERE
-          bt2.source_transaction_id = bt.billing_transaction_id
-          AND bt2.source_transaction_id IS NOT NULL
-          AND bt2.is_credit = TRUE
-      )
   );
