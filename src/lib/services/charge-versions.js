@@ -5,7 +5,6 @@ const DATE_FORMAT = 'YYYY-MM-DD'
 
 // Repos
 const chargeVersionRepo = require('../connectors/repos/charge-versions')
-const system = require('../connectors/system/supplementary-billing.js')
 const chargeVersionMapper = require('../mappers/charge-version')
 
 const noteRepo = require('../connectors/repos/notes')
@@ -21,8 +20,6 @@ const invoiceAccountsService = require('./invoice-accounts-service')
 const ChargeVersion = require('../models/charge-version')
 
 const validators = require('../models/validators')
-
-const { logger } = require('../../logger.js')
 
 /**
  * Gets charge version by ID
@@ -106,14 +103,6 @@ const persist = async chargeVersion => {
     chargeElementsService.create(persistedChargeVersion, chargeElement)
   )
   persistedChargeVersion.chargeElements = await Promise.all(tasks)
-
-  try {
-    // Let the water-abstraction-system know a new charge version has been added. It will then determine if the licence
-    // needs to be flagged for SROC supplementary billing based on the new charge version
-    await system.flagSupplementaryBilling(persistedChargeVersion.id)
-  } catch (error) {
-    logger.error('Flag supplementary request to system failed', error.stack)
-  }
 
   return persistedChargeVersion
 }
