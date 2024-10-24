@@ -4,8 +4,6 @@ const Joi = require('joi')
 
 const { version } = require('../../../../config')
 
-const { ROLES } = require('../../../lib/roles')
-
 const pathPrefix = `/water/${version}/licences/`
 const controller = require('../controllers/licences')
 
@@ -147,23 +145,6 @@ module.exports = {
         }),
         query: Joi.object().keys({
           code: Joi.string()
-        })
-      }
-    }
-  },
-
-  postMarkLicenceForSupplementaryBilling: {
-    method: 'POST',
-    path: `${pathPrefix}{licenceId}/mark-for-supplementary-billing`,
-    handler: controller.postMarkLicenceForSupplementaryBilling,
-    config: {
-      auth: {
-        scope: [ROLES.billing]
-      },
-      description: 'Marks the licence for supplementary billing',
-      validate: {
-        params: Joi.object().keys({
-          licenceId: Joi.string().guid().required()
         })
       }
     }

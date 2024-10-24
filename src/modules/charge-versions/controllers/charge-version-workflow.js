@@ -4,6 +4,7 @@ const Boom = require('@hapi/boom')
 
 const chargeVersionsWorkflowService = require('../services/charge-version-workflows')
 const licencesService = require('../../../lib/services/licences')
+const system = require('../../../lib/connectors/system/workflow-supplementary-billing.js')
 
 const controller = require('../../../lib/controller')
 const userMapper = require('../../../lib/mappers/user')
@@ -91,11 +92,20 @@ const patchChargeVersionWorkflow = async (request, h) => {
 
 const deleteChargeVersionWorkflow = async (request, h) => {
   const { chargeVersionWorkflow } = request.pre
+
   try {
+    // If a licence in workflow is excluded from billing, we check if it needs to be flagged for the next supplementary
+    // bill run when the workflow is removed or the charge version is cancelled. We call the system repo to assess this
+    // by passing the workflowId.
+
+    await system.workflowFlagSupplementaryBilling(chargeVersionWorkflow.id)
     await chargeVersionsWorkflowService.delete(chargeVersionWorkflow)
+
     return h.response().code(204)
-  } catch (err) {
-    return mapErrorResponse(err)
+  } catch (error) {
+    logger.error('Flag supplementary request to system failed', error.stack)
+
+    return mapErrorResponse(error)
   }
 }
 

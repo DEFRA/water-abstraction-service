@@ -7,15 +7,18 @@ const { serviceRequest } = require('@envage/water-abstraction-helpers')
  * Posts to system repo to flag new charge versions for SROC supplementary billing
  * @return {Promise}
  */
-const flagSupplementaryBilling = (chargeVersionId) => {
+const workflowFlagSupplementaryBilling = (workFlowId) => {
   const url = `${config.services.system}/licences/supplementary`
   const options = {
     body: {
-      chargeVersionId
+      workFlowId
     }
   }
 
   return serviceRequest.post(url, options)
 }
 
-exports.flagSupplementaryBilling = flagSupplementaryBilling
+exports.workflowFlagSupplementaryBilling = workflowFlagSupplementaryBilling
+
+// This route takes two ways. A workflow record being manually deleted or a charge version not being approved and there
+// fore the workflow record deleted.
