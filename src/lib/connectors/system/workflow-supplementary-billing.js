@@ -7,11 +7,11 @@ const { serviceRequest } = require('@envage/water-abstraction-helpers')
  * Posts to system repo to flag new charge versions for SROC supplementary billing
  * @return {Promise}
  */
-const workflowFlagSupplementaryBilling = (workFlowId) => {
+const workflowFlagSupplementaryBilling = (workflowId) => {
   const url = `${config.services.system}/licences/supplementary`
   const options = {
     body: {
-      workFlowId
+      workflowId
     }
   }
 
