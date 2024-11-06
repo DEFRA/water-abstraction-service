@@ -79,7 +79,7 @@ const deleteLicenceAgreementById = async (licenceAgreementId, issuer) => {
   // Flag for pre sroc supplementary billing
   await _flagForPreSrocSupplementaryBilling(licenceAgreement.dateRange.startDate, licence.id)
   // Log event
-  await createEvent(EVENT_TYPES.delete, licenceAgreement, issuer)
+  return createEvent(EVENT_TYPES.delete, licenceAgreement, issuer)
 }
 
 /**
@@ -132,7 +132,7 @@ const createLicenceAgreement = async (licence, data, issuer) => {
     await _flagForPreSrocSupplementaryBilling(licenceAgreement.dateRange.startDate, licence.id)
 
     // Log event
-    await createEvent(EVENT_TYPES.create, licenceAgreement, issuer)
+    createEvent(EVENT_TYPES.create, licenceAgreement, issuer)
 
     // Return the updated model
     return licenceAgreement
@@ -163,7 +163,7 @@ const patchLicenceAgreement = async (licenceAgreementId, data, issuer) => {
   await _flagForPreSrocSupplementaryBilling(licenceAgreement.dateRange.startDate, response.licence.licenceId)
 
   // Log event
-  await createEvent(EVENT_TYPES.update, licenceAgreement, issuer)
+  return createEvent(EVENT_TYPES.update, licenceAgreement, issuer)
 }
 
 /**
