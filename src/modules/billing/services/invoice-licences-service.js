@@ -13,7 +13,6 @@ const errors = require('../../../lib/errors')
 const { logger } = require('../../../logger')
 
 // Services
-const licencesService = require('../../../lib/services/licences')
 const batchService = require('./batch-service')
 
 /**
@@ -56,7 +55,7 @@ const deleteByInvoiceLicenceId = async invoiceLicenceId => {
   await validateInvoiceLicenceIsDeletable(billingInvoiceLicence)
 
   // Validation complete
-  const { billingBatchId: batchId, scheme } = billingInvoiceLicence.billingInvoice.billingBatch
+  const { billingBatchId: batchId } = billingInvoiceLicence.billingInvoice.billingBatch
 
   try {
     // Set batch to "processing" status while processing takes place
@@ -65,9 +64,6 @@ const deleteByInvoiceLicenceId = async invoiceLicenceId => {
     // Delete local/CM data for this licence
     await deleteCMInvoiceLicence(billingInvoiceLicence)
     await deleteWRLSInvoiceLicence(invoiceLicenceId)
-
-    // Flag for supplementary billing
-    await licencesService.flagForSupplementaryBilling(billingInvoiceLicence.licenceId, scheme)
 
     // Publish refresh totals job
     return queueManager.getQueueManager().add(refreshTotalsJob.jobName, batchId)

@@ -12,7 +12,6 @@ const { v4: uuid } = require('uuid')
 
 const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service')
 const batchService = require('../../../../src/modules/billing/services/batch-service')
-const licencesService = require('../../../../src/lib/services/licences')
 const { logger } = require('../../../../src/logger')
 
 const queueManager = require('../../../../src/lib/queue-manager')
@@ -56,8 +55,6 @@ experiment('modules/billing/services/invoice-licences-service', () => {
 
     sandbox.stub(chargeModuleBillRunConnector, 'getInvoiceTransactions')
     sandbox.stub(chargeModuleBillRunConnector, 'deleteLicence')
-
-    sandbox.stub(licencesService, 'flagForSupplementaryBilling')
 
     sandbox.stub(logger, 'error')
   })
@@ -233,12 +230,6 @@ experiment('modules/billing/services/invoice-licences-service', () => {
         expect(newRepos.billingInvoiceLicences.delete.callCount).to.equal(1)
         expect(newRepos.billingInvoiceLicences.delete.calledWith(
           invoiceLicenceId
-        )).to.be.true()
-      })
-
-      test('the licence is flagged for supplementary billing', async () => {
-        expect(licencesService.flagForSupplementaryBilling.calledWith(
-          licenceId
         )).to.be.true()
       })
 
