@@ -94,10 +94,11 @@ const deleteChargeVersionWorkflow = async (request, h) => {
   const { chargeVersionWorkflow } = request.pre
 
   try {
-    // If a licence in workflow is excluded from billing, we check if it needs to be flagged for the next supplementary
-    // bill run when the workflow is removed or the charge version is cancelled. We call the system repo to assess this
-    // by passing the workflowId.
-
+    // Licences in workflow get excluded from billing. This means when we delete a workflow record we need to check if
+    // that licence has missed any annual bill runs and therefore needs to be flagged for supplementary billing
+    // We do this by making a call to the system repo that handles all the logic for supplementary billing flags.
+    // This route is only deleting workflow records that have either been removed by the user or the charge version has
+    // not been approved. This does not cover charge versions being approved. That happens elsewhere.
     await system.workflowFlagSupplementaryBilling(chargeVersionWorkflow.id)
     await chargeVersionsWorkflowService.delete(chargeVersionWorkflow)
 
