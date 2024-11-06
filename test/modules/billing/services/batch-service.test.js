@@ -39,7 +39,6 @@ const licencesService = require('../../../../src/lib/services/licences')
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service')
 const { createBatch } = require('../test-data/test-billing-data')
 const config = require('../../../../config')
-const system = require('../../../../src/lib/connectors/system/licence-supplementary-billing.js')
 
 const queueManager = require('../../../../src/lib/queue-manager')
 const deleteErroredBatchJob = require('../../../../src/modules/billing/jobs/delete-errored-batch')
@@ -127,7 +126,6 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForSentBatch').resolves()
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForBatchCreatedDate').resolves()
     sandbox.stub(licencesService, 'updateIncludeInSrocSupplementaryBillingStatusForBatch').resolves()
-    sandbox.stub(system, 'licenceFlagSupplementaryBilling').resolves()
 
     sandbox.stub(chargeModuleBillRunConnector, 'create').resolves()
     sandbox.stub(chargeModuleBillRunConnector, 'get').resolves()
@@ -1422,12 +1420,6 @@ experiment('modules/billing/services/batch-service', () => {
 
         test('deletes invoice from batch', async () => {
           expect(newRepos.billingInvoices.delete.calledWith(billingInvoiceId)).to.be.true()
-        })
-
-        test('flags the batch for supplementary billing', async () => {
-          expect(system.licenceFlagSupplementaryBilling.calledWith(
-            licenceId, batch.scheme
-          )).to.be.true()
         })
 
         experiment('when the invoice is a rebilling invoice', () => {
