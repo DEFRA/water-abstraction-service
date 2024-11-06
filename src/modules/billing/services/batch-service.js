@@ -24,6 +24,8 @@ const billingVolumesService = require('./billing-volumes-service')
 const invoiceService = require('../../../lib/services/invoice-service')
 const licencesService = require('../../../lib/services/licences')
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs')
+const system = require('../../../lib/connectors/system/licence-supplementary-billing.js')
+
 // Models
 const Event = require('../../../lib/models/event')
 const Batch = require('../../../lib/models/batch')
@@ -522,7 +524,7 @@ const requestCMBatchGeneration = async batchId => {
 
 const _flagLicencesForSupplementaryBilling = async (billingInvoiceLicences, scheme) => {
   for (const billingInvoiceLicence of billingInvoiceLicences) {
-    licencesService.flagForSupplementaryBilling(billingInvoiceLicence.licenceId, scheme)
+    await system.licenceFlagSupplementaryBilling(billingInvoiceLicence.licenceId, scheme)
   }
 }
 
