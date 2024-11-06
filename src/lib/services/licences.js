@@ -129,22 +129,6 @@ const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
 }
 
 /**
- * Ensures the specified licence is included in the next supplementary bill run
- * @param {String} licenceId
- */
-const flagForSupplementaryBilling = (licenceId, scheme = 'alcs') => {
-  const argument = {}
-
-  if (scheme === 'alcs') {
-    argument.includeInSupplementaryBilling = INCLUDE_IN_SUPPLEMENTARY_BILLING.yes
-  } else {
-    argument.includeInSrocSupplementaryBilling = true
-  }
-
-  repos.licences.update(licenceId, argument)
-}
-
-/**
  * Retrieves the invoices associated with a licence
  * Used in the UI bills tab
  * @param {String} licenceId
@@ -231,7 +215,6 @@ exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementary
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch
 exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate
 exports.updateIncludeInSrocSupplementaryBillingStatusForBatch = updateIncludeInSrocSupplementaryBillingStatusForBatch
-exports.flagForSupplementaryBilling = flagForSupplementaryBilling
 exports.getLicenceInvoices = getLicenceInvoices
 exports.getLicencesByInvoiceAccountId = getLicencesByInvoiceAccountId
 exports.getReturnsByLicenceId = getReturnsByLicenceId
