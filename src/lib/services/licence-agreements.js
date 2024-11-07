@@ -78,6 +78,7 @@ const deleteLicenceAgreementById = async (licenceAgreementId, issuer) => {
 
   // Flag for pre sroc supplementary billing
   await _flagForPreSrocSupplementaryBilling(licenceAgreement.dateRange.startDate, licence.id)
+
   // Log event
   return createEvent(EVENT_TYPES.delete, licenceAgreement, issuer)
 }
