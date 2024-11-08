@@ -80,7 +80,7 @@ const deleteLicenceAgreementById = async (licenceAgreementId, issuer) => {
   await _flagForPreSrocSupplementaryBilling(licenceAgreement.dateRange.startDate, licence.id)
 
   // Log event
-  return createEvent(EVENT_TYPES.delete, licenceAgreement, issuer)
+  await createEvent(EVENT_TYPES.delete, licenceAgreement, issuer)
 }
 
 /**
@@ -133,7 +133,7 @@ const createLicenceAgreement = async (licence, data, issuer) => {
     await _flagForPreSrocSupplementaryBilling(licenceAgreement.dateRange.startDate, licence.id)
 
     // Log event
-    createEvent(EVENT_TYPES.create, licenceAgreement, issuer)
+    await createEvent(EVENT_TYPES.create, licenceAgreement, issuer)
 
     // Return the updated model
     return licenceAgreement
