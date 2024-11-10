@@ -15,7 +15,7 @@ CREATE TABLE water.review_licences (
 	licence_ref varchar(255) NOT NULL,
 	licence_holder varchar(255) NOT NULL,
 	issues text NULL,
-	status varchar(255) NOT NULL,
+	status varchar(255) DEFAULT 'ready' NOT NULL,
 	progress bool DEFAULT false NOT NULL,
 	created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	updated_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
