@@ -21,30 +21,38 @@ CREATE TABLE water.review_licences (
 	updated_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-INSERT INTO water.review_licences (
-  id,
-	bill_run_id,
-	licence_id,
-	licence_ref,
-	licence_holder,
-	issues,
-	status,
-	progress,
-	created_at,
-	updated_at
-)
-SELECT
-  id,
-	bill_run_id,
-	licence_id,
-	licence_ref,
-	licence_holder,
-	issues,
-	status,
-	progress,
-	created_at,
-	updated_at
-FROM
-  public.review_licences;
+DO $$
+  BEGIN
+    IF EXISTS
+      (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'review_licences')
+    THEN
+			INSERT INTO water.review_licences (
+				id,
+				bill_run_id,
+				licence_id,
+				licence_ref,
+				licence_holder,
+				issues,
+				status,
+				progress,
+				created_at,
+				updated_at
+			)
+			SELECT
+				id,
+				bill_run_id,
+				licence_id,
+				licence_ref,
+				licence_holder,
+				issues,
+				status,
+				progress,
+				created_at,
+				updated_at
+			FROM
+				public.review_licences;
+    END IF;
+  END
+$$;
 
 COMMIT;

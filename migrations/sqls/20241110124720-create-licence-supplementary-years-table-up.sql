@@ -27,24 +27,32 @@ CREATE TABLE water.licence_supplementary_years (
 	updated_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-INSERT INTO water.licence_supplementary_years (
-  id,
-  licence_id,
-  bill_run_id,
-  financial_year_end,
-  two_part_tariff,
-  created_at,
-  updated_at
-)
-SELECT
-  id,
-  licence_id,
-  bill_run_id,
-  financial_year_end,
-  two_part_tariff,
-  created_at,
-  updated_at
-FROM
-  public.licence_supplementary_years;
+DO $$
+  BEGIN
+    IF EXISTS
+      (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'licence_supplementary_years')
+    THEN
+      INSERT INTO water.licence_supplementary_years (
+        id,
+        licence_id,
+        bill_run_id,
+        financial_year_end,
+        two_part_tariff,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        licence_id,
+        bill_run_id,
+        financial_year_end,
+        two_part_tariff,
+        created_at,
+        updated_at
+      FROM
+        public.licence_supplementary_years;
+    END IF;
+  END
+$$;
 
 COMMIT;

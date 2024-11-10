@@ -16,20 +16,28 @@ CREATE TABLE water.review_charge_element_returns (
 	updated_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-INSERT INTO water.review_charge_element_returns (
-  id,
-  review_charge_element_id,
-  review_return_id,
-  created_at,
-  updated_at
-)
-SELECT
-  id,
-  review_charge_element_id,
-  review_return_id,
-  created_at,
-  updated_at
-FROM
-  public.review_charge_elements_returns;
+DO $$
+  BEGIN
+    IF EXISTS
+      (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'review_charge_elements_returns')
+    THEN
+      INSERT INTO water.review_charge_element_returns (
+        id,
+        review_charge_element_id,
+        review_return_id,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        review_charge_element_id,
+        review_return_id,
+        created_at,
+        updated_at
+      FROM
+        public.review_charge_elements_returns;
+    END IF;
+  END
+$$;
 
 COMMIT;

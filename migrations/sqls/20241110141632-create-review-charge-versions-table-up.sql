@@ -19,26 +19,34 @@ CREATE TABLE water.review_charge_versions (
 	updated_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-INSERT INTO water.review_charge_versions (
-  id,
-	review_licence_id,
-	charge_version_id,
-	change_reason,
-	charge_period_start_date,
-	charge_period_end_date,
-	created_at,
-	updated_at
-)
-SELECT
-  id,
-	review_licence_id,
-	charge_version_id,
-	change_reason,
-	charge_period_start_date,
-	charge_period_end_date,
-	created_at,
-	updated_at
-FROM
-  public.review_charge_versions;
+DO $$
+  BEGIN
+    IF EXISTS
+      (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'review_charge_versions')
+    THEN
+      INSERT INTO water.review_charge_versions (
+        id,
+        review_licence_id,
+        charge_version_id,
+        change_reason,
+        charge_period_start_date,
+        charge_period_end_date,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        review_licence_id,
+        charge_version_id,
+        change_reason,
+        charge_period_start_date,
+        charge_period_end_date,
+        created_at,
+        updated_at
+      FROM
+        public.review_charge_versions;
+    END IF;
+  END
+$$;
 
 COMMIT;

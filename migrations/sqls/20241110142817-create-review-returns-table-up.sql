@@ -31,48 +31,58 @@ CREATE TABLE water.review_returns (
 	updated_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-INSERT INTO water.review_returns (
-  id,
-	review_licence_id,
-	return_id,
-	return_reference,
-	quantity,
-	allocated,
-	under_query,
-	return_status,
-	nil_return,
-	abstraction_outside_period,
-	received_date,
-	due_date,
-	purposes,
-	description,
-	start_date,
-	end_date,
-	issues,
-	created_at,
-	updated_at
-)
-SELECT
-  id,
-	review_licence_id,
-	return_id,
-	return_reference,
-	quantity,
-	allocated,
-	under_query,
-	return_status,
-	nil_return,
-	abstraction_outside_period,
-	received_date,
-	due_date,
-	purposes,
-	description,
-	start_date,
-	end_date,
-	issues,
-	created_at,
-	updated_at
-FROM
-  public.review_returns;
+DO $$
+  BEGIN
+    IF EXISTS
+      (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'review_returns')
+    THEN
+      INSERT INTO water.review_returns (
+        id,
+        review_licence_id,
+        return_id,
+        return_reference,
+        quantity,
+        allocated,
+        under_query,
+        return_status,
+        nil_return,
+        abstraction_outside_period,
+        received_date,
+        due_date,
+        purposes,
+        description,
+        start_date,
+        end_date,
+        issues,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        review_licence_id,
+        return_id,
+        return_reference,
+        quantity,
+        allocated,
+        under_query,
+        return_status,
+        nil_return,
+        abstraction_outside_period,
+        received_date,
+        due_date,
+        purposes,
+        description,
+        start_date,
+        end_date,
+        issues,
+        created_at,
+        updated_at
+      FROM
+        public.review_returns;
+    END IF;
+  END
+$$;
+
+
 
 COMMIT;

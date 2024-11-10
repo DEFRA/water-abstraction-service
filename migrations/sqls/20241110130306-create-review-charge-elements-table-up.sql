@@ -21,30 +21,38 @@ CREATE TABLE water.review_charge_elements (
 	updated_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-INSERT INTO water.review_charge_elements (
-  id,
-  review_charge_reference_id,
-  charge_element_id,
-  allocated,
-  amended_allocated,
-  charge_dates_overlap,
-  issues,
-  status,
-  created_at,
-  updated_at
-)
-SELECT
-  id,
-  review_charge_reference_id,
-  charge_element_id,
-  allocated,
-  amended_allocated,
-  charge_dates_overlap,
-  issues,
-  status,
-  created_at,
-  updated_at
-FROM
-  public.review_charge_elements;
+DO $$
+  BEGIN
+    IF EXISTS
+      (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'review_charge_elements')
+    THEN
+      INSERT INTO water.review_charge_elements (
+        id,
+        review_charge_reference_id,
+        charge_element_id,
+        allocated,
+        amended_allocated,
+        charge_dates_overlap,
+        issues,
+        status,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        review_charge_reference_id,
+        charge_element_id,
+        allocated,
+        amended_allocated,
+        charge_dates_overlap,
+        issues,
+        status,
+        created_at,
+        updated_at
+      FROM
+        public.review_charge_elements;
+    END IF;
+  END
+$$;
 
 COMMIT;

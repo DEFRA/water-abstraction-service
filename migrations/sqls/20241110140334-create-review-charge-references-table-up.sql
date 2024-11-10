@@ -26,40 +26,48 @@ CREATE TABLE water.review_charge_references (
 	updated_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-INSERT INTO water.review_charge_references (
-  id,
-  review_charge_version_id,
-	charge_reference_id,
-	"aggregate",
-	amended_aggregate,
-	charge_adjustment,
-	amended_charge_adjustment,
-	abatement_agreement,
-	winter_discount,
-	two_part_tariff_agreement,
-	canal_and_river_trust_agreement,
-	authorised_volume,
-	amended_authorised_volume,
-  created_at,
-	updated_at
-)
-SELECT
-  id,
-  review_charge_version_id,
-	charge_reference_id,
-	"aggregate",
-	amended_aggregate,
-	charge_adjustment,
-	amended_charge_adjustment,
-	abatement_agreement,
-	winter_discount,
-	two_part_tariff_agreement,
-	canal_and_river_trust_agreement,
-	authorised_volume,
-	amended_authorised_volume,
-  created_at,
-	updated_at
-FROM
-  public.review_charge_references;
+DO $$
+  BEGIN
+    IF EXISTS
+      (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'review_charge_references')
+    THEN
+			INSERT INTO water.review_charge_references (
+				id,
+				review_charge_version_id,
+				charge_reference_id,
+				"aggregate",
+				amended_aggregate,
+				charge_adjustment,
+				amended_charge_adjustment,
+				abatement_agreement,
+				winter_discount,
+				two_part_tariff_agreement,
+				canal_and_river_trust_agreement,
+				authorised_volume,
+				amended_authorised_volume,
+				created_at,
+				updated_at
+			)
+			SELECT
+				id,
+				review_charge_version_id,
+				charge_reference_id,
+				"aggregate",
+				amended_aggregate,
+				charge_adjustment,
+				amended_charge_adjustment,
+				abatement_agreement,
+				winter_discount,
+				two_part_tariff_agreement,
+				canal_and_river_trust_agreement,
+				authorised_volume,
+				amended_authorised_volume,
+				created_at,
+				updated_at
+			FROM
+				public.review_charge_references;
+    END IF;
+  END
+$$;
 
 COMMIT;
