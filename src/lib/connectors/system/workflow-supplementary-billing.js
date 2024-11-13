@@ -4,7 +4,11 @@ const config = require('../../../../config')
 const { serviceRequest } = require('@envage/water-abstraction-helpers')
 
 /**
- * Posts to system repo to flag new charge versions for SROC supplementary billing
+ * Posts to the system repo to flag a licence for SROC supplementary billing
+ *
+ * This route is only taken for workflow records that have been deleted by a user either removing the licence from
+ * workflow or by declining the charge version that was awaiting approval
+ *
  * @return {Promise}
  */
 const workflowFlagSupplementaryBilling = (workflowId) => {
@@ -19,6 +23,3 @@ const workflowFlagSupplementaryBilling = (workflowId) => {
 }
 
 exports.workflowFlagSupplementaryBilling = workflowFlagSupplementaryBilling
-
-// This route takes two ways. A workflow record being manually deleted or a charge version not being approved and there
-// fore the workflow record deleted.
