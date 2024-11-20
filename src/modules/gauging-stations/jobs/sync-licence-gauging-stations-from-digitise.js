@@ -32,6 +32,7 @@ const handler = async () => {
   // Find out which licences need to be processed
   // Call the permit repo, and fetch any licence refs plus licence_data_value
   // where permit.licence.date_licence_version_purpose_conditions_last_copied is either null or before today
+  // TODO: permit used here
   const licences = await permitConnector.licences.getWaterLicencesThatHaveGaugingStationLinkagesThatNeedToBeCopiedFromDigitise()
 
   logger.info(`Found ${licences.length} candidate licences that have licence gauging station linkages that may be copied from digitise...`)
@@ -42,6 +43,7 @@ const handler = async () => {
     if (edits.status === 'Approved') {
       logger.info(`Processing ${eachLicence.licence_ref}: Status is approved...`)
       // Take the permit data, and put it through the Digitise reducer
+      // TODO: permit used here
       const originalLicence = await permitConnector.licences.getWaterLicence(eachLicence.licence_ref)
       const initialState = originalLicence && digitise.getInitialState(originalLicence)
       const hasData = initialState.licence.data.current_version !== undefined
@@ -128,6 +130,7 @@ const handler = async () => {
               // For the successful records,
               // mark them as processed by updating the datestamp
               // in permit.licence.date_licence_version_purpose_conditions_last_copied
+              // TODO: permit used here
               await permitConnector.licences.updateOne(eachLicence.licence_id, {
                 date_gauging_station_links_last_copied: new Date()
               })
