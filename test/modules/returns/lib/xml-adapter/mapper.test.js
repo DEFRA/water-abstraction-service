@@ -53,7 +53,6 @@ const getTestUser = () => ({
 })
 
 experiment('XML adapter mapper', () => {
-
   afterEach(async () => sandbox.restore())
 
   experiment('XML to JSON Mapping', () => {
