@@ -5,7 +5,7 @@ const waterHelpers = require('@envage/water-abstraction-helpers')
 const { getReturnId } = waterHelpers.returns
 
 const { intersection } = require('lodash')
-const libxmljs = require('libxmljs')
+const libxmljs = require('libxmljs2')
 
 const returnsConnector = require('../../../../lib/connectors/returns')
 const permitConnector = require('../../../../lib/connectors/permit')
@@ -76,7 +76,7 @@ const getMeterDetails = (ret) => {
 }
 
 const wasMeterUsed = (meterUsage) => {
-  return meterUsage.getAttribute('WasMeterUsed').value() === 'Y'
+  return meterUsage.attr('WasMeterUsed').value() === 'Y'
 }
 
 const getOverallReadingType = (ret) => {

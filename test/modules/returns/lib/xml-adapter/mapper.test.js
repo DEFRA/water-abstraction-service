@@ -27,7 +27,7 @@ const {
 const path = require('path')
 const fs = require('fs')
 const util = require('util')
-const libxmljs = require('libxmljs')
+const libxmljs = require('libxmljs2')
 
 const readFile = util.promisify(fs.readFile)
 
@@ -53,6 +53,8 @@ const getTestUser = () => ({
 })
 
 experiment('XML adapter mapper', () => {
+  afterEach(async () => sandbox.restore())
+
   experiment('XML to JSON Mapping', () => {
     let returnXmlNode
 

@@ -1,5 +1,5 @@
 const fs = require('fs')
-const libxmljs = require('libxmljs')
+const libxmljs = require('libxmljs2')
 const util = require('util')
 const path = require('path')
 const readFile = util.promisify(fs.readFile)
