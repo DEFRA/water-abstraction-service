@@ -19,6 +19,7 @@ module.exports = {
         query: Joi.object().keys({
           startDate: Joi.string().isoDate(),
           endDate: Joi.string().isoDate(),
+          dueDate: Joi.string().isoDate(),
           isSummer: Joi.boolean(),
           status: Joi.string().valid(...statuses),
           excludeNaldReturns: Joi.boolean().default(true)
