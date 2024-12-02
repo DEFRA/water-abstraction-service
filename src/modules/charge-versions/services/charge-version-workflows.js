@@ -4,7 +4,9 @@ const bluebird = require('bluebird')
 
 // Services
 const service = require('../../../lib/services/service')
-const system = require('../../../lib/connectors/system/charge-version-supplementary-billing.js')
+const systemChargeVersionConnector = require('../../../lib/connectors/system/charge-version-supplementary-billing.js')
+const systemWorkflowConnector = require('../../../lib/connectors/system/workflow-supplementary-billing.js')
+
 const documentsService = require('../../../lib/services/documents-service')
 const chargeVersionService = require('../../../lib/services/charge-versions')
 
@@ -233,7 +235,8 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
     // Let the water-abstraction-system know a new charge version has been added. It will then determine if the licence
     // needs to be flagged for supplementary billing based on the new charge version and how long the licence was in
     // workflow
-    await system.chargeVersionFlagSupplementaryBilling(persistedChargeVersion.id, chargeVersionWorkflow.id)
+    await systemChargeVersionConnector.chargeVersionFlagSupplementaryBilling(persistedChargeVersion.id)
+    await systemWorkflowConnector.workflowFlagSupplementaryBilling(chargeVersionWorkflow.id)
   } catch (error) {
     logger.error('Flag supplementary request to system failed', error.stack)
   }
