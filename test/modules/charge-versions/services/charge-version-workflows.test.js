@@ -23,7 +23,8 @@ const chargeVersionWorkflowService = require('../../../../src/modules/charge-ver
 const documentsService = require('../../../../src/lib/services/documents-service')
 const service = require('../../../../src/lib/services/service')
 const chargeVersionService = require('../../../../src/lib/services/charge-versions')
-const system = require('../../../../src/lib/connectors/system/charge-version-supplementary-billing.js')
+const systemChargeVersionConnector = require('../../../../src/lib/connectors/system/charge-version-supplementary-billing.js')
+const systemWorkflowConnector = require('../../../../src/lib/connectors/system/workflow-supplementary-billing.js')
 
 // Models
 const ChargeVersionWorkflow = require('../../../../src/lib/models/charge-version-workflow')
@@ -88,7 +89,8 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
     sandbox.stub(chargeVersionService, 'create')
 
-    sandbox.stub(system, 'chargeVersionFlagSupplementaryBilling').resolves()
+    sandbox.stub(systemChargeVersionConnector, 'chargeVersionFlagSupplementaryBilling').resolves()
+    sandbox.stub(systemWorkflowConnector, 'workflowFlagSupplementaryBilling').resolves()
 
     sandbox.stub(logger, 'error')
   })
@@ -411,8 +413,12 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     test('the licence is flagged for supplementary billing', async () => {
       await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
 
-      expect(system.chargeVersionFlagSupplementaryBilling.calledWith(
-        chargeVersionWorkflow.chargeVersion.id, chargeVersionWorkflow.id
+      expect(systemChargeVersionConnector.chargeVersionFlagSupplementaryBilling.calledWith(
+        chargeVersionWorkflow.chargeVersion.id
+      )).to.be.true()
+
+      expect(systemWorkflowConnector.workflowFlagSupplementaryBilling.calledWith(
+        chargeVersionWorkflow.id
       )).to.be.true()
     })
 
