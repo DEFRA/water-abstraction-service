@@ -8,6 +8,7 @@ const { v4: uuid } = require('uuid')
 // Services
 const licencesService = require('../../../../src/lib/services/licences')
 const chargeVersionWorkflowService = require('../../../../src/modules/charge-versions/services/charge-version-workflows')
+const system = require('../../../../src/lib/connectors/system/workflow-supplementary-billing.js')
 
 // Models
 const ChargeVersion = require('../../../../src/lib/models/charge-version')
@@ -29,7 +30,7 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
     sandbox.stub(controller, 'getEntity')
 
     sandbox.stub(licencesService, 'getLicenceById')
-    sandbox.stub(licencesService, 'flagForSupplementaryBilling').resolves()
+    sandbox.stub(system, 'workflowFlagSupplementaryBilling').resolves()
 
     sandbox.stub(licenceVersions, 'findByLicenceId').resolves({ licenceId: 'test-lv-id', version: 100, increment: 1 })
     sandbox.stub(chargeVersionWorkflowService, 'getAllWithLicenceHolderWithPaging').resolves({
@@ -370,6 +371,12 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
       test('the service delete() method is called with the charge version workflow', async () => {
         expect(chargeVersionWorkflowService.delete.calledWith(
           request.pre.chargeVersionWorkflow
+        )).to.be.true()
+      })
+
+      test('the service flags the licence for supplementary billing', async () => {
+        expect(system.workflowFlagSupplementaryBilling.calledWith(
+          request.pre.chargeVersionWorkflow.id
         )).to.be.true()
       })
 

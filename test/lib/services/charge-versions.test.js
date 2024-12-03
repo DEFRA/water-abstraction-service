@@ -17,7 +17,6 @@ const licencesService = require('../../../src/lib/services/licences')
 const notesService = require('../../../src/lib/services/notes-service')
 const chargeVersionService = require('../../../src/lib/services/charge-versions')
 const chargeElementService = require('../../../src/lib/services/charge-elements')
-const system = require('../../../src/lib/connectors/system/supplementary-billing.js')
 const invoiceAccountsService = require('../../../src/lib/services/invoice-accounts-service')
 
 // Models
@@ -50,9 +49,7 @@ experiment('lib/services/charge-versions', () => {
     sandbox.stub(chargeVersionRepo, 'findMany')
     sandbox.stub(licencesService, 'getLicenceById').resolves({})
     sandbox.stub(notesService, 'decorateWithNote').resolves({ ...data, note })
-    sandbox.stub(licencesService, 'flagForSupplementaryBilling')
     sandbox.stub(chargeElementService, 'create')
-    sandbox.stub(system, 'flagSupplementaryBilling')
     sandbox.stub(invoiceAccountsService, 'decorateWithInvoiceAccount').resolves({
       id: 'test-charge-version-id',
       invoiceAccount: { id: 'test-invoice-account-id' }

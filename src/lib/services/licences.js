@@ -129,22 +129,6 @@ const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
 }
 
 /**
- * Ensures the specified licence is included in the next supplementary bill run
- * @param {String} licenceId
- */
-const flagForSupplementaryBilling = (licenceId, scheme = 'alcs') => {
-  const argument = {}
-
-  if (scheme === 'alcs') {
-    argument.includeInSupplementaryBilling = INCLUDE_IN_SUPPLEMENTARY_BILLING.yes
-  } else {
-    argument.includeInSrocSupplementaryBilling = true
-  }
-
-  repos.licences.update(licenceId, argument)
-}
-
-/**
  * Retrieves the invoices associated with a licence
  * Used in the UI bills tab
  * @param {String} licenceId
@@ -221,13 +205,6 @@ const getLicenceVersionPurposeConditionsByLicenceId = async (licenceId, code) =>
   return conditions.getLicenceVersionPurposeConditionsByLicenceId(licenceId, code)
 }
 
-const markLicenceForSupplementaryBilling = licenceId =>
-  repos.licences.updateIncludeLicenceInSupplementaryBilling(
-    licenceId,
-    INCLUDE_IN_SUPPLEMENTARY_BILLING.no,
-    INCLUDE_IN_SUPPLEMENTARY_BILLING.yes
-  )
-
 exports.getLicenceById = getLicenceById
 exports.getLicencesByLicenceRefs = getLicencesByLicenceRefs
 exports.getLicenceVersionById = getLicenceVersionById
@@ -238,10 +215,8 @@ exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementary
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch
 exports.updateIncludeInSupplementaryBillingStatusForBatchCreatedDate = updateIncludeInSupplementaryBillingStatusForBatchCreatedDate
 exports.updateIncludeInSrocSupplementaryBillingStatusForBatch = updateIncludeInSrocSupplementaryBillingStatusForBatch
-exports.flagForSupplementaryBilling = flagForSupplementaryBilling
 exports.getLicenceInvoices = getLicenceInvoices
 exports.getLicencesByInvoiceAccountId = getLicencesByInvoiceAccountId
 exports.getReturnsByLicenceId = getReturnsByLicenceId
 exports.getScheduledNotificationsByLicenceId = getScheduledNotificationsByLicenceId
 exports.getLicenceVersionPurposeConditionsByLicenceId = getLicenceVersionPurposeConditionsByLicenceId
-exports.markLicenceForSupplementaryBilling = markLicenceForSupplementaryBilling

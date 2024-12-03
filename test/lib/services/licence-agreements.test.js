@@ -19,6 +19,7 @@ const licenceService = require('../../../src/lib/services/licences')
 const licenceAgreementsService = require('../../../src/lib/services/licence-agreements')
 const eventsService = require('../../../src/lib/services/events')
 const service = require('../../../src/lib/services/service')
+const system = require('../../../src/lib/connectors/system/licence-supplementary-billing.js')
 
 // Mappers
 const licenceAgreementMapper = require('../../../src/lib/mappers/licence-agreement')
@@ -52,7 +53,7 @@ experiment('src/lib/services/licence-agreements', () => {
   beforeEach(async () => {
     sandbox.stub(agreementsService, 'getAgreementByCode')
 
-    sandbox.stub(licenceService, 'flagForSupplementaryBilling')
+    sandbox.stub(system, 'licenceFlagSupplementaryBilling')
     sandbox.stub(licenceService, 'getLicenceByLicenceRef')
 
     sandbox.stub(eventsService, 'create')
@@ -141,7 +142,7 @@ experiment('src/lib/services/licence-agreements', () => {
       })
 
       test('the licence is flagged for supplementary billing', async () => {
-        expect(licenceService.flagForSupplementaryBilling.calledWith(
+        expect(system.licenceFlagSupplementaryBilling.calledWith(
           tempLicenceId
         )).to.be.true()
       })
@@ -193,7 +194,7 @@ experiment('src/lib/services/licence-agreements', () => {
       })
 
       test('the licence is flagged for supplementary billing', async () => {
-        expect(licenceService.flagForSupplementaryBilling.calledWith(
+        expect(system.licenceFlagSupplementaryBilling.calledWith(
           licence.id
         )).to.be.true()
       })
@@ -253,7 +254,7 @@ experiment('src/lib/services/licence-agreements', () => {
       })
 
       test('the licence is flagged for supplementary billing', async () => {
-        expect(licenceService.flagForSupplementaryBilling.calledWith(
+        expect(system.licenceFlagSupplementaryBilling.calledWith(
           licence.id
         )).to.be.true()
       })

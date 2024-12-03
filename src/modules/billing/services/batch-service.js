@@ -24,6 +24,7 @@ const billingVolumesService = require('./billing-volumes-service')
 const invoiceService = require('../../../lib/services/invoice-service')
 const licencesService = require('../../../lib/services/licences')
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs')
+
 // Models
 const Event = require('../../../lib/models/event')
 const Batch = require('../../../lib/models/batch')
@@ -412,8 +413,6 @@ const deleteBatchInvoice = async (batch, invoiceId, originalBillingInvoiceId = n
   // Set batch status back to 'processing'
   await setStatus(batch.id, Batch.BATCH_STATUS.processing)
   try {
-    await _flagLicencesForSupplementaryBilling(invoice.billingInvoiceLicences, batch.scheme)
-
     if (rebillInvoiceId && originalBillingInvoiceId) {
       // find the original Invoice and rebilling invoice (reversal of resissue)
       const originalInvoice = invoice.originalBillingInvoice
@@ -517,12 +516,6 @@ const requestCMBatchGeneration = async batchId => {
   const transactionCount = await getBatchTransactionCount(batch.id)
   if (transactionCount > 0) {
     await chargeModuleBillRunConnector.generate(batch.externalId)
-  }
-}
-
-const _flagLicencesForSupplementaryBilling = async (billingInvoiceLicences, scheme) => {
-  for (const billingInvoiceLicence of billingInvoiceLicences) {
-    licencesService.flagForSupplementaryBilling(billingInvoiceLicence.licenceId, scheme)
   }
 }
 

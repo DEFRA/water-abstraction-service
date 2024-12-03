@@ -22,6 +22,7 @@ const agreementsService = require('./agreements')
 const licencesService = require('./licences')
 const service = require('./service')
 const eventService = require('./events')
+const system = require('../connectors/system/licence-supplementary-billing.js')
 
 const EVENT_TYPES = {
   create: {
@@ -75,11 +76,11 @@ const deleteLicenceAgreementById = async (licenceAgreementId, issuer) => {
   // Get licence
   const licence = await licencesService.getLicenceByLicenceRef(licenceAgreement.licenceNumber)
 
-  // Log event and flag licence for supplementary billing
-  return Promise.all([
-    createEvent(EVENT_TYPES.delete, licenceAgreement, issuer),
-    new Date(licenceAgreement.dateRange.startDate) < new Date(config.billing.srocStartDate) && licencesService.flagForSupplementaryBilling(licence.id)
-  ])
+  // Flag for pre sroc supplementary billing
+  await _flagForPreSrocSupplementaryBilling(licenceAgreement.dateRange.startDate, licence.id)
+
+  // Log event
+  await createEvent(EVENT_TYPES.delete, licenceAgreement, issuer)
 }
 
 /**
@@ -128,11 +129,11 @@ const createLicenceAgreement = async (licence, data, issuer) => {
 
     licenceAgreement.id = licenceAgreementId
 
-    // Log event and flag licence for supplementary billing
-    await Promise.all([
-      createEvent(EVENT_TYPES.create, licenceAgreement, issuer),
-      new Date(licenceAgreement.dateRange.startDate) < new Date(config.billing.srocStartDate) && licencesService.flagForSupplementaryBilling(licence.id)
-    ])
+    // Flag for pre sroc supplementary billing
+    await _flagForPreSrocSupplementaryBilling(licenceAgreement.dateRange.startDate, licence.id)
+
+    // Log event
+    await createEvent(EVENT_TYPES.create, licenceAgreement, issuer)
 
     // Return the updated model
     return licenceAgreement
@@ -146,7 +147,7 @@ const createLicenceAgreement = async (licence, data, issuer) => {
 
 /**
  * Patch an existing licence agreement
- * @param {String} agreemntId
+ * @param {String} agreementId
  * @param {Object} data - data for the licence agreement
  * @param {String} data.endDate - the agreement end date
  * @param {User} issuer
@@ -159,11 +160,28 @@ const patchLicenceAgreement = async (licenceAgreementId, data, issuer) => {
   // Patch
   const response = await licenceAgreementRepo.update(licenceAgreementId, data)
 
-  // Log event and flag licence for supplementary billing
-  return Promise.all([
-    createEvent(EVENT_TYPES.update, licenceAgreement, issuer),
-    new Date(licenceAgreement.dateRange.startDate) < new Date(config.billing.srocStartDate) && licencesService.flagForSupplementaryBilling(response.licence.licenceId)
-  ])
+  // Flag for pre sroc supplementary billing
+  await _flagForPreSrocSupplementaryBilling(licenceAgreement.dateRange.startDate, response.licence.licenceId)
+
+  // Log event
+  return createEvent(EVENT_TYPES.update, licenceAgreement, issuer)
+}
+
+/**
+ * Flag for pre-sroc supplementary billing
+ *
+ * Changes to the licence agreement could mean flagging it for pre-sroc supplementary billing
+ * If the licence agreement start date is before the start of sroc billing (1st April 2022), then we flag it for
+ * pre-sroc supplementary billing. We do not flag for sroc or two-part tariff supplementary billing for changing to the
+ * licence agreement. This is because the licence agreements has no affect on licences being picked up for sroc and two
+ * part tariff billing.
+ *
+ * @private
+ */
+const _flagForPreSrocSupplementaryBilling = async (startDate, licenceId) => {
+  if (new Date(startDate) < new Date(config.billing.srocStartDate)) {
+    await system.licenceFlagSupplementaryBilling(licenceId, 'alcs')
+  }
 }
 
 exports.getLicenceAgreementById = getLicenceAgreementById

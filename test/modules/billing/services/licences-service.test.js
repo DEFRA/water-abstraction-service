@@ -16,8 +16,8 @@ const Decimal = require('decimal.js-light')
 const repos = require('../../../../src/lib/connectors/repos')
 
 const licencesService = require('../../../../src/modules/billing/services/licences-service')
+const system = require('../../../../src/lib/connectors/system/licence-supplementary-billing.js')
 const invoiceAccountService = require('../../../../src/lib/services/invoice-accounts-service')
-const generalLicencesService = require('../../../../src/lib/services/licences')
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service')
 const { BatchStatusError } = require('../../../../src/modules/billing/lib/errors')
 
@@ -28,7 +28,7 @@ experiment('modules/billing/services/licences-service', () => {
     batch = new Batch()
 
     sandbox.stub(repos.licences, 'findByBatchIdForTwoPartTariffReview')
-    sandbox.stub(generalLicencesService, 'flagForSupplementaryBilling')
+    sandbox.stub(system, 'licenceFlagSupplementaryBilling')
 
     sandbox.stub(repos.billingVolumes, 'deleteByBatchIdAndLicenceId')
     sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchIdAndLicenceId')
@@ -104,8 +104,8 @@ experiment('modules/billing/services/licences-service', () => {
       })
 
       test('licence is flagged for supplementary billing', async () => {
-        expect(generalLicencesService.flagForSupplementaryBilling.calledWith(
-          licenceId
+        expect(system.licenceFlagSupplementaryBilling.calledWith(
+          licenceId, 'alcs'
         )).to.be.true()
       })
 
@@ -113,7 +113,7 @@ experiment('modules/billing/services/licences-service', () => {
         sinon.assert.callOrder(
           repos.billingVolumes.deleteByBatchIdAndLicenceId,
           repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId,
-          generalLicencesService.flagForSupplementaryBilling
+          system.licenceFlagSupplementaryBilling
         )
       })
     })

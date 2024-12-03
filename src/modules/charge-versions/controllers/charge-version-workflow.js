@@ -4,6 +4,7 @@ const Boom = require('@hapi/boom')
 
 const chargeVersionsWorkflowService = require('../services/charge-version-workflows')
 const licencesService = require('../../../lib/services/licences')
+const system = require('../../../lib/connectors/system/workflow-supplementary-billing.js')
 
 const controller = require('../../../lib/controller')
 const userMapper = require('../../../lib/mappers/user')
@@ -91,11 +92,21 @@ const patchChargeVersionWorkflow = async (request, h) => {
 
 const deleteChargeVersionWorkflow = async (request, h) => {
   const { chargeVersionWorkflow } = request.pre
+
   try {
+    // Licences in workflow get excluded from billing. This means when we delete a workflow record we need to check if
+    // that licence has missed any annual bill runs and therefore needs to be flagged for supplementary billing
+    // We do this by making a call to the system repo that handles all the logic for supplementary billing flags.
+    // This route is only deleting workflow records that have either been removed by the user or the charge version has
+    // not been approved. This does not cover charge versions being approved. That happens elsewhere.
+    await system.workflowFlagSupplementaryBilling(chargeVersionWorkflow.id)
     await chargeVersionsWorkflowService.delete(chargeVersionWorkflow)
+
     return h.response().code(204)
-  } catch (err) {
-    return mapErrorResponse(err)
+  } catch (error) {
+    logger.error('Flag supplementary request to system failed', error.stack)
+
+    return mapErrorResponse(error)
   }
 }
 

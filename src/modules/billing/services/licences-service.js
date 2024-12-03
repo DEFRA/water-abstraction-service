@@ -5,6 +5,7 @@ const Batch = require('../../../lib/models/batch')
 const { BatchStatusError } = require('../lib/errors')
 const licencesService = require('../../../lib/services/licences')
 const invoiceAccountService = require('../../../lib/services/invoice-accounts-service')
+const system = require('../../../lib/connectors/system/licence-supplementary-billing.js')
 
 const mapItem = (licence, invoiceAccount) => ({
   licenceId: licence.licenceId,
@@ -54,8 +55,11 @@ const deleteBatchLicence = async (batch, licenceId) => {
   await repos.billingVolumes.deleteByBatchIdAndLicenceId(batch.id, licenceId)
   // only the 2PT part will be deleted from the bill run
   await repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId(batch.id, licenceId, true)
+
   // flag for supplementary billing
-  await licencesService.flagForSupplementaryBilling(licenceId)
+  // This route is only used by pre-sroc two-part tariff bills meaning the only flag that would be put on any licence
+  // coming through here would only be pre-sroc ('alcs')
+  await system.licenceFlagSupplementaryBilling(licenceId, 'alcs')
 }
 
 const updateIncludeInSupplementaryBillingStatusForEmptyBatch = async batchId => {

@@ -126,7 +126,6 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForSentBatch').resolves()
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForBatchCreatedDate').resolves()
     sandbox.stub(licencesService, 'updateIncludeInSrocSupplementaryBillingStatusForBatch').resolves()
-    sandbox.stub(licencesService, 'flagForSupplementaryBilling').resolves()
 
     sandbox.stub(chargeModuleBillRunConnector, 'create').resolves()
     sandbox.stub(chargeModuleBillRunConnector, 'get').resolves()
