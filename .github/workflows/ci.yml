@@ -54,7 +54,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of sonarcloud analysis
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of SonarQube analysis
 
       # Before we do anything, check we haven't accidentally left any `experiment.only()` or `test.only(` statements in
       # the tests
@@ -95,19 +95,13 @@ jobs:
         run: |
           npm run migrate
 
-      # This includes an extra run step. The sonarcloud analysis will be run in a docker container with the current
-      # folder mounted as `/github/workspace`. The problem is when the lcov.info file is generated it will reference the
-      # code in the current folder. So to enable sonarcloud to matchup code coverage with the files we use sed to update
-      # the references in lcov.info
-      # https://community.sonarsource.com/t/code-coverage-doesnt-work-with-github-action/16747/6
       - name: Run unit tests
         run: |
           npm test
-          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' coverage/lcov.info
 
-      - name: Analyze with SonarCloud
+      - name: Analyze with SonarQube
         if: github.actor != 'dependabot[bot]'
-        uses: sonarsource/sonarcloud-github-action@master
+        uses: sonarsource/sonarqube-scan-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This is provided automatically by GitHub
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # This needs to be set in your repo; settings -> secrets
