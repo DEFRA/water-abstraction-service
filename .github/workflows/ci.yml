@@ -95,15 +95,9 @@ jobs:
         run: |
           npm run migrate
 
-      # This includes an extra run step. The SonarQube analysis will be run in a docker container with the current
-      # folder mounted as `/github/workspace`. The problem is when the lcov.info file is generated it will reference the
-      # code in the current folder. So to enable SonarQube to matchup code coverage with the files we use sed to update
-      # the references in lcov.info
-      # https://community.sonarsource.com/t/code-coverage-doesnt-work-with-github-action/16747/6
       - name: Run unit tests
         run: |
           npm test
-          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' coverage/lcov.info
 
       - name: Analyze with SonarQube
         if: github.actor != 'dependabot[bot]'
