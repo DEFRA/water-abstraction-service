@@ -93,7 +93,7 @@ WHERE code = 'INFLO' AND subcode = 'TYPE';
 UPDATE water.licence_version_purpose_condition_types
 SET param_1_label = 'Rate (l/s)',
     param_2_label = 'Where measured'
-WHERE code = 'INFLO' AND subcode = 'RATE';
+WHERE code = 'INFLR' AND subcode = 'RATE';
 
 UPDATE water.licence_version_purpose_condition_types
 SET param_1_label = 'Type'
