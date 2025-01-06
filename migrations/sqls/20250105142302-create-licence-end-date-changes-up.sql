@@ -32,5 +32,6 @@ CREATE TABLE water.licence_end_date_changes (
   nald_date date NULL,
   wrls_date date NULL,
   created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
-  updated_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
+  updated_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  CONSTRAINT licence_end_date_changes_unique UNIQUE (licence_id, date_type)
 );
