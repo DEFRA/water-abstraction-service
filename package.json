@@ -27,7 +27,6 @@
     "@hapi/vision": "^7.0.3",
     "@sindresorhus/is": "^4.0.0",
     "aws-sdk": "^2.1658.0",
-    "blipp": "^4.0.2",
     "bluebird": "^3.7.2",
     "bookshelf": "^1.2.0",
     "bookshelf-case-converter-plugin": "^2.0.0",

@@ -2,7 +2,6 @@
 
 require('dotenv').config()
 
-const Blipp = require('blipp')
 const Hapi = require('@hapi/hapi')
 const HapiAuthJwt2 = require('hapi-auth-jwt2')
 const moment = require('moment')
@@ -34,11 +33,6 @@ const _registerServerPlugins = async (server) => {
   // Service plugins
   await server.register(HapiPinoPlugin())
   await server.register(plugins)
-
-  await server.register({
-    plugin: Blipp,
-    options: config.blipp
-  })
 
   // JWT token auth
   await server.register(HapiAuthJwt2)

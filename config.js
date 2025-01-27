@@ -42,10 +42,6 @@ module.exports = {
     alcsEndYear: 2022
   },
 
-  blipp: {
-    showAuth: true
-  },
-
   jobs: {
     batchNotifications: {
       requestEvent: 60000, // 1 minute
