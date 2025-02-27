@@ -66,6 +66,9 @@ const getActiveReturns = async returnIds => {
  * @return {Promise<Array>}        - all returns matching criteria
  */
 const getCurrentDueReturns = async (excludeLicences, returnCycle) => {
+
+  console.log("return cycle = " + returnCycle)
+
   const { startDate, endDate, isSummer, dueDate } = returnCycle
 
   const filter = {
