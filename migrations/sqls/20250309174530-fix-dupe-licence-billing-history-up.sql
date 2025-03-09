@@ -32,14 +32,24 @@
  */
 BEGIN;
 
--- Update the billing invoices to assign the account against MD/028/0003/012
-UPDATE water.billing_invoices AS tgt
-SET
-  invoice_account_id = (SELECT ia.invoice_account_id FROM crm_v2.invoice_accounts ia WHERE ia.invoice_account_number = 'B88899044A'),
-  invoice_account_number = 'B88899044A',
-  date_updated = now()
-WHERE
-  tgt.invoice_account_number = 'B88899074A';
+-- Update the billing invoices to assign the account against MD/028/0003/012. We have to wrap it in a check to because
+-- the crm_v2 schema and tables don't exist when this query is run against CI. But we can't put this query in
+-- water-abstraction-tactical-crm because water.licences doesn't exist there!
+DO $$
+  BEGIN
+    IF EXISTS
+      (SELECT 1 FROM information_schema.tables WHERE table_schema = 'crm_v2' AND table_name = 'invoice_accounts')
+    THEN
+      UPDATE water.billing_invoices AS tgt
+      SET
+        invoice_account_id = (SELECT ia.invoice_account_id FROM crm_v2.invoice_accounts ia WHERE ia.invoice_account_number = 'B88899044A'),
+        invoice_account_number = 'B88899044A',
+        date_updated = now()
+      WHERE
+        tgt.invoice_account_number = 'B88899074A';
+    END IF;
+  END
+$$;
 
 -- Update the billing invoice licences to assign them to MD/028/0003/012
 UPDATE water.billing_invoice_licences AS tgt
