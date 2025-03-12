@@ -235,7 +235,8 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
     // Let the water-abstraction-system know a new charge version has been added. It will then determine if the licence
     // needs to be flagged for supplementary billing based on the new charge version and how long the licence was in
     // workflow
-    await systemChargeVersionConnector.chargeVersionFlagSupplementaryBilling(persistedChargeVersion.id)
+    const { id, licence, dateRange } = persistedChargeVersion
+    await systemChargeVersionConnector.chargeVersionFlagSupplementaryBilling(id, licence.id, dateRange.startDate)
     await systemWorkflowConnector.workflowFlagSupplementaryBilling(chargeVersionWorkflow.id)
   } catch (error) {
     logger.error('Flag supplementary request to system failed', error.stack)
