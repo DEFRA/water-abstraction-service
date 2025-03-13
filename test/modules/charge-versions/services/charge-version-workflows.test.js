@@ -398,6 +398,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       chargeVersionWorkflow.createdBy = new User(456, 'someone-else@example.com')
       chargeVersionWorkflow.licence = new Licence(uuid())
       chargeVersionWorkflow.chargeVersion = new ChargeVersion(uuid())
+      chargeVersionWorkflow.chargeVersion.dateRange = new DateRange('2019-01-01', null)
 
       chargeVersionService.create.resolves(chargeVersionWorkflow.chargeVersion)
     })
@@ -414,7 +415,9 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
 
       expect(systemChargeVersionConnector.chargeVersionFlagSupplementaryBilling.calledWith(
-        chargeVersionWorkflow.chargeVersion.id
+        chargeVersionWorkflow.chargeVersion.id,
+        chargeVersionWorkflow.licence.id,
+        chargeVersionWorkflow.chargeVersion.dateRange.startDate
       )).to.be.true()
 
       expect(systemWorkflowConnector.workflowFlagSupplementaryBilling.calledWith(
