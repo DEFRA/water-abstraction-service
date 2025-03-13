@@ -38,7 +38,6 @@ const LicenceVersion = require('../../../../src/lib/models/licence-version')
 
 // Mappers
 const chargeVersionWorkflowMapper = require('../../../../src/lib/mappers/charge-version-workflow')
-const { date } = require('joi')
 
 const roleId = uuid()
 
