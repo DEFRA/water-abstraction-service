@@ -15,7 +15,6 @@ const isTlsConnection = (process.env.REDIS_HOST || '').includes('aws')
 const isRedisLazy = !!process.env.LAZY_REDIS
 
 module.exports = {
-
   frontEnds: {
     viewMyLicence: {
       baseUrl: process.env.BASE_URL || 'http://localhost:8000'
@@ -60,7 +59,7 @@ module.exports = {
   log: {
     // Credit to https://stackoverflow.com/a/323546/6117745 for how to handle
     // converting the env var to a boolean
-    logInTest: (String(process.env.LOG_IN_TEST) === 'true') || false,
+    logInTest: String(process.env.LOG_IN_TEST) === 'true' || false,
     level: process.env.WRLS_LOG_LEVEL || 'warn'
   },
 
@@ -214,7 +213,7 @@ module.exports = {
       host: process.env.REDIS_HOST || '127.0.0.1',
       port: process.env.REDIS_PORT || 6379,
       password: process.env.REDIS_PASSWORD || '',
-      ...(isTlsConnection) && { tls: {} },
+      ...(isTlsConnection && { tls: {} }),
       db: process.env.NODE_ENV === 'test' ? 4 : 2,
       lazyConnect: isRedisLazy,
       maxRetriesPerRequest: null,
@@ -223,7 +222,8 @@ module.exports = {
   },
 
   featureToggles: {
-    deleteAllBillingData: process.env.ENABLE_DELETE_ALL_BILLING_DATA_FEATURE === 'true' && !isProduction
+    deleteAllBillingData: process.env.ENABLE_DELETE_ALL_BILLING_DATA_FEATURE === 'true' && !isProduction,
+    batchNotificationsJob: process.env.ENABLE_BATCH_NOTIFICATIONS_JOB === 'true'
   },
 
   slackHook: process.env.SLACK_HOOK
