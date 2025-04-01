@@ -1,7 +1,6 @@
 'use strict'
 
 // Config
-
 const config = require('../../../config.js')
 
 // Batch Notifications
