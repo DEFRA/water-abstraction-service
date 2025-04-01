@@ -1,9 +1,13 @@
 'use strict'
 
 // Test framework dependencies
-const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script()
+const { experiment, test, beforeEach, afterEach } = (exports.lab = require('@hapi/lab').script())
 const { expect } = require('@hapi/code')
 const sandbox = require('sinon').createSandbox()
+const Sinon = require('sinon')
+
+// Things to stub
+const config = require('../../../config')
 
 // Thing under test
 const { StartUpJobsService } = require('../../../src/lib/queue-manager/start-up-jobs-service')
@@ -15,6 +19,10 @@ experiment('lib/queue-manager/start-up-jobs-service', () => {
     queueManager = {
       add: sandbox.spy()
     }
+
+    Sinon.stub(config, 'featureToggles').value({
+      batchNotificationsJob: true
+    })
   })
 
   afterEach(async () => {

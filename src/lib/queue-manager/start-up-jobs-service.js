@@ -1,5 +1,8 @@
 'use strict'
 
+// Config
+const config = require('../../../config.js')
+
 // Batch Notifications
 const checkStatus = require('../../modules/batch-notifications/lib/jobs/check-status')
 const refreshEvent = require('../../modules/batch-notifications/lib/jobs/refresh-event')
@@ -16,7 +19,10 @@ const syncLicenceVersionPurposeConditionsFromDigitise = require('../../modules/g
 
 class StartUpJobsService {
   static go (queueManager) {
-    this._batchNotificationsJobs(queueManager)
+    if (config.featureToggles.batchNotificationsJob) {
+      this._batchNotificationsJobs(queueManager)
+    }
+
     this._billingJobs(queueManager)
     this._gaugingStationJobs(queueManager)
   }
