@@ -18,14 +18,14 @@ const syncLicenceGaugingStationsFromDigitise = require('../../modules/gauging-st
 const syncLicenceVersionPurposeConditionsFromDigitise = require('../../modules/gauging-stations/jobs/sync-licence-version-purpose-conditions-from-digitise')
 
 class StartUpJobsService {
-  static go(queueManager) {
+  static go (queueManager) {
     this._batchNotificationsJobs(queueManager)
 
     this._billingJobs(queueManager)
     this._gaugingStationJobs(queueManager)
   }
 
-  static async _batchNotificationsJobs(queueManager) {
+  static async _batchNotificationsJobs (queueManager) {
     if (config.featureToggles.batchNotificationsJob) {
       queueManager.add(checkStatus.jobName)
     }
@@ -33,12 +33,12 @@ class StartUpJobsService {
     queueManager.add(sendMessage.jobName)
   }
 
-  static async _billingJobs(queueManager) {
+  static async _billingJobs (queueManager) {
     queueManager.add(customerFileRefresh.jobName)
     queueManager.add(syncChargeCategories.jobName)
   }
 
-  static async _gaugingStationJobs(queueManager) {
+  static async _gaugingStationJobs (queueManager) {
     queueManager.add(syncGaugingStations.jobName)
     queueManager.add(syncLicenceGaugingStationsFromDigitise.jobName)
     queueManager.add(syncLicenceVersionPurposeConditionsFromDigitise.jobName)
