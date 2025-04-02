@@ -161,7 +161,7 @@ class ScheduledNotification extends Model {
    * Convert model to JSON
    * @return {Object}
    */
-  toJSON() {
+  toJSON () {
     return {
       ...super.toJSON(),
       displayStatus: this.displayStatus,
