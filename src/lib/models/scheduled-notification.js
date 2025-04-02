@@ -7,6 +7,7 @@ const validators = require('./validators')
 
 const messageStatuses = {
   draft: 'draft',
+  pending: 'pending',
   sending: 'sending',
   sent: 'sent',
   error: 'error'
@@ -39,6 +40,7 @@ const displayStatuses = {
 const statusMap = new Map()
   .set(messageStatuses.draft, displayStatuses.pending)
   .set(messageStatuses.sending, displayStatuses.pending)
+  .set(messageStatuses.pending, displayStatuses.pending)
   .set(messageStatuses.sent, displayStatuses.sent)
   .set(messageStatuses.error, displayStatuses.error)
 
@@ -159,7 +161,7 @@ class ScheduledNotification extends Model {
    * Convert model to JSON
    * @return {Object}
    */
-  toJSON () {
+  toJSON() {
     return {
       ...super.toJSON(),
       displayStatus: this.displayStatus,
