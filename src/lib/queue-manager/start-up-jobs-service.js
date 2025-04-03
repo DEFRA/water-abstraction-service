@@ -19,16 +19,16 @@ const syncLicenceVersionPurposeConditionsFromDigitise = require('../../modules/g
 
 class StartUpJobsService {
   static go (queueManager) {
-    if (config.featureToggles.batchNotificationsJob) {
-      this._batchNotificationsJobs(queueManager)
-    }
+    this._batchNotificationsJobs(queueManager)
 
     this._billingJobs(queueManager)
     this._gaugingStationJobs(queueManager)
   }
 
   static async _batchNotificationsJobs (queueManager) {
-    queueManager.add(checkStatus.jobName)
+    if (config.featureToggles.batchNotificationsJob) {
+      queueManager.add(checkStatus.jobName)
+    }
     queueManager.add(refreshEvent.jobName)
     queueManager.add(sendMessage.jobName)
   }
