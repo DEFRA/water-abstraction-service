@@ -10,7 +10,6 @@ const sendMessage = require('../../modules/batch-notifications/lib/jobs/send-mes
 
 // Billing
 const customerFileRefresh = require('../../modules/billing//jobs/customer-file-refresh')
-const syncChargeCategories = require('../../modules/billing/jobs/sync-charge-categories')
 
 // Gauging Stations
 const syncGaugingStations = require('../../modules/gauging-stations/jobs/sync-gauging-stations')
@@ -35,7 +34,6 @@ class StartUpJobsService {
 
   static async _billingJobs (queueManager) {
     queueManager.add(customerFileRefresh.jobName)
-    queueManager.add(syncChargeCategories.jobName)
   }
 
   static async _gaugingStationJobs (queueManager) {
