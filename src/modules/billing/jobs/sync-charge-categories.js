@@ -24,10 +24,7 @@ const createMessage = () => ([
   JOB_NAME,
   {},
   {
-    jobId: `${JOB_NAME}.${moment().format('YYYYMMDD')}`,
-    repeat: {
-      every: config.import.chargeCategoriesSyncFrequencyInMS
-    }
+    jobId: `${JOB_NAME}.${moment().format('YYYYMMDD')}`
   }
 ])
 
