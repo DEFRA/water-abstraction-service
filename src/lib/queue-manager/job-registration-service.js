@@ -1,7 +1,6 @@
 'use strict'
 
 const billingApproveBatch = require('../../modules/billing/jobs/approve-batch')
-const billingChargeCategoriesSyncFromCsv = require('../../modules/billing/jobs/sync-charge-categories')
 const billingCreateBillRun = require('../../modules/billing/jobs/create-bill-run')
 const billingCreateCharge = require('../../modules/billing/jobs/create-charge')
 const billingCustomerFileRefresh = require('../../modules/billing/jobs/customer-file-refresh')
@@ -71,7 +70,6 @@ class JobRegistrationService {
   static _jobs () {
     return [
       billingApproveBatch,
-      billingChargeCategoriesSyncFromCsv,
       billingCreateBillRun,
       billingCreateCharge,
       billingCustomerFileRefresh,

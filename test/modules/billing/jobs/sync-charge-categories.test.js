@@ -64,7 +64,6 @@ experiment('modules/billing/jobs/sync-charge-categories', () => {
       expect(message[0]).to.equal('billing.charge-categories.sync-from-csv')
       expect(message[1]).to.equal({})
       expect(message[2].jobId).to.startWith('billing.charge-categories.sync-from-csv.20')
-      expect(message[2].repeat).to.exist()
     })
   })
 

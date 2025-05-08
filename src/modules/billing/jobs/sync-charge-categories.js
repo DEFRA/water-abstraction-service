@@ -13,7 +13,6 @@ const JOB_NAME = 'billing.charge-categories.sync-from-csv'
 const csvKey = 'billing-metadata/charge-categories.csv'
 
 // Handy stuff
-const config = require('../../../../config')
 const applicationState = require('../../../lib/services/application-state')
 
 // Charge Categories Repo
@@ -24,10 +23,7 @@ const createMessage = () => ([
   JOB_NAME,
   {},
   {
-    jobId: `${JOB_NAME}.${moment().format('YYYYMMDD')}`,
-    repeat: {
-      every: config.import.chargeCategoriesSyncFrequencyInMS
-    }
+    jobId: `${JOB_NAME}.${moment().format('YYYYMMDD')}`
   }
 ])
 
