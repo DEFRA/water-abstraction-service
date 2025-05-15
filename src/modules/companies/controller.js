@@ -21,6 +21,7 @@ const rowMapper = ret => {
     returnId: ret.return_id,
     startDate: ret.start_date,
     endDate: ret.end_date,
+    dueDate: ret.due_date,
     frequency: ret.returns_frequency,
     returnRequirement: ret.return_requirement,
     status: ret.status,
@@ -44,12 +45,12 @@ const getReturns = async (request, h) => {
   // Get returns matching the documents and other filter params supplied
   // in request GET params
   const returnsFilter = returnsHelper.createReturnsFilter(request, documents)
-  const columms = [
-    'return_id', 'licence_ref', 'start_date', 'end_date',
+  const columns = [
+    'return_id', 'licence_ref', 'start_date', 'end_date', 'due_date',
     'returns_frequency', 'return_requirement', 'status', 'metadata'
   ]
-  const returns = await returnsConnector.returns.findAll(returnsFilter, null, columms)
-
+  const returns = await returnsConnector.returns.findAll(returnsFilter, null, columns)
+//console.log("get returns " + JSON.stringify(returns))
   // Map returns
   return returns.map(rowMapper)
 }
