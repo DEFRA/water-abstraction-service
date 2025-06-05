@@ -103,10 +103,7 @@ const findRecentReturnsByFormatId = async (formatId) => {
   const filter = {
     regime: 'water',
     licence_type: 'abstraction',
-    return_requirement: formatId,
-    start_date: {
-      $gte: '2008-04-01'
-    }
+    return_requirement: formatId
   }
   const sort = {
     end_date: -1

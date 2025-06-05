@@ -132,7 +132,6 @@ experiment('findRecentReturnsByFormatId', () => {
     expect(filter.regime).to.equal('water')
     expect(filter.licence_type).to.equal('abstraction')
     expect(filter.return_requirement).to.equal(formatId)
-    expect(filter.start_date).to.equal({ $gte: '2008-04-01' })
     expect(sort).to.equal({ end_date: -1 })
     expect(columns).to.include([
       'return_id', 'licence_ref', 'return_requirement',
