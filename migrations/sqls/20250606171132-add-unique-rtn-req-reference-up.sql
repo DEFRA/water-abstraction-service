@@ -27,8 +27,6 @@
   functionality whilst we work on using the new `reference` instead of `legacy_id`.
 */
 
-BEGIN;
-
 -- 1. Add the new column
 ALTER TABLE water.return_requirements ADD COLUMN reference INTEGER;
 
@@ -40,5 +38,3 @@ DO $$
     EXECUTE format('CREATE SEQUENCE return_reference_seq START %s', max_legacy_id + 1);
   END
 $$;
-
-COMMIT;
