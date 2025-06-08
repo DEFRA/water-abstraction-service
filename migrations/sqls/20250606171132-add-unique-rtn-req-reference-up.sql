@@ -101,7 +101,7 @@ ALTER TABLE water.return_requirements ALTER COLUMN reference SET DEFAULT nextval
 ALTER TABLE water.return_requirements ALTER COLUMN reference SET NOT NULL;
 
 -- 8. Add a unique constraint
-ALTER TABLE water.return_requirements ADD CONSTRAINT return_requirements_reference_key UNIQUE (reference);
+ALTER TABLE water.return_requirements ADD CONSTRAINT return_requirements_reference_unique UNIQUE (reference);
 
 -- 9. Create a trigger that will sync legacy_id to reference when a new record is inserted
 CREATE OR REPLACE FUNCTION sync_legacy_id_to_reference()

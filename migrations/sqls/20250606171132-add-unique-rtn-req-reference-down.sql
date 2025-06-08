@@ -10,7 +10,7 @@ DROP FUNCTION IF EXISTS sync_legacy_id_to_reference();
 ALTER TABLE water.return_requirements ALTER COLUMN reference DROP DEFAULT;
 
 -- 4. Drop the unique constraint on reference (if you created it)
-ALTER TABLE water.return_requirements DROP CONSTRAINT IF EXISTS return_requirements_reference_key;
+ALTER TABLE water.return_requirements DROP CONSTRAINT IF EXISTS return_requirements_reference_unique;
 
 -- 5. Drop the reference column
 ALTER TABLE water.return_requirements DROP COLUMN IF EXISTS reference;
