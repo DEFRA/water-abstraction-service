@@ -16,4 +16,4 @@ ALTER TABLE water.return_requirements DROP CONSTRAINT IF EXISTS return_requireme
 ALTER TABLE water.return_requirements DROP COLUMN IF EXISTS reference;
 
 -- 6. Drop the sequence
-DROP SEQUENCE IF EXISTS return_reference_seq;
+DROP SEQUENCE IF EXISTS water.return_reference_seq;

@@ -95,7 +95,7 @@ SET reference = nextval('return_reference_seq')
 WHERE reference IS NULL;
 
 -- 6. Now the column is fully populated, default it to the next reference for new records
-ALTER TABLE water.return_requirements ALTER COLUMN reference SET DEFAULT nextval('return_reference_seq');
+ALTER TABLE water.return_requirements ALTER COLUMN reference SET DEFAULT nextval('water.return_reference_seq');
 
 -- 7. Make the column not null
 ALTER TABLE water.return_requirements ALTER COLUMN reference SET NOT NULL;
