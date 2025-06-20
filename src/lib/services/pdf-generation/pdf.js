@@ -13,7 +13,11 @@ const {
  */
 const createPdf = async html => {
   const browser = await puppeteer.launch({
-    args: ['--no-proxy-server']
+    executablePath: '/usr/bin/chromium',
+    args: [
+        '--no-proxy-server'
+      , '--no-sandbox'
+    ]
   })
   const page = await browser.newPage()
 
