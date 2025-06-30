@@ -25,8 +25,6 @@ const mapReturn = (row) => {
 /**
  * Given an array of returns, checks each licence number
  * exists in CRM
- * This is required because we currently only show current licences, and
- * therefore we only show returns related to current licences
  * @param {Array} returns
  * @return {Promise} resolves with list of returns filtered by whether
  *                   they exist in the CRM document headers
@@ -36,7 +34,8 @@ const filterReturnsByCRMDocument = async (returns) => {
   const filter = {
     system_external_id: {
       $in: licenceNumbers
-    }
+    },
+    includeExpired: true
   }
   const { data, error } = await documents.findMany(filter, null, null, ['system_external_id'])
 
