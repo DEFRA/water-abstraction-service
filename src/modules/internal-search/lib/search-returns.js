@@ -4,7 +4,6 @@ const helpers = require('@envage/water-abstraction-helpers')
 const { groupBy } = require('../../../lib/object-helpers')
 const { throwIfError } = require('@envage/hapi-pg-rest-api')
 const returnsService = require('../../../lib/connectors/returns')
-const documents = require('../../../lib/connectors/crm/documents')
 const { isReturnId } = require('./query-parser')
 
 /**
@@ -20,37 +19,6 @@ const mapReturn = (row) => {
     ...rest,
     region
   }
-}
-
-/**
- * Given an array of returns, checks each licence number
- * exists in CRM
- * @param {Array} returns
- * @return {Promise} resolves with list of returns filtered by whether
- *                   they exist in the CRM document headers
- */
-const filterReturnsByCRMDocument = async (returns) => {
-  const licenceNumbers = returns.map(row => row.licence_ref)
-  const filter = {
-    system_external_id: {
-      $in: licenceNumbers
-    },
-    includeExpired: true
-  }
-  const { data, error } = await documents.findMany(filter, null, null, ['system_external_id'])
-
-  if (error) {
-    const err = new Error('Error finding CRM document')
-    err.params = {
-      error,
-      licenceNumbers
-    }
-    throw err
-  }
-
-  const validLicenceNumbers = data.map(row => row.system_external_id)
-
-  return returns.filter(row => validLicenceNumbers.includes(row.licence_ref))
 }
 
 /**
@@ -125,13 +93,12 @@ const findRecentReturnsByFormatId = async (formatId) => {
 const searchReturns = async (query) => {
   const finder = isReturnId(query) ? findReturnByReturnId : findRecentReturnsByFormatId
   const returns = await finder(query)
-  const filtered = await filterReturnsByCRMDocument(returns)
-  return filtered.map(mapReturn)
+
+  return returns.map(mapReturn)
 }
 
 exports.mapReturn = mapReturn
 exports.searchReturns = searchReturns
-exports.filterReturnsByCRMDocument = filterReturnsByCRMDocument
 exports.findReturnByReturnId = findReturnByReturnId
 exports.findRecentReturnsByFormatId = findRecentReturnsByFormatId
 exports.mapRecentReturns = mapRecentReturns
