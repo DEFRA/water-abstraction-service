@@ -4,7 +4,6 @@ const { experiment, test, afterEach, beforeEach } = exports.lab = Lab.script()
 const { expect } = require('@hapi/code')
 
 const searchReturns = require('../../../../src/modules/internal-search/lib/search-returns')
-const documents = require('../../../../src/lib/connectors/crm/documents')
 const returnsService = require('../../../../src/lib/connectors/returns')
 
 // Test returns data
@@ -47,29 +46,6 @@ experiment('mapReturn', () => {
   test('It should map a row of data from the returns API to include the region name', async () => {
     const mapped = searchReturns.mapReturn(returns[0])
     expect(mapped.region).to.equal('Midlands')
-  })
-})
-
-experiment('filterReturnsByCRMDocument', () => {
-  let stub
-
-  afterEach(async () => {
-    stub.restore()
-  })
-
-  test('It should throw an error if API response contains error', async () => {
-    stub = sinon.stub(documents, 'findMany').resolves(errorResponse)
-    expect(searchReturns.filterReturnsByCRMDocument(returns)).to.reject()
-  })
-
-  test('It should filter returns for which a CRM document cannot be found', async () => {
-    stub = sinon.stub(documents, 'findMany').resolves({
-      data: [{
-        system_external_id: 'y'
-      }]
-    })
-    const result = await searchReturns.filterReturnsByCRMDocument(returns)
-    expect(result).to.equal([returns[1]])
   })
 })
 
