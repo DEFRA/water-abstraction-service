@@ -67,13 +67,38 @@ experiment('lib/queue-manager/queue-manager', () => {
     experiment('for a job that wishes to start clean', () => {
       beforeEach(async () => {
         job.startClean = true
-        queueManager.register(job)
       })
 
-      test('the existing queue is deleted', async () => {
-        expect(connection.scanStream.calledWith({
-          match: '*test-job*'
-        })).to.be.true()
+      experiment('and we are the foreground (index.js) instance', () => {
+        beforeEach(async () => {
+          sandbox.stub(config, 'isBackground').value(false)
+        })
+
+        test('the existing queue is not deleted', async () => {
+          queueManager.register(job)
+
+          expect(
+            connection.scanStream.calledWith({
+              match: '*test-job*'
+            })
+          ).to.be.false()
+        })
+      })
+
+      experiment('and we are the background (index-background.js) instance', () => {
+        beforeEach(async () => {
+          sandbox.stub(config, 'isBackground').value(true)
+        })
+
+        test('the existing queue is deleted', async () => {
+          queueManager.register(job)
+
+          expect(
+            connection.scanStream.calledWith({
+              match: '*test-job*'
+            })
+          ).to.be.true()
+        })
       })
     })
 
@@ -170,7 +195,7 @@ experiment('lib/queue-manager/queue-manager', () => {
 
       test('connection.scanStream is called with the pattern', async () => {
         expect(connection.scanStream.calledWith({
-          match: pattern
+            match: pattern
         })).to.be.true()
       })
 
