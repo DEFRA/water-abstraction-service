@@ -195,7 +195,7 @@ experiment('lib/queue-manager/queue-manager', () => {
 
       test('connection.scanStream is called with the pattern', async () => {
         expect(connection.scanStream.calledWith({
-            match: pattern
+          match: pattern
         })).to.be.true()
       })
 
