@@ -148,4 +148,185 @@ BEGIN;
   WHERE status = 'draft'
   AND licence_id IN (SELECT licence_id FROM water.licences WHERE licence_ref = '28/39/18/0048');
 
+  -- Delete just the draft return version as no child data exists
+  DELETE FROM water.return_versions
+  WHERE status = 'draft'
+  AND licence_id IN (SELECT licence_id FROM water.licences WHERE licence_ref = '19/55/15/0023');
+
+  -- The draft return version for licence NE/027/0025/009/R01 has child data, so we need to delete this first.
+  -- Delete the mod_logs record for the return version
+  DELETE FROM water.mod_logs
+  WHERE return_version_id IN (
+    SELECT rv.return_version_id FROM water.return_versions rv
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = 'NE/027/0025/009/R01'
+  );
+
+  -- Delete the return_requirement_points records for the return version
+  DELETE FROM water.return_requirement_points
+  WHERE return_requirement_id IN (
+    SELECT rr.return_requirement_id FROM water.return_requirements rr
+    INNER JOIN water.return_versions rv ON rr.return_version_id = rv.return_version_id
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = 'NE/027/0025/009/R01'
+  );
+
+  -- Delete the return_requirement_purposes record for the return version
+  DELETE FROM water.return_requirement_purposes
+  WHERE return_requirement_id IN (
+    SELECT rr.return_requirement_id FROM water.return_requirements rr
+    INNER JOIN water.return_versions rv ON rr.return_version_id = rv.return_version_id
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = 'NE/027/0025/009/R01'
+  );
+
+  -- Delete the return_requirements record for the return version
+  DELETE FROM water.return_requirements
+  WHERE return_version_id IN (
+    SELECT rv.return_version_id FROM water.return_versions rv
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = 'NE/027/0025/009/R01'
+  );
+
+  -- Delete the return_versions record for the return version
+  DELETE FROM water.return_versions
+  WHERE status = 'draft'
+  AND licence_id IN (SELECT licence_id FROM water.licences WHERE licence_ref = 'NE/027/0025/009/R01');
+
+  -- The draft return version for licence SW/045/0000/016 has child data, so we need to delete this first.
+  -- Delete the mod_logs record for the return version
+  DELETE FROM water.mod_logs
+  WHERE return_version_id IN (
+    SELECT rv.return_version_id FROM water.return_versions rv
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = 'SW/045/0000/016'
+  );
+
+  -- Delete the return_requirement_points records for the return version
+  DELETE FROM water.return_requirement_points
+  WHERE return_requirement_id IN (
+    SELECT rr.return_requirement_id FROM water.return_requirements rr
+    INNER JOIN water.return_versions rv ON rr.return_version_id = rv.return_version_id
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = 'SW/045/0000/016'
+  );
+
+  -- Delete the return_requirement_purposes record for the return version
+  DELETE FROM water.return_requirement_purposes
+  WHERE return_requirement_id IN (
+    SELECT rr.return_requirement_id FROM water.return_requirements rr
+    INNER JOIN water.return_versions rv ON rr.return_version_id = rv.return_version_id
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = 'SW/045/0000/016'
+  );
+
+  -- Delete the return_requirements record for the return version
+  DELETE FROM water.return_requirements
+  WHERE return_version_id IN (
+    SELECT rv.return_version_id FROM water.return_versions rv
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = 'SW/045/0000/016'
+  );
+
+  -- Delete the return_versions record for the return version
+  DELETE FROM water.return_versions
+  WHERE status = 'draft'
+  AND licence_id IN (SELECT licence_id FROM water.licences WHERE licence_ref = 'SW/045/0000/016');
+
+  -- The draft return version for licence NW/075/0004/001 has child data, so we need to delete this first.
+  -- Delete the mod_logs record for the return version
+  DELETE FROM water.mod_logs
+  WHERE return_version_id IN (
+    SELECT rv.return_version_id FROM water.return_versions rv
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = 'NW/075/0004/001'
+  );
+
+  -- Delete the return_requirement_points records for the return version
+  DELETE FROM water.return_requirement_points
+  WHERE return_requirement_id IN (
+    SELECT rr.return_requirement_id FROM water.return_requirements rr
+    INNER JOIN water.return_versions rv ON rr.return_version_id = rv.return_version_id
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = 'NW/075/0004/001'
+  );
+
+  -- Delete the return_requirement_purposes record for the return version
+  DELETE FROM water.return_requirement_purposes
+  WHERE return_requirement_id IN (
+    SELECT rr.return_requirement_id FROM water.return_requirements rr
+    INNER JOIN water.return_versions rv ON rr.return_version_id = rv.return_version_id
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = 'NW/075/0004/001'
+  );
+
+  -- Delete the return_requirements record for the return version
+  DELETE FROM water.return_requirements
+  WHERE return_version_id IN (
+    SELECT rv.return_version_id FROM water.return_versions rv
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = 'NW/075/0004/001'
+  );
+
+  -- Delete the return_versions record for the return version
+  DELETE FROM water.return_versions
+  WHERE status = 'draft'
+  AND licence_id IN (SELECT licence_id FROM water.licences WHERE licence_ref = 'NW/075/0004/001');
+
+  -- The draft return version for licence 9/40/02/0112/GR/A has child data, so we need to delete this first.
+  -- Delete the mod_logs record for the return version
+  DELETE FROM water.mod_logs
+  WHERE return_version_id IN (
+    SELECT rv.return_version_id FROM water.return_versions rv
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = '9/40/02/0112/GR/A'
+  );
+
+  -- Delete the return_requirement_points records for the return version
+  DELETE FROM water.return_requirement_points
+  WHERE return_requirement_id IN (
+    SELECT rr.return_requirement_id FROM water.return_requirements rr
+    INNER JOIN water.return_versions rv ON rr.return_version_id = rv.return_version_id
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = '9/40/02/0112/GR/A'
+  );
+
+  -- Delete the return_requirement_purposes record for the return version
+  DELETE FROM water.return_requirement_purposes
+  WHERE return_requirement_id IN (
+    SELECT rr.return_requirement_id FROM water.return_requirements rr
+    INNER JOIN water.return_versions rv ON rr.return_version_id = rv.return_version_id
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = '9/40/02/0112/GR/A'
+  );
+
+  -- Delete the return_requirements record for the return version
+  DELETE FROM water.return_requirements
+  WHERE return_version_id IN (
+    SELECT rv.return_version_id FROM water.return_versions rv
+    INNER JOIN water.licences l ON rv.licence_id = l.licence_id
+    WHERE rv.status = 'draft'
+    AND l.licence_ref = '9/40/02/0112/GR/A'
+  );
+
+  -- Delete the return_versions record for the return version
+  DELETE FROM water.return_versions
+  WHERE status = 'draft'
+  AND licence_id IN (SELECT licence_id FROM water.licences WHERE licence_ref = '9/40/02/0112/GR/A');
+
 COMMIT;
