@@ -86,7 +86,9 @@ class QueueManager {
 
     logger.info(`Registering job: ${wrlsJob.jobName}`)
 
-    if (wrlsJob.startClean) {
+    // We only clean the existing queue if we are the background instance to avoid the race condition scenario where the
+    // foreground instance cleans this job from the queue _after_ the background instance has scheduled it
+    if (wrlsJob.startClean && config.isBackground) {
       this._cleanQueue(wrlsJob.jobName)
     }
 
@@ -108,9 +110,7 @@ class QueueManager {
     try {
       logger.info(`Cleaning queue ${name}`)
       await this.deleteKeysByPattern(`*${name}*`)
-    } catch (err) {
-
-    }
+    } catch (err) {}
   }
 
   /**
@@ -139,10 +139,10 @@ class QueueManager {
       const stream = connection.scanStream({
         match: pattern
       })
-      stream.on('data', keys => {
+      stream.on('data', (keys) => {
         if (keys.length) {
           const pipeline = connection.pipeline()
-          keys.forEach(key => {
+          keys.forEach((key) => {
             pipeline.del(key)
           })
           pipeline.exec()
@@ -151,7 +151,7 @@ class QueueManager {
       stream.on('end', () => {
         resolve()
       })
-      stream.on('error', e => {
+      stream.on('error', (e) => {
         reject(e)
       })
     })
@@ -219,15 +219,13 @@ class QueueManager {
     result.worker = new BullMQ.Worker(wrlsJob.jobName, wrlsJob.handler, workerOptions)
 
     if (wrlsJob.onComplete) {
-      result.worker.on('completed', job => wrlsJob.onComplete(job, this))
+      result.worker.on('completed', (job) => wrlsJob.onComplete(job, this))
     }
 
     result.worker.on('failed', wrlsJob.onFailed)
 
     // This is needed if the job makes use of Bull features such as retry/repeat/cron
-    result.scheduler = wrlsJob.hasScheduler
-      ? new BullMQ.QueueScheduler(wrlsJob.jobName, { connection })
-      : null
+    result.scheduler = wrlsJob.hasScheduler ? new BullMQ.QueueScheduler(wrlsJob.jobName, { connection }) : null
 
     return result
   }
