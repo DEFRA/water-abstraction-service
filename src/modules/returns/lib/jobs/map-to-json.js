@@ -50,7 +50,7 @@ const mapToJson = async (evt, s3Object, user) => {
  * Handler for the 'return-upload-to-json' job in Bull MQ.
  *
  * This will acquire the saved document from AWS S3,
- * convert the XML/CSV to a JSON representation, then put the JSON
+ * convert the CSV to a JSON representation, then put the JSON
  * back to S3 for future processing.
  *
  * @param {Object} job The job data from Bull MQ
