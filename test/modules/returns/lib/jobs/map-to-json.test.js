@@ -6,8 +6,6 @@ const {
   test
 } = exports.lab = require('@hapi/lab').script()
 
-const fs = require('fs')
-const path = require('path')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 const { v4: uuid } = require('uuid')
