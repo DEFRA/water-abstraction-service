@@ -33,7 +33,7 @@ const getValidationError = (validationErrors, subtype) => {
   return (dateErrors.length > 0) ? errorEvent.keys.INVALID_DATE : errorEvent.keys[subtype].INVALID
 }
 /**
- * Validates the object from the S3 bucket using an appropriate adatper
+ * Validates the object from the S3 bucket using an appropriate adapter
  * If validation errors are found, an error is thrown with a key which
  * allows the error type to be stored in the event metadata
  * @param  {Object}  evt   ◊   - upload event
