@@ -3,7 +3,6 @@
 const billingApproveBatch = require('../../modules/billing/jobs/approve-batch')
 const billingCreateBillRun = require('../../modules/billing/jobs/create-bill-run')
 const billingCreateCharge = require('../../modules/billing/jobs/create-charge')
-const billingCustomerFileRefresh = require('../../modules/billing/jobs/customer-file-refresh')
 const billingDeleteErroredBatch = require('../../modules/billing/jobs/delete-errored-batch')
 const billingPopulateBatchChargeVersions = require('../../modules/billing/jobs/populate-batch-charge-versions')
 const billingPrepareTransactions = require('../../modules/billing/jobs/prepare-transactions')
@@ -72,7 +71,6 @@ class JobRegistrationService {
       billingApproveBatch,
       billingCreateBillRun,
       billingCreateCharge,
-      billingCustomerFileRefresh,
       billingDeleteErroredBatch,
       billingPopulateBatchChargeVersions,
       billingPrepareTransactions,

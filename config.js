@@ -193,8 +193,7 @@ module.exports = {
       host: process.env.COGNITO_HOST,
       username: process.env.COGNITO_USERNAME,
       password: process.env.COGNITO_PASSWORD
-    },
-    customerFileRefreshFrequencyInMS: 3600000
+    }
   },
 
   proxy: process.env.PROXY,

@@ -42,7 +42,6 @@ experiment('lib/queue-manager/start-up-jobs-service', () => {
       StartUpJobsService.go(queueManager)
 
       expect(queueManager.add.calledWith('notifications.checkStatus')).to.be.true()
-      expect(queueManager.add.calledWith('billing.customer-file-refresh')).to.be.true()
       expect(queueManager.add.calledWith('gauging-stations.copy-licence-gauging-stations-from-digitise')).to.be.true()
     })
   })

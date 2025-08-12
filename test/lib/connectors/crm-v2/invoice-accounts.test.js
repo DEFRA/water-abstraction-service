@@ -166,20 +166,4 @@ experiment('lib/connectors/crm-v2/invoice-accounts', () => {
       expect(result).to.equal(createdInvoiceAccountAddress)
     })
   })
-
-  experiment('updateInvoiceAccountsWithCustomerFileReference', () => {
-    const fileRef = 'SomeFile'
-    const exportedAt = '2010-10-10'
-    const exportedCustomers = ['cus1', 'cus2']
-
-    beforeEach(async () => {
-      serviceRequest.post.resolves()
-      await invoiceAccountConnector.updateInvoiceAccountsWithCustomerFileReference(fileRef, exportedAt, exportedCustomers)
-    })
-
-    test('makes a request to the expected URL', async () => {
-      const [url] = serviceRequest.post.lastCall.args
-      expect(url).to.equal('http://test.defra/invoice-accounts/customer-file-references')
-    })
-  })
 })
