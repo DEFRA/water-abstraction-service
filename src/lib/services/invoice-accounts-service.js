@@ -204,13 +204,9 @@ const decorateWithInvoiceAccount = async model => {
   return model
 }
 
-const updateInvoiceAccountsWithCustomerFileReference =
-  invoiceAccountsConnector.updateInvoiceAccountsWithCustomerFileReference
-
 exports.getByInvoiceAccountIds = getByInvoiceAccountIds
 exports.getByInvoiceAccountId = getByInvoiceAccountId
 exports.decorateWithInvoiceAccount = decorateWithInvoiceAccount
 exports.deleteInvoiceAccount = deleteInvoiceAccount
 exports.createInvoiceAccount = createInvoiceAccount
 exports.createInvoiceAccountAddress = createInvoiceAccountAddress
-exports.updateInvoiceAccountsWithCustomerFileReference = updateInvoiceAccountsWithCustomerFileReference
