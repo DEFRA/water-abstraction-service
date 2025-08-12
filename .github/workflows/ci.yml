@@ -52,7 +52,7 @@ jobs:
     steps:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of SonarQube analysis
 
