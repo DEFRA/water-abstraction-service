@@ -39,14 +39,4 @@ experiment('lib/connectors/charge-module/customers', () => {
       expect(options).to.equal({ json: tempInvoiceAccountId })
     })
   })
-
-  experiment('.getCustomerFiles', () => {
-    beforeEach(async () => {
-      await customerApiConnector.getCustomerFiles()
-    })
-
-    test('the method is GET', async () => {
-      expect(gotCM.get.called).to.be.true()
-    })
-  })
 })
