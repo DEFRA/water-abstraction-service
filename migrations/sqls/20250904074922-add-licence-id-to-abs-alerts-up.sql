@@ -12,18 +12,17 @@
   This one-off data migration adds the missing `licenceId` to those water abstraction alert notification records that
   don't have it.
 
-  Before we run it though, we delete any with a status of 'draft'. These are a hangover of the legacy code, that would
-  commit records to the DB as part of the setup process. If users abandoned the process though, the draft notifications
+  Before we run it, though, we delete any with a status of 'draft'. These are a hangover of the legacy code, which would
+  commit records to the DB as part of the setup process. If users abandoned the process, though, the draft notifications
   would remain.
 
-  I don't think the previous team realised how often this would happen. We've found the users often like to get to the
-  last page in the process so they can see what would be generated, but then cancel so they can go deal with any issues
-  found.
+  The previous team didn't realise how often this would happen. We've found the users often like to get to the last page
+  in the process so they can see what would be generated, but then cancel so they can go deal with any issues found.
 
-  At time of writing, there are 525,000 notifications, of which 339K are 'draft'!
+  At the time of writing, there are 525,000 notifications, of which 339,000 are 'draft'!
 
-  Now we've taken over most notification processes, and we want to run queries against the table, it seemed a prudent
-  time to delete them.
+  Now that we've taken over most notification processes, and we want to run queries against the table, it is prudent to
+  delete them.
 */
 
 DELETE FROM water.scheduled_notification sn WHERE sn.status = 'draft';
