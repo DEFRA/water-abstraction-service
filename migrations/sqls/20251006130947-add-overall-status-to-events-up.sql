@@ -22,16 +22,12 @@
 
   We found thousands of notifications with a status of 'sent' but a notify status that means error/failure.
 
-  We'll be making changes to water.events records in this script, and each time the notification-status job runs.
-  Therefore, the final amendment we make to this migration script is to add an updated_at column to the table, because
-  for some reason the previous team failed to add one. While we are at it, we also alter the existing `created` column
-  to default to the current date and time.
-
   So, now this migration script is
 
-  - update the status of existing notifications to match the 'system' understanding
-  - add the new columns to `water.events` (if they don't already exist)
-  - run the query that sets `overall_status` and `status_counts`, now with 'cancelled' included
+  - Update the status of existing notifications to match the 'system' understanding
+  - Do a bit of housekeeping and update the existing `created` and `modified` columns to default to the current date and time
+  - Add the new columns to `water.events` (if they don't already exist)
+  - Run the query that sets `overall_status` and `status_counts`, now with 'cancelled' included
 
   The overall_status column is populated with the overall status of related notifications. This status is calculated
   based on the statuses of all notifications associated with an event. It provides a quick reference to the overall
@@ -61,9 +57,10 @@ UPDATE water.scheduled_notification SET status = 'cancelled' WHERE "status" = 's
 ALTER TABLE IF EXISTS water.events ALTER COLUMN created SET DEFAULT now();
 ALTER TABLE IF EXISTS water.events ALTER COLUMN created SET NOT NULL;
 
--- 4. Add the new updated_at column to water.events and then set it to match the created value
-ALTER TABLE IF EXISTS water.events ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now() NOT NULL;
-UPDATE water.events SET updated_at = created;
+-- 4. Update the existing modified column to default to the current date and time and to no longer allow nulls
+ALTER TABLE IF EXISTS water.events ALTER COLUMN modified SET DEFAULT now();
+UPDATE water.events SET modified = created WHERE modified IS NULL;
+ALTER TABLE IF EXISTS water.events ALTER COLUMN modified SET NOT NULL;
 
 -- 5. Add our new overall_status and status_counts columns
 ALTER TABLE IF EXISTS water.events ADD COLUMN IF NOT EXISTS overall_status VARCHAR(255);
@@ -104,7 +101,7 @@ WHERE
 UPDATE water.events e
 SET
   metadata = jsonb_set(e.metadata,'{error}', to_jsonb((status_counts->>'error')::integer), true),
-  updated_at = CURRENT_TIMESTAMP
+  modified = CURRENT_TIMESTAMP
 WHERE
   e.type = 'notification'
   AND e.status_counts IS NOT NULL;
