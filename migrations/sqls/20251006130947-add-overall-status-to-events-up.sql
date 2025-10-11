@@ -1,7 +1,37 @@
 /*
-  Add overall_status and status_counts columns to events table
+  Correct the status of legacy notifications, then add overall_status and status_counts columns to events table
 
-  https://eaflood.atlassian.net/browse/WATER-5306
+  - https://eaflood.atlassian.net/browse/WATER-5306
+  - https://eaflood.atlassian.net/browse/WATER-5328
+  - https://eaflood.atlassian.net/browse/WATER-5329
+
+  This migration originally started as just adding the new columns then populating them based on the existing status of
+  notifications.
+
+  Then when working to enable water-abstraction-system to view any notification no matter the status, we came across
+  ones which had a Notify status of 'cancelled', but a status of 'sent'.
+
+  > These are letters where the user has cancelled them in the Notify dashboard before they were sent to the provider.
+
+  We realised we needed to capture these in our overall status and counts, but that the existing records would need to
+  be updated before this migration script kicked in.
+
+  However, we then realised we had a bigger issue! Essentially, 'sent' for legacy notifications just means the
+  notification got to Notify. It doesn't mean that Notify has actually sent it. But in new system notifications status
+  does relate to whether Notify has managed to send the notification successfully.
+
+  We found thousands of notifications with a status of 'sent' but a notify status that means error/failure.
+
+  We'll be making changes to water.events records in this script, and each time the notification-status job runs.
+  Therefore, the final amendment we make to this migration script is to add an updated_at column to the table, because
+  for some reason the previous team failed to add one. While we are at it, we also alter the existing `created` column
+  to default to the current date and time.
+
+  So, now this migration script is
+
+  - update the status of existing notifications to match the 'system' understanding
+  - add the new columns to `water.events` (if they don't already exist)
+  - run the query that sets `overall_status` and `status_counts`, now with 'cancelled' included
 
   The overall_status column is populated with the overall status of related notifications. This status is calculated
   based on the statuses of all notifications associated with an event. It provides a quick reference to the overall
@@ -12,9 +42,34 @@
 
 BEGIN;
 
-ALTER TABLE water.events ADD COLUMN overall_status varchar(255);
-ALTER TABLE water.events ADD COLUMN status_counts jsonb;
+-- 1. Update the status of existing notifications to error where we know notify has failed to send them
+UPDATE water.scheduled_notification
+SET status = 'error'
+WHERE
+  "status" = 'sent'
+  AND notify_status IN (
+    'permanent-failure',
+    'technical-failure',
+    'temporary-failure',
+    'validation-failed'
+  );
 
+-- 2. Update the status of the existing cancelled notifications
+UPDATE water.scheduled_notification SET status = 'cancelled' WHERE "status" = 'sent' AND notify_status = 'cancelled';
+
+-- 3. Update the existing created column to default to the current date and time and to no longer allow nulls
+ALTER TABLE IF EXISTS water.events ALTER COLUMN created SET DEFAULT now();
+ALTER TABLE IF EXISTS water.events ALTER COLUMN created SET NOT NULL;
+
+-- 4. Add the new updated_at column to water.events and then set it to match the created value
+ALTER TABLE IF EXISTS water.events ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now() NOT NULL;
+UPDATE water.events SET updated_at = created;
+
+-- 5. Add our new overall_status and status_counts columns
+ALTER TABLE IF EXISTS water.events ADD COLUMN IF NOT EXISTS overall_status VARCHAR(255);
+ALTER TABLE IF EXISTS water.events ADD COLUMN IF NOT EXISTS status_counts jsonb;
+
+-- 6. Run script to populate the new columns for existing events
 UPDATE water.events e
 SET
   overall_status = os.overall_status,
@@ -22,22 +77,36 @@ SET
 FROM (
   SELECT
     sn.event_id,
-    CASE
+    (CASE
+      WHEN COUNT(*) = COUNT(*) FILTER (WHERE sn.status = 'cancelled') THEN 'cancelled'
       WHEN COUNT(*) FILTER (WHERE sn.status = 'returned') > 0 THEN 'returned'
       WHEN COUNT(*) FILTER (WHERE sn.status = 'error') > 0 THEN 'error'
       WHEN COUNT(*) FILTER (WHERE sn.status = 'pending') > 0 THEN 'pending'
       ELSE 'sent'
-    END AS overall_status,
+    END) AS overall_status,
     jsonb_build_object(
-      'returned', COUNT(*) FILTER (WHERE sn.status = 'returned'),
+      'cancelled', COUNT(*) FILTER (WHERE sn.status = 'cancelled'),
       'error', COUNT(*) FILTER (WHERE sn.status = 'error'),
       'pending', COUNT(*) FILTER (WHERE sn.status = 'pending'),
+      'returned', COUNT(*) FILTER (WHERE sn.status = 'returned'),
       'sent', COUNT(*) FILTER (WHERE sn.status = 'sent')
     ) AS status_counts
-  FROM water.scheduled_notification sn
-  GROUP BY sn.event_id
+  FROM
+    water.scheduled_notification sn
+  GROUP BY
+    sn.event_id
 ) os
-WHERE e.type = 'notification'
-AND e.event_id = os.event_id;
+WHERE
+  e.type = 'notification'
+  AND e.event_id = os.event_id;
+
+-- 7. Update the legacy error count in the event's metadata just to ensure consistency
+UPDATE water.events e
+SET
+  metadata = jsonb_set(e.metadata,'{error}', to_jsonb((status_counts->>'error')::integer), true),
+  updated_at = CURRENT_TIMESTAMP
+WHERE
+  e.type = 'notification'
+  AND e.status_counts IS NOT NULL;
 
 COMMIT;
