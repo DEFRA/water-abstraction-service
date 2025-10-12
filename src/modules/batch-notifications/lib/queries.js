@@ -58,7 +58,7 @@ const getNotifyStatusChecks = async () => {
   const query = `SELECT id
     FROM water.scheduled_notification
     WHERE send_after>(CURRENT_TIMESTAMP - interval '1 week')
-    AND (notify_status IS NULL OR notify_status NOT IN ('permanent-failure', 'technical-failure', 'delivered', 'received'))
+    AND (notify_status IS NULL OR notify_status NOT IN ('permanent-failure', 'technical-failure', 'delivered', 'received', 'validation-failed', 'cancelled'))
     AND (next_status_check IS NULL OR next_status_check<=CURRENT_TIMESTAMP)
     AND notify_id IS NOT NULL
     AND status=$1
