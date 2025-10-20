@@ -70,7 +70,7 @@ experiment('lib/event', () => {
       expect(ev.metadata).to.equal({})
       expect(ev.status).to.be.null()
       expect(isDateString(ev.created)).to.equal(true)
-      expect(ev.modified).to.be.null()
+      expect(isDateString(ev.modified)).to.equal(true)
     })
 
     test('it should enable properties to be set on creation', async () => {

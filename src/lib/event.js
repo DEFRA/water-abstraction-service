@@ -1,4 +1,3 @@
-const moment = require('moment')
 const { logger } = require('../logger')
 const newEventService = require('./services/events')
 const Event = require('./models/event')
@@ -10,6 +9,7 @@ const Event = require('./models/event')
  */
 const create = (data = {}) => {
   logDeprecatedWarning()
+  const timestamp = new Date().toISOString()
   const defaults = {
     referenceCode: null,
     type: null,
@@ -20,8 +20,8 @@ const create = (data = {}) => {
     comment: null,
     metadata: {},
     status: null,
-    created: moment().format('YYYY-MM-DD HH:mm:ss'),
-    modified: null
+    created: timestamp,
+    modified: timestamp
   }
   return Object.assign({}, defaults, data)
 }
