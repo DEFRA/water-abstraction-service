@@ -83,7 +83,8 @@ experiment('lib/connectors/repos/events', () => {
 
     test('calls .save() with the updates', async () => {
       const [updates] = stub.save.lastCall.args
-      expect(updates).to.equal({ status: 'updated' })
+      expect(updates.status).to.equal('updated')
+      expect(updates.modified).to.exist()
     })
 
     test('returns a JSON object of the model updated', async () => {
