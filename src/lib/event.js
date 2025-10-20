@@ -1,4 +1,3 @@
-const moment = require('moment')
 const { logger } = require('../logger')
 const newEventService = require('./services/events')
 const Event = require('./models/event')
