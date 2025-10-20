@@ -8,7 +8,13 @@ const helpers = require('./lib/helpers')
  * @returns {Object} event pojo
  */
 const create = async (event) => {
+  const timestamp = new Date().toISOString()
+
+  event.created = timestamp
+  event.modified = timestamp
+
   const result = await Event.forge(event).save()
+
   return result.toJSON()
 }
 
@@ -26,6 +32,10 @@ const findOne = id =>
  * @param {Object} changes // event pojo
  */
 const update = async (id, changes) => {
+  const timestamp = new Date().toISOString()
+
+  changes.modified = timestamp
+
   const result = await Event.forge({ eventId: id }).save(changes)
   return result.toJSON()
 }
