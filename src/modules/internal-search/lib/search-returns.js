@@ -76,7 +76,7 @@ const findRecentReturnsByFormatId = async (formatId) => {
     end_date: -1
   }
   const columns = [
-    'return_id', 'licence_ref', 'return_requirement',
+    'id', 'return_id', 'licence_ref', 'return_requirement',
     'end_date', 'metadata', 'status', 'due_date'
   ]
 
