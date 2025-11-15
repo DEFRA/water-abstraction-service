@@ -21,7 +21,6 @@ const gaugingStationsCopyLvpcFromDigitise = require('../../modules/gauging-stati
 const gaugingStationsSyncFromCsv = require('../../modules/gauging-stations/jobs/sync-gauging-stations')
 const notificationsCheckStatus = require('../../modules/batch-notifications/lib/jobs/check-status')
 const notificationsGetRecipients = require('../../modules/batch-notifications/lib/jobs/get-recipients')
-const notificationsRefreshEvent = require('../../modules/batch-notifications/lib/jobs/refresh-event')
 const notificationsSendMessage = require('../../modules/batch-notifications/lib/jobs/send-message')
 const notifySend = require('../../modules/notify/lib/notify-send')
 const persistBulkReturns = require('../../modules/returns/lib/jobs/persist-returns')
@@ -89,7 +88,6 @@ class JobRegistrationService {
       gaugingStationsSyncFromCsv,
       notificationsCheckStatus,
       notificationsGetRecipients,
-      notificationsRefreshEvent,
       notificationsSendMessage,
       notifySend,
       persistBulkReturns,

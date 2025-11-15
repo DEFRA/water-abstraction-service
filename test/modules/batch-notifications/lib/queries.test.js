@@ -51,44 +51,6 @@ experiment('queries', () => {
     })
   })
 
-  experiment('getSendingEvents', () => {
-    test('passes a string query to pool.query', async () => {
-      await queries.getSendingEvents()
-      const [query] = pool.query.lastCall.args
-      expect(query).to.be.a.string()
-    })
-
-    test('passes expected parameters to pool.query', async () => {
-      await queries.getSendingEvents()
-      const [, params] = pool.query.lastCall.args
-      expect(params).to.equal([EVENT_STATUS_SENDING])
-    })
-
-    test('resolves with the data returned from the query', async () => {
-      const result = await queries.getSendingEvents()
-      expect(result).to.equal(data)
-    })
-  })
-
-  experiment('getMessageStatuses', () => {
-    test('passes a string query to pool.query', async () => {
-      await queries.getMessageStatuses(eventId)
-      const [query] = pool.query.lastCall.args
-      expect(query).to.be.a.string()
-    })
-
-    test('passes expected parameters to pool.query', async () => {
-      await queries.getMessageStatuses(eventId)
-      const [, params] = pool.query.lastCall.args
-      expect(params).to.equal([eventId])
-    })
-
-    test('resolves with the data returned from the query', async () => {
-      const result = await queries.getMessageStatuses()
-      expect(result).to.equal(data)
-    })
-  })
-
   experiment('getNotifyStatusChecks', () => {
     test('passes a string query to pool.query', async () => {
       await queries.getNotifyStatusChecks(eventId)

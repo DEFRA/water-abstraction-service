@@ -81,36 +81,7 @@ const getStatusCount = (statuses, status) => {
   return parseInt(count)
 }
 
-/**
- * Given an event ID, updates the metadata
- * within the event with the number sent/errored, and if all are sent
- * then the status changes to EVENT_STATUS_COMPLETED
- * @param {String} eventId - the event GUID
- * @param {Promise} resolves with event data
- */
-const refreshEventStatus = async (eventId) => {
-  const ev = await eventsService.findOne(eventId)
-
-  if (ev.status !== EVENT_STATUS_SENDING) {
-    return ev
-  }
-
-  // Get breakdown of statuses of messages in this event
-  const statuses = await queries.getMessageStatuses(eventId)
-  const sent = getStatusCount(statuses, MESSAGE_STATUS_SENT)
-  const error = getStatusCount(statuses, MESSAGE_STATUS_ERROR)
-
-  const isComplete = (sent + error) === ev.metadata.recipients
-
-  ev.status = isComplete ? EVENT_STATUS_COMPLETED : EVENT_STATUS_SENDING
-  ev.metadata.sent = sent
-  ev.metadata.error = error
-
-  return eventsService.update(ev)
-}
-
 module.exports = {
   createEvent,
-  markAsProcessed,
-  refreshEventStatus
+  markAsProcessed
 }
