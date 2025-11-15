@@ -1,8 +1,5 @@
 'use strict'
 
-// Config
-const config = require('../../../config.js')
-
 // Batch Notifications
 const checkStatus = require('../../modules/batch-notifications/lib/jobs/check-status')
 const sendMessage = require('../../modules/batch-notifications/lib/jobs/send-message')
@@ -19,9 +16,7 @@ class StartUpJobsService {
   }
 
   static async _batchNotificationsJobs (queueManager) {
-    if (config.featureToggles.batchNotificationsJob) {
-      queueManager.add(checkStatus.jobName)
-    }
+    queueManager.add(checkStatus.jobName)
     queueManager.add(sendMessage.jobName)
   }
 
