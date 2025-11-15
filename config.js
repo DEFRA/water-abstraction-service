@@ -220,8 +220,7 @@ module.exports = {
   },
 
   featureToggles: {
-    deleteAllBillingData: process.env.ENABLE_DELETE_ALL_BILLING_DATA_FEATURE === 'true' && !isProduction,
-    batchNotificationsJob: process.env.ENABLE_BATCH_NOTIFICATIONS_JOB === 'true'
+    deleteAllBillingData: process.env.ENABLE_DELETE_ALL_BILLING_DATA_FEATURE === 'true' && !isProduction
   },
 
   slackHook: process.env.SLACK_HOOK
