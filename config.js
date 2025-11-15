@@ -43,8 +43,8 @@ module.exports = {
 
   jobs: {
     batchNotifications: {
-      checkStatus: 15000, // 15 seconds
-      sendMessages: 15000 // 15 seconds
+      checkStatus: 12 * 60 * 1000, // 12 hours
+      sendMessages: 30000 // 30 seconds
     }
   },
 

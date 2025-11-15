@@ -58,7 +58,7 @@ experiment('checkStatus job', () => {
       expect(msg[2]).to.equal({
         jobId: 'notifications.checkStatus',
         repeat: {
-          every: 15000
+          every: 720000
         }
       })
     })
