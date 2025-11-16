@@ -9,13 +9,10 @@ const {
 const sandbox = require('sinon').createSandbox()
 const { v4: uuid } = require('uuid')
 
-const queries = require('../../../../src/modules/batch-notifications/lib/queries')
 const { createEvent, markAsProcessed } =
 require('../../../../src/modules/batch-notifications/lib/event-helpers')
-const { EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING, EVENT_STATUS_COMPLETED } =
+const { EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED } =
 require('../../../../src/modules/batch-notifications/lib/event-statuses')
-const { MESSAGE_STATUS_SENT, MESSAGE_STATUS_ERROR } =
-require('../../../../src/modules/batch-notifications/lib/message-statuses')
 
 const eventsService = require('../../../../src/lib/services/events')
 const Event = require('../../../../src/lib/models/event')

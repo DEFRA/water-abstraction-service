@@ -14,9 +14,6 @@ const { pool } = require('../../../../src/lib/connectors/db')
 const { MESSAGE_STATUS_SENT, MESSAGE_STATUS_SENDING } =
 require('../../../../src/modules/batch-notifications/lib/message-statuses')
 
-const { EVENT_STATUS_SENDING } =
-require('../../../../src/modules/batch-notifications/lib/event-statuses')
-
 const queries =
 require('../../../../src/modules/batch-notifications/lib/queries')
 
