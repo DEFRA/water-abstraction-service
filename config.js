@@ -43,9 +43,8 @@ module.exports = {
 
   jobs: {
     batchNotifications: {
-      requestEvent: 60000, // 1 minute
-      checkStatus: 15000, // 15 seconds
-      sendMessages: 15000 // 15 seconds
+      checkStatus: 12 * 60 * 1000, // 12 hours
+      sendMessages: 30000 // 30 seconds
     }
   },
 
@@ -221,8 +220,7 @@ module.exports = {
   },
 
   featureToggles: {
-    deleteAllBillingData: process.env.ENABLE_DELETE_ALL_BILLING_DATA_FEATURE === 'true' && !isProduction,
-    batchNotificationsJob: process.env.ENABLE_BATCH_NOTIFICATIONS_JOB === 'true'
+    deleteAllBillingData: process.env.ENABLE_DELETE_ALL_BILLING_DATA_FEATURE === 'true' && !isProduction
   },
 
   slackHook: process.env.SLACK_HOOK

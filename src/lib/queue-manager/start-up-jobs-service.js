@@ -1,11 +1,7 @@
 'use strict'
 
-// Config
-const config = require('../../../config.js')
-
 // Batch Notifications
 const checkStatus = require('../../modules/batch-notifications/lib/jobs/check-status')
-const refreshEvent = require('../../modules/batch-notifications/lib/jobs/refresh-event')
 const sendMessage = require('../../modules/batch-notifications/lib/jobs/send-message')
 
 // Gauging Stations
@@ -20,10 +16,7 @@ class StartUpJobsService {
   }
 
   static async _batchNotificationsJobs (queueManager) {
-    if (config.featureToggles.batchNotificationsJob) {
-      queueManager.add(checkStatus.jobName)
-    }
-    queueManager.add(refreshEvent.jobName)
+    queueManager.add(checkStatus.jobName)
     queueManager.add(sendMessage.jobName)
   }
 

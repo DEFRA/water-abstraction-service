@@ -9,13 +9,10 @@ const {
 const sandbox = require('sinon').createSandbox()
 const { v4: uuid } = require('uuid')
 
-const queries = require('../../../../src/modules/batch-notifications/lib/queries')
-const { createEvent, markAsProcessed, refreshEventStatus } =
+const { createEvent, markAsProcessed } =
 require('../../../../src/modules/batch-notifications/lib/event-helpers')
-const { EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING, EVENT_STATUS_COMPLETED } =
+const { EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED } =
 require('../../../../src/modules/batch-notifications/lib/event-statuses')
-const { MESSAGE_STATUS_SENT, MESSAGE_STATUS_ERROR } =
-require('../../../../src/modules/batch-notifications/lib/message-statuses')
 
 const eventsService = require('../../../../src/lib/services/events')
 const Event = require('../../../../src/lib/models/event')
@@ -60,13 +57,6 @@ experiment('batch notifications event helpers', () => {
   experiment('createEvent ', () => {
     let createdEvent
 
-    beforeEach(async () => {
-      sandbox.stub(queries, 'getMessageStatuses').resolves([
-        { status: MESSAGE_STATUS_SENT, count: 5 },
-        { status: MESSAGE_STATUS_ERROR, count: 2 }
-      ])
-    })
-
     experiment('should create an event', () => {
       beforeEach(async () => {
         createdEvent = createEvent(issuer, config, options)
@@ -106,11 +96,6 @@ experiment('batch notifications event helpers', () => {
     const recipients = 10
 
     beforeEach(async () => {
-      sandbox.stub(queries, 'getMessageStatuses').resolves([
-        { status: MESSAGE_STATUS_SENT, count: 5 },
-        { status: MESSAGE_STATUS_ERROR, count: 2 }
-      ])
-
       await markAsProcessed('testEventId', licenceNumbers, recipients)
     })
 
@@ -138,121 +123,6 @@ experiment('batch notifications event helpers', () => {
     test('should not alter existing metadata', async () => {
       const [event] = eventsService.update.firstCall.args
       expect(event.metadata.foo).to.equal('bar')
-    })
-  })
-
-  experiment('refreshEventStatus', () => {
-    experiment('when the event has both an error and sent scheduled notification record', () => {
-      beforeEach(async () => {
-        sandbox.stub(queries, 'getMessageStatuses').resolves([
-          { status: MESSAGE_STATUS_SENT, count: 5 },
-          { status: MESSAGE_STATUS_ERROR, count: 2 }
-        ])
-      })
-
-      test('loads the event with the specified ID', async () => {
-        await refreshEventStatus('testId')
-        expect(eventsService.findOne.firstCall.args[0]).to.equal('testId')
-      })
-
-      test('should not update the event unless status is "sending"', async () => {
-        eventsService.findOne.resolves(
-          createEventModel().fromHash({ status: 'wrongStatus' })
-        )
-        await refreshEventStatus('testId')
-        expect(eventsService.update.callCount).to.equal(0)
-      })
-
-      test('updates the event when status is "sending"', async () => {
-        eventsService.findOne.resolves(
-          createEventModel().fromHash({
-            metadata: {
-              recipients: 8
-            },
-            status: EVENT_STATUS_SENDING
-          })
-        )
-
-        await refreshEventStatus('testId')
-
-        const [ev] = eventsService.update.lastCall.args
-
-        expect(ev.status).to.equal(EVENT_STATUS_SENDING)
-        expect(ev.metadata.sent).to.equal(5)
-        expect(ev.metadata.error).to.equal(2)
-      })
-
-      test('updates event status to "completed" when all messages are sent/errored', async () => {
-        eventsService.findOne.resolves(
-          createEventModel().fromHash({
-            metadata: {
-              recipients: 7
-            },
-            status: EVENT_STATUS_SENDING
-          })
-        )
-
-        await refreshEventStatus('testId')
-
-        const [ev] = eventsService.update.lastCall.args
-        expect(ev.status).to.equal(EVENT_STATUS_COMPLETED)
-      })
-
-      test('resolves with the event object', async () => {
-        const result = await refreshEventStatus('testId')
-        expect(result).to.be.an.object()
-        expect(result.eventId).to.equal('testEventId')
-      })
-    })
-
-    experiment('when the event has only error scheduled notification records', () => {
-      beforeEach(async () => {
-        sandbox.stub(queries, 'getMessageStatuses').resolves([
-          { status: MESSAGE_STATUS_ERROR, count: 2 }
-        ])
-      })
-
-      experiment('and a different number of recipients', () => {
-        beforeEach(() => {
-          eventsService.findOne.resolves(
-            createEventModel().fromHash({
-              metadata: {
-                recipients: 7
-              },
-              status: EVENT_STATUS_SENDING
-            })
-          )
-        })
-
-        test("updates the event with a status of 'sending'", async () => {
-          await refreshEventStatus('testId')
-
-          const [ev] = eventsService.update.lastCall.args
-
-          expect(ev.status).to.equal(EVENT_STATUS_SENDING)
-        })
-      })
-
-      experiment('and the same number of recipients', () => {
-        beforeEach(() => {
-          eventsService.findOne.resolves(
-            createEventModel().fromHash({
-              metadata: {
-                recipients: 2
-              },
-              status: EVENT_STATUS_SENDING
-            })
-          )
-        })
-
-        test("updates the event with a status of 'completed'", async () => {
-          await refreshEventStatus('testId')
-
-          const [ev] = eventsService.update.lastCall.args
-
-          expect(ev.status).to.equal(EVENT_STATUS_COMPLETED)
-        })
-      })
     })
   })
 })
