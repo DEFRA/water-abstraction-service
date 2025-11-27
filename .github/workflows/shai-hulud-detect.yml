@@ -1,6 +1,8 @@
 name: shai-hulud-detect
 
-on: push
+on:
+  schedule:
+    - cron: "5 4 * * *"
 
 permissions:
   contents: read
