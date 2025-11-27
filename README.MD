@@ -3,6 +3,7 @@
 ![Build Status](https://github.com/DEFRA/water-abstraction-service/actions/workflows/ci.yml/badge.svg?branch=main)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_water-abstraction-service&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=DEFRA_water-abstraction-service)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_water-abstraction-service&metric=coverage)](https://sonarcloud.io/dashboard?id=DEFRA_water-abstraction-service)
+[![shai-hulud-detect](https://github.com/DEFRA/water-abstraction-service/actions/workflows/shai-hulud-detect.yml/badge.svg)](https://github.com/DEFRA/water-abstraction-service/actions/workflows/shai-hulud-detect.yml)
 [![Licence](https://img.shields.io/badge/Licence-OGLv3-blue.svg)](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3)
 
 The water abstraction service is a layer which contains the business logic that is required for the water abstraction service to function, without such logic making its way into the underlying and potentially reusable IDM, CRM or Permit projects.
