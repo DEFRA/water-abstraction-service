@@ -1,0 +1,32 @@
+name: shai-hulud-detect
+
+on:
+  schedule:
+    - cron: "5 4 * * *"
+
+jobs:
+  shai-hulud-detect:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Downloads a copy of the code in your repository by default
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          path: project
+          fetch-depth: 1
+
+      # Checkout the security scanning repo we're using
+      - name: Checkout scanner
+        uses: actions/checkout@v6
+        with:
+          repository: Cobenian/shai-hulud-detect
+          ref: main
+          path: scanner
+          fetch-depth: 1
+
+      - name: Run scanner
+        run: |
+          chmod +x ./scanner/shai-hulud-detector.sh
+          ./scanner/shai-hulud-detector.sh ./project
