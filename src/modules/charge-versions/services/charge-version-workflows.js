@@ -242,7 +242,7 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
   }
 
   // Delete the charge version workflow record as it is no longer needed
-  await deleteOne(chargeVersionWorkflow, false)
+  await deleteOne(chargeVersionWorkflow)
 
   return persistedChargeVersion
 }
