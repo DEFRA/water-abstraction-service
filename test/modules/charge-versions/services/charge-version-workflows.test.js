@@ -432,7 +432,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     test('the workflow record is deleted', async () => {
       await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser)
 
-      expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true()
+      expect(chargeVersionWorkflowRepo.softDeleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true()
     })
   })
   experiment('getLicenceHolderRole', () => {
