@@ -13,7 +13,7 @@ exports.setup = function (options, _seedLink) {
 }
 
 exports.up = function (db) {
-  const filePath = path.join(__dirname, 'sqls', '20251001100750-add-returned-at-to-scheduled-notification-up.sql')
+  const filePath = path.join(__dirname, 'sqls', '20251205123556-add-contact-type-to-notifications-up.sql')
   return new Promise(function (resolve, reject) {
     fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
       if (err) return reject(err)
@@ -27,7 +27,7 @@ exports.up = function (db) {
 }
 
 exports.down = function (db) {
-  const filePath = path.join(__dirname, 'sqls', '20251001100750-add-returned-at-to-scheduled-notification-down.sql')
+  const filePath = path.join(__dirname, 'sqls', '20251205123556-add-contact-type-to-notifications-down.sql')
   return new Promise(function (resolve, reject) {
     fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
       if (err) return reject(err)
