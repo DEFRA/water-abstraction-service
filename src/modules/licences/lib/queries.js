@@ -14,7 +14,7 @@ const getNotificationsForLicence = async (licenceNumber) => {
     WHERE n.licences @> $1
     AND n.notify_status IN ('delivered', 'received')
     AND n.status='sent'
-    ORDER BY send_after DESC
+    ORDER BY date_created DESC
     LIMIT 10`
 
   const { rows } = await pool.query(query, params)

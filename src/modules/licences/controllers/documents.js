@@ -265,7 +265,7 @@ const mapNotification = (row) => {
   return {
     notificationId: row.id,
     messageType: row.message_type,
-    date: row.send_after,
+    date: row.date_created,
     notificationType: row.event_metadata.name ?? null,
     sender: row.issuer,
     isPdf
