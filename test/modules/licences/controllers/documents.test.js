@@ -53,7 +53,7 @@ const licenceResponse = {
 
 const getNotificationsResponse = () => ([{
   id: 'message_123',
-  send_after: '2018-12-13T16:04:22.000Z',
+  date_created: '2018-12-13T16:04:22.000Z',
   issuer: 'mail@example.com',
   event_metadata: {
     name: 'Notification type'
