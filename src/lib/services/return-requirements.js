@@ -12,4 +12,7 @@ const service = require('./service')
  */
 const getReturnRequirementByExternalId = async externalId => service.findOne(externalId, returnRequirementsRepo.findOneByExternalId, returnRequirementsMapper)
 
+const getReturnRequirementById = async id => service.findOne(id, returnRequirementsRepo.findOneById, returnRequirementsMapper)
+
 exports.getReturnRequirementByExternalId = getReturnRequirementByExternalId
+exports.getReturnRequirementById = getReturnRequirementById
