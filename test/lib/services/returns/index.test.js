@@ -40,6 +40,7 @@ const createReturns = (overrides = {}) => (
     status: overrides.status || 'completed',
     under_query: false,
     frequency: 'day',
+    return_requirement_id: '6063a931-6bc1-4673-a232-4b9706ef336d',
     metadata: {
       isSummer: true,
       purposes: [{
@@ -77,7 +78,8 @@ const createLines = () => ([{
 
 const createReturnRequirement = () => {
   return new ReturnRequirement().fromHash({
-    externalId: '1:123'
+    externalId: '1:123',
+    returnRequirementId: '6063a931-6bc1-4673-a232-4b9706ef336d'
   })
 }
 
@@ -97,6 +99,7 @@ experiment('lib/services/returns/index', () => {
     sandbox.stub(apiConnector, 'getCurrentVersion').resolves(createVersion())
     sandbox.stub(apiConnector, 'getLines').resolves(createLines())
     sandbox.stub(returnsRequirementsService, 'getReturnRequirementByExternalId').resolves(createReturnRequirement())
+    sandbox.stub(returnsRequirementsService, 'getReturnRequirementById').resolves(createReturnRequirement())
     sandbox.stub(documentsService, 'getDocuments')
     sandbox.stub(documentsService, 'getDocument')
   })
@@ -134,9 +137,9 @@ experiment('lib/services/returns/index', () => {
         )).to.be.true()
       })
 
-      test('the return requirements are fetched using an external ID using the NALD region code and format ID', async () => {
-        expect(returnsRequirementsService.getReturnRequirementByExternalId.calledWith(
-          '1:123'
+      test('the return requirements are fetched using their IDs', async () => {
+        expect(returnsRequirementsService.getReturnRequirementById.calledWith(
+          '6063a931-6bc1-4673-a232-4b9706ef336d'
         )).to.be.true()
       })
 
