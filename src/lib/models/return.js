@@ -93,7 +93,7 @@ class Return extends Model {
    * @param {String}
    */
   set dueDate (dueDate) {
-    this._dueDate = this.getDateOrThrow(dueDate, 'dueDate')
+    this._dueDate = this.getDateTimeFromValue(dueDate)
   }
 
   /**
@@ -101,7 +101,7 @@ class Return extends Model {
    * @return {String} YYYY-MM-DD
    */
   get dueDate () {
-    return this._dueDate.format('YYYY-MM-DD')
+    return this._dueDate ? this._dueDate.format('YYYY-MM-DD') : null
   }
 
   /**
