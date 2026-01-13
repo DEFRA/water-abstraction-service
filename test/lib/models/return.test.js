@@ -132,16 +132,14 @@ experiment('lib/models/return', () => {
       expect(ret.dueDate).to.equal('2019-11-28')
     })
 
+    test('can be set to null', async () => {
+      ret.dueDate = null
+      expect(ret.dueDate).to.equal(null)
+    })
+
     test('throws an error if set to an invalid date', async () => {
       const func = () => {
         ret.dueDate = '2020-13-01'
-      }
-      expect(func).to.throw()
-    })
-
-    test('throws an error if set to null', async () => {
-      const func = () => {
-        ret.dueDate = null
       }
       expect(func).to.throw()
     })

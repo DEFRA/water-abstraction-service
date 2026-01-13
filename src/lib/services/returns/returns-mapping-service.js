@@ -11,8 +11,6 @@ const { logger } = require('../../../logger.js')
 const returnRequirementsService = require('../return-requirements')
 const returnMapper = require('../../mappers/return')
 
-const getReturnRequirementExternalId = returnData => `${returnData.metadata.nald.regionCode}:${returnData.metadata.nald.formatId}`
-
 /**
  * Given a list of returns loaded from the returns service, fetches the
  * return requirements from water.return_requirements as service models
@@ -20,11 +18,21 @@ const getReturnRequirementExternalId = returnData => `${returnData.metadata.nald
  * @return {Array<ReturnRequirement>}
  */
 const getReturnRequirements = returnsData => {
-  // Get a unique list of external IDs
+  // Get a unique list of return requirement IDs
   // Create a new set to remove any duplicate values
-  const externalIds = [...new Set(returnsData.map(getReturnRequirementExternalId))]
-  const tasks = externalIds.map(returnRequirementsService.getReturnRequirementByExternalId)
+  const returnRequirementIds = _returnRequirementIds(returnsData)
+
+  const tasks = returnRequirementIds.map(returnRequirementsService.getReturnRequirementById)
+
   return Promise.all(tasks)
+}
+
+function _returnRequirementIds (returnsData) {
+  const ids = returnsData.map((returnData) => {
+    return returnData.return_requirement_id
+  })
+
+  return [...new Set(ids)]
 }
 
 /**
@@ -36,14 +44,14 @@ const getReturnRequirements = returnsData => {
  * @return {Return}
  */
 const mapReturnDataToModel = (returnData, returnRequirements) => {
-  const externalId = getReturnRequirementExternalId(returnData)
+  const returnRequirementId = returnData.returnRequirementId
 
   let returnRequirement
 
   try {
-    returnRequirement = returnRequirements.find((o) => o.externalId === externalId)
+    returnRequirement = returnRequirements.find((o) => o.returnRequirementId === returnRequirementId)
   } catch (error) {
-    logger.error(`Error finding return requirement ${externalId} in mapping service`, error.stack)
+    logger.error(`Error finding return requirement ${returnRequirementId} in mapping service`, error.stack)
   }
 
   return returnMapper.returnsServiceToModel(returnData, returnRequirement)
