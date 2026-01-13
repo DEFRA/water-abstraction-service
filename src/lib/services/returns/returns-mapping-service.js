@@ -27,7 +27,7 @@ const getReturnRequirements = returnsData => {
   return Promise.all(tasks)
 }
 
-function _returnRequirementIds(returnsData) {
+function _returnRequirementIds (returnsData) {
   const ids = returnsData.map((returnData) => {
     return returnData.return_requirement_id
   })
