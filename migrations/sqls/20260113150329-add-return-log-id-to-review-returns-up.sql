@@ -63,11 +63,6 @@ WHERE
     SELECT 1 FROM water.review_licences rl WHERE rl.id = rcr.review_licence_id
   );
 
--- Final script to ensure no orphaned records remain
-DELETE FROM water.review_returns rr WHERE NOT EXISTS (
-  SELECT 1 FROM "returns"."returns" r WHERE r.return_id = rr.return_id
-);
-
 BEGIN;
   -- Add the column without NOT NULL constraint first
   ALTER TABLE water.review_returns ADD COLUMN return_log_id UUID;
@@ -78,6 +73,12 @@ BEGIN;
       IF EXISTS
         (SELECT 1 FROM information_schema.tables WHERE table_schema = 'returns' AND table_name = 'returns')
       THEN
+        -- Final script to ensure no orphaned records remain
+        DELETE FROM water.review_returns rr WHERE NOT EXISTS (
+          SELECT 1 FROM "returns"."returns" r WHERE r.return_id = rr.return_id
+        );
+
+        -- Populate the column from existing data
         UPDATE water.review_returns rr
         SET return_log_id = r.id
         FROM "returns"."returns" r
