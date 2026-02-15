@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "3.17.4",
+  "version": "3.17.5",
   "description": "API containing the business logic required for the water abstraction service to function",
   "main": "index.js",
   "repository": {
