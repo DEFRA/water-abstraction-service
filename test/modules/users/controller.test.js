@@ -297,8 +297,8 @@ experiment('modules/users/controller', () => {
             code: 'test_code_1',
             dateCreated: '2017-01-01T00:00:00.000Z',
             licences: [
-              { licenceRef: 'lic_1', documentId: 'lic_1_document_id' },
-              { licenceRef: 'lic_2', documentId: 'lic_2_document_id' }
+              { licenceRef: 'lic_1', licenceId: null, documentId: 'lic_1_document_id' },
+              { licenceRef: 'lic_2', licenceId: null, documentId: 'lic_2_document_id' }
             ]
           }
         ])
@@ -308,7 +308,7 @@ experiment('modules/users/controller', () => {
           {
             code: 'test_code_2',
             dateCreated: '2018-01-01T00:00:00.000Z',
-            licences: [{ licenceRef: 'lic_3', documentId: 'lic_3_document_id' }]
+            licences: [{ licenceRef: 'lic_3', licenceId: null, documentId: 'lic_3_document_id' }]
           }
         ])
     })
