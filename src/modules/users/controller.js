@@ -233,12 +233,12 @@ const errorHandler = (err, message, params = {}) => {
  *
  * @private
  */
-async function _applyVerificationLicenceIds(companies) {
+async function _applyVerificationLicenceIds (companies) {
   const mockDocuments = []
   for (const company of companies) {
     for (const outstandingVerification of company.outstandingVerifications) {
       for (const licence of outstandingVerification.licences) {
-        mockDocuments.push({system_external_id: licence.licenceRef })
+        mockDocuments.push({ system_external_id: licence.licenceRef })
       }
     }
   }
