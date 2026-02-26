@@ -205,6 +205,57 @@ const errorHandler = (err, message, params = {}) => {
   throw err
 }
 
+/**
+ * This is a hack!
+ *
+ * Stemming back to when the legacy service would base its view licence summary on the crm.document_header records
+ * rather than water.licences, a lot of links were driven off crm.document_header.document_id.
+ *
+ * This was later changed to water.licences.licence_id in
+ * {@link https://github.com/DEFRA/water-abstraction-service/pull/1399 | PR 1399} as part of WATER-2880, which is when
+ * `licenceMappers` and `getLicencesMap()` was added to this module.
+ *
+ * However, when they made that change so the licences listed below a company would link to the new page, they omitted
+ * the licences linked alongside verification codes. So, those links have been broken since 2021!
+ *
+ * This is a hack, because we should be diving through the various layers of abstraction and attempting to work how we
+ * incorporate licence_id into the original result. But seeing as they never bothered to do that, we also are going
+ * with the `licencesMap` hack!
+ *
+ * This means once the legacy code has done its thing and we know which documents (licences) have outstanding
+ * verifications, we extract their licencer refs into 'mock documents', which we can then pass to getLicencesMap() to
+ * find the equivalent water.licences.
+ *
+ * Then it is just a case of iterating back through everything and applying the corresponding licenceId to the
+ * verification document.
+ *
+ * Hacketty-hack!
+ *
+ * @private
+ */
+async function _applyVerificationLicenceIds (companies) {
+  const mockDocuments = []
+  for (const company of companies) {
+    for (const outstandingVerification of company.outstandingVerifications) {
+      for (const licence of outstandingVerification.licences) {
+        mockDocuments.push({ system_external_id: licence.licenceRef })
+      }
+    }
+  }
+
+  const licencesMap = await getLicencesMap(mockDocuments)
+
+  for (const company of companies) {
+    for (const outstandingVerification of company.outstandingVerifications) {
+      for (const licence of outstandingVerification.licences) {
+        const matchingLicence = licencesMap.get(licence.licenceRef)
+
+        licence.licenceId = matchingLicence ? matchingLicence.id : null
+      }
+    }
+  }
+}
+
 const getStatus = async (request, h) => {
   const userResponse = await idmConnector.usersClient.findOne(request.params.id)
 
@@ -226,6 +277,8 @@ const getStatus = async (request, h) => {
     documentHeaders,
     licenceMap
   )
+
+  await _applyVerificationLicenceIds(companies)
 
   return {
     data: {
