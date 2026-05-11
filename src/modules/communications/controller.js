@@ -30,6 +30,8 @@ const formatNotification = notification => {
     address_line_3: addressLine3,
     address_line_4: addressLine4,
     address_line_5: addressLine5,
+    address_line_6: addressLine6,
+    address_line_7: addressLine7,
     postcode
   } = notification.personalisation
   data.address = camelCaseKeys({
@@ -38,7 +40,8 @@ const formatNotification = notification => {
     address_line_3: addressLine3,
     address_line_4: addressLine4,
     address_line_5: addressLine5,
-    postcode
+    address_line_6: addressLine6,
+    postcode: postcode ?? addressLine7
   })
   return camelCaseKeys(data)
 }

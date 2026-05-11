@@ -30,7 +30,8 @@ const notificationResult = {
       address_line_2: 'Add 2',
       address_line_3: 'Add 3',
       address_line_4: 'Add 4',
-      address_line_5: 'Add 5'
+      address_line_5: 'Add 5',
+      address_line_6: 'Add 6'
     },
     send_after: '2018-01-01T00:00:00.000Z',
     status: 'sent',
@@ -146,6 +147,7 @@ experiment('getCommunication', () => {
       addressLine3: 'Add 3',
       addressLine4: 'Add 4',
       addressLine5: 'Add 5',
+      addressLine6: 'Add 6',
       postcode: 'PO5 0TC'
     })
   })
