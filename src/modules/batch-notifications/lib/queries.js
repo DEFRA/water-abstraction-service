@@ -65,7 +65,6 @@ const getNotifyStatusChecks = async () => {
         'email_change_verification_code_email',
         'existing_user_verification_email',
         'expiry_notification_email',
-        'new_internal_user_email',
         'new_user_verification_email',
         'password_locked_email',
         'password_reset_email',
