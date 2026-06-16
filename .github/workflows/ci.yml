@@ -52,7 +52,7 @@ jobs:
     steps:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6.0.3
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of SonarQube analysis
 
@@ -65,14 +65,14 @@ jobs:
           ! grep -R 'experiment.only(\|test.only(' test
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e #v6.4.0
         with:
           node-version-file: ".nvmrc"
 
       # Speeds up workflows by reading the node modules from cache. Obviously you need to run it at least once, and the
       # cache will be updated should the package-lock.json file change
       - name: Cache Node modules
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae #v5.0.5
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
@@ -101,7 +101,7 @@ jobs:
 
       - name: Analyze with SonarQube
         if: github.actor != 'dependabot[bot]'
-        uses: sonarsource/sonarqube-scan-action@master
+        uses: sonarsource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e #v8.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This is provided automatically by GitHub
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
