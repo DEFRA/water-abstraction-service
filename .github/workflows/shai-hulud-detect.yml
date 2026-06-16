@@ -14,7 +14,7 @@ jobs:
     steps:
       # Downloads a copy of the code in your repository by default
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6.0.3
         with:
           ref: main
           path: project
@@ -22,7 +22,7 @@ jobs:
 
       # Checkout the security scanning repo we're using
       - name: Checkout scanner
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6.0.3
         with:
           repository: Cobenian/shai-hulud-detect
           ref: main
