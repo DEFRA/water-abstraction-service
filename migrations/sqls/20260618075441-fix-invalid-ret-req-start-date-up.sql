@@ -12,12 +12,12 @@
 
   There are only 30 days in April, so when RDP tries to ingest the record, it throws an error.
 
-  We've checked the DB, both start and end date, and fortunately this is the only example of an invalid date.
+  We've checked the DB, both start and end dates, and fortunately, this is the only example of an invalid date.
 
   This script fixes the record.
 
-  > NOTE: We use the external_id rather than return_requirement_id because this record was imported across a range of
-  > environments, and therefore it will be different in each, whereas external_id will be consistent.
+  > NOTE: We use the external_id rather than return_requirement_id because this record was imported across multiple
+  > environments, so it will differ in each, whereas external_id will be consistent.
 */
 
 UPDATE water.return_requirements rr
