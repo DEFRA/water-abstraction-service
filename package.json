@@ -79,5 +79,12 @@
     "promise-poller": "^1.9.1",
     "sinon": "^14.0.2",
     "standard": "^17.1.0"
+  },
+  "allowScripts": {
+    "aws-sdk@2.1693.0": true,
+    "es5-ext@0.10.63": true,
+    "msgpackr-extract@3.0.2": true,
+    "puppeteer@19.8.0": true,
+    "ssh2@1.4.0": true
   }
 }
