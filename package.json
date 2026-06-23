@@ -80,6 +80,9 @@
     "sinon": "^14.0.2",
     "standard": "^17.1.0"
   },
+  "overrides": {
+    "msgpackr": "^1.12.1"
+  },
   "allowScripts": {
     "aws-sdk@2.1693.0": true,
     "es5-ext@0.10.63": true,
