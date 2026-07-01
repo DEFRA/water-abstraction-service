@@ -49,18 +49,15 @@ BEGIN
       WHERE
         e.type = 'unlink-licence'
     ),
-    inserted AS (
-      INSERT INTO water.licence_unregistrations (created_by, licence_id, created_at)
-      SELECT
-        created_by,
-        licence_id,
-        created_at
-      FROM
-        event_data
+    deleted AS (
+      DELETE FROM water.events e
+      USING event_data
+      WHERE e.event_id = event_data.event_id
+      RETURNING event_data.created_by, event_data.licence_id, event_data.created_at
     )
-    DELETE FROM water.events e
-    USING event_data
-    WHERE e.event_id = event_data.event_id;
+    INSERT INTO water.licence_unregistrations (created_by, licence_id, created_at)
+    SELECT created_by, licence_id, created_at
+    FROM deleted;
   END IF;
 END
 $$;
