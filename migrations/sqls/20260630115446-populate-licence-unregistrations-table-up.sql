@@ -28,7 +28,7 @@ BEGIN
   THEN
     WITH event_data AS (
       SELECT
-        e.created as created_at,
+        e.created AT TIME ZONE 'UTC' as created_at,
         u.id as created_by,
         e.event_id,
         l.licence_id
