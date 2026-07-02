@@ -48,16 +48,19 @@ BEGIN
         dh.system_external_id = l.licence_ref
       WHERE
         e.type = 'unlink-licence'
-    ),
-    deleted AS (
-      DELETE FROM water.events e
-      USING event_data
-      WHERE e.event_id = event_data.event_id
-      RETURNING event_data.created_by, event_data.licence_id, event_data.created_at
     )
+
     INSERT INTO water.licence_unregistrations (created_by, licence_id, created_at)
-    SELECT created_by, licence_id, created_at
-    FROM deleted;
+    SELECT
+      created_by,
+      licence_id,
+      created_at
+    FROM
+      event_data;
+
+    DELETE FROM water.events e
+    WHERE
+      e.type = 'unlink-licence';
   END IF;
 END
 $$;
