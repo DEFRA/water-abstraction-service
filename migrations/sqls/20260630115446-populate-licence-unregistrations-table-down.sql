@@ -1,0 +1,1 @@
+/* No down script due to migration removing the event data */
