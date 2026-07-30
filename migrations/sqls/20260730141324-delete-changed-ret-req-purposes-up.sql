@@ -12,44 +12,60 @@
   This migration deletes return requirement purposes that were imported from NALD, but now no longer exist.
 */
 
-WITH parsed_ids AS (
-  SELECT
-    split_part(rrp.external_id, ':', 1) AS region_code,
-    split_part(rrp.external_id, ':', 2) AS format_id,
-    split_part(rrp.external_id, ':', 3) AS primary_purpose_code,
-    split_part(rrp.external_id, ':', 4) AS secondary_purpose_code,
-    split_part(rrp.external_id, ':', 5) AS purpose_code,
-    rrp.*
-  FROM
-    water.return_requirement_purposes rrp
-  WHERE
-    rrp.external_id IS NOT NULL
-),
-to_be_deleted_records AS (
-  SELECT
-    pi.*
-  FROM
-    parsed_ids pi
-  WHERE
-    NOT EXISTS (
+DO $$
+BEGIN
+  IF EXISTS
+    (
       SELECT
         1
       FROM
-        "import"."NALD_RET_FMT_PURPOSES" nrfp
+        information_schema.tables
       WHERE
-        nrfp."FGAC_REGION_CODE" = pi.region_code
-        AND nrfp."ARTY_ID" = pi.format_id
-        AND nrfp."APUR_APPR_CODE" = pi.primary_purpose_code
-        AND nrfp."APUR_APSE_CODE" = pi.secondary_purpose_code
-        AND nrfp."APUR_APUS_CODE" = pi.purpose_code
+        table_schema = 'import'
+        AND table_name = 'NALD_RET_FMT_PURPOSES'
     )
-)
-DELETE FROM
-  water.return_requirement_purposes rrp
-WHERE
-  rrp.return_requirement_purpose_id IN (
-    SELECT
-      tbdr.return_requirement_purpose_id
-    FROM
-      to_be_deleted_records tbdr
-  );
+  THEN
+    WITH parsed_ids AS (
+      SELECT
+        split_part(rrp.external_id, ':', 1) AS region_code,
+        split_part(rrp.external_id, ':', 2) AS format_id,
+        split_part(rrp.external_id, ':', 3) AS primary_purpose_code,
+        split_part(rrp.external_id, ':', 4) AS secondary_purpose_code,
+        split_part(rrp.external_id, ':', 5) AS purpose_code,
+        rrp.*
+      FROM
+        water.return_requirement_purposes rrp
+      WHERE
+        rrp.external_id IS NOT NULL
+    ),
+    to_be_deleted_records AS (
+      SELECT
+        pi.*
+      FROM
+        parsed_ids pi
+      WHERE
+        NOT EXISTS (
+          SELECT
+            1
+          FROM
+            "import"."NALD_RET_FMT_PURPOSES" nrfp
+          WHERE
+            nrfp."FGAC_REGION_CODE" = pi.region_code
+            AND nrfp."ARTY_ID" = pi.format_id
+            AND nrfp."APUR_APPR_CODE" = pi.primary_purpose_code
+            AND nrfp."APUR_APSE_CODE" = pi.secondary_purpose_code
+            AND nrfp."APUR_APUS_CODE" = pi.purpose_code
+        )
+    )
+    DELETE FROM
+      water.return_requirement_purposes rrp
+    WHERE
+      rrp.return_requirement_purpose_id IN (
+        SELECT
+          tbdr.return_requirement_purpose_id
+        FROM
+          to_be_deleted_records tbdr
+      );
+  END IF;
+END
+$$;
