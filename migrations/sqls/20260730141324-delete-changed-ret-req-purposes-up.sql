@@ -9,7 +9,13 @@
 
   But the RDP reports are based on our data so we need to clean this up.
 
-  This migration deletes return requirement purposes that were imported from NALD, but now no longer exist.
+  This migration deletes return requirement purposes that were imported from NALD, but now no longer exist. In testing
+  we found examples where B&D have deleted _all_ the purposes for a return requirement, or the whole return requirement
+  itself. We cannot leave a return requirement with no purposes, so we ignore any where the deletion would leave the
+  return requirement with no purposes.
+
+  > The 'whole requirement' deletions would have happened after the import was switched off. They shouldn't be doing
+  > _anything_ with returns data in NALD anymore!
 */
 
 DO $$
@@ -38,7 +44,7 @@ BEGIN
       WHERE
         rrp.external_id IS NOT NULL
     ),
-    to_be_deleted_records AS (
+    to_be_deleted_candidates AS (
       SELECT
         pi.*
       FROM
@@ -56,15 +62,38 @@ BEGIN
             AND nrfp."APUR_APSE_CODE" = pi.secondary_purpose_code
             AND nrfp."APUR_APUS_CODE" = pi.purpose_code
         )
+    ),
+    validated_deletions AS (
+      -- Only keep candidates if they leave behind at least one valid purpose
+      SELECT
+        tbdc.*
+      FROM
+        to_be_deleted_candidates tbdc
+      WHERE
+        EXISTS (
+          SELECT
+            1
+          FROM
+            water.return_requirement_purposes rrp_keep
+          WHERE
+            rrp_keep.return_requirement_id = tbdc.return_requirement_id
+            -- Ensure this surviving record is NOT slated for deletion
+            AND rrp_keep.return_requirement_purpose_id NOT IN (
+              SELECT
+                return_requirement_purpose_id
+              FROM
+                to_be_deleted_candidates
+            )
+        )
     )
     DELETE FROM
       water.return_requirement_purposes rrp
     WHERE
       rrp.return_requirement_purpose_id IN (
         SELECT
-          tbdr.return_requirement_purpose_id
+          vd.return_requirement_purpose_id
         FROM
-          to_be_deleted_records tbdr
+          validated_deletions vd
       );
   END IF;
 END
