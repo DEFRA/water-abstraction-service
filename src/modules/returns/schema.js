@@ -9,8 +9,7 @@ const statuses = ['due', 'completed', 'received', 'void']
 const units = ['m³', 'l', 'Ml', 'gal']
 const userTypes = ['internal', 'external']
 
-const waterHelpers = require('@envage/water-abstraction-helpers')
-const { returnIDRegex } = waterHelpers.returns
+const { returnIDRegex } = require('../../lib/return-id')
 
 const userSchema = Joi.object().required().keys({
   email: Joi.string().required(),

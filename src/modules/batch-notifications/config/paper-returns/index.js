@@ -3,7 +3,7 @@
 const Joi = require('joi')
 
 const eventHelpers = require('../../lib/event-helpers')
-const { returnIDRegex } = require('@envage/water-abstraction-helpers').returns
+const { returnIDRegex } = require('../../../../lib/return-id')
 const { getRecipients } = require('./lib/get-recipients')
 
 const OPTIONAL_NULLABLE_STRING = Joi.string().allow(null).optional()
