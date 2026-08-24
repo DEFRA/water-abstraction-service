@@ -6,7 +6,7 @@ const Joi = require('joi')
 const assert = (value, schema) => Joi.assert(value, schema)
 
 const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/
-const { returnIDRegex } = require('@envage/water-abstraction-helpers').returns
+const { returnIDRegex } = require('../return-id')
 
 const VALID_DATE = Joi.string().regex(dateRegex).required()
 const VALID_NULLABLE_DATE = VALID_DATE.allow(null)
