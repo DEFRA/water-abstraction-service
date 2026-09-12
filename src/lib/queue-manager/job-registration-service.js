@@ -18,7 +18,6 @@ const chargeInformationUploadStart = require('../../modules/charge-versions-uplo
 const chargeInformationUploadToJson = require('../../modules/charge-versions-upload/jobs/update-charge-information-to-json')
 const gaugingStationsCopyLicenceGaugingStationsFromDigitise = require('../../modules/gauging-stations/jobs/sync-licence-gauging-stations-from-digitise')
 const gaugingStationsCopyLvpcFromDigitise = require('../../modules/gauging-stations/jobs/sync-licence-version-purpose-conditions-from-digitise')
-const gaugingStationsSyncFromCsv = require('../../modules/gauging-stations/jobs/sync-gauging-stations')
 const notificationsCheckStatus = require('../../modules/batch-notifications/lib/jobs/check-status')
 const notificationsGetRecipients = require('../../modules/batch-notifications/lib/jobs/get-recipients')
 const notificationsSendMessage = require('../../modules/batch-notifications/lib/jobs/send-message')
@@ -85,7 +84,6 @@ class JobRegistrationService {
       chargeInformationUploadToJson,
       gaugingStationsCopyLicenceGaugingStationsFromDigitise,
       gaugingStationsCopyLvpcFromDigitise,
-      gaugingStationsSyncFromCsv,
       notificationsCheckStatus,
       notificationsGetRecipients,
       notificationsSendMessage,

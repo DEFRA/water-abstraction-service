@@ -5,7 +5,6 @@ const checkStatus = require('../../modules/batch-notifications/lib/jobs/check-st
 const sendMessage = require('../../modules/batch-notifications/lib/jobs/send-message')
 
 // Gauging Stations
-const syncGaugingStations = require('../../modules/gauging-stations/jobs/sync-gauging-stations')
 const syncLicenceGaugingStationsFromDigitise = require('../../modules/gauging-stations/jobs/sync-licence-gauging-stations-from-digitise')
 const syncLicenceVersionPurposeConditionsFromDigitise = require('../../modules/gauging-stations/jobs/sync-licence-version-purpose-conditions-from-digitise')
 
@@ -21,7 +20,6 @@ class StartUpJobsService {
   }
 
   static async _gaugingStationJobs (queueManager) {
-    queueManager.add(syncGaugingStations.jobName)
     queueManager.add(syncLicenceGaugingStationsFromDigitise.jobName)
     queueManager.add(syncLicenceVersionPurposeConditionsFromDigitise.jobName)
   }
